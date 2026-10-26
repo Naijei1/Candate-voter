@@ -6,14 +6,14 @@ import { YearSelect } from "@/components/YearSelect";
 export function SiteHeader({ cycles }: { cycles: number[] }) {
   return (
     <header className="sticky top-0 z-30 border-b border-line bg-card/95 backdrop-blur">
-      <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
+      <div className="flex w-full items-center justify-between gap-4 px-4 py-3 sm:px-6">
         <Link
           href="/"
-          className="flex min-w-0 items-center gap-3 text-ink focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
+          className="brand-link flex min-w-0 items-center gap-3 rounded-lg px-1.5 py-1 text-ink focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
         >
           <BrandMark />
           <span className="min-w-0">
-            <span className="block text-lg leading-5 font-semibold tracking-tight">Candate</span>
+            <span className="brand-name block text-lg leading-5 font-semibold tracking-tight">Candate</span>
             <span className="block truncate text-xs font-medium text-muted">
               Nonpartisan federal races
             </span>

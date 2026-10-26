@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { stateName } from "@/lib/data/states";
+// Classic JSX runtime for `node --import tsx --test`. Next compiles this with the automatic runtime.
+import React, { memo, useCallback, useEffect, useState, type KeyboardEvent, type MouseEvent } from "react";
+import { isPostalState, stateName } from "@/lib/data/states";
 import { DC_CALLOUT } from "@/lib/geo/dc-label";
-import { US_MAP_VIEW, US_STATE_SHAPES } from "@/lib/geo/us-states";
+import { US_MAP_VIEW, US_STATE_SHAPES, type UsStateShape } from "@/lib/geo/us-states";
 
 const ARROW: Record<string, readonly [number, number]> = {
   ArrowRight: [1, 0],
@@ -13,6 +14,18 @@ const ARROW: Record<string, readonly [number, number]> = {
 };
 
 const SMALL_LABEL = new Set(["CT", "DE", "DC", "MA", "MD", "NH", "NJ", "RI", "VT"]);
+/** Extra hit area for states that are only a few pixels wide. */
+const HIT_RADIUS: Record<string, number> = {
+  MA: 14,
+  MD: 14,
+  NH: 14,
+  NJ: 14,
+  VT: 16,
+  CT: 16,
+  DE: 18,
+  RI: 18,
+  DC: 22,
+};
 /** DC is a few pixels wide at this scale, so the shape stays clickable without a colliding abbreviation. */
 const HIDE_LABEL = new Set(["DC"]);
 
@@ -40,76 +53,197 @@ export function UsMap({
     if (selected) setTabStop(selected);
   }, [selected]);
 
+  const onKeyDown = useCallback(
+    (event: KeyboardEvent<SVGPathElement>) => {
+      const postal = event.currentTarget.dataset.postal;
+      if (!postal) return;
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        onSelect(postal);
+        return;
+      }
+      const direction = ARROW[event.key];
+      if (!direction) return;
+      event.preventDefault();
+      const current = US_STATE_SHAPES.find((shape) => shape.postal === postal);
+      if (!current) return;
+      const next = neighbor(current, direction);
+      if (!next) return;
+      setTabStop(next.postal);
+      document.getElementById(`${mapId}-${next.postal}`)?.focus();
+    },
+    [mapId, onSelect],
+  );
+
+  function onMapClick(event: MouseEvent<SVGSVGElement>) {
+    const target = event.target;
+    if (target instanceof SVGElement && target.classList.contains("us-hit")) {
+      const postal = postalFromTarget(target);
+      if (postal) {
+        onSelect(postal);
+        return;
+      }
+    }
+    const geometric = smallestShapeAt(event.currentTarget, event.clientX, event.clientY, mapId);
+    if (geometric) {
+      onSelect(geometric);
+      return;
+    }
+    if (target instanceof SVGTextElement) {
+      const postal = postalFromTarget(target);
+      if (postal) onSelect(postal);
+    }
+  }
+
   return (
     <svg
       viewBox={`0 0 ${US_MAP_VIEW.width} ${US_MAP_VIEW.height}`}
-      className="us-map h-auto w-full"
+      className="us-map h-full w-full"
       role="group"
       aria-label={`${label} Arrow keys move between states. Enter selects.`}
+      onClick={onMapClick}
     >
-      {US_STATE_SHAPES.map((shape) => {
-        const name = stateName(shape.postal);
-        const hasRaces = withRaces.has(shape.postal);
-        const isSelected = selected === shape.postal;
-        const pressed = isSelected ? "true" : "false";
-        return (
-          <g key={shape.postal}>
-            <path
-              id={`${mapId}-${shape.postal}`}
-              d={shape.d}
-              className={hasRaces ? "us-state has-data" : "us-state"}
-              role="button"
-              tabIndex={shape.postal === tabStop ? 0 : -1}
-              aria-label={
-                hasRaces ? `${name}, stored federal races` : `${name}, no stored Senate or House races`
-              }
-              aria-pressed={pressed}
-              onClick={() => onSelect(shape.postal)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" || event.key === " ") {
-                  event.preventDefault();
-                  onSelect(shape.postal);
-                  return;
-                }
-                const direction = ARROW[event.key];
-                if (!direction) return;
-                event.preventDefault();
-                const next = neighbor(shape, direction);
-                if (!next) return;
-                setTabStop(next.postal);
-                document.getElementById(`${mapId}-${next.postal}`)?.focus();
-              }}
+      {US_STATE_SHAPES.map((shape) => (
+        <StatePath
+          key={shape.postal}
+          shape={shape}
+          mapId={mapId}
+          hasRaces={withRaces.has(shape.postal)}
+          isSelected={selected === shape.postal}
+          tabbable={shape.postal === tabStop}
+          onKeyDown={onKeyDown}
+        />
+      ))}
+      {US_STATE_SHAPES.filter((shape) => HIT_RADIUS[shape.postal] != null).map((shape) => (
+        <circle
+          key={`hit-${shape.postal}`}
+          data-postal={shape.postal}
+          cx={shape.x}
+          cy={shape.y}
+          r={HIT_RADIUS[shape.postal]}
+          className="us-hit"
+          aria-hidden="true"
+        />
+      ))}
+      {labelled ? (
+        <g className="us-labels" aria-hidden="true">
+          {US_STATE_SHAPES.map((shape) => (
+            <StateLabel
+              key={`label-${shape.postal}`}
+              shape={shape}
+              isSelected={selected === shape.postal}
             />
-            {shape.postal === "DC" && labelled ? (
-              <g className="us-dc-callout" aria-hidden="true">
-                <line x1={DC_CALLOUT.x1} y1={DC_CALLOUT.y1} x2={DC_CALLOUT.x2} y2={DC_CALLOUT.y2} />
-                <text
-                  x={DC_CALLOUT.labelX}
-                  y={DC_CALLOUT.labelY}
-                  textAnchor="start"
-                  dominantBaseline="central"
-                  className="us-label-dc"
-                >
-                  DC
-                </text>
-              </g>
-            ) : labelled && !HIDE_LABEL.has(shape.postal) ? (
-              <text
-                x={shape.x}
-                y={shape.y}
-                textAnchor="middle"
-                dominantBaseline="central"
-                className={SMALL_LABEL.has(shape.postal) ? "us-label us-label-small" : "us-label"}
-                aria-hidden="true"
-              >
-                {shape.postal}
-              </text>
-            ) : null}
-          </g>
-        );
-      })}
+          ))}
+        </g>
+      ) : null}
     </svg>
   );
+}
+
+const StatePath = memo(function StatePath({
+  shape,
+  mapId,
+  hasRaces,
+  isSelected,
+  tabbable,
+  onKeyDown,
+}: {
+  shape: UsStateShape;
+  mapId: string;
+  hasRaces: boolean;
+  isSelected: boolean;
+  tabbable: boolean;
+  onKeyDown: (event: KeyboardEvent<SVGPathElement>) => void;
+}) {
+  const name = stateName(shape.postal);
+  return (
+    <path
+      id={`${mapId}-${shape.postal}`}
+      data-postal={shape.postal}
+      d={shape.d}
+      className={hasRaces ? "us-state has-data" : "us-state"}
+      role="button"
+      tabIndex={tabbable ? 0 : -1}
+      aria-label={
+        hasRaces ? `${name}, stored federal races` : `${name}, no stored Senate or House races`
+      }
+      aria-pressed={isSelected ? "true" : "false"}
+      onKeyDown={onKeyDown}
+    />
+  );
+});
+
+const StateLabel = memo(function StateLabel({
+  shape,
+  isSelected,
+}: {
+  shape: UsStateShape;
+  isSelected: boolean;
+}) {
+  if (shape.postal === "DC") {
+    return (
+      <g data-postal="DC">
+        <g className="us-dc-callout">
+          <line x1={DC_CALLOUT.x1} y1={DC_CALLOUT.y1} x2={DC_CALLOUT.x2} y2={DC_CALLOUT.y2} />
+        </g>
+        <text
+          data-postal="DC"
+          x={DC_CALLOUT.labelX}
+          y={DC_CALLOUT.labelY}
+          textAnchor="start"
+          dominantBaseline="central"
+          className="us-label-dc"
+        >
+          DC
+        </text>
+      </g>
+    );
+  }
+  if (HIDE_LABEL.has(shape.postal)) return null;
+  const small = SMALL_LABEL.has(shape.postal);
+  const selectedClass = isSelected && !small ? " is-selected" : "";
+  return (
+    <text
+      data-postal={shape.postal}
+      x={shape.x}
+      y={shape.y}
+      textAnchor="middle"
+      dominantBaseline="central"
+      className={`${small ? "us-label us-label-small" : "us-label"}${selectedClass}`}
+    >
+      {shape.postal}
+    </text>
+  );
+});
+
+/** Shared borders belong to more than one fill. The smaller state keeps the click. */
+function smallestShapeAt(svg: SVGSVGElement, clientX: number, clientY: number, mapId: string): string | null {
+  const ctm = svg.getScreenCTM();
+  if (!ctm) return null;
+  const point = svg.createSVGPoint();
+  point.x = clientX;
+  point.y = clientY;
+  const local = point.matrixTransform(ctm.inverse());
+  let bestPostal: string | null = null;
+  let bestArea = Infinity;
+  for (const shape of US_STATE_SHAPES) {
+    const path = document.getElementById(`${mapId}-${shape.postal}`);
+    if (!(path instanceof SVGPathElement) || !path.isPointInFill(local)) continue;
+    const box = path.getBBox();
+    const area = box.width * box.height;
+    if (area < bestArea) {
+      bestArea = area;
+      bestPostal = shape.postal;
+    }
+  }
+  return bestPostal;
+}
+
+function postalFromTarget(target: EventTarget | null): string | null {
+  if (!(target instanceof Element)) return null;
+  const node = target.closest("[data-postal]");
+  const postal = node?.getAttribute("data-postal") ?? "";
+  return isPostalState(postal) ? postal : null;
 }
 
 function neighbor(
