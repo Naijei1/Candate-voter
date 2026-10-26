@@ -11,6 +11,15 @@
 const MIN_CYCLE = 1980;
 const MAX_CYCLE = 2100;
 
+/** Election year in the same range `CANDATE_CYCLES` accepts. */
+export function parseCycle(value: string): number | null {
+  const parsed = Number(value.trim());
+  if (!Number.isInteger(parsed) || parsed < MIN_CYCLE || parsed > MAX_CYCLE) {
+    return null;
+  }
+  return parsed;
+}
+
 export function defaultCycles(now: Date = new Date()): number[] {
   const year = now.getUTCFullYear();
   const start = Math.max(MIN_CYCLE, year - 1);
@@ -31,10 +40,8 @@ export function cyclesFromEnv(
 
   const cycles = new Set<number>();
   for (const part of raw.split(",")) {
-    const parsed = Number(part.trim());
-    if (!Number.isInteger(parsed) || parsed < MIN_CYCLE || parsed > MAX_CYCLE) {
-      continue;
-    }
+    const parsed = parseCycle(part);
+    if (parsed == null) continue;
     cycles.add(parsed);
   }
   return [...cycles].sort((a, b) => a - b);
@@ -51,8 +58,8 @@ export function resolveCycle(
 ): number | null {
   if (cycles.length === 0) return null;
   const sorted = [...cycles].sort((a, b) => a - b);
-  const parsed = Number(requested);
-  if (sorted.includes(parsed)) return parsed;
+  const parsed = requested == null ? null : parseCycle(requested);
+  if (parsed != null && sorted.includes(parsed)) return parsed;
   const current = now.getUTCFullYear();
   if (sorted.includes(current)) return current;
   return sorted.reduce((best, year) =>

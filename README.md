@@ -33,6 +33,11 @@ Package manager is npm. Commit `package-lock.json`. Amplify runs `npm ci`.
 | `/` | Federal races index |
 | `/races/[raceId]` | Race detail |
 | `/candidates/[candidateId]` | Candidate detail |
+| `/agent` | Read API documentation and live ingest freshness |
+| `/openapi.yaml` | OpenAPI 3.0 document for `/api/v1` |
+| `/llms.txt` | Short index for agents |
+
+`/api/v1` is a separate read-only JSON surface. See [Agent API](#agent-api).
 
 Links use `next/link` with app-relative paths so they follow `basePath`. Server components read stored races, candidates, and filings through `createDynamoRepository()`. `src/lib/placeholders.ts` is a fixture module and is not imported by those pages.
 
@@ -138,7 +143,7 @@ aws lambda invoke \
 
 `/`, `/races/[raceId]`, and `/candidates/[candidateId]` are server components. They call `createDynamoRepository()` and set `dynamic = "force-dynamic"`, so `next build` does not query the table and does not prebuild ids from `src/lib/placeholders.ts`. The Amplify SSR compute role (not the build role) needs `dynamodb:GetItem` and `dynamodb:Query` on the table and `gsi1`. Leave `FEC_API_KEY` on the Lambda only.
 
-Amplify Hosting puts branch environment variables in the build shell and does not pass them to the Next.js server at request time. `amplify.yml` copies `CANDATE_TABLE_NAME`, `CANDATE_CYCLES`, and `NEXT_PUBLIC_*` into `.env.production` before `next build`. Next.js loads that file when it serves traffic. If `CANDATE_TABLE_NAME` is still unset, reads use `candate-voter`. `AWS_REGION` falls back to `us-east-1` in the repository client. Neither value is a secret.
+Amplify Hosting puts branch environment variables in the build shell and does not pass them to the Next.js server at request time. `amplify.yml` deletes `.env.production` and `scripts/write-amplify-server-env.mjs` writes it again before `next build`. That script is the only copy. It writes `CANDATE_TABLE_NAME`, `CANDATE_API_KEY`, `CANDATE_CYCLES`, `AWS_REGION`, the chat settings (`CANDATE_CHAT_ENABLED`, `CANDATE_CHAT_MODEL`, `CANDATE_CHAT_RATE_LIMIT`, `CANDATE_CHAT_RATE_WINDOW_SECONDS`, `BEDROCK_MODEL_ID`, `BEDROCK_SONNET_MODEL_ID`), and `NEXT_PUBLIC_*` when they are set, and it does not write `FEC_API_KEY`. Next.js loads that file when it serves traffic. If `CANDATE_TABLE_NAME` is still unset, reads use `candate-voter`. If `AWS_REGION` is unset, the repository client uses `us-east-1`.
 
 The home index queries `listRacesByCycle` for each year in a window: the previous UTC calendar year through six years ahead. `CANDATE_CYCLES` (comma-separated years) overrides that window. A query with no rows renders an empty state. A storage error renders an error message and does not substitute sample rows.
 
@@ -162,6 +167,90 @@ SSR compute role:
 }
 ```
 
+## Agent API
+
+Agents and scripts read the same DynamoDB records as the HTML pages. `POST /api/chat` is a separate same-origin browser route and does not use the API key. Other agents call `/api/v1` with a key.
+
+| Method and path | Record |
+| --- | --- |
+| `GET /api/v1/races` | Races. Query: `cycle`, `state`, `office`, `limit` (default 50, max 100), `cursor` (`raceId` of the last row on the previous page). Omitting `cycle` uses the public index year window. |
+| `GET /api/v1/races/{raceId}` | One race and its candidates. |
+| `GET /api/v1/candidates/{candidateId}` | One candidate and its race. |
+| `GET /api/v1/candidates/{candidateId}/filings` | Form 2 filings for that candidate, newest FEC load timestamp first. |
+| `GET /api/v1/freshness` | Ingest watermark for `fec-efile-form2` (`lastLoadTimestamp`, `lastRunAt`, `lastStatus`, and the other cursor fields). `watermark` is null until a run has stored one. |
+
+Send `Authorization: Bearer <key>` or `X-Api-Key: <key>`. When both headers are present, both must match `CANDATE_API_KEY`. Comparison is constant-time. A missing server key, a missing request key, or a wrong key returns `401` with `{ "error": "unauthorized" }`. Unknown ids return `404`. A failed table read returns `503`. Query mistakes return `400`.
+
+`/agent` is public. It documents the surface, shows curl examples with the placeholder `YOUR_API_KEY`, links `/openapi.yaml`, and renders the live watermark from the repository on the server. The key is not sent to the browser. `/llms.txt` and `/openapi.yaml` are public too.
+
+Responses are the domain objects from `src/lib/types.ts`, with `sourceUrl` and timestamps. Party stays the filing affiliation code. The `/api/v1` routes only implement `GET`.
+
+## Browser chat
+
+`POST /api/chat` answers from the stored races, candidates, filings, and ingest watermark. Tools call `createDynamoRepository()` in process. They do not loop back through `/api/v1` and they do not read `CANDATE_API_KEY` or `FEC_API_KEY`.
+
+Amplify Hosting compute does not support Next.js streaming. The route waits for the tool calls and the model, then returns one JSON body. The page should show a waiting state and then the full answer.
+
+```bash
+curl -sS -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"message":"Which Senate races are stored for California in 2026?","cycle":2026}' \
+  https://voter.naijei.com/api/chat
+```
+
+Success is HTTP 200:
+
+```json
+{
+  "answer_markdown": "string",
+  "sources": [{ "title": "string", "url": "string", "as_of": "string" }],
+  "refused": false,
+  "threadId": "string"
+}
+```
+
+`refused: true` is still 200. That covers voting advice, rankings, endorsements, and a lookup the tools could not match. The copy is in `answer_markdown`. A bad body is 400. Too many requests from one address is 429 with a `Retry-After` header in seconds. Chat disabled, or Bedrock or DynamoDB unavailable, is 503.
+
+`threadId` is echoed when the client sends one, or minted when it does not. Turns are not stored.
+
+The default model is Claude Haiku 5.5 via the US geo inference profile `us.anthropic.claude-haiku-5-5` (Bedrock model id `anthropic.claude-haiku-5-5` is not on-demand). Set `CANDATE_CHAT_MODEL=sonnet` to use `us.anthropic.claude-sonnet-5-5`, or set `BEDROCK_MODEL_ID` / `BEDROCK_SONNET_MODEL_ID` to another profile id. `CANDATE_CHAT_ENABLED` must be `true` or the route returns 503. Leave it unset until the compute role can call Bedrock.
+
+The rate limit defaults to 20 requests per 60 seconds per address, in memory on that server process. Amplify runs more than one instance, so the cap is not shared. `CANDATE_CHAT_RATE_LIMIT` and `CANDATE_CHAT_RATE_WINDOW_SECONDS` change the per-instance numbers.
+
+### Enable Bedrock on Amplify
+
+Do this in the console. This repo does not deploy the IAM change.
+
+1. In Amazon Bedrock, open **Model access** in us-east-1 and submit the Anthropic use-case form for Claude Haiku 5.5. Repeat for Sonnet 5.5 only if you set `CANDATE_CHAT_MODEL=sonnet`.
+2. On the Amplify app, open **App settings → IAM roles** and add a statement to the **compute** role (the SSR role, not the build role):
+
+```json
+{
+  "Effect": "Allow",
+  "Action": ["bedrock:Converse", "bedrock:InvokeModel"],
+  "Resource": [
+    "arn:aws:bedrock:us-east-1:402275401617:inference-profile/us.anthropic.claude-haiku-5-5",
+    "arn:aws:bedrock:us-east-1:402275401617:inference-profile/us.anthropic.claude-sonnet-5-5",
+    "arn:aws:bedrock:*::foundation-model/anthropic.claude-haiku-5-5",
+    "arn:aws:bedrock:*::foundation-model/anthropic.claude-sonnet-5-5"
+  ]
+}
+```
+
+The US geo profile routes from us-east-1 to us-east-1, us-east-2, and us-west-2. The foundation-model resources cover those destinations. Drop the Sonnet lines if you will not enable that model.
+
+3. Set branch environment variables, then redeploy so `scripts/write-amplify-server-env.mjs` can copy them into `.env.production`:
+
+| Name | Value |
+| --- | --- |
+| `CANDATE_CHAT_ENABLED` | `true` |
+| `CANDATE_CHAT_MODEL` | `haiku`, or `sonnet` for the optional model |
+| `BEDROCK_MODEL_ID` | Optional. Default `us.anthropic.claude-haiku-5-5`. |
+| `BEDROCK_SONNET_MODEL_ID` | Optional. Default `us.anthropic.claude-sonnet-5-5`. |
+| `AWS_REGION` | `us-east-1` when you want it explicit. |
+
+There is no Bedrock API key. Do not create a `NEXT_PUBLIC_` variable for chat, the read API key, or the FEC key.
+
 ## Connect Amplify Hosting
 
 This app is set up for **Amplify Hosting** (Git-connected, platform `WEB_COMPUTE`), not an Amplify Gen 2 backend. Gen 2 (`ampx`, `amplify/backend.ts`, AppSync) is a larger step than connecting this repo, and the January page does not need auth or a GraphQL API. Add DynamoDB later from the ingest worker, or adopt Gen 2 data then. Hosting SSR is the path that matches `amplify.yml`.
@@ -181,16 +270,23 @@ Build image Node is 22 (`nvm install 22` in `amplify.yml`, `.nvmrc`). Amplify bl
 
 ### Environment variables
 
-Branch environment variables are available to the build shell. `amplify.yml` copies the site's variables into `.env.production` so the Next.js server can read them. `CANDATE_TABLE_NAME` is optional: an empty value selects `candate-voter`.
+Branch environment variables are available to the build shell. WEB_COMPUTE does not pass them into the Next.js server. Before `next build`, `amplify.yml` replaces `.env.production` using `scripts/write-amplify-server-env.mjs`. That is the only writer. It records `CANDATE_TABLE_NAME`, `CANDATE_API_KEY`, `CANDATE_CYCLES`, `AWS_REGION`, the chat settings listed under [Browser chat](#browser-chat), and `NEXT_PUBLIC_*` when they are set. It skips `FEC_API_KEY`. Next.js loads `.env.production` when it serves traffic. An empty `CANDATE_TABLE_NAME` selects `candate-voter`. An empty `AWS_REGION` selects `us-east-1` in the repository client. `/api/v1` returns 401 until `CANDATE_API_KEY` is set. Changing one of these values requires a new deploy. Do not commit `.env.production`. Values in that file are readable by anyone who can read the deployment artifact.
 
 | Name | MVP value |
 | --- | --- |
 | `NEXT_PUBLIC_BASE_PATH` | Leave unset or empty. |
-| `AWS_REGION` | Optional. `us-east-1` when unset. The repository client does not need this copied into `.env.production`. |
-| `CANDATE_TABLE_NAME` | Optional. `candate-voter` when unset. |
-| `CANDATE_CYCLES` | Optional. Comma-separated election years for the home index. When unset, the page queries the previous UTC year through six years ahead. |
+| `AWS_REGION` | Optional. `us-east-1` when unset. Copied into `.env.production` when set. |
+| `CANDATE_TABLE_NAME` | Optional. `candate-voter` when unset. Copied into `.env.production` when set. |
+| `CANDATE_CYCLES` | Optional. Comma-separated election years for the home index and for `GET /api/v1/races` when `cycle` is omitted. When unset, the query uses the previous UTC year through six years ahead. |
+| `CANDATE_API_KEY` | Long random secret for `/api/v1`. HTML pages and `/api/chat` do not use it. |
+| `CANDATE_CHAT_ENABLED` | Optional. Chat stays off until this is `true`. |
+| `CANDATE_CHAT_MODEL` | Optional. `haiku` (default) or `sonnet`. |
+| `BEDROCK_MODEL_ID` | Optional override for the Haiku inference profile id. |
+| `BEDROCK_SONNET_MODEL_ID` | Optional override for the Sonnet inference profile id. |
+| `CANDATE_CHAT_RATE_LIMIT` | Optional. Default 20 requests per address per instance. |
+| `CANDATE_CHAT_RATE_WINDOW_SECONDS` | Optional. Default 60. |
 
-`FEC_API_KEY` stays on the ingest Lambda (or the shell that runs `npm run ingest`). The site does not call OpenFEC.
+`FEC_API_KEY` stays on the ingest Lambda (or the shell that runs `npm run ingest`). The site does not call OpenFEC. Do not set `FEC_API_KEY` on the Amplify app.
 
 `NEXT_PUBLIC_*` values are inlined at build time. Changing `NEXT_PUBLIC_BASE_PATH` requires a new build.
 
@@ -215,3 +311,4 @@ If CloudFront later serves this app at `https://naijei.com/voter`, set `NEXT_PUB
 - **Amplify Hosting (`amplify.yml`, `WEB_COMPUTE`)**, not Amplify Gen 2 and not a static export. Production build is `next build` (webpack). `npm run dev` uses Turbopack locally.
 - **System font stack** so the Amplify build does not depend on downloading fonts.
 - **DynamoDB single table plus a SAM-scheduled Lambda** beside Amplify Hosting. The hosting build stays `amplify.yml` / `WEB_COMPUTE`. Gen 2 (`ampx`, AppSync) is not required for this ingest path.
+- **Read-only `/api/v1` plus a public `/agent` page** for agents. `POST /api/chat` is a buffered, keyless browser route over the same DynamoDB rows. The chat UI is a separate frontend. `CANDATE_API_KEY` gates `/api/v1` only. `FEC_API_KEY` stays off the Next app. Bedrock uses the compute role.

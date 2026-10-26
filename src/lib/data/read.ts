@@ -1,7 +1,7 @@
 import { cache } from "react";
 import { cyclesFromEnv } from "./cycles";
 import { createDynamoRepository, type VoterRepository } from "./repository";
-import type { Candidate, Filing, Race } from "../types";
+import type { Candidate, Filing, IngestWatermark, Race } from "../types";
 
 export { racesByOffice } from "../races";
 
@@ -52,6 +52,12 @@ export const readCandidatesForRace = cache(
   async (raceId: string): Promise<Candidate[]> => {
     const candidates = await createDynamoRepository().listCandidatesForRace(raceId);
     return sortCandidates(candidates);
+  },
+);
+
+export const readWatermark = cache(
+  async (): Promise<IngestWatermark | null> => {
+    return createDynamoRepository().getWatermark();
   },
 );
 

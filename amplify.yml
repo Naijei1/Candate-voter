@@ -12,13 +12,18 @@ frontend:
         - npm ci
     build:
       commands:
-        # Console env vars are in this shell, but WEB_COMPUTE does not pass
-        # them to Next.js server components. Next loads .env.production when
-        # it serves traffic. Copy only names the site reads. Never copy
-        # FEC_API_KEY. An unset CANDATE_TABLE_NAME still falls back to
-        # candate-voter in tableNameFromEnv.
+        # Console env vars are in this shell. WEB_COMPUTE does not pass them
+        # to the Next.js server. Next loads .env.production when it serves
+        # traffic. This script is the only writer. It copies
+        # CANDATE_TABLE_NAME, CANDATE_API_KEY, CANDATE_CYCLES, AWS_REGION,
+        # CANDATE_CHAT_ENABLED, CANDATE_CHAT_MODEL, the chat rate-limit
+        # settings, BEDROCK_MODEL_ID, BEDROCK_SONNET_MODEL_ID, and
+        # NEXT_PUBLIC_* when set. It does not copy FEC_API_KEY. An unset
+        # CANDATE_TABLE_NAME still falls back to candate-voter. Chat stays
+        # off until CANDATE_CHAT_ENABLED is true. Bedrock uses the compute
+        # role, not a key.
         - rm -f .env.production
-        - env | grep -e '^CANDATE_TABLE_NAME=' -e '^CANDATE_CYCLES=' -e '^NEXT_PUBLIC_' >> .env.production || true
+        - node scripts/write-amplify-server-env.mjs
         - npm run build
   artifacts:
     baseDirectory: .next
