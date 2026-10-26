@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AskPageContext } from "@/components/chat/AskProvider";
+import { MultiFilingDetails } from "@/components/MultiFilingDetails";
 import { RecordMeta } from "@/components/RecordMeta";
 import { StorageNotice } from "@/components/StorageNotice";
 import {
@@ -171,7 +172,7 @@ function FilingGroupNote({
   if (!group?.multiFilingNote) return null;
   const onKeeper = group.candidateId === candidateId;
   return (
-    <div className="space-y-1 text-sm leading-6 text-muted">
+    <MultiFilingDetails count={group.alternateFilings.length + 1}>
       {onKeeper ? null : (
         <p>
           This FEC id is one filing for this name. The race list keeps a single row on{" "}
@@ -199,7 +200,7 @@ function FilingGroupNote({
           </p>
         );
       })}
-    </div>
+    </MultiFilingDetails>
   );
 }
 

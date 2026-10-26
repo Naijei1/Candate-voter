@@ -1,7 +1,7 @@
 import { Landing } from "@/components/Landing";
 import { StorageNotice } from "@/components/StorageNotice";
 import { formatCycleList, resolveCycle } from "@/lib/data/cycles";
-import { logReadError, readRaceIndex, readWatermark } from "@/lib/data/read";
+import { logReadError, readRaceIndex } from "@/lib/data/read";
 import { isPostalState } from "@/lib/data/states";
 import { stateRaces } from "@/lib/landing";
 import { loadCandidatesForRaces } from "@/lib/landing/candidates";
@@ -35,7 +35,6 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   const requestedState = params.state?.trim().toUpperCase() ?? "";
   const initialState = isPostalState(requestedState) ? requestedState : null;
   const seededCandidates = await seedState(races, initialState);
-  const refreshedAt = await loadRefreshedAt();
 
   return (
     <Landing
@@ -46,7 +45,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       hasAnyRaces={loaded.groups.length > 0}
       cycleLabel={formatCycleList(loaded.cycles)}
       seededCandidates={seededCandidates}
-      refreshedAt={refreshedAt}
+      refreshedAt={loaded.refreshedAt}
     />
   );
 }
@@ -56,16 +55,6 @@ async function seedState(races: Race[], state: string | null) {
   const ids = stateRaces(races, state).map((race) => race.raceId);
   if (ids.length === 0) return null;
   return loadCandidatesForRaces(ids);
-}
-
-async function loadRefreshedAt(): Promise<string | null> {
-  try {
-    const watermark = await readWatermark();
-    return watermark?.updatedAt ?? null;
-  } catch (error) {
-    logReadError("getWatermark", error);
-    return null;
-  }
 }
 
 async function loadIndex() {

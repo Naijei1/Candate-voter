@@ -14,6 +14,8 @@ export type CandidatePreview = {
   /** Distinct affiliation labels, keeper first. */
   partyLabels: string[];
   multiFilingNote: string | null;
+  /** Other FEC ids already collapsed into this row. The keeper is not included. */
+  alternateFilingCount: number;
   sourceUrl: string | null;
   updatedAt: string | null;
 };
@@ -47,6 +49,7 @@ export async function loadCandidatesForRaces(
             partyLabel: candidate.partyLabel,
             partyLabels: displayedPartyLabels(candidate),
             multiFilingNote: candidate.multiFilingNote,
+            alternateFilingCount: candidate.alternateFilings.length,
             sourceUrl: candidate.sourceUrl,
             updatedAt: candidate.updatedAt,
           })),

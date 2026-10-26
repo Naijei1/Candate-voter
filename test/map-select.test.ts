@@ -42,4 +42,14 @@ test("home section is titled Popular and disclaims a ranking", () => {
   assert.match(source, /Recently updated filings — not a ranking\./);
   assert.equal(source.includes("Not a rating"), false);
   assert.equal(source.includes("newest stored update"), false);
+  assert.equal(source.includes("Popular "), false);
+  assert.equal(/<ol\b/.test(source), false);
+});
+
+test("desktop map grid keeps a fixed height so the filings panel cannot stretch it", () => {
+  const css = readFileSync(new URL("../src/app/globals.css", import.meta.url), "utf8");
+  const block = css.slice(css.indexOf("@media (min-width: 1024px)"));
+  assert.match(block, /\.map-hero-grid\s*\{[^}]*height:\s*calc\(100svh - 4\.5rem\)/);
+  assert.match(block, /\.map-hero-grid\s*\{[^}]*max-height:\s*calc\(100svh - 4\.5rem\)/);
+  assert.match(block, /\.map-panel\s*\{[^}]*overflow:\s*hidden/);
 });

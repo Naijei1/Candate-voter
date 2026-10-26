@@ -3,6 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AskPageContext } from "@/components/chat/AskProvider";
 import { CoverageNote } from "@/components/CoverageNote";
+import { DataRefreshedBanner } from "@/components/DataRefreshedBanner";
+import { MultiFilingDetails } from "@/components/MultiFilingDetails";
 import { RecordMeta } from "@/components/RecordMeta";
 import { StorageNotice } from "@/components/StorageNotice";
 import { FORM2_SCOPE_NOTE } from "@/lib/data/coverage";
@@ -66,6 +68,7 @@ export default async function RacePage({ params }: RacePageProps) {
           Federal races
         </Link>
       </p>
+      <DataRefreshedBanner refreshedAt={coverage.refreshedAt} />
       <header className="space-y-2">
         <h1 className="text-3xl font-semibold tracking-tight">{race.title}</h1>
         <p className="text-base text-muted">
@@ -80,11 +83,7 @@ export default async function RacePage({ params }: RacePageProps) {
           ) : null}
         </p>
         <RecordMeta sourceUrl={race.sourceUrl} updatedAt={race.updatedAt} />
-        <CoverageNote
-          lines={coverage.lines}
-          scopeNote={FORM2_SCOPE_NOTE}
-          refreshedAt={coverage.refreshedAt}
-        />
+        <CoverageNote lines={coverage.lines} scopeNote={FORM2_SCOPE_NOTE} />
       </header>
       <section aria-labelledby="candidates-heading">
         <h2 id="candidates-heading" className="text-lg font-semibold">
@@ -136,23 +135,25 @@ function CandidateRow({ candidate }: { candidate: PublicCandidate }) {
         <span className="text-sm text-muted">{parties.join(" · ")}</span>
       </div>
       {candidate.multiFilingNote ? (
-        <p className="mt-1 text-sm leading-6 text-muted">{candidate.multiFilingNote}</p>
+        <MultiFilingDetails count={candidate.alternateFilings.length + 1}>
+          <p>{candidate.multiFilingNote}</p>
+          {candidate.alternateFilings.map((alternate) => {
+            const href = httpsUrl(alternate.sourceUrl);
+            const label = `${alternate.partyLabel} ${alternate.fecCandidateId ?? alternate.candidateId}`;
+            if (!href) return null;
+            return (
+              <p key={alternate.candidateId}>
+                <a
+                  href={href}
+                  className="text-accent underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
+                >
+                  {label}
+                </a>
+              </p>
+            );
+          })}
+        </MultiFilingDetails>
       ) : null}
-      {candidate.alternateFilings.map((alternate) => {
-        const href = httpsUrl(alternate.sourceUrl);
-        const label = `${alternate.partyLabel} ${alternate.fecCandidateId ?? alternate.candidateId}`;
-        if (!href) return null;
-        return (
-          <p key={alternate.candidateId} className="text-sm leading-6 text-muted">
-            <a
-              href={href}
-              className="text-accent underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
-            >
-              {label}
-            </a>
-          </p>
-        );
-      })}
       <RecordMeta sourceUrl={candidate.sourceUrl} updatedAt={candidate.updatedAt} />
     </li>
   );

@@ -39,10 +39,15 @@ export async function listRacesForCycles(
 export async function readRaceIndex(
   env: Record<string, string | undefined> = process.env,
   now: Date = new Date(),
-): Promise<{ cycles: number[]; groups: Array<{ cycle: number; races: Race[] }> }> {
+): Promise<{
+  cycles: number[];
+  groups: Array<{ cycle: number; races: Race[] }>;
+  /** Ingest cursor write time. Same value as API `refreshedAt`. Null when none is stored. */
+  refreshedAt: string | null;
+}> {
   const cycles = cyclesFromEnv(env, now);
   const groups = await listRacesForCycles(createDynamoRepository(), cycles);
-  return { cycles, groups };
+  return { cycles, groups, refreshedAt: await readIndexRefreshedAt() };
 }
 
 export const readRacesForCycle = cache(async (cycle: number): Promise<Race[]> => {
@@ -71,6 +76,16 @@ export const readWatermark = cache(
     return createDynamoRepository().getWatermark();
   },
 );
+
+/** Top-level index `refreshedAt`. A watermark miss omits the banner; it does not drop the races. */
+async function readIndexRefreshedAt(): Promise<string | null> {
+  try {
+    return (await readWatermark())?.updatedAt ?? null;
+  } catch (error) {
+    logReadError("getWatermark", error);
+    return null;
+  }
+}
 
 export const readFilingsForCandidate = cache(
   async (candidateId: string): Promise<Filing[]> => {
