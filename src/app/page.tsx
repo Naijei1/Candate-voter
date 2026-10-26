@@ -39,7 +39,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
   return (
     <Landing
-      key={`${year}:${initialState ?? ""}`}
+      key={String(year)}
       year={year}
       races={races}
       initialState={initialState}

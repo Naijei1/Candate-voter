@@ -7,6 +7,7 @@
   --color-line: #e2e8f0;
   --color-card: #ffffff;
   --color-accent: #0f766e;
+  --color-accent-strong: #115e59;
   --color-map: #e7eef2;
   --color-map-data: #b7ebe3;
   --color-map-hover: #c5e6df;
@@ -17,6 +18,7 @@ body {
   background: var(--color-paper);
   color: var(--color-ink);
   font-family: var(--font-sans);
+  overflow-x: clip;
 }
 
 .us-map .us-state {
@@ -24,7 +26,6 @@ body {
   stroke: #ffffff;
   stroke-width: 1.25;
   cursor: pointer;
-  transition: fill 180ms ease;
 }
 
 .us-map .us-state.has-data {
@@ -48,11 +49,17 @@ body {
   stroke-width: 2;
 }
 
+.us-map .us-hit {
+  fill: transparent;
+  stroke: none;
+  cursor: pointer;
+}
+
 .us-map .us-label {
   fill: #334155;
   font-size: 13px;
   font-weight: 600;
-  pointer-events: none;
+  cursor: pointer;
   user-select: none;
 }
 
@@ -60,7 +67,7 @@ body {
   font-size: 11px;
 }
 
-.us-map .us-state[aria-pressed="true"] + .us-label {
+.us-map .us-label.is-selected {
   fill: #ffffff;
 }
 
@@ -77,35 +84,93 @@ body {
   fill: #334155;
   font-size: 14px;
   font-weight: 600;
+  cursor: pointer;
   user-select: none;
 }
 
-html.motion-ok .map-reveal {
-  opacity: 0;
-  transform: translateY(12px);
+.map-hero {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-top: -2rem;
 }
 
-html.motion-ok .map-reveal.is-shown {
-  opacity: 1;
-  transform: none;
-  transition: opacity 420ms ease, transform 420ms ease;
+.map-hero-grid {
+  display: grid;
+  align-items: stretch;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
+.map-stage {
+  display: flex;
+  flex-direction: column;
+  min-height: clamp(32rem, 78vh, 52rem);
+  background: var(--color-paper);
+}
+
+.map-canvas {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 24rem;
+}
+
+.map-canvas .us-map {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: manipulation;
+}
+
+.map-overlay {
+  position: relative;
+  z-index: 2;
+  margin: 0.75rem 0.75rem 0;
+  width: min(22rem, calc(100% - 1.5rem));
+  border: 1px solid var(--color-line);
+  border-radius: 0.75rem;
+  background: var(--color-card);
+  padding: 0.85rem 0.95rem 0.75rem;
+  box-shadow: 0 1px 2px rgb(15 23 42 / 6%);
+}
+
+.map-panel {
+  min-height: 0;
+  padding: 0 1rem 1rem;
+}
+
+.brand-link:hover {
+  background: var(--color-map);
+}
+
+.brand-link:hover .brand-name {
+  color: var(--color-accent);
+}
+
+.nav-control:hover {
+  border-color: #cbd5e1;
+  background: var(--color-map);
+  color: var(--color-accent);
+}
+
+.ask-entry:hover {
+  background: var(--color-accent-strong);
+}
+
+@media (min-width: 1024px) {
+  .map-hero-grid {
+    grid-template-columns: minmax(0, 1fr) 23.5rem;
+    min-height: calc(100svh - 4.5rem);
   }
 
-  html.motion-ok .map-reveal,
-  html.motion-ok .map-reveal.is-shown {
-    opacity: 1;
-    transform: none;
-    transition: none;
+  .map-stage {
+    min-height: calc(100svh - 4.5rem);
   }
-}
 
-@media (prefers-reduced-motion: no-preference) {
-  html {
-    scroll-behavior: smooth;
+  .map-canvas {
+    min-height: 0;
+  }
+
+  .map-panel {
+    padding: 0;
   }
 }
