@@ -13,6 +13,7 @@ import {
 } from "../data/view";
 import type { Filing, Race } from "../types";
 import { isResourceId } from "../api/ids";
+import { canonicalUrl, humanRaceTitle } from "./polish";
 import type { ChatSource } from "./types";
 
 const LIST_DEFAULT = 20;
@@ -370,12 +371,17 @@ async function listFilings(
     );
     const sources = [
       ...sourcesForCandidate(candidate, ctx.root),
-      ...filings.flatMap((filing) => sourcesForFiling(filing, ctx.root)),
+      ...filings.flatMap((filing) =>
+        sourcesForFiling(filing, candidate.displayName, ctx.root),
+      ),
     ];
     return ok(
       1 + filings.length,
       sources,
-      [candidateSnippet(candidate), ...filings.map(filingSnippet)],
+      [
+        candidateSnippet(candidate),
+        ...filings.map((filing) => filingSnippet(filing, candidate.displayName)),
+      ],
       { candidate, filings, sources: sources.slice(0, MAX_SOURCES) },
     );
   } catch (error) {
@@ -496,10 +502,11 @@ function coverageSnippet(row: {
 }
 
 function sourcesForRace(race: Race, root: string): ChatSource[] {
+  const title = humanRaceTitle(race);
   const sources = [
-    pageSource(race.title, `${root}/races/${encodeURIComponent(race.raceId)}`, race.updatedAt),
+    pageSource(title, `${root}/races/${encodeURIComponent(race.raceId)}`, race.updatedAt),
   ];
-  const fec = externalSource(race.title, race.sourceUrl, race.updatedAt);
+  const fec = externalSource(title, race.sourceUrl, race.updatedAt);
   if (fec) sources.push(fec);
   return sources;
 }
@@ -541,13 +548,14 @@ function sourcesForCandidate(
   return sources;
 }
 
-function sourcesForFiling(filing: Filing, root: string): ChatSource[] {
+function sourcesForFiling(filing: Filing, displayName: string, root: string): ChatSource[] {
   const asOf = filing.retrievedAt ?? filing.updatedAt ?? filing.fecLoadTimestamp;
-  const fec = externalSource(`Form 2 ${filing.filingId}`, filing.sourceUrl, asOf);
+  const title = `FEC Form 2 — ${displayName.trim() || "Candidate"}`;
+  const fec = externalSource(title, filing.sourceUrl, asOf);
   if (fec) return [fec];
   return [
     pageSource(
-      `Form 2 ${filing.filingId}`,
+      title,
       `${root}/candidates/${encodeURIComponent(filing.candidateId)}`,
       asOf,
     ),
@@ -575,8 +583,9 @@ function dedupeSources(sources: readonly ChatSource[]): ChatSource[] {
   const seen = new Set<string>();
   const unique: ChatSource[] = [];
   for (const source of sources) {
-    if (seen.has(source.url)) continue;
-    seen.add(source.url);
+    const key = canonicalUrl(source.url);
+    if (seen.has(key)) continue;
+    seen.add(key);
     unique.push(source);
   }
   return unique;
@@ -586,9 +595,8 @@ function chatRace(race: Race): Race & ReturnType<typeof contestAnnotation> {
   return { ...race, ...contestAnnotation(race) };
 }
 
-function raceSnippet(race: Race & { ballotNote?: string | null }): string {
-  const note = race.ballotNote ? ` ${race.ballotNote}` : "";
-  return `${race.title} (\`${race.raceId}\`).${note}`;
+function raceSnippet(race: Race): string {
+  return humanRaceTitle(race);
 }
 
 function candidateSnippet(candidate: PublicCandidate): string {
@@ -599,8 +607,8 @@ function candidateSnippet(candidate: PublicCandidate): string {
   return `${candidate.displayName} — ${party} (\`${candidate.candidateId}\`).${note}`;
 }
 
-function filingSnippet(filing: Filing): string {
-  return `Form 2 ${filing.filingId} for \`${filing.candidateId}\``;
+function filingSnippet(_filing: Filing, displayName: string): string {
+  return `FEC Form 2 — ${displayName.trim() || "Candidate"}`;
 }
 
 function matchesCandidate(candidate: PublicCandidate, needle: string): boolean {

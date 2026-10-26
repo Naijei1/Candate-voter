@@ -1,13 +1,15 @@
-import {
-  cycleCalendar,
-  isMidtermCycle,
-  isPresidentialElectionYear,
-  presidentialContestNote,
-} from "../data/calendar";
+import { cycleCalendar, leadSentences } from "../data/calendar";
 import { logReadError } from "../data/read";
 import { visibleRaces } from "../data/view";
 import type { Race } from "../types";
 import { cycleMentionedIn, stateMentionedIn } from "./intent";
+import {
+  ASK_PRESIDENTIAL_YEAR_SENTENCE,
+  ASK_STATE_SENTENCE,
+  FORM2_FILINGS_SENTENCE,
+  humanRaceTitle,
+  polishSources,
+} from "./polish";
 import type { ToolContext } from "./tools";
 import type { ChatAnswer, ChatRequest, ChatSource } from "./types";
 
@@ -26,12 +28,21 @@ export async function answerUpcoming(input: {
   const state = stateMentionedIn(input.request.message);
   try {
     const stored = visibleRaces(await input.ctx.repo.listRacesByCycle(cycle));
-    return renderUpcoming({
-      cycle,
-      state,
-      races: stored,
-      root: input.ctx.root,
-    });
+    let refreshedAt: string | null = null;
+    try {
+      refreshedAt = (await input.ctx.repo.getWatermark())?.updatedAt ?? null;
+    } catch (error) {
+      logReadError("getWatermark", error);
+    }
+    return {
+      ...renderUpcoming({
+        cycle,
+        state,
+        races: stored,
+        root: input.ctx.root,
+      }),
+      refreshedAt,
+    };
   } catch (error) {
     logReadError("listRacesByCycle", error);
     return { unavailable: true, message: "Stored records are unavailable." };
@@ -48,45 +59,33 @@ export function renderUpcoming(input: {
   const senate = filterOffice(input.races, "senate", input.state);
   const house = filterOffice(input.races, "house", input.state);
   const president = input.races.filter((race) => race.office === "president");
-  const paragraphs: string[] = [lead(input.cycle)];
-  paragraphs.push(
-    "Stored records are FEC Form 2 filings so far, not a full ballot.",
-  );
+  const paragraphs: string[] = [lead(input.cycle), FORM2_FILINGS_SENTENCE];
+  const mentioned: Race[] = [];
 
   if (input.state) {
     paragraphs.push(stateFilings(input.cycle, input.state, senate, house));
+    mentioned.push(...senate.slice(0, LIST_CAP), ...house.slice(0, LIST_CAP));
   } else if (calendar.presidentialGeneralElection) {
-    paragraphs.push(
-      "Ask for a state to list Senate and House filings. In a presidential year, one national presidential contest is the presidential race when Form 2 filings are stored.",
-    );
+    paragraphs.push(ASK_PRESIDENTIAL_YEAR_SENTENCE);
   } else {
-    paragraphs.push("Ask for a state to list the stored Senate and House filings.");
+    paragraphs.push(ASK_STATE_SENTENCE);
   }
 
-  const cited: Race[] = [];
-  if (calendar.presidentialGeneralElection) {
-    cited.push(...president, ...senate.slice(0, LIST_CAP), ...house.slice(0, LIST_CAP));
-  } else {
-    cited.push(...senate.slice(0, LIST_CAP), ...house.slice(0, LIST_CAP));
+  const presidential = president[0];
+  if (presidential && !calendar.presidentialGeneralElection) {
+    paragraphs.push(outOfCycleParagraph(presidential));
+    mentioned.push(presidential);
+  } else if (presidential && calendar.presidentialGeneralElection) {
+    paragraphs.push(`**${humanRaceTitle(presidential)}** are stored for the presidential contest.`);
+    mentioned.push(presidential);
   }
 
-  if (president.length > 0 && !calendar.presidentialGeneralElection) {
-    const race = president[0];
-    if (race) {
-      paragraphs.push(outOfCycleParagraph(input.cycle, race));
-      cited.push(race);
-    }
-  } else if (president.length > 0 && calendar.presidentialGeneralElection) {
-    const race = president[0];
-    if (race) {
-      paragraphs.push(`Presidential filings for ${input.cycle} are stored as \`${race.raceId}\`.`);
-    }
-  }
-
-  const sources = cited.flatMap((race) => sourcesForRace(race, input.root)).slice(0, 8);
+  const sources = polishSources(
+    mentioned.flatMap((race) => sourcesForRace(race, input.root)),
+  ).slice(0, 8);
   return {
     answer_markdown: paragraphs.join("\n\n"),
-    sources: dedupeSources(sources),
+    sources,
     refused: false,
     mode: "factual",
   };
@@ -105,13 +104,10 @@ function resolveCycle(request: ChatRequest, now: Date): number {
 }
 
 function lead(cycle: number): string {
-  if (isMidtermCycle(cycle)) {
-    return `**${cycle} is a midterm year.** Federal contests on the ballot are U.S. Senate and U.S. House. There is no presidential general election.`;
-  }
-  if (!isPresidentialElectionYear(cycle)) {
-    return `**${cycle} is not a presidential election year.** There is no presidential general election. Federal contests that can appear are U.S. Senate and U.S. House, including special elections when a filing uses this year.`;
-  }
-  return `**${cycle} is a presidential election year.** Federal contests on the ballot are President, U.S. Senate, and U.S. House.`;
+  const [first, ...rest] = leadSentences(cycle);
+  if (!first) return "";
+  const bold = `**${first.slice(0, -1)}.**`;
+  return [bold, ...rest].join(" ");
 }
 
 function stateFilings(
@@ -134,15 +130,14 @@ function stateFilings(
 }
 
 function bulletRaces(races: readonly Race[]): string[] {
-  const shown = races.slice(0, LIST_CAP).map((race) => `- ${race.title} (\`${race.raceId}\`)`);
+  const shown = races.slice(0, LIST_CAP).map((race) => `- ${humanRaceTitle(race)}`);
   const extra = races.length - shown.length;
   if (extra > 0) shown.push(`- ${extra} more House or Senate race${extra === 1 ? "" : "s"} are stored.`);
   return shown;
 }
 
-function outOfCycleParagraph(cycle: number, race: Race): string {
-  const note = presidentialContestNote(cycle);
-  return `A stored race \`${race.raceId}\` (${race.title}) is an early or out-of-cycle presidential Form 2 filing. ${note ?? "It is not the general election."}`;
+function outOfCycleParagraph(race: Race): string {
+  return `**${humanRaceTitle(race)}** are stored as an early or out-of-cycle Form 2 filing, not the general election.`;
 }
 
 function filterOffice(races: readonly Race[], office: Race["office"], state: string | null): Race[] {
@@ -153,26 +148,16 @@ function filterOffice(races: readonly Race[], office: Race["office"], state: str
 
 function sourcesForRace(race: Race, root: string): ChatSource[] {
   const asOf = race.updatedAt?.trim() || "unknown";
+  const title = humanRaceTitle(race);
   const sources: ChatSource[] = [
     {
-      title: race.title.trim() || "Candate record",
+      title,
       url: `${root}/races/${encodeURIComponent(race.raceId)}`,
       as_of: asOf,
     },
   ];
   if (race.sourceUrl && /^https:\/\//i.test(race.sourceUrl)) {
-    sources.push({ title: race.title.trim() || "FEC source", url: race.sourceUrl, as_of: asOf });
+    sources.push({ title, url: race.sourceUrl, as_of: asOf });
   }
   return sources;
-}
-
-function dedupeSources(sources: readonly ChatSource[]): ChatSource[] {
-  const seen = new Set<string>();
-  const unique: ChatSource[] = [];
-  for (const source of sources) {
-    if (seen.has(source.url)) continue;
-    seen.add(source.url);
-    unique.push(source);
-  }
-  return unique;
 }

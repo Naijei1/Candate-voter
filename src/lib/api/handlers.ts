@@ -71,6 +71,7 @@ export async function getRaces(request: Request, deps: ApiDeps): Promise<Respons
       cycles: parsed.query.cycles,
       races: page.races,
       nextCursor: page.nextCursor,
+      refreshedAt,
       coverage: {
         scope: FORM2_SCOPE,
         filingsSoFarOnly: true,
@@ -109,6 +110,7 @@ export async function getRace(
     return json({
       race,
       candidates,
+      refreshedAt,
       coverage: {
         scope: FORM2_SCOPE,
         filingsSoFarOnly: true,

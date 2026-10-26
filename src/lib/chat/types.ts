@@ -14,6 +14,11 @@ export type ChatAnswer = {
   refused: boolean;
   /** Lets the page show a disclaimer. Omitted only by older clients' requests. */
   mode?: ChatMode;
+  /**
+   * Ingest cursor write time, same ISO value as race and index `refreshedAt`.
+   * Null when no cursor is stored. Omitted when this answer did not read it.
+   */
+  refreshedAt?: string | null;
 };
 
 export type ChatRequest = {

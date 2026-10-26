@@ -33,6 +33,28 @@ export type CycleCalendar = {
   note: string | null;
 };
 
+/** Visitor-facing calendar sentences. The first sentence is the year framing. */
+export function leadSentences(cycle: number): string[] {
+  if (isMidtermCycle(cycle)) {
+    return [
+      `${cycle} is a midterm year.`,
+      "Federal contests on the ballot are U.S. Senate and U.S. House.",
+      "There is no presidential general election.",
+    ];
+  }
+  if (!isPresidentialElectionYear(cycle)) {
+    return [
+      `${cycle} is not a presidential election year.`,
+      "There is no presidential general election.",
+      "Federal contests that can appear are U.S. Senate and U.S. House, including special elections when a filing uses this year.",
+    ];
+  }
+  return [
+    `${cycle} is a presidential election year.`,
+    "Federal contests on the ballot are President, U.S. Senate, and U.S. House.",
+  ];
+}
+
 export function cycleCalendar(cycle: number): CycleCalendar {
   const presidentialGeneralElection = isPresidentialElectionYear(cycle);
   return {

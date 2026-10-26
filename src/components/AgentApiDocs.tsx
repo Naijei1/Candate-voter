@@ -86,9 +86,12 @@ export function AgentApiDocs({ origin, basePath, freshness }: AgentApiDocsProps)
         </ul>
         <p className="max-w-2xl text-base leading-7 text-muted">
           Records are FEC Form 2 electronic filings only, not a full ballot.
-          Race list and race detail responses include <code>coverage.house</code>{" "}
-          (<code>districtsWithFilings</code> of <code>districtsTotal</code>) and{" "}
-          <code>refreshedAt</code>. <code>GET /api/v1/freshness</code> repeats
+          Race list (the index, and a state filter) and race detail include
+          top-level <code>refreshedAt</code> for the page-level data-refreshed
+          banner. It is the ISO-8601 ingest cursor time, or null, and{" "}
+          <code>coverage.refreshedAt</code> is the same value.{" "}
+          <code>coverage.house</code> is <code>districtsWithFilings</code> of{" "}
+          <code>districtsTotal</code>. <code>GET /api/v1/freshness</code> repeats
           that scope and the ingest watermark. Chat asks which state or race
           when “who is running” has no contest. It soft-refuses voting advice.
           An explicit viewpoint question sets <code>mode</code> to{" "}

@@ -15,12 +15,13 @@ import {
   isUpcomingElectionsQuestion,
   needsRaceClarification,
 } from "./intent";
+import { polishChatAnswer } from "./polish";
 import { answerUpcoming } from "./upcoming";
 import { isVotingAdvice, VOTING_ADVICE_MARKDOWN } from "./prompt";
 import { clientAddress, createRateLimiter, type RateLimiter } from "./rate-limit";
 import { parseChatRequest } from "./request";
 import { ChatUnavailableError, runGroundedChat } from "./run";
-import type { ConverseFn } from "./types";
+import type { ChatAnswer, ConverseFn } from "./types";
 import type { ApiRepository } from "../api/deps";
 
 export type ChatDeps = {
@@ -85,25 +86,35 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
   const threadId = parsed.value.threadId ?? randomUUID();
   if (isVotingAdvice(parsed.value.message)) {
     logOutcome({ refused: true, tools: [], latencyMs: Date.now() - started, mode: "factual" });
-    return json({
-      answer_markdown: VOTING_ADVICE_MARKDOWN,
-      sources: [],
-      refused: true,
-      mode: "factual",
-      threadId,
-    });
+    return json(
+      chatBody(
+        {
+          answer_markdown: VOTING_ADVICE_MARKDOWN,
+          sources: [],
+          refused: true,
+          mode: "factual",
+        },
+        threadId,
+        parsed.value.message,
+      ),
+    );
   }
 
   if (isAlignmentRequest(parsed.value.message)) {
     if (!alignmentEnabled(deps.env)) {
       logOutcome({ refused: true, tools: [], latencyMs: Date.now() - started, mode: "factual" });
-      return json({
-        answer_markdown: ALIGNMENT_DISABLED_MARKDOWN,
-        sources: [],
-        refused: true,
-        mode: "factual",
-        threadId,
-      });
+      return json(
+        chatBody(
+          {
+            answer_markdown: ALIGNMENT_DISABLED_MARKDOWN,
+            sources: [],
+            refused: true,
+            mode: "factual",
+          },
+          threadId,
+          parsed.value.message,
+        ),
+      );
     }
     const siteRoot =
       deps.siteRoot ?? `${originFromRequest(request)}${basePathFromEnv(deps.env)}`;
@@ -126,13 +137,7 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
         latencyMs: Date.now() - started,
         mode: "alignment",
       });
-      return json({
-        answer_markdown: answer.answer_markdown,
-        sources: answer.sources,
-        refused: answer.refused,
-        mode: "alignment",
-        threadId,
-      });
+      return json(chatBody(answer, threadId, parsed.value.message));
     } catch (error) {
       const name = error instanceof Error ? error.name : "Error";
       console.error(`Alignment lookup failed: ${name}`);
@@ -162,13 +167,7 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
         latencyMs: Date.now() - started,
         mode: "factual",
       });
-      return json({
-        answer_markdown: answer.answer_markdown,
-        sources: answer.sources,
-        refused: answer.refused,
-        mode: "factual",
-        threadId,
-      });
+      return json(chatBody(answer, threadId, parsed.value.message));
     } catch (error) {
       const name = error instanceof Error ? error.name : "Error";
       console.error(`Upcoming lookup failed: ${name}`);
@@ -178,13 +177,18 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
 
   if (needsRaceClarification(parsed.value)) {
     logOutcome({ refused: false, tools: [], latencyMs: Date.now() - started, mode: "factual" });
-    return json({
-      answer_markdown: CLARIFY_RACE_MARKDOWN,
-      sources: [],
-      refused: false,
-      mode: "factual",
-      threadId,
-    });
+    return json(
+      chatBody(
+        {
+          answer_markdown: CLARIFY_RACE_MARKDOWN,
+          sources: [],
+          refused: false,
+          mode: "factual",
+        },
+        threadId,
+        parsed.value.message,
+      ),
+    );
   }
 
   const siteRoot =
@@ -210,13 +214,7 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
       inputTokens: answer.usage.inputTokens,
       outputTokens: answer.usage.outputTokens,
     });
-    return json({
-      answer_markdown: answer.answer_markdown,
-      sources: answer.sources,
-      refused: answer.refused,
-      mode: answer.mode ?? "factual",
-      threadId,
-    });
+    return json(chatBody(answer, threadId, parsed.value.message));
   } catch (error) {
     const message =
       error instanceof ChatUnavailableError
@@ -228,6 +226,18 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
     }
     return json({ error: "unavailable", message }, 503);
   }
+}
+
+function chatBody(answer: ChatAnswer, threadId: string, priorMessage: string) {
+  const polished = polishChatAnswer(answer, priorMessage);
+  return {
+    answer_markdown: polished.answer_markdown,
+    sources: polished.sources,
+    refused: polished.refused,
+    mode: polished.mode ?? "factual",
+    threadId,
+    ...(polished.refreshedAt !== undefined ? { refreshedAt: polished.refreshedAt } : {}),
+  };
 }
 
 function logOutcome(fields: Record<string, unknown>): void {

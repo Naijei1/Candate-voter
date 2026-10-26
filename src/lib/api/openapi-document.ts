@@ -6,7 +6,7 @@
 export const OPENAPI_DOCUMENT = `openapi: 3.0.3
 info:
   title: Candate read API
-  version: "1.1.0"
+  version: "1.2.0"
   description: |
     Read-only JSON for federal races, candidates, Form 2 filings, and the
     FEC electronic Form 2 ingest watermark stored in DynamoDB \`candate-voter\`.
@@ -41,8 +41,12 @@ paths:
         Returns races for one election year, or for the public index window
         when \`cycle\` is omitted (the previous UTC year through six years
         ahead, or \`CANDATE_CYCLES\` when that is set). Filter further with
-        \`state\` and \`office\`. Pages are ordered by \`raceId\`. Pass
-        \`nextCursor\` back as \`cursor\` to read the next page.
+        \`state\` and \`office\`. A \`state\` query is the state payload.
+        Pages are ordered by \`raceId\`. Pass \`nextCursor\` back as
+        \`cursor\` to read the next page.
+        Top-level \`refreshedAt\` is the ISO-8601 ingest cursor write time
+        for the page-level data-refreshed banner. It is null when no cursor
+        is stored. \`coverage.refreshedAt\` is the same timestamp.
       parameters:
         - $ref: "#/components/parameters/cycle"
         - $ref: "#/components/parameters/state"
@@ -69,6 +73,7 @@ paths:
                     jurisdiction: California
                     sourceUrl: "https://www.fec.gov/data/elections/senate/CA/2026/"
                     updatedAt: "2026-10-26T05:00:00.000Z"
+                refreshedAt: "2026-10-26T05:00:00.000Z"
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
@@ -80,6 +85,10 @@ paths:
       tags: [races]
       operationId: getRace
       summary: Get one race and its candidates
+      description: |
+        Top-level \`refreshedAt\` is the ISO-8601 ingest cursor write time
+        for the page-level data-refreshed banner on this race. It is null
+        when no cursor is stored. \`coverage.refreshedAt\` is the same timestamp.
       parameters:
         - $ref: "#/components/parameters/raceId"
       responses:
@@ -191,6 +200,11 @@ paths:
         The stored rows are Form 2 filings, so alignment says when votes and
         position statements are not in the table. \`threadId\` is echoed or
         minted for the client. This spike does not store the thread.
+        \`answer_markdown\` names races by title (for example "U.S. Senate, Kentucky"
+        or "2026 U.S. presidential filings") and does not include race ids.
+        \`sources[].title\` is a human label, not a race id or filing key.
+        Optional \`refreshedAt\` is the same ISO timestamp as the race payloads
+        when the answer read the ingest cursor.
       requestBody:
         required: true
         content:
@@ -605,7 +619,10 @@ components:
           description: ISO-8601 time this system last wrote the cursor.
     RaceList:
       type: object
-      required: [cycles, races, nextCursor]
+      required: [cycles, races, nextCursor, refreshedAt]
+      description: |
+        Race index. The same schema is the state payload when \`state\` is set.
+        \`refreshedAt\` is the page-level data-refreshed value.
       properties:
         cycles:
           type: array
@@ -618,14 +635,30 @@ components:
         nextCursor:
           type: string
           nullable: true
+        refreshedAt:
+          type: string
+          nullable: true
+          format: date-time
+          description: |
+            ISO-8601 ingest cursor write time (\`watermark.updatedAt\`), or null.
+            Page-level data-refreshed banner for the race index and for a state
+            filter on this route. Same value as \`coverage.refreshedAt\`.
         coverage:
           $ref: "#/components/schemas/Coverage"
     RaceDetail:
       type: object
-      required: [race, candidates]
+      required: [race, candidates, refreshedAt]
       properties:
         race:
           $ref: "#/components/schemas/Race"
+        refreshedAt:
+          type: string
+          nullable: true
+          format: date-time
+          description: |
+            ISO-8601 ingest cursor write time (\`watermark.updatedAt\`), or null.
+            Page-level data-refreshed banner for this race. Same value as
+            \`coverage.refreshedAt\`.
         candidates:
           type: array
           description: Alphabetical by display name. Party is not a sort key. Placeholder n/a names are omitted. Rows that share a normalized name on this race collapse to one display row. multiFilingNote names each party once and lists the other FEC ids. alternateFilings keeps those source links.
@@ -672,7 +705,11 @@ components:
         refreshedAt:
           type: string
           nullable: true
-          description: ISO-8601 time the ingest cursor was last written. Null when watermark is null.
+          format: date-time
+          description: |
+            ISO-8601 time the ingest cursor was last written. Null when watermark
+            is null. Same field the race index, state filter, and race detail
+            expose at the top level.
     Coverage:
       type: object
       required: [scope, filingsSoFarOnly, scopeNote, refreshedAt, house]
@@ -687,6 +724,10 @@ components:
         refreshedAt:
           type: string
           nullable: true
+          format: date-time
+          description: |
+            Same ISO-8601 ingest cursor time as the parent payload's top-level
+            \`refreshedAt\`. Null when no cursor is stored.
         house:
           type: array
           description: |
@@ -732,6 +773,9 @@ components:
       properties:
         title:
           type: string
+          description: |
+            Human label, such as a race title or "FEC Form 2 — Candidate Name".
+            Not a race id, candidate id, or filing key.
         url:
           type: string
         as_of:
@@ -758,6 +802,14 @@ components:
             question. The page can show a disclaimer when mode is alignment.
             Alignment does not recommend a vote. If the table has no position
             or vote fields, the answer says so.
+        refreshedAt:
+          type: string
+          nullable: true
+          format: date-time
+          description: |
+            ISO-8601 ingest cursor write time when this answer read it.
+            Same value as race, state, and index \`refreshedAt\`. Null when no
+            cursor is stored. Omitted for refusals that do not read the table.
         threadId:
           type: string
 `;
