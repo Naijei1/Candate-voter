@@ -1,7 +1,15 @@
 "use client";
 
 // Classic JSX runtime for `node --import tsx --test`. Next compiles this with the automatic runtime.
-import React, { memo, useCallback, useEffect, useState, type KeyboardEvent, type MouseEvent } from "react";
+import React, {
+  memo,
+  useCallback,
+  useEffect,
+  useState,
+  type KeyboardEvent,
+  type MouseEvent,
+  type PointerEvent,
+} from "react";
 import { isPostalState, stateName } from "@/lib/data/states";
 import { DC_CALLOUT } from "@/lib/geo/dc-label";
 import { US_MAP_VIEW, US_STATE_SHAPES, type UsStateShape } from "@/lib/geo/us-states";
@@ -75,23 +83,36 @@ export function UsMap({
     [mapId, onSelect],
   );
 
+  function onMapPointerDown(event: PointerEvent<SVGSVGElement>) {
+    if (event.pointerType !== "mouse" && event.pointerType !== "pen") return;
+    // Mouse and pen would focus the path and draw a rectangular ring.
+    // Keyboard focus still arrives through Tab and the arrow keys.
+    event.preventDefault();
+    blurMapFocus(event.currentTarget);
+  }
+
   function onMapClick(event: MouseEvent<SVGSVGElement>) {
+    const svg = event.currentTarget;
     const target = event.target;
+    const choose = (postal: string) => {
+      onSelect(postal);
+      blurMapFocus(svg);
+    };
     if (target instanceof SVGElement && target.classList.contains("us-hit")) {
       const postal = postalFromTarget(target);
       if (postal) {
-        onSelect(postal);
+        choose(postal);
         return;
       }
     }
-    const geometric = smallestShapeAt(event.currentTarget, event.clientX, event.clientY, mapId);
+    const geometric = smallestShapeAt(svg, event.clientX, event.clientY, mapId);
     if (geometric) {
-      onSelect(geometric);
+      choose(geometric);
       return;
     }
     if (target instanceof SVGTextElement) {
       const postal = postalFromTarget(target);
-      if (postal) onSelect(postal);
+      if (postal) choose(postal);
     }
   }
 
@@ -101,6 +122,7 @@ export function UsMap({
       className="us-map h-full w-full"
       role="group"
       aria-label={`${label} Arrow keys move between states. Enter selects.`}
+      onPointerDown={onMapPointerDown}
       onClick={onMapClick}
     >
       {US_STATE_SHAPES.map((shape) => (
@@ -237,6 +259,11 @@ function smallestShapeAt(svg: SVGSVGElement, clientX: number, clientY: number, m
     }
   }
   return bestPostal;
+}
+
+function blurMapFocus(svg: SVGSVGElement) {
+  const active = document.activeElement;
+  if (active instanceof SVGElement && svg.contains(active)) active.blur();
 }
 
 function postalFromTarget(target: EventTarget | null): string | null {

@@ -26,6 +26,8 @@ body {
   stroke: #ffffff;
   stroke-width: 1.25;
   cursor: pointer;
+  outline: none;
+  box-shadow: none;
 }
 
 .us-map .us-state.has-data {
@@ -39,14 +41,25 @@ body {
 
 .us-map .us-state[aria-pressed="true"],
 .us-map .us-state[aria-pressed="true"]:hover,
+.us-map .us-state[aria-pressed="true"]:focus,
 .us-map .us-state[aria-pressed="true"]:focus-visible {
   fill: var(--color-accent);
 }
 
-.us-map .us-state:focus-visible {
+/* SVG path focus is a rectangle around the bounding box. :focus-visible
+   alone misses click focus and Firefox's :-moz-focusring (Tailwind sets
+   outline: auto there). Selection stays a fill change. */
+.us-map:focus,
+.us-map:focus-visible,
+.us-map .us-state:focus,
+.us-map .us-state:focus-visible,
+.us-map .us-state:-moz-focusring,
+.us-map .us-hit:focus,
+.us-map .us-hit:focus-visible,
+.us-map .us-hit:-moz-focusring {
   outline: none;
-  stroke: var(--color-ink);
-  stroke-width: 2;
+  outline-offset: 0;
+  box-shadow: none;
 }
 
 .us-map .us-hit {
