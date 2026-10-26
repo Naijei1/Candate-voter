@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { cycleCalendar, isMidtermCycle, isPresidentialElectionYear } from "../src/lib/data/calendar";
 import {
   cyclesFromEnv,
   defaultCycles,
@@ -47,4 +48,18 @@ test("formatCycleList collapses a contiguous span", () => {
   assert.equal(formatCycleList([2026]), "2026");
   assert.equal(formatCycleList([2028, 2026, 2027]), "2026–2028");
   assert.equal(formatCycleList([2026, 2028]), "2026, 2028");
+});
+
+test("midterm cycles have no presidential general election", () => {
+  assert.equal(isPresidentialElectionYear(2028), true);
+  assert.equal(isPresidentialElectionYear(2024), true);
+  assert.equal(isMidtermCycle(2026), true);
+  assert.equal(isMidtermCycle(2022), true);
+  assert.equal(isMidtermCycle(2028), false);
+  assert.equal(isMidtermCycle(2025), false);
+  assert.deepEqual(cycleCalendar(2026).onBallot, ["senate", "house"]);
+  assert.equal(cycleCalendar(2026).presidentialGeneralElection, false);
+  assert.match(cycleCalendar(2026).note ?? "", /out-of-cycle/);
+  assert.deepEqual(cycleCalendar(2028).onBallot, ["president", "senate", "house"]);
+  assert.equal(cycleCalendar(2028).note, null);
 });

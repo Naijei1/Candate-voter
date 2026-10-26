@@ -1,7 +1,7 @@
 "use server";
 
+import { displayedPartyLabels } from "@/lib/data/view";
 import { logReadError, readCandidatesForRace } from "@/lib/data/read";
-import { presentCandidate } from "@/lib/data/view";
 import { parseRaceIds } from "@/lib/landing";
 
 export type CandidatePreview = {
@@ -11,6 +11,9 @@ export type CandidatePreview = {
   partyCode: string | null;
   /** Stored label when the filing has one; otherwise the FEC code map or the raw code. */
   partyLabel: string;
+  /** Distinct affiliation labels, keeper first. */
+  partyLabels: string[];
+  multiFilingNote: string | null;
   sourceUrl: string | null;
   updatedAt: string | null;
 };
@@ -36,21 +39,17 @@ export async function loadCandidatesForRaces(
         const candidates = await readCandidatesForRace(raceId);
         return {
           raceId,
-          candidates: candidates.flatMap((candidate) => {
-            const presented = presentCandidate(candidate);
-            if (!presented) return [];
-            return [
-              {
-                candidateId: presented.candidateId,
-                displayName: presented.displayName,
-                partyAffiliation: presented.partyAffiliation,
-                partyCode: presented.partyCode,
-                partyLabel: presented.partyLabel,
-                sourceUrl: presented.sourceUrl,
-                updatedAt: presented.updatedAt,
-              },
-            ];
-          }),
+          candidates: candidates.map((candidate) => ({
+            candidateId: candidate.candidateId,
+            displayName: candidate.displayName,
+            partyAffiliation: candidate.partyAffiliation,
+            partyCode: candidate.partyCode,
+            partyLabel: candidate.partyLabel,
+            partyLabels: displayedPartyLabels(candidate),
+            multiFilingNote: candidate.multiFilingNote,
+            sourceUrl: candidate.sourceUrl,
+            updatedAt: candidate.updatedAt,
+          })),
         };
       } catch (error) {
         logReadError("listCandidatesForRace", error);

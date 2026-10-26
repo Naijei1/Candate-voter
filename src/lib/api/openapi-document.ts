@@ -444,6 +444,8 @@ components:
         - sourceUrl
         - sourceLoadedAt
         - updatedAt
+        - alternateFilings
+        - multiFilingNote
       properties:
         candidateId:
           type: string
@@ -481,6 +483,40 @@ components:
         updatedAt:
           type: string
           nullable: true
+        alternateFilings:
+          type: array
+          description: Other FEC candidate ids for the same normalized name on this race. Empty when this row is the only filing. Race lists include them. A direct candidate lookup is the stored row and leaves this empty.
+          items:
+            type: object
+            required:
+              - candidateId
+              - fecCandidateId
+              - partyAffiliation
+              - partyCode
+              - partyLabel
+              - sourceUrl
+            properties:
+              candidateId:
+                type: string
+              fecCandidateId:
+                type: string
+                nullable: true
+              partyAffiliation:
+                type: string
+                nullable: true
+              partyCode:
+                type: string
+                nullable: true
+              partyLabel:
+                type: string
+              sourceUrl:
+                type: string
+                nullable: true
+                format: uri
+        multiFilingNote:
+          type: string
+          nullable: true
+          description: Short note when the same person has more than one FEC id on this race. Each party is named once, with the FEC ids that reported it. Null for a single filing.
     Filing:
       type: object
       required:
@@ -592,7 +628,7 @@ components:
           $ref: "#/components/schemas/Race"
         candidates:
           type: array
-          description: Alphabetical by display name. Party is not a sort key. Placeholder n/a names are omitted. Presidential rows that share a normalized name are collapsed.
+          description: Alphabetical by display name. Party is not a sort key. Placeholder n/a names are omitted. Rows that share a normalized name on this race collapse to one display row. multiFilingNote names each party once and lists the other FEC ids. alternateFilings keeps those source links.
           items:
             $ref: "#/components/schemas/Candidate"
         coverage:

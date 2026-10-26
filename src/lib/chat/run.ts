@@ -34,6 +34,7 @@ export async function runGroundedChat(input: {
   ];
   const grounded = idsIn(prompt);
   const sources: ChatSource[] = [];
+  const recordUrls = new Set<string>();
   const snippets: string[] = [];
   const toolNames: string[] = [];
   let records = 0;
@@ -71,6 +72,7 @@ export async function runGroundedChat(input: {
           modelText: textOf(response.message),
           toolRecords: records,
           toolSources: sources,
+          recordUrls: [...recordUrls],
           snippets,
           groundedText: [...grounded].join(" "),
           toolsCalled,
@@ -103,6 +105,7 @@ export async function runGroundedChat(input: {
       }
       snippets.push(...executed.snippets);
       for (const id of idsIn(JSON.stringify(executed.content))) grounded.add(id);
+      collectRecordUrls(executed.content, recordUrls);
       results.push({
         toolResult: {
           toolUseId: call.toolUseId,
@@ -115,6 +118,25 @@ export async function runGroundedChat(input: {
   }
 
   throw new ChatUnavailableError("The model did not finish.");
+}
+
+function collectRecordUrls(value: unknown, into: Set<string>): void {
+  if (!value || typeof value !== "object") return;
+  if (Array.isArray(value)) {
+    for (const item of value) collectRecordUrls(item, into);
+    return;
+  }
+  for (const [key, child] of Object.entries(value as Record<string, unknown>)) {
+    if (
+      (key === "sourceUrl" || key === "url") &&
+      typeof child === "string" &&
+      /^https:\/\//i.test(child)
+    ) {
+      into.add(child);
+      continue;
+    }
+    collectRecordUrls(child, into);
+  }
 }
 
 function withoutVoteAdvice<T extends { answer_markdown: string; sources: ChatAnswer["sources"]; refused: boolean }>(

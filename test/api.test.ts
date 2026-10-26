@@ -357,6 +357,8 @@ test("race, candidate, and filing routes return stored shapes", async () => {
     ],
   );
   assert.equal(raceBody.coverage.filingsSoFarOnly, true);
+  assert.equal(raceBody.candidates[0].multiFilingNote, null);
+  assert.deepEqual(raceBody.candidates[0].alternateFilings, []);
 
   const missingRace = await getRace(
     authed("https://voter.example/api/v1/races/2026-senate-WY"),

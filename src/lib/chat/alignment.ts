@@ -72,7 +72,8 @@ function fromTool(
     const party = candidate.partyCode
       ? `${candidate.partyLabel} (${candidate.partyCode})`
       : candidate.partyLabel;
-    return `- **${candidate.displayName}** — ${party}`;
+    const note = candidate.multiFilingNote ? ` ${candidate.multiFilingNote}` : "";
+    return `- **${candidate.displayName}** — ${party}.${note}`;
   });
   const extra = candidates.length - lines.length;
   const heading = title ? `**Filings on file for ${title}:**` : "**Filings on file:**";

@@ -7,10 +7,12 @@ import { StorageNotice } from "@/components/StorageNotice";
 import {
   logReadError,
   readCandidate,
+  readCandidatesForRace,
   readFilingsForCandidate,
   readRace,
 } from "@/lib/data/read";
-import { fecCandidateLabel, partyLabel } from "@/lib/format";
+import type { PublicCandidate } from "@/lib/data/view";
+import { fecCandidateLabel, httpsUrl, partyLabel } from "@/lib/format";
 import type { Candidate, Filing, Race } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -47,9 +49,10 @@ export default async function CandidatePage({ params }: CandidatePageProps) {
   if (!loaded.candidate) notFound();
 
   const candidate = loaded.candidate;
-  const [race, filings] = await Promise.all([
+  const [race, filings, group] = await Promise.all([
     loadRace(candidate.raceId),
     loadFilings(candidate.candidateId),
+    loadGroup(candidate.raceId, candidate.candidateId),
   ]);
   const filedName = nameAsFiled(candidate);
 
@@ -79,6 +82,7 @@ export default async function CandidatePage({ params }: CandidatePageProps) {
         {filedName ? (
           <p className="text-sm text-muted">Name as filed: {filedName}</p>
         ) : null}
+        <FilingGroupNote candidateId={candidate.candidateId} group={group} />
         <RecordMeta sourceUrl={candidate.sourceUrl} updatedAt={candidate.updatedAt} />
       </header>
       <section aria-labelledby="filings-heading" className="space-y-2">
@@ -155,6 +159,67 @@ function FilingRow({ filing }: { filing: Filing }) {
       />
     </li>
   );
+}
+
+function FilingGroupNote({
+  candidateId,
+  group,
+}: {
+  candidateId: string;
+  group: PublicCandidate | null;
+}) {
+  if (!group?.multiFilingNote) return null;
+  const onKeeper = group.candidateId === candidateId;
+  return (
+    <div className="space-y-1 text-sm leading-6 text-muted">
+      {onKeeper ? null : (
+        <p>
+          This FEC id is one filing for this name. The race list keeps a single row on{" "}
+          <Link
+            href={`/candidates/${group.candidateId}`}
+            className="text-accent underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
+          >
+            {group.candidateId}
+          </Link>
+          .
+        </p>
+      )}
+      <p>{group.multiFilingNote}</p>
+      {group.alternateFilings.map((alternate) => {
+        const href = httpsUrl(alternate.sourceUrl);
+        if (!href || alternate.candidateId === candidateId) return null;
+        return (
+          <p key={alternate.candidateId}>
+            <a
+              href={href}
+              className="text-accent underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
+            >
+              {alternate.partyLabel} {alternate.fecCandidateId ?? alternate.candidateId}
+            </a>
+          </p>
+        );
+      })}
+    </div>
+  );
+}
+
+async function loadGroup(
+  raceId: string,
+  candidateId: string,
+): Promise<PublicCandidate | null> {
+  try {
+    const listed = await readCandidatesForRace(raceId);
+    return (
+      listed.find(
+        (row) =>
+          row.candidateId === candidateId ||
+          row.alternateFilings.some((alternate) => alternate.candidateId === candidateId),
+      ) ?? null
+    );
+  } catch (error) {
+    logReadError("listCandidatesForRace", error);
+    return null;
+  }
 }
 
 function nameAsFiled(candidate: Candidate): string | null {

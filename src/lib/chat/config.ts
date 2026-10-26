@@ -9,7 +9,7 @@ export const DEFAULT_HAIKU_MODEL_ID = "us.anthropic.claude-haiku-5-5";
 /** Optional quality model. Same profile rule as Haiku. */
 export const DEFAULT_SONNET_MODEL_ID = "us.anthropic.claude-sonnet-5-5";
 
-export const CHAT_PROMPT_VERSION = "2026-10-26.2";
+export const CHAT_PROMPT_VERSION = "2026-10-26.3";
 
 const DEFAULT_RATE_LIMIT = 20;
 const DEFAULT_RATE_WINDOW_SECONDS = 60;

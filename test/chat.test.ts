@@ -464,6 +464,8 @@ test("Haiku 5.5 is the default Bedrock model and Sonnet is opt-in", () => {
   assert.match(CHAT_SYSTEM_PROMPT, /nonpartisan/i);
   assert.match(CHAT_SYSTEM_PROMPT, /voting advice/i);
   assert.match(CHAT_SYSTEM_PROMPT, /Never invent/i);
+  assert.match(CHAT_SYSTEM_PROMPT, /midterm/i);
+  assert.match(CHAT_SYSTEM_PROMPT, /out-of-cycle/i);
 });
 
 test("Amplify env copy includes chat settings and not a public model key", () => {
@@ -491,12 +493,16 @@ test("openapi, llms.txt, and /agent document the browser chat route", () => {
   assert.match(chat, /mode:/);
   assert.match(spec, /alignment/);
   assert.match(spec, /partyLabel/);
+  assert.match(spec, /multiFilingNote/);
+  assert.match(spec, /alternateFilings/);
   assert.match(spec, /districtsWithFilings/);
   assert.equal(spec.includes("FEC_API_KEY"), false);
 
   const text = llmsText({ origin: "https://voter.example", basePath: "" });
   assert.match(text, /POST https:\/\/voter\.example\/api\/chat/);
   assert.match(text, /does not use the API key/);
+  assert.match(text, /multiFilingNote/);
+  assert.match(text, /out-of-cycle/);
 
   const html = renderToStaticMarkup(
     createElement(AgentApiDocs, {
@@ -663,4 +669,94 @@ test("alignment without a race still refuses to invent positions", async () => {
   assert.match(payload.answer_markdown, /Form 2/i);
   assert.equal(/\bvote for\b/i.test(payload.answer_markdown), false);
   assert.deepEqual(payload.sources, []);
+});
+
+test("2026 coming-up answers lead with the midterm ballot, not a presidential general", async () => {
+  const repo = new MemoryVoterRepository();
+  await repo.upsertRace(
+    race({
+      raceId: "2026-president",
+      office: "president",
+      cycle: 2026,
+      state: null,
+      title: "President",
+      jurisdiction: "United States",
+      sourceUrl: "https://www.fec.gov/data/candidates/?office=P&election_year=2026",
+    }),
+  );
+  await repo.upsertRace(
+    race({
+      raceId: "2026-senate-NY",
+      office: "senate",
+      cycle: 2026,
+      state: "NY",
+      title: "U.S. Senate, New York",
+      jurisdiction: "New York",
+    }),
+  );
+  await repo.upsertRace(
+    race({
+      raceId: "2028-president",
+      office: "president",
+      cycle: 2028,
+      state: null,
+      title: "President",
+      jurisdiction: "United States",
+    }),
+  );
+
+  let called = false;
+  const response = await postChat(
+    post({ message: "What elections are coming up", cycle: 2026 }),
+    chatDeps(repo, async () => {
+      called = true;
+      throw new Error("model should not be called");
+    }),
+  );
+  assert.equal(called, false);
+  assert.equal(response.status, 200);
+  const payload = (await response.json()) as { answer_markdown: string; mode: string };
+  assert.equal(payload.mode, "factual");
+  assert.match(payload.answer_markdown, /^\*\*2026 is a midterm year\.\*\*/);
+  assert.match(payload.answer_markdown, /U\.S\. Senate and U\.S\. House/);
+  assert.match(payload.answer_markdown, /no presidential general election/i);
+  assert.doesNotMatch(payload.answer_markdown, /one national presidential/i);
+  const senateAt = payload.answer_markdown.indexOf("U.S. Senate");
+  const filingAt = payload.answer_markdown.search(/out-of-cycle/i);
+  assert.equal(senateAt >= 0 && filingAt > senateAt, true);
+  assert.match(payload.answer_markdown, /2026-president/);
+
+  const ny = await postChat(
+    post({ message: "What elections are coming up in New York?", cycle: 2026 }),
+    chatDeps(repo, async () => {
+      throw new Error("model should not be called");
+    }),
+  );
+  const nyBody = (await ny.json()) as { answer_markdown: string };
+  assert.match(nyBody.answer_markdown, /U\.S\. Senate, New York/);
+  assert.match(nyBody.answer_markdown, /^\*\*2026 is a midterm year\.\*\*/);
+
+  const presidentialYear = await postChat(
+    post({ message: "What elections are coming up", cycle: 2028 }),
+    chatDeps(repo, async () => {
+      throw new Error("model should not be called");
+    }),
+  );
+  const yearBody = (await presidentialYear.json()) as { answer_markdown: string };
+  assert.match(yearBody.answer_markdown, /^\*\*2028 is a presidential election year\.\*\*/);
+
+  const listed = await executeChatTool(
+    "list_races",
+    { office: "president", cycle: 2026 },
+    { repo, env: {}, now, root: ROOT },
+  );
+  assert.equal(listed.ok, true);
+  if (!listed.ok) return;
+  const races = listed.content.races as Array<{ raceId: string; ballotRole: string; ballotNote: string }>;
+  assert.equal(races[0]?.raceId, "2026-president");
+  assert.equal(races[0]?.ballotRole, "out-of-cycle-presidential-filing");
+  assert.match(races[0]?.ballotNote ?? "", /midterm/);
+  const calendar = listed.content.cycleCalendar as Array<{ onBallot: string[]; midterm: boolean }>;
+  assert.equal(calendar[0]?.midterm, true);
+  assert.deepEqual(calendar[0]?.onBallot, ["senate", "house"]);
 });

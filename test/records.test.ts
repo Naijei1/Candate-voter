@@ -6,7 +6,8 @@ import { houseCoverageForRaces } from "../src/lib/data/coverage";
 import { planPresidentialDuplicates } from "../src/lib/data/dedupe";
 import { MemoryVoterRepository } from "../src/lib/data/memory-repository";
 import { normalizePersonName } from "../src/lib/data/names";
-import { loadVisibleCandidates, loadVisibleRace, visibleRaces } from "../src/lib/data/view";
+import { loadPublicCandidates, loadVisibleCandidates, loadVisibleRace, visibleRaces } from "../src/lib/data/view";
+import { answerAlignment } from "../src/lib/chat/alignment";
 import { executeChatTool } from "../src/lib/chat/tools";
 import type { Candidate, Filing, Race } from "../src/lib/types";
 
@@ -225,4 +226,104 @@ test("chat coverage tool reports filings so far", async () => {
   assert.equal(blocked.ok, false);
   if (blocked.ok) return;
   assert.match(blocked.message, /state/i);
+});
+
+test("same-name senate filings collapse to one row and name each party once", async () => {
+  const repo = new MemoryVoterRepository();
+  await repo.upsertRace(
+    race({
+      raceId: "2026-senate-NY",
+      office: "senate",
+      cycle: 2026,
+      state: "NY",
+      title: "U.S. Senate, New York",
+      jurisdiction: "New York",
+    }),
+  );
+  const parties = ["REP", "REP", "REP", "REP", "WRI", "WRI", "WRI", "WRI"];
+  for (let index = 0; index < parties.length; index += 1) {
+    const candidateId = `S6NY0000${index + 1}`;
+    await repo.upsertCandidate(
+      candidate({
+        candidateId,
+        displayName: index % 2 === 0 ? "GAVIN SOLOMON" : "Gavin Solomon",
+        raceId: "2026-senate-NY",
+        office: "senate",
+        partyAffiliation: parties[index] ?? "REP",
+        sourceUrl: `https://www.fec.gov/data/candidate/${candidateId}/`,
+        sourceLoadedAt: index === 3 ? "2026-10-20 00:00:00" : "2026-10-01 00:00:00",
+      }),
+    );
+  }
+  await repo.upsertCandidate(
+    candidate({
+      candidateId: "S6NY00999",
+      displayName: "Maria Chen",
+      raceId: "2026-senate-NY",
+      office: "senate",
+      partyAffiliation: "DEM",
+    }),
+  );
+  await repo.upsertCandidate(
+    candidate({
+      candidateId: "S6NY00111",
+      displayName: "Cher",
+      raceId: "2026-senate-NY",
+      office: "senate",
+    }),
+  );
+  await repo.upsertCandidate(
+    candidate({
+      candidateId: "S6NY00112",
+      displayName: "CHER",
+      raceId: "2026-senate-NY",
+      office: "senate",
+    }),
+  );
+
+  const visible = await loadPublicCandidates(repo, "2026-senate-NY");
+  const names = visible.map((item) => item.displayName);
+  assert.equal(names.filter((name) => name === "Gavin Solomon").length, 1);
+  assert.equal(names.filter((name) => name === "Cher").length, 2);
+  assert.equal(names.includes("Maria Chen"), true);
+  const solomon = visible.find((item) => item.displayName === "Gavin Solomon");
+  assert.equal(solomon?.candidateId, "S6NY00004");
+  assert.equal(solomon?.partyCode, "REP");
+  assert.equal(solomon?.alternateFilings.length, 7);
+  const note = solomon?.multiFilingNote ?? "";
+  assert.equal(note.includes("Republican"), true);
+  assert.equal(note.includes("Write-in"), true);
+  assert.equal((note.match(/Republican/g) ?? []).length, 1);
+  assert.equal((note.match(/Write-in/g) ?? []).length, 1);
+  assert.match(note, /S6NY00001/);
+  assert.match(note, /S6NY00008/);
+
+  const ctx = {
+    repo,
+    env: {},
+    now: new Date("2026-10-26T12:00:00.000Z"),
+    root: "https://voter.example",
+  };
+  const listed = await executeChatTool("get_race", { raceId: "2026-senate-NY" }, ctx);
+  assert.equal(listed.ok, true);
+  if (!listed.ok) return;
+  const candidates = listed.content.candidates as Array<{
+    displayName: string;
+    alternateFilings?: Array<{ sourceUrl: string | null }>;
+  }>;
+  assert.equal(candidates.filter((item) => item.displayName === "Gavin Solomon").length, 1);
+  const row = candidates.find((item) => item.displayName === "Gavin Solomon");
+  assert.equal(
+    row?.alternateFilings?.some((filing) => filing.sourceUrl?.includes("S6NY00008")),
+    true,
+  );
+
+  const alignment = await answerAlignment({
+    request: { message: "Whose views align with mine?", raceId: "2026-senate-NY" },
+    ctx,
+  });
+  assert.equal("unavailable" in alignment, false);
+  if ("unavailable" in alignment) return;
+  assert.equal((alignment.answer_markdown.match(/Gavin Solomon/g) ?? []).length, 1);
+  assert.match(alignment.answer_markdown, /multiple FEC ids/);
 });

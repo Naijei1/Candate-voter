@@ -9,7 +9,13 @@ import {
 } from "./alignment";
 import { alignmentEnabled, CHAT_PROMPT_VERSION, chatEnabled, rateLimitSettings } from "./config";
 import { createBedrockConverse } from "./converse";
-import { CLARIFY_RACE_MARKDOWN, isAlignmentRequest, needsRaceClarification } from "./intent";
+import {
+  CLARIFY_RACE_MARKDOWN,
+  isAlignmentRequest,
+  isUpcomingElectionsQuestion,
+  needsRaceClarification,
+} from "./intent";
+import { answerUpcoming } from "./upcoming";
 import { isVotingAdvice, VOTING_ADVICE_MARKDOWN } from "./prompt";
 import { clientAddress, createRateLimiter, type RateLimiter } from "./rate-limit";
 import { parseChatRequest } from "./request";
@@ -130,6 +136,42 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
     } catch (error) {
       const name = error instanceof Error ? error.name : "Error";
       console.error(`Alignment lookup failed: ${name}`);
+      return json({ error: "unavailable", message: "Stored records are unavailable." }, 503);
+    }
+  }
+
+  if (isUpcomingElectionsQuestion(parsed.value.message)) {
+    const siteRoot =
+      deps.siteRoot ?? `${originFromRequest(request)}${basePathFromEnv(deps.env)}`;
+    try {
+      const answer = await answerUpcoming({
+        request: parsed.value,
+        ctx: {
+          repo: deps.repository(),
+          env: deps.env,
+          now,
+          root: siteRoot.replace(/\/+$/, ""),
+        },
+      });
+      if ("unavailable" in answer) {
+        return json({ error: "unavailable", message: answer.message }, 503);
+      }
+      logOutcome({
+        refused: answer.refused,
+        tools: ["upcoming"],
+        latencyMs: Date.now() - started,
+        mode: "factual",
+      });
+      return json({
+        answer_markdown: answer.answer_markdown,
+        sources: answer.sources,
+        refused: answer.refused,
+        mode: "factual",
+        threadId,
+      });
+    } catch (error) {
+      const name = error instanceof Error ? error.name : "Error";
+      console.error(`Upcoming lookup failed: ${name}`);
       return json({ error: "unavailable", message: "Stored records are unavailable." }, 503);
     }
   }

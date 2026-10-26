@@ -13,9 +13,10 @@ import {
   readRacesForCycle,
   readWatermark,
 } from "@/lib/data/read";
-import { partyLabel } from "@/lib/format";
+import { displayedPartyLabels, type PublicCandidate } from "@/lib/data/view";
+import { httpsUrl } from "@/lib/format";
 import { houseCoverageLine } from "@/lib/landing";
-import type { Candidate, Race } from "@/lib/types";
+import type { Race } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -121,7 +122,8 @@ export default async function RacePage({ params }: RacePageProps) {
   );
 }
 
-function CandidateRow({ candidate }: { candidate: Candidate }) {
+function CandidateRow({ candidate }: { candidate: PublicCandidate }) {
+  const parties = displayedPartyLabels(candidate);
   return (
     <li className="px-4 py-3">
       <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
@@ -131,10 +133,26 @@ function CandidateRow({ candidate }: { candidate: Candidate }) {
         >
           {candidate.displayName}
         </Link>
-        <span className="text-sm text-muted">
-          {partyLabel(candidate.partyAffiliation, candidate.partyLabel)}
-        </span>
+        <span className="text-sm text-muted">{parties.join(" · ")}</span>
       </div>
+      {candidate.multiFilingNote ? (
+        <p className="mt-1 text-sm leading-6 text-muted">{candidate.multiFilingNote}</p>
+      ) : null}
+      {candidate.alternateFilings.map((alternate) => {
+        const href = httpsUrl(alternate.sourceUrl);
+        const label = `${alternate.partyLabel} ${alternate.fecCandidateId ?? alternate.candidateId}`;
+        if (!href) return null;
+        return (
+          <p key={alternate.candidateId} className="text-sm leading-6 text-muted">
+            <a
+              href={href}
+              className="text-accent underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
+            >
+              {label}
+            </a>
+          </p>
+        );
+      })}
       <RecordMeta sourceUrl={candidate.sourceUrl} updatedAt={candidate.updatedAt} />
     </li>
   );
@@ -172,7 +190,7 @@ async function loadRace(
 
 async function loadCandidates(
   raceId: string,
-): Promise<{ ok: true; list: Candidate[] } | { ok: false }> {
+): Promise<{ ok: true; list: PublicCandidate[] } | { ok: false }> {
   try {
     const list = await readCandidatesForRace(raceId);
     return { ok: true, list };
