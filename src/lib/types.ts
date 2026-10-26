@@ -88,4 +88,6 @@ export type IngestWatermark = {
   pagesFetched: number;
   filingsUpserted: number;
   skipped: number;
+  /** ISO-8601 time our system last wrote this cursor. */
+  updatedAt: string;
 };

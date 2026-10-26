@@ -118,13 +118,23 @@ export function toFilingItem(filing: Filing): FilingItem {
 }
 
 export function toWatermarkItem(watermark: IngestWatermark): WatermarkItem {
+  const updatedAt = nonEmpty(watermark.updatedAt) ?? nonEmpty(watermark.lastRunAt);
+  if (!updatedAt) {
+    throw new Error("Ingest watermark is missing updatedAt");
+  }
   return {
     [TABLE_KEYS.partition]: INGEST_PK,
     [TABLE_KEYS.sort]: INGEST_SK,
     entityType: "ingestWatermark",
     schemaVersion: SCHEMA_VERSION,
     ...watermark,
+    updatedAt,
   };
+}
+
+function nonEmpty(value: string | null | undefined): string | null {
+  const text = value?.trim() ?? "";
+  return text.length > 0 ? text : null;
 }
 
 export function fromRaceItem(item: Record<string, unknown>): Race | null {
@@ -202,5 +212,6 @@ export function fromWatermarkItem(
     pagesFetched: asNumber(item.pagesFetched) ?? 0,
     filingsUpserted: asNumber(item.filingsUpserted) ?? 0,
     skipped: asNumber(item.skipped) ?? 0,
+    updatedAt: asString(item.updatedAt) ?? asString(item.lastRunAt) ?? "",
   };
 }

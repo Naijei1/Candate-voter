@@ -206,6 +206,7 @@ function watermarkBody(input: {
     pagesFetched: input.pagesFetched,
     filingsUpserted: input.filingsUpserted,
     skipped: input.skipped,
+    updatedAt: input.now,
   };
 }
 
