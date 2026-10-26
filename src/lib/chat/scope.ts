@@ -11,7 +11,7 @@ export const ALIGNMENT_DISCLAIMER =
   "Viewpoint similarity uses public records only. This is not a voting recommendation.";
 
 export const ASK_INTRO =
-  "Factual answers are the default. Alignment is only when you ask whose views match yours. Viewpoint similarity uses public records only. This is not a voting recommendation.";
+  "Ask factual questions about federal races and filings. Answers cite sources. Candate does not rank candidates or give voting advice. Alignment is only when you ask whose views are similar.";
 
 const MAX_MESSAGE = 2000;
 
@@ -96,6 +96,28 @@ export function anchorRaceId(local: readonly Race[]): string | undefined {
   const senate = local.find((race) => race.office === "senate");
   if (senate) return senate.raceId;
   return local.find((race) => race.office === "house")?.raceId;
+}
+
+/** Page-context note plus the visitor's question, still inside the message field. */
+export function applyPagePrefix(prefix: string | undefined, message: string): string {
+  const note = prefix?.trim() ?? "";
+  if (!note.startsWith("Page context:")) return message.trim();
+  return fitMessage(note, message.trim());
+}
+
+export function pageContextFromScope(scope: AskScope): {
+  raceId?: string;
+  candidateId?: string;
+  cycle?: number;
+  messagePrefix?: string;
+} {
+  const prefix = stateContextPrefix(scope);
+  return {
+    ...(scope.raceId ? { raceId: scope.raceId } : {}),
+    ...(scope.candidateId ? { candidateId: scope.candidateId } : {}),
+    ...(scope.cycle != null ? { cycle: scope.cycle } : {}),
+    ...(prefix ? { messagePrefix: prefix } : {}),
+  };
 }
 
 export function buildChatPayload(input: {

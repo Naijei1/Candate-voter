@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { AskScope } from "@/components/AskChrome";
+import { AskPageContext } from "@/components/chat/AskProvider";
 import { RecordMeta } from "@/components/RecordMeta";
 import { StorageNotice } from "@/components/StorageNotice";
 import {
@@ -10,7 +10,6 @@ import {
   readFilingsForCandidate,
   readRace,
 } from "@/lib/data/read";
-import { askScopeForCandidate } from "@/lib/chat/scope";
 import { fecCandidateLabel, partyLabel } from "@/lib/format";
 import type { Candidate, Filing, Race } from "@/lib/types";
 
@@ -58,13 +57,10 @@ export default async function CandidatePage({ params }: CandidatePageProps) {
 
   return (
     <article className="space-y-8">
-      <AskScope
-        {...askScopeForCandidate({
-          candidateId: candidate.candidateId,
-          raceId: candidate.raceId,
-          displayName: candidate.displayName,
-          cycle,
-        })}
+      <AskPageContext
+        candidateId={candidate.candidateId}
+        raceId={candidate.raceId}
+        cycle={cycle ?? undefined}
       />
       <div className="space-y-2 text-sm">
         <RaceCrumb race={race} />

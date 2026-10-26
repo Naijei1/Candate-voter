@@ -1,16 +1,20 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { AskScope } from "@/components/AskChrome";
+import { AskPageContext } from "@/components/chat/AskProvider";
+import { CoverageNote } from "@/components/CoverageNote";
 import { RecordMeta } from "@/components/RecordMeta";
 import { StorageNotice } from "@/components/StorageNotice";
+import { FORM2_SCOPE_NOTE } from "@/lib/data/coverage";
 import {
   logReadError,
   readCandidatesForRace,
   readRace,
+  readRacesForCycle,
+  readWatermark,
 } from "@/lib/data/read";
-import { askScopeForRace } from "@/lib/chat/scope";
 import { partyLabel } from "@/lib/format";
+import { houseCoverageLine } from "@/lib/landing";
 import type { Candidate, Race } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -48,10 +52,11 @@ export default async function RacePage({ params }: RacePageProps) {
 
   const race = loaded.race;
   const candidates = await loadCandidates(race.raceId);
+  const coverage = await loadCoverage(race);
 
   return (
     <article className="space-y-8">
-      <AskScope {...askScopeForRace(race)} />
+      <AskPageContext raceId={race.raceId} cycle={race.cycle ?? undefined} />
       <p className="text-sm">
         <Link
           href="/"
@@ -74,6 +79,11 @@ export default async function RacePage({ params }: RacePageProps) {
           ) : null}
         </p>
         <RecordMeta sourceUrl={race.sourceUrl} updatedAt={race.updatedAt} />
+        <CoverageNote
+          lines={coverage.lines}
+          scopeNote={FORM2_SCOPE_NOTE}
+          refreshedAt={coverage.refreshedAt}
+        />
       </header>
       <section aria-labelledby="candidates-heading">
         <h2 id="candidates-heading" className="text-lg font-semibold">
@@ -128,6 +138,24 @@ function CandidateRow({ candidate }: { candidate: Candidate }) {
       <RecordMeta sourceUrl={candidate.sourceUrl} updatedAt={candidate.updatedAt} />
     </li>
   );
+}
+
+async function loadCoverage(race: Race): Promise<{ lines: string[]; refreshedAt: string | null }> {
+  let refreshedAt: string | null = null;
+  try {
+    refreshedAt = (await readWatermark())?.updatedAt ?? null;
+  } catch (error) {
+    logReadError("getWatermark", error);
+  }
+  if (race.cycle == null) return { lines: [], refreshedAt };
+  try {
+    const races = await readRacesForCycle(race.cycle);
+    const line = houseCoverageLine(races, race.cycle, race.state);
+    return { lines: line ? [line] : [], refreshedAt };
+  } catch (error) {
+    logReadError("listRacesByCycle", error);
+    return { lines: [], refreshedAt };
+  }
 }
 
 async function loadRace(

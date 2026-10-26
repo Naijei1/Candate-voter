@@ -1,8 +1,16 @@
 import type { ApiRepository } from "../api/deps";
+import { FORM2_SCOPE, FORM2_SCOPE_NOTE, houseCoverageForRaces } from "../data/coverage";
 import { cyclesFromEnv, parseCycle } from "../data/cycles";
 import { isPostalState } from "../data/states";
-import { logReadError, sortCandidates, sortFilings } from "../data/read";
-import type { Candidate, Filing, Race } from "../types";
+import { logReadError, sortFilings } from "../data/read";
+import {
+  loadPublicCandidates,
+  loadVisibleRace,
+  presentCandidate,
+  visibleRaces,
+  type PublicCandidate,
+} from "../data/view";
+import type { Filing, Race } from "../types";
 import { isResourceId } from "../api/ids";
 import type { ChatSource } from "./types";
 
@@ -47,7 +55,7 @@ const tools: readonly ToolSpec[] = [
   {
     name: "list_races",
     description:
-      "List stored federal races. Filter with cycle, state, and office. This is not a ranking. Omit cycle to use the public index year window.",
+      "List stored federal races. Pass a state, or office president. Do not call this without a state to list every Senate or House race. This is not a ranking. Omit cycle to use the public index year window. The result includes house coverage (districts with Form 2 filings out of apportioned districts).",
     inputSchema: {
       type: "object",
       properties: {
@@ -115,9 +123,22 @@ const tools: readonly ToolSpec[] = [
     run: listFilings,
   },
   {
+    name: "get_coverage",
+    description:
+      "How many House districts in a cycle have at least one stored FEC Form 2 filing, out of the apportioned district count. filingsSoFarOnly is always true: this is not a full ballot. Pass state to limit to one state. Omit state for the 50-state total plus each state that has a filing.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        cycle: { type: "integer", description: "Election year. Omit to use the public index year window." },
+        state: { type: "string", description: "Two-letter postal code. Omit for the national House total." },
+      },
+    },
+    run: getCoverage,
+  },
+  {
     name: "get_freshness",
     description:
-      "Read the fec-efile-form2 ingest watermark: lastLoadTimestamp, lastRunAt, lastStatus, and updatedAt. watermark is null until a run has stored one.",
+      "Read the fec-efile-form2 ingest watermark: lastLoadTimestamp, lastRunAt, lastStatus, updatedAt, and refreshedAt. watermark is null until a run has stored one. Scope is electronic Form 2 filings only.",
     inputSchema: {
       type: "object",
       properties: {},
@@ -161,13 +182,18 @@ async function listRaces(
   const limit = readLimit(input.limit, LIST_DEFAULT, LIST_MAX);
   if (!limit.ok) return toolError(limit.message);
 
+  if (!state.value && office.value !== "president") {
+    return toolError(
+      "Pass a state, or set office to president. Do not list Senate or House races for every state.",
+    );
+  }
   const cycles = cycle.value != null ? [cycle.value] : cyclesFromEnv(ctx.env, ctx.now);
   try {
     const groups = await Promise.all(
       cycles.map((year) => ctx.repo.listRacesByCycle(year)),
     );
-    const races = groups
-      .flat()
+    const visible = visibleRaces(groups.flat());
+    const races = visible
       .filter((race) => {
         if (state.value && race.state !== state.value) return false;
         if (office.value && race.office !== office.value) return false;
@@ -179,6 +205,12 @@ async function listRaces(
     return ok(races.length, sources, races.map(raceSnippet), {
       cycles,
       races,
+      coverage: {
+        scope: FORM2_SCOPE,
+        filingsSoFarOnly: true,
+        scopeNote: FORM2_SCOPE_NOTE,
+        house: houseCoverageForRaces(visible, cycles, state.value),
+      },
       sources: sources.slice(0, MAX_SOURCES),
     });
   } catch (error) {
@@ -193,13 +225,11 @@ async function getRace(
   const raceId = readId(input.raceId, "raceId");
   if (!raceId.ok) return toolError(raceId.message);
   try {
-    const race = await ctx.repo.getRace(raceId.value);
+    const race = await loadVisibleRace(ctx.repo, raceId.value);
     if (!race) {
       return ok(0, [], [], { race: null, candidates: [], sources: [] });
     }
-    const candidates = sortCandidates(
-      await ctx.repo.listCandidatesForRace(raceId.value),
-    );
+    const candidates = await loadPublicCandidates(ctx.repo, race.raceId);
     const sources = [
       ...sourcesForRace(race, ctx.root),
       ...candidates.flatMap((candidate) => sourcesForCandidate(candidate, ctx.root)),
@@ -235,9 +265,10 @@ async function searchCandidates(
   const needle = query.toLowerCase();
   try {
     if (isResourceId(query)) {
-      const direct = await ctx.repo.getCandidate(query);
+      const stored = await ctx.repo.getCandidate(query);
+      const direct = stored ? presentCandidate(stored) : null;
       if (direct && matchesCandidate(direct, needle)) {
-        const race = await ctx.repo.getRace(direct.raceId);
+        const race = await loadVisibleRace(ctx.repo, direct.raceId);
         const sources = sourcesForCandidate(direct, ctx.root);
         return ok(1, sources, [candidateSnippet(direct)], {
           matches: [{ candidate: direct, race }],
@@ -249,11 +280,11 @@ async function searchCandidates(
     }
 
     const cycles = cycle.value != null ? [cycle.value] : cyclesFromEnv(ctx.env, ctx.now);
-    const matches: Array<{ candidate: Candidate; race: Race | null }> = [];
+    const matches: Array<{ candidate: PublicCandidate; race: Race | null }> = [];
     let scanned = 0;
     let truncated = false;
     for (const year of cycles) {
-      const races = await ctx.repo.listRacesByCycle(year);
+      const races = visibleRaces(await ctx.repo.listRacesByCycle(year));
       for (const race of races) {
         if (state.value && race.state !== state.value) continue;
         if (office.value && race.office !== office.value) continue;
@@ -262,7 +293,7 @@ async function searchCandidates(
           break;
         }
         scanned += 1;
-        const candidates = await ctx.repo.listCandidatesForRace(race.raceId);
+        const candidates = await loadPublicCandidates(ctx.repo, race.raceId);
         for (const candidate of candidates) {
           if (!matchesCandidate(candidate, needle)) continue;
           matches.push({ candidate, race });
@@ -298,11 +329,12 @@ async function getCandidate(
   const candidateId = readId(input.candidateId, "candidateId");
   if (!candidateId.ok) return toolError(candidateId.message);
   try {
-    const candidate = await ctx.repo.getCandidate(candidateId.value);
+    const stored = await ctx.repo.getCandidate(candidateId.value);
+    const candidate = stored ? presentCandidate(stored) : null;
     if (!candidate) {
       return ok(0, [], [], { candidate: null, race: null, sources: [] });
     }
-    const race = await ctx.repo.getRace(candidate.raceId);
+    const race = await loadVisibleRace(ctx.repo, candidate.raceId);
     const sources = [
       ...sourcesForCandidate(candidate, ctx.root),
       ...(race ? sourcesForRace(race, ctx.root) : []),
@@ -324,7 +356,8 @@ async function listFilings(
   const candidateId = readId(input.candidateId, "candidateId");
   if (!candidateId.ok) return toolError(candidateId.message);
   try {
-    const candidate = await ctx.repo.getCandidate(candidateId.value);
+    const stored = await ctx.repo.getCandidate(candidateId.value);
+    const candidate = stored ? presentCandidate(stored) : null;
     if (!candidate) {
       return ok(0, [], [], { candidate: null, filings: [], sources: [] });
     }
@@ -353,7 +386,14 @@ async function getFreshness(
   try {
     const watermark = await ctx.repo.getWatermark();
     if (!watermark) {
-      return ok(0, [], [], { watermark: null, sources: [] });
+      return ok(0, [], [], {
+        watermark: null,
+        scope: FORM2_SCOPE,
+        filingsSoFarOnly: true,
+        scopeNote: FORM2_SCOPE_NOTE,
+        refreshedAt: null,
+        sources: [],
+      });
     }
     const sources: ChatSource[] = [
       {
@@ -364,6 +404,10 @@ async function getFreshness(
     ];
     return ok(1, sources, [`Ingest watermark ${watermark.lastStatus}`], {
       watermark,
+      scope: FORM2_SCOPE,
+      filingsSoFarOnly: true,
+      scopeNote: FORM2_SCOPE_NOTE,
+      refreshedAt: watermark.updatedAt,
       sources,
     });
   } catch (error) {
@@ -399,6 +443,54 @@ function unavailable(operation: string, error: unknown): ToolOutput {
   };
 }
 
+async function getCoverage(
+  input: Record<string, unknown>,
+  ctx: ToolContext,
+): Promise<ToolOutput> {
+  const cycle = readCycle(input.cycle);
+  if (!cycle.ok) return toolError(cycle.message);
+  const state = readState(input.state);
+  if (!state.ok) return toolError(state.message);
+  const cycles = cycle.value != null ? [cycle.value] : cyclesFromEnv(ctx.env, ctx.now);
+  try {
+    const groups = await Promise.all(
+      cycles.map((year) => ctx.repo.listRacesByCycle(year)),
+    );
+    const visible = visibleRaces(groups.flat());
+    const watermark = await ctx.repo.getWatermark();
+    const house = houseCoverageForRaces(visible, cycles, state.value);
+    const sources: ChatSource[] = watermark
+      ? [
+          {
+            title: "Candate Form 2 ingest watermark",
+            url: `${ctx.root}/agent`,
+            as_of: watermark.updatedAt,
+          },
+        ]
+      : [];
+    return ok(house.length, sources, house.map(coverageSnippet), {
+      scope: FORM2_SCOPE,
+      filingsSoFarOnly: true,
+      scopeNote: FORM2_SCOPE_NOTE,
+      refreshedAt: watermark?.updatedAt ?? null,
+      house,
+      sources,
+    });
+  } catch (error) {
+    return unavailable("getCoverage", error);
+  }
+}
+
+function coverageSnippet(row: {
+  cycle: number;
+  state: string | null;
+  districtsWithFilings: number;
+  districtsTotal: number;
+}): string {
+  const where = row.state ?? "the 50 states";
+  return `${row.cycle} House, ${where}: ${row.districtsWithFilings} of ${row.districtsTotal} districts have Form 2 filings`;
+}
+
 function sourcesForRace(race: Race, root: string): ChatSource[] {
   const sources = [
     pageSource(race.title, `${root}/races/${encodeURIComponent(race.raceId)}`, race.updatedAt),
@@ -408,7 +500,10 @@ function sourcesForRace(race: Race, root: string): ChatSource[] {
   return sources;
 }
 
-function sourcesForCandidate(candidate: Candidate, root: string): ChatSource[] {
+function sourcesForCandidate(
+  candidate: Pick<PublicCandidate, "displayName" | "candidateId" | "updatedAt" | "sourceLoadedAt" | "sourceUrl">,
+  root: string,
+): ChatSource[] {
   const sources = [
     pageSource(
       candidate.displayName,
@@ -470,15 +565,18 @@ function raceSnippet(race: Race): string {
   return `${race.title} (\`${race.raceId}\`)`;
 }
 
-function candidateSnippet(candidate: Candidate): string {
-  return `${candidate.displayName} (\`${candidate.candidateId}\`)`;
+function candidateSnippet(candidate: PublicCandidate): string {
+  const party = candidate.partyCode
+    ? `${candidate.partyLabel} (${candidate.partyCode})`
+    : candidate.partyLabel;
+  return `${candidate.displayName} — ${party} (\`${candidate.candidateId}\`)`;
 }
 
 function filingSnippet(filing: Filing): string {
   return `Form 2 ${filing.filingId} for \`${filing.candidateId}\``;
 }
 
-function matchesCandidate(candidate: Candidate, needle: string): boolean {
+function matchesCandidate(candidate: PublicCandidate, needle: string): boolean {
   const haystack = [
     candidate.displayName,
     candidate.nameAsFiled ?? "",

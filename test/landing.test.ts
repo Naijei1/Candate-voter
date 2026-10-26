@@ -117,12 +117,15 @@ test("state view lists Senate and House only, with president kept national", () 
   );
   assert.equal(presidentialRace(races)?.raceId, "2026-president");
   assert.equal(stateRaces(races, "WY").length, 0);
-  assert.equal(filingCoverageLabel(races, "WY"), "No filings yet.");
+  assert.equal(
+    filingCoverageLabel(races, "WY"),
+    "0 of 1 House districts have filings. Counts are FEC Form 2 electronic filings stored so far, not a full ballot or a certified candidate list.",
+  );
   assert.equal(
     filingCoverageLabel(races, "VA"),
-    "Form 2 e-file filings so far: 1 Senate race with filings and 2 House races with filings. Not a complete ballot.",
+    "1 Senate race with filings. 2 of 11 House districts have filings. Counts are FEC Form 2 electronic filings stored so far, not a full ballot or a certified candidate list.",
   );
-  assert.equal(filingCoverageLabel(races, "VA").includes(" of "), false);
+  assert.match(filingCoverageLabel(races, "VA"), /2 of 11 House districts have filings/);
   assert.deepEqual(statesWithRaces(races), ["MD", "VA"]);
 });
 

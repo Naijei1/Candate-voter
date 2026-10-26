@@ -1,3 +1,4 @@
+import { PARTY_LABELS } from "./data/party-codes";
 import type { FederalOffice } from "./types";
 
 const INSTANT_FORMAT = new Intl.DateTimeFormat("en-US", {
@@ -48,36 +49,9 @@ export function officeLabel(office: FederalOffice): string {
 }
 
 /**
- * Common names for FEC party codes. The code is the affiliation on the
- * filing. A name is a readable label for that code, not an endorsement.
- * Codes without a known name stay visible as filed.
+ * Party code as reported on the filing, plus a readable label.
+ * The label is not an endorsement. Unknown codes stay visible as stored.
  */
-const PARTY_NAMES: Record<string, string> = {
-  DEM: "Democratic",
-  DFL: "Democratic-Farmer-Labor",
-  REP: "Republican",
-  IND: "Independent",
-  LIB: "Libertarian",
-  GRE: "Green",
-  GRN: "Green",
-  CON: "Conservative",
-  CST: "Constitution",
-  REF: "Reform",
-  AIP: "American Independent",
-  IAP: "Independent American",
-  NPA: "No Party Affiliation",
-  NNE: "None",
-  NON: "Nonpartisan",
-  UNK: "Unknown",
-  OTH: "Other",
-  WFP: "Working Families",
-  PFP: "Peace and Freedom",
-  SWP: "Socialist Workers",
-  IDP: "Independence",
-  NLP: "Natural Law",
-  PRO: "Progressive",
-  WRI: "Write-in",
-};
 
 /** Filing affiliation code, uppercased, or null when the filing left it blank. */
 export function partyCode(party: string | null | undefined): string | null {
@@ -98,7 +72,7 @@ export function partyLabel(
   if (explicit) return explicit;
   const code = partyCode(party);
   if (!code) return "Affiliation not reported";
-  return PARTY_NAMES[code] ?? code;
+  return PARTY_LABELS[code] ?? code;
 }
 
 /**

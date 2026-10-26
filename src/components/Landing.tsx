@@ -2,17 +2,17 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { useAsk } from "@/components/AskChrome";
+import { useAsk } from "@/components/chat/AskProvider";
 import { RecordMeta } from "@/components/RecordMeta";
 import { StorageNotice } from "@/components/StorageNotice";
 import { MapLegend, UsMap } from "@/components/UsMap";
-import { askScopeForState, askScopeForYear } from "@/lib/chat/scope";
+import { askScopeForState, askScopeForYear, pageContextFromScope } from "@/lib/chat/scope";
 import { stateName, stateOptions } from "@/lib/data/states";
-import { officeLabel, partyLabel, partyTone } from "@/lib/format";
+import { formatInstant, officeLabel, partyLabel, partyTone } from "@/lib/format";
 import {
-  filingCoverageLabel,
   presidentialRace,
   spotlightRaces,
+  stateCoverage,
   stateRaces,
   statesWithRaces,
 } from "@/lib/landing";
@@ -38,6 +38,8 @@ type LandingProps = {
   cycleLabel: string;
   /** Candidates already read for the state in the URL, so the panel can render with the races. */
   seededCandidates?: RaceCandidatesResult | null;
+  /** Ingest watermark time from freshness (`refreshedAt`). */
+  refreshedAt?: string | null;
 };
 
 export function Landing({
@@ -47,18 +49,19 @@ export function Landing({
   hasAnyRaces,
   cycleLabel,
   seededCandidates = null,
+  refreshedAt = null,
 }: LandingProps) {
   const [selected, setSelected] = useState<string | null>(initialState);
   const [candidateTick, setCandidateTick] = useState(0);
   const cacheRef = useRef(seedCandidateCache(seededCandidates));
   const marked = statesWithRaces(races);
   const spotlight = spotlightRaces(races);
-  const { replaceScope } = useAsk();
+  const { replacePageContext } = useAsk();
 
   useEffect(() => {
     const scope = selected ? askScopeForState(year, selected, races) : askScopeForYear(year);
-    return replaceScope(scope);
-  }, [replaceScope, races, selected, year]);
+    return replacePageContext(pageContextFromScope(scope));
+  }, [replacePageContext, races, selected, year]);
 
   useEffect(() => {
     setSelected(initialState);
@@ -230,6 +233,7 @@ export function Landing({
             selected={selected}
             cache={cacheRef.current}
             cacheTick={candidateTick}
+            refreshedAt={refreshedAt}
           />
         </div>
         </section>
@@ -287,18 +291,21 @@ function StatePanel({
   selected,
   cache,
   cacheTick,
+  refreshedAt,
 }: {
   year: number;
   races: Race[];
   selected: string | null;
   cache: Map<string, CandidateCacheEntry>;
   cacheTick: number;
+  refreshedAt: string | null;
 }) {
   void cacheTick;
   const listed = selected ? stateRaces(races, selected) : [];
   const groups = racesByStateOffice(listed);
   const president = presidentialRace(races);
-  const coverage = selected ? filingCoverageLabel(races, selected) : null;
+  const coverage = selected ? stateCoverage(races, selected, year) : null;
+  const refreshed = formatInstant(refreshedAt);
 
   return (
     <aside
@@ -309,13 +316,21 @@ function StatePanel({
         <h3 className="text-lg font-semibold tracking-tight">
           {selected ? `${stateName(selected)} filings` : "State filings"}
         </h3>
-        <p className="text-sm leading-6 text-muted">
-          {selected
-            ? groups.length === 0
-              ? `No Senate or House Form 2 e-file filings are stored for ${stateName(selected)} in ${year}.`
-              : coverage
-            : "Select a state to list stored Senate and House filings."}
-        </p>
+        <div className="text-sm leading-6 text-muted">
+          {selected && coverage ? (
+            <>
+              {coverage.lines.length > 0 ? (
+                coverage.lines.map((line) => <p key={line}>{line}</p>)
+              ) : (
+                <p>{`No Senate or House Form 2 e-file filings are stored for ${stateName(selected)} in ${year}.`}</p>
+              )}
+              <p>{coverage.scopeNote}</p>
+              {refreshed ? <p>Refreshed {refreshed}</p> : null}
+            </>
+          ) : (
+            <p>Select a state to list stored Senate and House filings.</p>
+          )}
+        </div>
       </div>
       <div className="flex-1 overflow-y-auto px-3 py-3">
         {!selected ? (

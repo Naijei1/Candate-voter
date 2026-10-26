@@ -6,6 +6,7 @@ import { join } from "node:path";
 import test from "node:test";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
+import { FORM2_SCOPE_NOTE } from "../src/lib/data/coverage";
 import { MemoryVoterRepository } from "../src/lib/data/memory-repository";
 import { AgentApiDocs } from "../src/components/AgentApiDocs";
 import { timingSafeStringEqual } from "../src/lib/api/auth";
@@ -28,6 +29,16 @@ import {
 import type { Candidate, Filing, IngestWatermark, Race } from "../src/lib/types";
 
 const KEY = "test-key";
+
+function freshnessBody(watermark: IngestWatermark | null) {
+  return {
+    watermark,
+    scope: "fec-efile-form2",
+    filingsSoFarOnly: true,
+    scopeNote: FORM2_SCOPE_NOTE,
+    refreshedAt: watermark?.updatedAt ?? null,
+  };
+}
 const updatedAt = "2026-10-26T05:00:00.000Z";
 const now = new Date("2026-10-26T12:00:00.000Z");
 
@@ -225,7 +236,7 @@ test("bearer and x-api-key both authorize a freshness read", async () => {
     deps(repo),
   );
   assert.equal(bearer.status, 200);
-  assert.deepEqual(await bearer.json(), { watermark });
+  assert.deepEqual(await bearer.json(), freshnessBody(watermark));
 
   const apiKey = await getFreshness(
     new Request("https://voter.example/api/v1/freshness", {
@@ -234,11 +245,11 @@ test("bearer and x-api-key both authorize a freshness read", async () => {
     deps(repo),
   );
   assert.equal(apiKey.status, 200);
-  assert.deepEqual(await apiKey.json(), { watermark });
+  assert.deepEqual(await apiKey.json(), freshnessBody(watermark));
 
   const empty = await getFreshness(authed("https://voter.example/api/v1/freshness"), deps(new MemoryVoterRepository()));
   assert.equal(empty.status, 200);
-  assert.deepEqual(await empty.json(), { watermark: null });
+  assert.deepEqual(await empty.json(), freshnessBody(null));
 });
 
 test("race list filters, paginates, and keeps domain fields", async () => {
@@ -259,6 +270,16 @@ test("race list filters, paginates, and keeps domain fields", async () => {
   assert.equal(body.races[0].sourceUrl, "https://www.fec.gov/data/elections/");
   assert.equal(body.races[0].updatedAt, updatedAt);
   assert.equal(body.nextCursor, null);
+  assert.equal(body.coverage.scope, "fec-efile-form2");
+  assert.equal(body.coverage.filingsSoFarOnly, true);
+  assert.deepEqual(body.coverage.house, [
+    {
+      cycle: 2026,
+      state: "CA",
+      districtsWithFilings: 1,
+      districtsTotal: 52,
+    },
+  ]);
 
   const page = await getRaces(
     authed("https://voter.example/api/v1/races?cycle=2026&limit=1"),
@@ -325,6 +346,17 @@ test("race, candidate, and filing routes return stored shapes", async () => {
     raceBody.candidates.map((item: Candidate) => item.partyAffiliation),
     ["REP", "DEM"],
   );
+  assert.deepEqual(
+    raceBody.candidates.map((item: { partyCode: string; partyLabel: string }) => [
+      item.partyCode,
+      item.partyLabel,
+    ]),
+    [
+      ["REP", "Republican"],
+      ["DEM", "Democratic"],
+    ],
+  );
+  assert.equal(raceBody.coverage.filingsSoFarOnly, true);
 
   const missingRace = await getRace(
     authed("https://voter.example/api/v1/races/2026-senate-WY"),

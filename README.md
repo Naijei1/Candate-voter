@@ -33,6 +33,7 @@ Package manager is npm. Commit `package-lock.json`. Amplify runs `npm ci`.
 | `/` | Federal races index |
 | `/races/[raceId]` | Race detail |
 | `/candidates/[candidateId]` | Candidate detail |
+| `/chat` | Ask about stored races and filings |
 | `/agent` | Read API documentation and live ingest freshness |
 | `/openapi.yaml` | OpenAPI 3.0 document for `/api/v1` |
 | `/llms.txt` | Short index for agents |
@@ -67,6 +68,14 @@ Race ids:
 | House | `2026-house-CA-07` (`00` is at-large) |
 
 The cycle is the election year on the filing, not a guessed calendar. A repeat ingest updates the same keys (`UpdateItem`). A candidate row moves forward only when the filing's FEC load timestamp is greater than or equal to `sourceLoadedAt`, so an older amendment overlap does not rewind the name or party.
+
+Names are normalized on ingest and again on read. A literal `n/a` token is dropped (so `James n/a Athans` displays as `James Athans`). A name that is only `n/a` is omitted. All-caps words are title-cased. Mixed-case names and short initials (`JJ`, `D.A.`) stay as written.
+
+Party stays the FEC code. API and chat payloads also send `partyCode` and `partyLabel` (`DEM` / Democratic, `W` / Write-in, and the rest of the FEC party-code list). The label is not an endorsement.
+
+Presidential filers with the same normalized name on the same race collapse to one row on read (the lowest candidate id). Ingest attaches a later filing for that name to the candidate id already stored. Other offices are not merged. Existing duplicate rows remain in DynamoDB until `scripts/consolidate-presidential.ts` runs. That script is a dry run unless `--apply` is set. Apply copies filings onto the keeper and sets `supersededBy`. It does not delete items; the ingest and app roles have no `DeleteItem`.
+
+Wyoming and the other single-seat House states (AK, DE, ND, SD, VT, WY, plus delegate districts) use race id district `00` (at-large). A Form 2 that says district `1` is stored and read as `00`. A legacy `2026-house-WY-01` row is folded into `2026-house-WY-00` on read. Montana has two districts and is unchanged.
 
 Every stored race, candidate, and filing has `sourceUrl` and a write timestamp (`updatedAt`). Filings also have `retrievedAt`. The electronic Form 2 feed does not include a submission time, so `filedAt` stays null and `fecLoadTimestamp` holds FEC's load time (`YYYY-MM-DD HH:MM:SS`). Street address, city, and ZIP from the filing are not stored.
 
@@ -183,13 +192,15 @@ Send `Authorization: Bearer <key>` or `X-Api-Key: <key>`. When both headers are 
 
 `/agent` is public. It documents the surface, shows curl examples with the placeholder `YOUR_API_KEY`, links `/openapi.yaml`, and renders the live watermark from the repository on the server. The key is not sent to the browser. `/llms.txt` and `/openapi.yaml` are public too.
 
-Responses are the domain objects from `src/lib/types.ts`, with `sourceUrl` and timestamps. Party stays the filing affiliation code. The `/api/v1` routes only implement `GET`.
+Responses are the domain objects from `src/lib/types.ts`, with `sourceUrl` and timestamps, plus read-time fields. Candidates include `partyCode` and `partyLabel` beside `partyAffiliation`. `GET /api/v1/races` and `GET /api/v1/races/{raceId}` add `coverage`: `scope` (`fec-efile-form2`), `filingsSoFarOnly`, `scopeNote`, `refreshedAt`, and `house[]` with `districtsWithFilings` and `districtsTotal`. The district total is the 2020 census apportionment (435). A state query returns that state's row, for example 12 of 52. `GET /api/v1/freshness` keeps `watermark` and adds the same scope fields. `refreshedAt` is `watermark.updatedAt`, or null when no cursor is stored. The `/api/v1` routes only implement `GET`.
 
 ## Browser chat
 
 `POST /api/chat` answers from the stored races, candidates, filings, and ingest watermark. Tools call `createDynamoRepository()` in process. They do not loop back through `/api/v1` and they do not read `CANDATE_API_KEY` or `FEC_API_KEY`.
 
-Amplify Hosting compute does not support Next.js streaming. The route waits for the tool calls and the model, then returns one JSON body. The page should show a waiting state and then the full answer.
+Amplify Hosting compute does not support Next.js streaming. The route waits for the tool calls and the model, then returns one JSON body. The Ask panel and `/chat` show a waiting state and then the full answer. They do not stream and they do not put credentials in the browser.
+
+The header **Ask** control opens a panel on `/`, `/races/[raceId]`, and `/candidates/[candidateId]`. On other pages it links to `/chat`. The panel’s “Open in full page” link keeps the race, candidate, and year context on that URL. A 429 disables Retry until the `Retry-After` seconds elapse.
 
 ```bash
 curl -sS -X POST \
@@ -205,11 +216,16 @@ Success is HTTP 200:
   "answer_markdown": "string",
   "sources": [{ "title": "string", "url": "string", "as_of": "string" }],
   "refused": false,
+  "mode": "factual",
   "threadId": "string"
 }
 ```
 
-`refused: true` is still 200. That covers voting advice, rankings, endorsements, and a lookup the tools could not match. The copy is in `answer_markdown`. A bad body is 400. Too many requests from one address is 429 with a `Retry-After` header in seconds. Chat disabled, or Bedrock or DynamoDB unavailable, is 503.
+`mode` is `factual` or `alignment`. `refused: true` is still 200. That covers voting advice, rankings, endorsements, and a lookup the tools could not match. The copy is in `answer_markdown`. A vague "who's running" question with no `raceId`, `candidateId`, state, or presidential contest asks which state or race to open. It does not invent a national list. When the request includes `raceId` or `candidateId`, the answer stays on that contest.
+
+`alignment` is used only when the visitor explicitly asks whose views align with theirs (or a clear equivalent). The answer cites stored race and candidate pages, describes viewpoint similarity, and does not say who to vote for. The table has filing metadata only, no votes or position statements, so the answer says that comparison cannot be made yet. `CANDATE_CHAT_ALIGNMENT` defaults to on. Set it to `false` to soft-refuse those asks. Answers are markdown (paragraphs, lists, bold, links). Every citation is a title, URL, and `as_of` returned by a tool.
+
+A bad body is 400. Too many requests from one address is 429 with a `Retry-After` header in seconds. Chat disabled, or Bedrock or DynamoDB unavailable, is 503.
 
 `threadId` is echoed when the client sends one, or minted when it does not. Turns are not stored.
 
@@ -280,6 +296,7 @@ Branch environment variables are available to the build shell. WEB_COMPUTE does 
 | `CANDATE_CYCLES` | Optional. Comma-separated election years for the home index and for `GET /api/v1/races` when `cycle` is omitted. When unset, the query uses the previous UTC year through six years ahead. |
 | `CANDATE_API_KEY` | Long random secret for `/api/v1`. HTML pages and `/api/chat` do not use it. |
 | `CANDATE_CHAT_ENABLED` | Optional. Chat stays off until this is `true`. |
+| `CANDATE_CHAT_ALIGNMENT` | Optional. Explicit viewpoint alignment stays on when unset. Set `false` to soft-refuse those asks. |
 | `CANDATE_CHAT_MODEL` | Optional. `haiku` (default) or `sonnet`. |
 | `BEDROCK_MODEL_ID` | Optional override for the Haiku inference profile id. |
 | `BEDROCK_SONNET_MODEL_ID` | Optional override for the Sonnet inference profile id. |

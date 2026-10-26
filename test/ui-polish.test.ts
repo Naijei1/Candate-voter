@@ -1,15 +1,18 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { fromCandidateItem, toCandidateItem } from "../src/lib/data/items";
-import { parseSafeMarkdown } from "../src/lib/chat/markdown";
+import { presentCandidate } from "../src/lib/data/view";
+import { parseMarkdown } from "../src/lib/chat/ui";
 import {
   ALIGNMENT_DISCLAIMER,
   ASK_INTRO,
+  applyPagePrefix,
   askScopeForCandidate,
   askScopeForRace,
   askScopeForState,
   askScopeForYear,
   buildChatPayload,
+  pageContextFromScope,
   parseChatResponse,
   retryAfterSeconds,
 } from "../src/lib/chat/scope";
@@ -114,8 +117,17 @@ test("ask payload carries real ids and cycle, and does not send mode or state", 
 });
 
 test("chat responses keep API markdown and only flag alignment mode", () => {
-  assert.equal(ASK_INTRO.includes(ALIGNMENT_DISCLAIMER), true);
+  assert.equal(
+    ALIGNMENT_DISCLAIMER,
+    "Viewpoint similarity uses public records only. This is not a voting recommendation.",
+  );
+  assert.equal(ASK_INTRO.includes(ALIGNMENT_DISCLAIMER), false);
   assert.equal(/recommend who to vote/i.test(ASK_INTRO), false);
+  const ca = pageContextFromScope(askScopeForState(2026, "CA", races));
+  assert.equal(ca.raceId, "2026-senate-CA");
+  assert.equal(ca.cycle, 2026);
+  assert.match(applyPagePrefix(ca.messagePrefix, "Who filed?"), /2026-senate-CA/);
+  assert.equal(applyPagePrefix("ignore this", "Who filed?"), "Who filed?");
 
   const alignment = parseChatResponse({
     answer_markdown: "Two stored filers discuss housing in their statements.",
@@ -158,19 +170,20 @@ test("chat responses keep API markdown and only flag alignment mode", () => {
 });
 
 test("answer markdown renders structure without raw heading marks or html", () => {
-  const blocks = parseSafeMarkdown(
+  const blocks = parseMarkdown(
     "## Senate\n\nOne **stored** race.\n\n- [FEC](https://www.fec.gov/data/)\n- <script>alert(1)</script>\n\n1. First filing\n\n[skip](javascript:alert(1))",
   );
-  assert.equal(blocks[0]?.type, "heading");
-  if (blocks[0]?.type === "heading") {
+  assert.equal(blocks[0]?.type, "h");
+  if (blocks[0]?.type === "h") {
     assert.equal(blocks[0].level, 2);
     assert.equal(blocks[0].inlines.some((item) => item.type === "text" && item.text.includes("##")), false);
     assert.deepEqual(blocks[0].inlines, [{ type: "text", text: "Senate" }]);
   }
   const paragraph = blocks[1];
-  assert.equal(paragraph?.type, "paragraph");
-  if (paragraph?.type === "paragraph") {
-    assert.equal(paragraph.inlines.some((item) => item.type === "strong"), true);
+  assert.equal(paragraph?.type, "p");
+  if (paragraph?.type === "p") {
+    const inlines = paragraph.lines.flat();
+    assert.equal(inlines.some((item) => item.type === "bold"), true);
   }
   const list = blocks[2];
   assert.equal(list?.type, "ul");
@@ -182,7 +195,7 @@ test("answer markdown renders structure without raw heading marks or html", () =
   assert.equal(blocks[3]?.type, "ol");
   const skipped = JSON.stringify(blocks);
   assert.equal(skipped.includes("javascript:"), true);
-  assert.equal(blocks.some((block) => block.type !== "pre" && JSON.stringify(block).includes('"href":"javascript:')), false);
+  assert.equal(skipped.includes('"href":"javascript:'), false);
 });
 
 test("candidate rows prefer a stored party label and omit it when absent", () => {
@@ -218,4 +231,9 @@ test("candidate rows prefer a stored party label and omit it when absent", () =>
     updatedAt: null,
   };
   assert.equal("partyLabel" in toCandidateItem(candidate), false);
+  const presented = presentCandidate({ ...candidate, partyLabel: "Democratic Party" });
+  assert.equal(presented?.partyLabel, "Democratic Party");
+  const unknown = presentCandidate({ ...candidate, partyAffiliation: "XYZ", partyLabel: null });
+  assert.equal(unknown?.partyCode, "XYZ");
+  assert.equal(unknown?.partyLabel, "XYZ");
 });

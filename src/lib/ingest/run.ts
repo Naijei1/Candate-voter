@@ -1,8 +1,9 @@
+import { presidentialPersonKey } from "../data/dedupe";
 import { mapForm2Filing, normalizeLoadTimestamp } from "../fec/map-form2";
 import type { FecClient } from "../fec/client";
 import { nextWatermark, notBefore } from "./watermark";
 import type { VoterRepository } from "../data/repository";
-import type { IngestWatermark } from "../types";
+import type { Candidate, Filing, IngestWatermark } from "../types";
 
 export type IngestLogger = {
   info: (message: string, extra?: Record<string, unknown>) => void;
@@ -62,6 +63,7 @@ export async function runIngest(options: RunIngestOptions): Promise<IngestSummar
   let stoppedBecause: IngestSummary["stoppedBecause"] = "complete";
 
   const perPage = options.perPage ?? 100;
+  const seenPerson = new Map<string, string>();
 
   try {
     for await (const page of options.fec.iterateForm2({
@@ -85,13 +87,19 @@ export async function runIngest(options: RunIngestOptions): Promise<IngestSummar
           continue;
         }
 
+        const identity = await assignPresidentialIdentity(
+          options.repo,
+          mapped.candidate,
+          mapped.filing,
+          seenPerson,
+        );
         await options.repo.upsertRace(mapped.race);
         races.add(mapped.race.raceId);
         if (mapped.race.cycle != null) cycles.add(mapped.race.cycle);
-        const candidateResult = await options.repo.upsertCandidate(mapped.candidate);
+        const candidateResult = await options.repo.upsertCandidate(identity.candidate);
         if (candidateResult === "applied") candidatesApplied += 1;
         else candidatesKeptNewer += 1;
-        await options.repo.upsertFiling(mapped.filing);
+        await options.repo.upsertFiling(identity.filing);
         filingsUpserted += 1;
       }
 
@@ -186,6 +194,48 @@ export async function runIngest(options: RunIngestOptions): Promise<IngestSummar
     }
     throw error;
   }
+}
+
+/**
+ * A later Form 2 for the same presidential name reuses the candidate id
+ * already stored or already seen in this run. House and Senate ids are
+ * left alone.
+ */
+async function assignPresidentialIdentity(
+  repo: VoterRepository,
+  candidate: Candidate,
+  filing: Filing,
+  seenPerson: Map<string, string>,
+): Promise<{ candidate: Candidate; filing: Filing }> {
+  const key = presidentialPersonKey(candidate);
+  if (!key) return { candidate, filing };
+  const remembered = seenPerson.get(key);
+  if (remembered) return retarget(repo, candidate, filing, remembered);
+  const existing = await repo.listCandidatesForRace(candidate.raceId);
+  const match = existing
+    .filter((row) => presidentialPersonKey(row) === key)
+    .sort((a, b) => a.candidateId.localeCompare(b.candidateId))[0];
+  const keep = match?.candidateId ?? candidate.candidateId;
+  seenPerson.set(key, keep);
+  if (keep === candidate.candidateId) return { candidate, filing };
+  return retarget(repo, candidate, filing, keep);
+}
+
+async function retarget(
+  repo: VoterRepository,
+  candidate: Candidate,
+  filing: Filing,
+  candidateId: string,
+): Promise<{ candidate: Candidate; filing: Filing }> {
+  const existing = await repo.getCandidate(candidateId);
+  return {
+    candidate: {
+      ...candidate,
+      candidateId,
+      fecCandidateId: existing?.fecCandidateId ?? candidate.fecCandidateId,
+    },
+    filing: { ...filing, candidateId },
+  };
 }
 
 function watermarkBody(input: {

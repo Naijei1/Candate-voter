@@ -1,7 +1,7 @@
 import { chatModelId } from "./config";
 import { finalizeAnswer, idsIn } from "./answer";
 import { textOf, toolUses } from "./converse";
-import { CHAT_SYSTEM_PROMPT, userPrompt } from "./prompt";
+import { CHAT_SYSTEM_PROMPT, userPrompt, VOTING_ADVICE_MARKDOWN } from "./prompt";
 import { executeChatTool, type ToolContext } from "./tools";
 import type { ChatAnswer, ChatMessage, ChatRequest, ChatSource, ConverseFn } from "./types";
 
@@ -66,15 +66,17 @@ export async function runGroundedChat(input: {
     const calls = toolUses(response.message);
     messages.push({ role: "assistant", content: response.message.content });
     if (calls.length === 0) {
-      const answer = finalizeAnswer({
-        modelText: textOf(response.message),
-        toolRecords: records,
-        toolSources: sources,
-        snippets,
-        groundedText: [...grounded].join(" "),
-        toolsCalled,
-      });
-      return { ...answer, modelId, tools: toolNames, usage };
+      const answer = withoutVoteAdvice(
+        finalizeAnswer({
+          modelText: textOf(response.message),
+          toolRecords: records,
+          toolSources: sources,
+          snippets,
+          groundedText: [...grounded].join(" "),
+          toolsCalled,
+        }),
+      );
+      return { ...answer, mode: "factual", modelId, tools: toolNames, usage };
     }
 
     const results: ChatMessage["content"] = [];
@@ -113,4 +115,16 @@ export async function runGroundedChat(input: {
   }
 
   throw new ChatUnavailableError("The model did not finish.");
+}
+
+function withoutVoteAdvice<T extends { answer_markdown: string; sources: ChatAnswer["sources"]; refused: boolean }>(
+  answer: T,
+): T {
+  if (!/\bvote for\b/i.test(answer.answer_markdown)) return answer;
+  return {
+    ...answer,
+    answer_markdown: VOTING_ADVICE_MARKDOWN,
+    sources: [],
+    refused: true,
+  };
 }

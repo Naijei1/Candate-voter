@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { AskButton } from "@/components/AskChrome";
+import { AskNav } from "@/components/chat/AskNav";
 import { YearSelect } from "@/components/YearSelect";
 
 export function SiteHeader({ cycles }: { cycles: number[] }) {
@@ -20,7 +20,7 @@ export function SiteHeader({ cycles }: { cycles: number[] }) {
           </span>
         </Link>
         <div className="flex items-center gap-2">
-          <AskButton />
+          <AskNav />
           <Suspense fallback={<div className="h-10 w-28 rounded-lg border border-line bg-card" aria-hidden="true" />}>
             <YearSelect cycles={cycles} />
           </Suspense>

@@ -1,5 +1,16 @@
-import { logReadError, sortCandidates, sortFilings } from "../data/read";
-import type { Race } from "../types";
+import {
+  FORM2_SCOPE,
+  FORM2_SCOPE_NOTE,
+  houseCoverageForRaces,
+} from "../data/coverage";
+import { logReadError, sortFilings } from "../data/read";
+import {
+  loadPublicCandidates,
+  loadVisibleRace,
+  presentCandidate,
+  visibleRaces,
+} from "../data/view";
+import type { IngestWatermark, Race } from "../types";
 import type { ApiDeps, ApiRepository } from "./deps";
 import { isResourceId } from "./ids";
 import { json, rejectUnauthorized } from "./http";
@@ -53,11 +64,24 @@ export async function getRaces(request: Request, deps: ApiDeps): Promise<Respons
     const groups = await Promise.all(
       parsed.query.cycles.map((cycle) => repo.listRacesByCycle(cycle)),
     );
-    const page = pageRaces(groups.flat(), parsed.query);
+    const visible = visibleRaces(groups.flat());
+    const page = pageRaces(visible, parsed.query);
+    const refreshedAt = await refreshedAtFrom(repo);
     return json({
       cycles: parsed.query.cycles,
       races: page.races,
       nextCursor: page.nextCursor,
+      coverage: {
+        scope: FORM2_SCOPE,
+        filingsSoFarOnly: true,
+        scopeNote: FORM2_SCOPE_NOTE,
+        refreshedAt,
+        house: houseCoverageForRaces(
+          visible,
+          parsed.query.cycles,
+          parsed.query.state,
+        ),
+      },
     });
   } catch (error) {
     logReadError("listRacesByCycle", error);
@@ -76,10 +100,27 @@ export async function getRace(
 
   try {
     const repo = deps.repository();
-    const race = await repo.getRace(raceId);
+    const race = await loadVisibleRace(repo, raceId);
     if (!race) return notFound();
-    const candidates = sortCandidates(await repo.listCandidatesForRace(raceId));
-    return json({ race, candidates });
+    const candidates = await loadPublicCandidates(repo, race.raceId);
+    const cycleRaces =
+      race.cycle == null ? [] : visibleRaces(await repo.listRacesByCycle(race.cycle));
+    const refreshedAt = await refreshedAtFrom(repo);
+    return json({
+      race,
+      candidates,
+      coverage: {
+        scope: FORM2_SCOPE,
+        filingsSoFarOnly: true,
+        scopeNote: FORM2_SCOPE_NOTE,
+        refreshedAt,
+        house: houseCoverageForRaces(
+          cycleRaces,
+          race.cycle == null ? [] : [race.cycle],
+          race.state,
+        ),
+      },
+    });
   } catch (error) {
     logReadError("getRace", error);
     return unavailable();
@@ -118,8 +159,10 @@ export async function getCandidateFilings(
     const repo = deps.repository();
     const candidate = await repo.getCandidate(candidateId);
     if (!candidate) return notFound();
+    const presented = presentCandidate(candidate);
+    if (!presented) return notFound();
     const filings = sortFilings(await repo.listFilingsForCandidate(candidateId));
-    return json({ candidate, filings });
+    return json({ candidate: presented, filings });
   } catch (error) {
     logReadError("listFilingsForCandidate", error);
     return unavailable();
@@ -135,7 +178,7 @@ export async function getFreshness(
 
   try {
     const watermark = await deps.repository().getWatermark();
-    return json({ watermark });
+    return json(freshnessBody(watermark));
   } catch (error) {
     logReadError("getWatermark", error);
     return unavailable();
@@ -145,6 +188,23 @@ export async function getFreshness(
 async function loadCandidateWithRace(repo: ApiRepository, candidateId: string) {
   const candidate = await repo.getCandidate(candidateId);
   if (!candidate) return null;
-  const race = await repo.getRace(candidate.raceId);
-  return { candidate, race };
+  const presented = presentCandidate(candidate);
+  if (!presented) return null;
+  const race = await loadVisibleRace(repo, candidate.raceId);
+  return { candidate: presented, race };
+}
+
+function freshnessBody(watermark: IngestWatermark | null) {
+  return {
+    watermark,
+    scope: FORM2_SCOPE,
+    filingsSoFarOnly: true as const,
+    scopeNote: FORM2_SCOPE_NOTE,
+    refreshedAt: watermark?.updatedAt ?? null,
+  };
+}
+
+async function refreshedAtFrom(repo: ApiRepository): Promise<string | null> {
+  const watermark = await repo.getWatermark();
+  return watermark?.updatedAt ?? null;
 }

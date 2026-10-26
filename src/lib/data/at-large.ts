@@ -1,0 +1,126 @@
+import { stateName } from "./states";
+
+/**
+ * States and territories with one House seat (or one delegate / resident
+ * commissioner). FEC sometimes files that seat as district 01. The race id
+ * for that contest is district 00, "at-large".
+ * Voting states here are the single-district states under the 2020 census
+ * apportionment. Montana has two districts and is not in this set.
+ */
+export const SINGLE_SEAT_POSTALS = new Set([
+  "AK",
+  "AS",
+  "DC",
+  "DE",
+  "GU",
+  "MP",
+  "ND",
+  "PR",
+  "SD",
+  "VI",
+  "VT",
+  "WY",
+]);
+
+/** House seats by postal code. Totals follow the 2020 census apportionment. */
+export const HOUSE_SEATS: Record<string, number> = {
+  AL: 7,
+  AK: 1,
+  AZ: 9,
+  AR: 4,
+  CA: 52,
+  CO: 8,
+  CT: 5,
+  DE: 1,
+  FL: 28,
+  GA: 14,
+  HI: 2,
+  ID: 2,
+  IL: 17,
+  IN: 9,
+  IA: 4,
+  KS: 4,
+  KY: 6,
+  LA: 6,
+  ME: 2,
+  MD: 8,
+  MA: 9,
+  MI: 13,
+  MN: 8,
+  MS: 4,
+  MO: 8,
+  MT: 2,
+  NE: 3,
+  NV: 4,
+  NH: 2,
+  NJ: 12,
+  NM: 3,
+  NY: 26,
+  NC: 14,
+  ND: 1,
+  OH: 15,
+  OK: 5,
+  OR: 6,
+  PA: 17,
+  RI: 2,
+  SC: 7,
+  SD: 1,
+  TN: 9,
+  TX: 38,
+  UT: 4,
+  VT: 1,
+  VA: 11,
+  WA: 10,
+  WV: 2,
+  WI: 8,
+  WY: 1,
+};
+
+export const HOUSE_SEATS_TOTAL = 435;
+
+const HOUSE_RACE_ID = /^(\d{4})-house-([A-Z]{2})-(\d{2})$/;
+
+export function isSingleSeat(state: string | null | undefined): boolean {
+  return state != null && SINGLE_SEAT_POSTALS.has(state);
+}
+
+/** District code stored on a race. Single-seat states always use `00`. */
+export function canonicalDistrict(
+  state: string | null | undefined,
+  district: string | null | undefined,
+): string | null {
+  if (!district) return district ?? null;
+  if (isSingleSeat(state)) return "00";
+  return district;
+}
+
+export function canonicalRaceId(raceId: string): string {
+  const match = HOUSE_RACE_ID.exec(raceId);
+  if (!match) return raceId;
+  const district = canonicalDistrict(match[2], match[3]);
+  return `${match[1]}-house-${match[2]}-${district}`;
+}
+
+/**
+ * Keys that should be read together. The canonical id is first.
+ * District 01 is the legacy Wyoming (and other single-seat) key.
+ */
+export function raceIdAliases(raceId: string): string[] {
+  const canonical = canonicalRaceId(raceId);
+  const match = HOUSE_RACE_ID.exec(canonical);
+  if (!match || !isSingleSeat(match[2]) || match[3] !== "00") return [canonical];
+  const legacy = `${match[1]}-house-${match[2]}-01`;
+  return canonical === legacy ? [canonical] : [canonical, legacy];
+}
+
+export function houseContestTitle(state: string, district: string): string {
+  const name = stateName(state);
+  if (district === "00") return `U.S. House, ${name} at-large`;
+  return `U.S. House, ${name} District ${Number(district)}`;
+}
+
+export function houseContestJurisdiction(state: string, district: string): string {
+  const name = stateName(state);
+  if (district === "00") return `${name} at-large`;
+  return `${name} District ${Number(district)}`;
+}

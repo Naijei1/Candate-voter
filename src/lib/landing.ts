@@ -1,3 +1,4 @@
+import { FORM2_SCOPE_NOTE, houseCoverageForRaces } from "./data/coverage";
 import { OFFICE_ORDER } from "./races";
 import type { Race } from "./types";
 
@@ -53,22 +54,69 @@ export function presidentialRace(races: readonly Race[]): Race | null {
   return [...matches].sort(byFreshest)[0] ?? null;
 }
 
+export type StateCoverage = {
+  /** No Senate row and no House district with a stored filing. */
+  empty: boolean;
+  lines: string[];
+  scopeNote: string;
+};
+
 /**
- * Counts of Senate and House rows already loaded for a state.
- * TODO(backend): when filings-scope fields land (expected House seats or a
- * completeness flag), render "X of Y" from those fields. Do not hardcode
- * apportionment or invent districts that are missing from the table.
+ * Senate rows already loaded, plus House "X of Y" from `houseCoverageForRaces`.
+ * `districtsTotal` is the apportionment on that coverage row. A zero total
+ * (no apportionment for the postal) does not invent a denominator.
  */
-export function filingCoverageLabel(races: readonly Race[], postal: string): string {
+export function stateCoverage(races: readonly Race[], postal: string, cycle?: number): StateCoverage {
   const local = stateRaces(races, postal);
   const senate = local.filter((race) => race.office === "senate").length;
-  const house = local.filter((race) => race.office === "house").length;
-  if (senate === 0 && house === 0) return "No filings yet.";
-  const parts: string[] = [];
-  if (senate > 0) parts.push(countPhrase(senate, "Senate"));
-  if (house > 0) parts.push(countPhrase(house, "House"));
-  const joined = parts.length === 2 ? `${parts[0]} and ${parts[1]}` : parts[0];
-  return `Form 2 e-file filings so far: ${joined}. Not a complete ballot.`;
+  const cycles =
+    cycle != null
+      ? [cycle]
+      : [
+          ...new Set(
+            races.flatMap((race) => (race.cycle != null && race.cycle > 0 ? [race.cycle] : [])),
+          ),
+        ];
+  const row = houseCoverageForRaces(races, cycles, postal).find((item) => item.state === postal);
+  const lines: string[] = [];
+  if (senate > 0) lines.push(`${countPhrase(senate, "Senate")}.`);
+  if (row && row.districtsTotal > 0) {
+    lines.push(`${row.districtsWithFilings} of ${row.districtsTotal} House districts have filings.`);
+  } else if (row && row.districtsWithFilings > 0) {
+    lines.push(`${countPhrase(row.districtsWithFilings, "House")}.`);
+  }
+  const filedHouse = row?.districtsWithFilings ?? 0;
+  return {
+    empty: senate === 0 && filedHouse === 0,
+    lines,
+    scopeNote: FORM2_SCOPE_NOTE,
+  };
+}
+
+/** One readable coverage sentence for a state panel or a test. */
+export function filingCoverageLabel(races: readonly Race[], postal: string, cycle?: number): string {
+  const coverage = stateCoverage(races, postal, cycle);
+  if (coverage.lines.length === 0) return `No filings yet. ${coverage.scopeNote}`;
+  return `${coverage.lines.join(" ")} ${coverage.scopeNote}`;
+}
+
+/**
+ * House line for a race page. `state` null uses the 50-state rollup
+ * (`state: null` on the coverage row). Missing apportionment omits "of Y".
+ */
+export function houseCoverageLine(
+  races: readonly Race[],
+  cycle: number,
+  state: string | null,
+): string | null {
+  const rows = houseCoverageForRaces(races, [cycle], state);
+  const row = state ? rows.find((item) => item.state === state) : rows.find((item) => item.state === null);
+  if (!row) return null;
+  if (row.districtsTotal > 0) {
+    return `${row.districtsWithFilings} of ${row.districtsTotal} House districts have filings.`;
+  }
+  if (row.districtsWithFilings > 0) return `${countPhrase(row.districtsWithFilings, "House")}.`;
+  return null;
 }
 
 /** Postal codes that have a stored Senate or House race. */

@@ -145,6 +145,8 @@ paths:
         \`watermark\` is null until the ingest worker has written a cursor.
         \`lastLoadTimestamp\` is the inclusive FEC load timestamp already safe
         to re-read. \`lastStatus\` is running, success, or error.
+        \`scope\` is \`fec-efile-form2\`. \`filingsSoFarOnly\` is true.
+        \`refreshedAt\` repeats the cursor write time when one is stored.
       responses:
         "200":
           description: The stored ingest cursor
@@ -163,6 +165,10 @@ paths:
                   filingsUpserted: 120
                   skipped: 2
                   updatedAt: "2026-10-26T05:00:00.000Z"
+                scope: fec-efile-form2
+                filingsSoFarOnly: true
+                scopeNote: Counts are FEC Form 2 electronic filings stored so far, not a full ballot or a certified candidate list.
+                refreshedAt: "2026-10-26T05:00:00.000Z"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "503":
@@ -178,8 +184,13 @@ paths:
         Amazon Bedrock with tools that read the same DynamoDB rows as
         \`/api/v1\`. The response is buffered JSON, not a stream.
         \`refused: true\` is still HTTP 200: voting advice, rankings,
-        endorsements, or no matching stored record. \`threadId\` is echoed
-        or minted for the client. This spike does not store the thread.
+        endorsements, or no matching stored record. A vague "who is running"
+        question with no race, candidate, or state asks which contest to
+        open instead of listing every state. \`mode\` is \`factual\` or
+        \`alignment\`. Alignment is only for an explicit viewpoint question.
+        The stored rows are Form 2 filings, so alignment says when votes and
+        position statements are not in the table. \`threadId\` is echoed or
+        minted for the client. This spike does not store the thread.
       requestBody:
         required: true
         content:
@@ -203,6 +214,7 @@ paths:
                     url: https://voter.naijei.com/races/2026-senate-CA
                     as_of: "2026-10-26T05:00:00.000Z"
                 refused: false
+                mode: factual
                 threadId: 4f1c0b7e-6a2d-4c1a-9d0e-2b6a9c8d7e11
         "400":
           description: The JSON body is missing or invalid
@@ -426,6 +438,8 @@ components:
         - nameAsFiled
         - office
         - partyAffiliation
+        - partyCode
+        - partyLabel
         - fecCandidateId
         - sourceUrl
         - sourceLoadedAt
@@ -445,7 +459,14 @@ components:
         partyAffiliation:
           type: string
           nullable: true
-          description: Party code as reported on the filing. Not an endorsement.
+          description: Party code as reported on the filing. Same value as partyCode. Not an endorsement.
+        partyCode:
+          type: string
+          nullable: true
+          description: Uppercase FEC party code. Null when the filing left affiliation blank.
+        partyLabel:
+          type: string
+          description: Readable label for partyCode, such as Democratic or Write-in. Unknown codes stay as stored. Not an endorsement.
         fecCandidateId:
           type: string
           nullable: true
@@ -561,6 +582,8 @@ components:
         nextCursor:
           type: string
           nullable: true
+        coverage:
+          $ref: "#/components/schemas/Coverage"
     RaceDetail:
       type: object
       required: [race, candidates]
@@ -569,9 +592,11 @@ components:
           $ref: "#/components/schemas/Race"
         candidates:
           type: array
-          description: Alphabetical by display name. Party is not a sort key.
+          description: Alphabetical by display name. Party is not a sort key. Placeholder n/a names are omitted. Presidential rows that share a normalized name are collapsed.
           items:
             $ref: "#/components/schemas/Candidate"
+        coverage:
+          $ref: "#/components/schemas/Coverage"
     CandidateDetail:
       type: object
       required: [candidate, race]
@@ -600,6 +625,52 @@ components:
           nullable: true
           allOf:
             - $ref: "#/components/schemas/IngestWatermark"
+        scope:
+          type: string
+          enum: [fec-efile-form2]
+        filingsSoFarOnly:
+          type: boolean
+          description: True. The product stores electronic Form 2 filings, not a full ballot.
+        scopeNote:
+          type: string
+        refreshedAt:
+          type: string
+          nullable: true
+          description: ISO-8601 time the ingest cursor was last written. Null when watermark is null.
+    Coverage:
+      type: object
+      required: [scope, filingsSoFarOnly, scopeNote, refreshedAt, house]
+      properties:
+        scope:
+          type: string
+          enum: [fec-efile-form2]
+        filingsSoFarOnly:
+          type: boolean
+        scopeNote:
+          type: string
+        refreshedAt:
+          type: string
+          nullable: true
+        house:
+          type: array
+          description: |
+            House districts with at least one stored Form 2 race.
+            districtsTotal uses the 2020 census apportionment (435 seats).
+            A single-seat state counts as one district. state null is the
+            50-state rollup.
+          items:
+            type: object
+            required: [cycle, state, districtsWithFilings, districtsTotal]
+            properties:
+              cycle:
+                type: integer
+              state:
+                type: string
+                nullable: true
+              districtsWithFilings:
+                type: integer
+              districtsTotal:
+                type: integer
     ChatRequest:
       type: object
       required: [message]
@@ -643,6 +714,14 @@ components:
         refused:
           type: boolean
           description: Soft refusal. The HTTP status stays 200.
+        mode:
+          type: string
+          enum: [factual, alignment]
+          description: |
+            factual is filings and races. alignment is an explicit viewpoint
+            question. The page can show a disclaimer when mode is alignment.
+            Alignment does not recommend a vote. If the table has no position
+            or vote fields, the answer says so.
         threadId:
           type: string
 `;

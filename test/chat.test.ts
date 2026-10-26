@@ -488,6 +488,10 @@ test("openapi, llms.txt, and /agent document the browser chat route", () => {
   assert.match(chat, /security: \[\]/);
   assert.match(chat, /Retry-After/);
   assert.match(chat, /answer_markdown/);
+  assert.match(chat, /mode:/);
+  assert.match(spec, /alignment/);
+  assert.match(spec, /partyLabel/);
+  assert.match(spec, /districtsWithFilings/);
   assert.equal(spec.includes("FEC_API_KEY"), false);
 
   const text = llmsText({ origin: "https://voter.example", basePath: "" });
@@ -504,4 +508,159 @@ test("openapi, llms.txt, and /agent document the browser chat route", () => {
   assert.match(html, /POST \/api\/chat/);
   assert.match(html, /https:\/\/voter\.example\/api\/chat/);
   assert.match(html, /No API key/);
+  assert.match(html, /alignment/);
+  assert.match(html, /Form 2/);
+});
+
+test("a vague who-is-running question asks for a race and does not call the model", async () => {
+  let called = false;
+  for (const message of ["Who's running", "Whos running"]) {
+    const response = await postChat(
+      post({ message }),
+      chatDeps(new MemoryVoterRepository(), async () => {
+        called = true;
+        throw new Error("model should not be called");
+      }),
+    );
+    assert.equal(response.status, 200, message);
+    const payload = (await response.json()) as {
+      answer_markdown: string;
+      refused: boolean;
+      mode: string;
+      sources: unknown[];
+    };
+    assert.equal(payload.refused, false);
+    assert.equal(payload.mode, "factual");
+    assert.match(payload.answer_markdown, /which state or race/i);
+    assert.equal(payload.answer_markdown.includes("Alabama"), false);
+    assert.equal(/50 states/i.test(payload.answer_markdown), false);
+    assert.equal(/every state/i.test(payload.answer_markdown), false);
+    assert.deepEqual(payload.sources, []);
+  }
+  assert.equal(called, false);
+});
+
+test("who is running with a raceId stays on that race", async () => {
+  const repo = new MemoryVoterRepository();
+  await repo.upsertRace(
+    race({
+      raceId: "2026-senate-CA",
+      office: "senate",
+      cycle: 2026,
+      title: "U.S. Senate, California",
+    }),
+  );
+  await repo.upsertCandidate(
+    candidate({ candidateId: "S0CA00123", displayName: "Ada Lovelace", partyAffiliation: "DEM" }),
+  );
+  const response = await postChat(
+    post({ message: "Who's running", raceId: "2026-senate-CA" }),
+    chatDeps(
+      repo,
+      scripted([
+        toolUse("get_race", { raceId: "2026-senate-CA" }),
+        modelJson({
+          answer_markdown:
+            "**Ada Lovelace** (Democratic) has a Form 2 filing for [California Senate](https://voter.example/races/2026-senate-CA).",
+          sources: [
+            {
+              title: "U.S. Senate, California",
+              url: "https://voter.example/races/2026-senate-CA",
+              as_of: updatedAt,
+            },
+          ],
+          refused: false,
+          mode: "factual",
+        }),
+      ]),
+    ),
+  );
+  assert.equal(response.status, 200);
+  const payload = (await response.json()) as {
+    answer_markdown: string;
+    mode: string;
+    refused: boolean;
+    sources: Array<{ url: string }>;
+  };
+  assert.equal(payload.mode, "factual");
+  assert.equal(payload.refused, false);
+  assert.match(payload.answer_markdown, /Ada Lovelace/);
+  assert.match(payload.answer_markdown, /\*\*Ada Lovelace\*\*/);
+  assert.equal(
+    payload.sources.some((source) => source.url === "https://voter.example/races/2026-senate-CA"),
+    true,
+  );
+});
+
+test("an explicit alignment question sets mode and does not recommend a vote", async () => {
+  const repo = new MemoryVoterRepository();
+  await repo.upsertRace(
+    race({
+      raceId: "2026-senate-CA",
+      office: "senate",
+      cycle: 2026,
+      title: "U.S. Senate, California",
+    }),
+  );
+  await repo.upsertCandidate(
+    candidate({ candidateId: "S0CA00123", displayName: "Ada Lovelace", partyAffiliation: "DEM" }),
+  );
+  let called = false;
+  const response = await postChat(
+    post({
+      message: "Whose views align with mine?",
+      raceId: "2026-senate-CA",
+    }),
+    chatDeps(repo, async () => {
+      called = true;
+      throw new Error("model should not invent positions");
+    }),
+  );
+  assert.equal(response.status, 200);
+  const payload = (await response.json()) as {
+    answer_markdown: string;
+    mode: string;
+    refused: boolean;
+    sources: Array<{ url: string; title: string; as_of: string }>;
+  };
+  assert.equal(called, false);
+  assert.equal(payload.mode, "alignment");
+  assert.equal(payload.refused, false);
+  assert.match(payload.answer_markdown, /Form 2/i);
+  assert.match(payload.answer_markdown, /cannot compare|can't compare/i);
+  assert.equal(/\bvote for\b/i.test(payload.answer_markdown), false);
+  assert.match(payload.answer_markdown, /Ada Lovelace/);
+  assert.equal(
+    payload.sources.some((source) => source.url === "https://voter.example/races/2026-senate-CA"),
+    true,
+  );
+  for (const source of payload.sources) {
+    assert.match(source.url, /^https:\/\//);
+    assert.ok(source.title.length > 0);
+    assert.ok(source.as_of.length > 0);
+  }
+});
+
+test("alignment without a race still refuses to invent positions", async () => {
+  let called = false;
+  const response = await postChat(
+    post({ message: "Whose views align with mine?" }),
+    chatDeps(new MemoryVoterRepository(), async () => {
+      called = true;
+      throw new Error("model should not be called");
+    }),
+  );
+  const payload = (await response.json()) as {
+    mode: string;
+    refused: boolean;
+    answer_markdown: string;
+    sources: unknown[];
+  };
+  assert.equal(called, false);
+  assert.equal(response.status, 200);
+  assert.equal(payload.mode, "alignment");
+  assert.equal(payload.refused, false);
+  assert.match(payload.answer_markdown, /Form 2/i);
+  assert.equal(/\bvote for\b/i.test(payload.answer_markdown), false);
+  assert.deepEqual(payload.sources, []);
 });
