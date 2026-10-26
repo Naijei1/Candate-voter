@@ -1,6 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { postalFromSearch, searchWithState, yearNavigationHref } from "../src/lib/landing/state-query";
+import {
+  postalFromSearch,
+  searchWithState,
+  selectionFromLocation,
+  selectionFromPop,
+  yearNavigationHref,
+} from "../src/lib/landing/state-query";
 
 test("state query keeps the year and replaces a previous state", () => {
   assert.equal(searchWithState("", "ca"), "?state=CA");
@@ -9,6 +15,16 @@ test("state query keeps the year and replaces a previous state", () => {
   assert.equal(postalFromSearch("?year=2026&state=ca"), "CA");
   assert.equal(postalFromSearch("?state=California"), null);
   assert.equal(postalFromSearch(""), null);
+});
+
+test("a deep link selects from the URL before the server prop catches up", () => {
+  assert.equal(selectionFromLocation("?state=NV", null), "NV");
+  assert.equal(selectionFromLocation("?state=ky", "CA"), "KY");
+  assert.equal(selectionFromLocation("", "NV"), "NV");
+  assert.equal(selectionFromLocation("?state=nope", "KY"), "KY");
+  assert.equal(selectionFromPop("?state=KY"), "KY");
+  assert.equal(selectionFromPop(""), null);
+  assert.equal(selectionFromPop("?year=2026"), null);
 });
 
 test("year navigation keeps the selected state on the home page", () => {

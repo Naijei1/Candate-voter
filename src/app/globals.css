@@ -169,14 +169,25 @@ body {
   background: var(--color-accent-strong);
 }
 
+.map-hero-below-banner {
+  margin-top: 0;
+}
+
 @media (min-width: 1024px) {
   .map-hero-grid {
     grid-template-columns: minmax(0, 1fr) 23.5rem;
+    /* Fixed box. A taller filings panel used to stretch this row and
+       scale the map downward. The panel scrolls inside the column. */
+    height: calc(100svh - 4.5rem);
     min-height: calc(100svh - 4.5rem);
+    max-height: calc(100svh - 4.5rem);
+    overflow: hidden;
   }
 
   .map-stage {
-    min-height: calc(100svh - 4.5rem);
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
   }
 
   .map-canvas {
@@ -184,6 +195,9 @@ body {
   }
 
   .map-panel {
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
     padding: 0;
   }
 }

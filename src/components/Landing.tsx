@@ -2,16 +2,23 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useAsk } from "@/components/chat/AskProvider";
+import { DataRefreshedBanner } from "@/components/DataRefreshedBanner";
+import { MultiFilingDetails } from "@/components/MultiFilingDetails";
 import { RecordMeta } from "@/components/RecordMeta";
 import { StorageNotice } from "@/components/StorageNotice";
 import { MapLegend, UsMap } from "@/components/UsMap";
 import { askScopeForState, askScopeForYear, pageContextFromScope } from "@/lib/chat/scope";
 import { isAskPanelPath } from "@/lib/chat/ui";
 import { isPostalState, stateName, stateOptions } from "@/lib/data/states";
-import { postalFromSearch, searchWithState } from "@/lib/landing/state-query";
-import { formatInstant, officeLabel, partyLabel, partyTone } from "@/lib/format";
+import {
+  postalFromSearch,
+  searchWithState,
+  selectionFromLocation,
+  selectionFromPop,
+} from "@/lib/landing/state-query";
+import { officeLabel, partyLabel, partyTone } from "@/lib/format";
 import {
   presidentialRace,
   spotlightRaces,
@@ -42,7 +49,7 @@ type LandingProps = {
   cycleLabel: string;
   /** Candidates already read for the state in the URL, so the panel can render with the races. */
   seededCandidates?: RaceCandidatesResult | null;
-  /** Ingest watermark time from freshness (`refreshedAt`). */
+  /** Top-level race-index `refreshedAt`. Null omits the page banner. */
   refreshedAt?: string | null;
 };
 
@@ -71,10 +78,23 @@ export function Landing({
     return replacePageContext(pageContextFromScope(scope));
   }, [replacePageContext, races, selected, year]);
 
-  useEffect(() => {
-    const fromUrl = postalFromSearch(window.location.search);
-    setSelected(fromUrl ?? initialState);
+  useLayoutEffect(() => {
+    setSelected(selectionFromLocation(window.location.search, initialState));
   }, [initialState]);
+
+  useLayoutEffect(() => {
+    const onUrl = () => {
+      const fromUrl = postalFromSearch(window.location.search);
+      if (fromUrl) setSelected(fromUrl);
+    };
+    const onPop = () => setSelected(selectionFromPop(window.location.search));
+    watchLocation(onUrl);
+    window.addEventListener("popstate", onPop);
+    return () => {
+      unwatchLocation(onUrl);
+      window.removeEventListener("popstate", onPop);
+    };
+  }, []);
 
   const panelRaceKey = selected ? stateRaces(races, selected).map((race) => race.raceId).join("\n") : "";
 
@@ -148,17 +168,16 @@ export function Landing({
     writeStateUrl(selected);
   }, [selected, writeStateUrl]);
 
-  useEffect(() => {
-    function onPop() {
-      setSelected(postalFromSearch(window.location.search));
-    }
-    window.addEventListener("popstate", onPop);
-    return () => window.removeEventListener("popstate", onPop);
-  }, []);
+  const showRefreshed = Boolean(refreshedAt?.trim());
 
   return (
     <div className="space-y-10">
-      <section data-testid="hero" className="map-hero" aria-labelledby="hero-heading">
+      <DataRefreshedBanner refreshedAt={refreshedAt} />
+      <section
+        data-testid="hero"
+        className={showRefreshed ? "map-hero map-hero-below-banner" : "map-hero"}
+        aria-labelledby="hero-heading"
+      >
         {hasAnyRaces ? null : (
           <div className="px-4 pt-4 sm:px-6">
             <StorageNotice>
@@ -220,7 +239,6 @@ export function Landing({
               selected={selected}
               cache={entries}
               onRetryRace={retryRace}
-              refreshedAt={refreshedAt}
             />
           </div>
         </div>
@@ -238,32 +256,24 @@ export function Landing({
             <StorageNotice>No races are stored for {year}.</StorageNotice>
           </div>
         ) : (
-          <ol className="mt-4 space-y-3">
-            {spotlight.map((race, index) => (
+          <ul className="mt-4 space-y-3">
+            {spotlight.map((race) => (
               <li key={race.raceId}>
                 <article className="rounded-xl border border-line bg-card p-4 shadow-sm">
-                  <div className="flex gap-4">
-                    <span className="w-6 shrink-0 pt-0.5 text-sm font-semibold text-muted tabular-nums" aria-hidden="true">
-                      {index + 1}
-                    </span>
-                    <div className="min-w-0">
-                      <h3 className="text-base font-semibold tracking-tight">
-                        <Link
-                          href={`/races/${race.raceId}`}
-                          className="text-ink underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
-                        >
-                          <span className="sr-only">Popular {index + 1}. </span>
-                          {race.title}
-                        </Link>
-                      </h3>
-                      <p className="text-sm text-muted">{race.jurisdiction}</p>
-                      <RecordMeta sourceUrl={race.sourceUrl} updatedAt={race.updatedAt} />
-                    </div>
-                  </div>
+                  <h3 className="text-base font-semibold tracking-tight">
+                    <Link
+                      href={`/races/${race.raceId}`}
+                      className="text-ink underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
+                    >
+                      {race.title}
+                    </Link>
+                  </h3>
+                  <p className="text-sm text-muted">{race.jurisdiction}</p>
+                  <RecordMeta sourceUrl={race.sourceUrl} updatedAt={race.updatedAt} />
                 </article>
               </li>
             ))}
-          </ol>
+          </ul>
         )}
       </section>
     </div>
@@ -306,26 +316,23 @@ function StatePanel({
   races,
   selected,
   cache,
-  refreshedAt,
   onRetryRace,
 }: {
   year: number;
   races: Race[];
   selected: string | null;
   cache: Map<string, CandidateCacheEntry>;
-  refreshedAt: string | null;
   onRetryRace: (raceId: string) => void;
 }) {
   const listed = selected ? stateRaces(races, selected) : [];
   const groups = racesByStateOffice(listed);
   const president = presidentialRace(races);
   const coverage = selected ? stateCoverage(races, selected, year) : null;
-  const refreshed = formatInstant(refreshedAt);
 
   return (
     <aside
       data-testid="state-panel"
-      className="flex h-full max-h-[44rem] flex-col overflow-hidden rounded-xl border border-line bg-card shadow-sm lg:max-h-none lg:rounded-none lg:border-0 lg:border-l lg:shadow-none"
+      className="flex h-full min-h-0 max-h-[44rem] flex-col overflow-hidden rounded-xl border border-line bg-card shadow-sm lg:max-h-none lg:rounded-none lg:border-0 lg:border-l lg:shadow-none"
     >
       <div className="border-b border-line bg-paper px-4 py-3">
         <h3 className="text-lg font-semibold tracking-tight">
@@ -340,7 +347,6 @@ function StatePanel({
                 <p>{`No Senate or House Form 2 e-file filings are stored for ${stateName(selected)} in ${year}.`}</p>
               )}
               <p>{coverage.scopeNote}</p>
-              {refreshed ? <p>Refreshed {refreshed}</p> : null}
             </>
           ) : (
             <p>Select a state to list stored Senate and House filings.</p>
@@ -492,7 +498,9 @@ function CandidateList({
               <Affiliation party={candidate.partyAffiliation} provided={candidate.partyLabel} />
             )}
             {candidate.multiFilingNote ? (
-              <p className="text-sm text-muted">{candidate.multiFilingNote}</p>
+              <MultiFilingDetails count={candidate.alternateFilingCount + 1}>
+                <p>{candidate.multiFilingNote}</p>
+              </MultiFilingDetails>
             ) : null}
           </li>
         ))}
@@ -510,6 +518,32 @@ function CandidateList({
       ) : null}
     </div>
   );
+}
+
+const locationListeners = new Set<() => void>();
+let locationPatched = false;
+
+function watchLocation(listener: () => void) {
+  locationListeners.add(listener);
+  if (locationPatched) return;
+  locationPatched = true;
+  const push = history.pushState.bind(history);
+  const replace = history.replaceState.bind(history);
+  const notify = () => {
+    for (const item of locationListeners) item();
+  };
+  history.pushState = (...args: Parameters<History["pushState"]>) => {
+    push(...args);
+    notify();
+  };
+  history.replaceState = (...args: Parameters<History["replaceState"]>) => {
+    replace(...args);
+    notify();
+  };
+}
+
+function unwatchLocation(listener: () => void) {
+  locationListeners.delete(listener);
 }
 
 function Affiliation({
