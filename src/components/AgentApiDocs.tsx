@@ -59,7 +59,10 @@ export function AgentApiDocs({ origin, basePath, freshness }: AgentApiDocsProps)
           </li>
           <li>
             <code>GET /api/v1/races/{"{raceId}"}</code> — one race and its
-            candidates, alphabetical by display name.
+            candidates, alphabetical by display name. The same normalized name
+            is one row. <code>multiFilingNote</code> names each party once and
+            lists the other FEC ids. <code>alternateFilings</code> keeps those
+            source links.
           </li>
           <li>
             <code>GET /api/v1/candidates/{"{candidateId}"}</code> — one candidate

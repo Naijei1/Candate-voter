@@ -21,12 +21,17 @@ export function finalizeAnswer(input: {
   modelText: string | null;
   toolRecords: number;
   toolSources: readonly ChatSource[];
+  /** HTTPS URLs present on tool records, including collapsed FEC ids past the source cap. */
+  recordUrls?: readonly string[];
   snippets: readonly string[];
   groundedText: string;
   toolsCalled: number;
 }): ChatAnswer {
   const allowed = dedupe(input.toolSources);
-  const allowedUrls = new Set(allowed.map((source) => source.url));
+  const allowedUrls = new Set([
+    ...allowed.map((source) => source.url),
+    ...(input.recordUrls ?? []),
+  ]);
   const grounded = idsIn(input.groundedText);
   const parsed = input.modelText ? parseModelAnswer(input.modelText) : null;
 

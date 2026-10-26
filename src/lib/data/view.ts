@@ -7,14 +7,31 @@ import {
   houseContestTitle,
   raceIdAliases,
 } from "./at-large";
-import { dedupePresidential } from "./dedupe";
+import { collapseSamePerson, multiFilingNote, type CollapsedCandidate } from "./dedupe";
 import { normalizeFiledName, normalizePersonName } from "./names";
+
+/** Another FEC id for the same person on this race. Party is the code that filing reported. */
+export type AlternateFiling = {
+  candidateId: string;
+  fecCandidateId: string | null;
+  partyAffiliation: string | null;
+  partyCode: string | null;
+  partyLabel: string;
+  sourceUrl: string | null;
+};
 
 export type PublicCandidate = Candidate & {
   /** Uppercase FEC party code, or null when the filing left it blank. */
   partyCode: string | null;
   /** Readable label for `partyCode`. Not an endorsement. */
   partyLabel: string;
+  /** Other FEC ids collapsed into this display row. Empty when this is the only filing. */
+  alternateFilings: AlternateFiling[];
+  /**
+   * Short note when the same name was filed under more than one FEC id.
+   * Each party is named once. Null for a single filing.
+   */
+  multiFilingNote: string | null;
 };
 
 type RaceLookup = {
@@ -37,16 +54,55 @@ export function cleanCandidate(candidate: Candidate): Candidate | null {
   };
 }
 
-export function presentCandidate(candidate: Candidate): PublicCandidate | null {
+export function presentCandidate(
+  candidate: Candidate,
+  alternates: readonly Candidate[] = alternateRows(candidate),
+): PublicCandidate | null {
   const cleaned = cleanCandidate(candidate);
   if (!cleaned) return null;
   const code = partyCode(cleaned.partyAffiliation);
+  const alternateFilings = alternates.flatMap((row) => {
+    const next = cleanCandidate(row);
+    return next ? [toAlternate(next)] : [];
+  });
   return {
     ...cleaned,
     partyAffiliation: code,
     partyCode: code,
     partyLabel: partyLabel(code, cleaned.partyLabel),
+    alternateFilings,
+    multiFilingNote: multiFilingNote(cleaned, alternates.flatMap((row) => {
+      const next = cleanCandidate(row);
+      return next ? [next] : [];
+    })),
   };
+}
+
+/** Party labels on a collapsed row, keeper first, each distinct label once. */
+export function displayedPartyLabels(candidate: PublicCandidate): string[] {
+  const labels = [candidate.partyLabel, ...candidate.alternateFilings.map((row) => row.partyLabel)];
+  const seen = new Set<string>();
+  const unique: string[] = [];
+  for (const label of labels) {
+    if (seen.has(label)) continue;
+    seen.add(label);
+    unique.push(label);
+  }
+  return unique;
+}
+
+/** Party codes on a collapsed row, keeper first, each distinct code once. */
+export function displayedPartyCodes(candidate: PublicCandidate): Array<string | null> {
+  const codes = [candidate.partyCode, ...candidate.alternateFilings.map((row) => row.partyCode)];
+  const seen = new Set<string>();
+  const unique: Array<string | null> = [];
+  for (const code of codes) {
+    const key = code ?? "";
+    if (seen.has(key)) continue;
+    seen.add(key);
+    unique.push(code);
+  }
+  return unique;
 }
 
 /** Rewrite a single-seat House race that was stored under district 01. */
@@ -111,7 +167,7 @@ export async function loadVisibleCandidates(
     const next = cleanCandidate(candidate);
     return next ? [next] : [];
   });
-  return sortByName(dedupePresidential(cleaned));
+  return sortByName(collapseSamePerson(cleaned));
 }
 
 export async function loadPublicCandidates(
@@ -132,12 +188,30 @@ function preferRace(next: Race, current: Race): boolean {
   return (next.updatedAt ?? "") > (current.updatedAt ?? "");
 }
 
-function sortByName(candidates: readonly Candidate[]): Candidate[] {
+function sortByName<T extends Candidate>(candidates: readonly T[]): T[] {
   return [...candidates].sort((a, b) => {
     const byName = a.displayName.localeCompare(b.displayName, "en");
     if (byName !== 0) return byName;
     return a.candidateId.localeCompare(b.candidateId);
   });
+}
+
+function alternateRows(candidate: Candidate): Candidate[] {
+  const extra = (candidate as CollapsedCandidate).alternateFilings;
+  if (!Array.isArray(extra)) return [];
+  return extra.filter((row) => row && typeof row.candidateId === "string" && typeof row.displayName === "string");
+}
+
+function toAlternate(candidate: Candidate): AlternateFiling {
+  const code = partyCode(candidate.partyAffiliation);
+  return {
+    candidateId: candidate.candidateId,
+    fecCandidateId: candidate.fecCandidateId,
+    partyAffiliation: code,
+    partyCode: code,
+    partyLabel: partyLabel(code, candidate.partyLabel),
+    sourceUrl: candidate.sourceUrl,
+  };
 }
 
 function rewriteDistrictParam(sourceUrl: string | null, district: string): string | null {

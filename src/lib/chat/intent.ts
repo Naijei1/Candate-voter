@@ -1,3 +1,4 @@
+import { parseCycle } from "../data/cycles";
 import { isPostalState, stateOptions } from "../data/states";
 import type { ChatRequest } from "./types";
 
@@ -13,6 +14,49 @@ const VAGUE_RUNNING: readonly RegExp[] = [
   /\bwho(?:'s| has| have)?\s*filed\b/i,
   /\bwho is running\b/i,
 ];
+
+const UPCOMING: readonly RegExp[] = [
+  /\bwhat elections are coming up\b/i,
+  /\bwhich elections are coming up\b/i,
+  /\belections?\s+(?:are\s+)?coming up\b/i,
+  /\bupcoming elections?\b/i,
+  /\bwhat(?:'s| is| are) coming up\b/i,
+  /\bwhat races are (?:coming up|next|on the ballot)\b/i,
+  /\bwhat(?:'s| is) on the ballot\b/i,
+  /\bwhat elections\b/i,
+  /\bwhich elections\b/i,
+];
+
+/** "What elections are coming up" and the same calendar question. */
+export function isUpcomingElectionsQuestion(message: string): boolean {
+  return UPCOMING.some((pattern) => pattern.test(message));
+}
+
+/** Postal state named in the question, if any. */
+export function stateMentionedIn(message: string): string | null {
+  const lower = message.toLowerCase();
+  for (const option of stateOptions()) {
+    if (option.name.length < 4) continue;
+    if (lower.includes(option.name.toLowerCase())) return option.postal;
+  }
+  const prefixed = /\b(?:in|for|from|of)\s+([a-z]{2})\b/gi;
+  for (const match of message.matchAll(prefixed)) {
+    const code = match[1]?.toUpperCase() ?? "";
+    if (isPostalState(code)) return code;
+  }
+  for (const match of message.matchAll(/\b([A-Z]{2})\b/g)) {
+    const code = match[1] ?? "";
+    if (isPostalState(code)) return code;
+  }
+  return null;
+}
+
+/** First election year written in the question, when it is in range. */
+export function cycleMentionedIn(message: string): number | null {
+  const match = /\b(?:19|20)\d{2}\b/.exec(message);
+  if (!match) return null;
+  return parseCycle(match[0]);
+}
 
 /**
  * A who-is-running question with no race, candidate, state, or presidential
@@ -51,19 +95,5 @@ I can list **who has an FEC Form 2 filing** once I know the contest. For example
 I won't guess a national list. Stored records are **Form 2 filings so far**, not a full ballot.`;
 
 function mentionsState(message: string): boolean {
-  const lower = message.toLowerCase();
-  for (const option of stateOptions()) {
-    if (option.name.length < 4) continue;
-    if (lower.includes(option.name.toLowerCase())) return true;
-  }
-  const prefixed = /\b(?:in|for|from|of)\s+([a-z]{2})\b/gi;
-  for (const match of message.matchAll(prefixed)) {
-    const code = match[1]?.toUpperCase() ?? "";
-    if (isPostalState(code)) return true;
-  }
-  for (const match of message.matchAll(/\b([A-Z]{2})\b/g)) {
-    const code = match[1] ?? "";
-    if (isPostalState(code)) return true;
-  }
-  return false;
+  return stateMentionedIn(message) != null;
 }

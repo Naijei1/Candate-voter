@@ -1,37 +1,48 @@
 import type { Candidate } from "../types";
+import { partyCode, partyLabel } from "../format";
 import { normalizePersonName } from "./names";
 
 /**
- * Stable key for a presidential filer. Same normalized name on the same
- * race only. One-token names are not merged. House and Senate rows are
- * never merged, because a shared name there is weaker evidence.
+ * Same normalized name on the same race. One-token names are not merged.
+ * The race id already includes office, cycle, and jurisdiction, so two
+ * people who only share a surname in different contests stay separate.
+ */
+export function samePersonKey(
+  candidate: Pick<Candidate, "raceId" | "displayName">,
+): string | null {
+  const tokens = personTokens(candidate.displayName);
+  if (!tokens) return null;
+  return `${candidate.raceId}|${tokens}`;
+}
+
+/**
+ * Presidential filers only. Ingest still reuses one candidate id for a
+ * repeated presidential name. Senate and House duplicates are collapsed
+ * on read so each FEC id's party stays on its own stored row.
  */
 export function presidentialPersonKey(
   candidate: Pick<Candidate, "office" | "raceId" | "displayName">,
 ): string | null {
   if (candidate.office !== "president") return null;
-  const name = normalizePersonName(candidate.displayName);
-  if (!name) return null;
-  const tokens = name
-    .toLowerCase()
-    .split(/\s+/)
-    .map((token) => token.replace(/[^a-z]/g, ""))
-    .filter((token) => token.length >= 2);
-  if (tokens.length < 2) return null;
-  return `${candidate.raceId}|${tokens.join(" ")}`;
+  return samePersonKey(candidate);
 }
 
+export type CollapsedCandidate = Candidate & {
+  /** Other stored rows for this name on this race. Empty when there is one filing. */
+  alternateFilings: Candidate[];
+};
+
 /**
- * Collapse presidential rows that are the same person. The keeper is the
- * lexicographically smallest candidate id so the public link stays put.
+ * One display row per person on a race. The keeper is the latest FEC load
+ * timestamp, then the lexicographically smallest candidate id.
  */
-export function dedupePresidential(candidates: readonly Candidate[]): Candidate[] {
+export function collapseSamePerson(candidates: readonly Candidate[]): CollapsedCandidate[] {
   const groups = new Map<string, Candidate[]>();
-  const passthrough: Candidate[] = [];
+  const passthrough: CollapsedCandidate[] = [];
   for (const candidate of candidates) {
-    const key = presidentialPersonKey(candidate);
+    const key = samePersonKey(candidate);
     if (!key) {
-      passthrough.push(candidate);
+      passthrough.push({ ...candidate, alternateFilings: [] });
       continue;
     }
     const group = groups.get(key);
@@ -40,45 +51,102 @@ export function dedupePresidential(candidates: readonly Candidate[]): Candidate[
   }
   const kept = [...passthrough];
   for (const group of groups.values()) {
-    const sorted = [...group].sort((a, b) => a.candidateId.localeCompare(b.candidateId));
-    const winner = sorted[0];
-    if (winner) kept.push(winner);
+    const keeper = pickKeeper(group);
+    const alternateFilings = group
+      .filter((candidate) => candidate.candidateId !== keeper.candidateId)
+      .sort((a, b) => a.candidateId.localeCompare(b.candidateId));
+    kept.push({ ...keeper, alternateFilings });
   }
   return kept;
 }
 
-export type PresidentialDuplicatePlan = {
+/** @deprecated Use collapseSamePerson. Presidential rows are included there. */
+export function dedupePresidential(candidates: readonly Candidate[]): Candidate[] {
+  return collapseSamePerson(candidates);
+}
+
+export type SamePersonDuplicatePlan = {
   raceId: string;
   personKey: string;
   keep: string;
   drop: string[];
 };
 
+export type PresidentialDuplicatePlan = SamePersonDuplicatePlan;
+
 /** Groups that still have more than one stored candidate id. */
-export function planPresidentialDuplicates(
+export function planSamePersonDuplicates(
   candidates: readonly Candidate[],
-): PresidentialDuplicatePlan[] {
+): SamePersonDuplicatePlan[] {
   const groups = new Map<string, Candidate[]>();
   for (const candidate of candidates) {
-    const key = presidentialPersonKey(candidate);
+    const key = samePersonKey(candidate);
     if (!key) continue;
     const group = groups.get(key);
     if (group) group.push(candidate);
     else groups.set(key, [candidate]);
   }
-  const plans: PresidentialDuplicatePlan[] = [];
+  const plans: SamePersonDuplicatePlan[] = [];
   for (const [personKey, group] of groups) {
     if (group.length < 2) continue;
-    const sorted = [...group].sort((a, b) => a.candidateId.localeCompare(b.candidateId));
-    const keep = sorted[0]?.candidateId;
-    if (!keep) continue;
+    const keeper = pickKeeper(group);
     plans.push({
-      raceId: sorted[0]?.raceId ?? "",
+      raceId: keeper.raceId,
       personKey,
-      keep,
-      drop: sorted.slice(1).map((candidate) => candidate.candidateId),
+      keep: keeper.candidateId,
+      drop: group
+        .filter((candidate) => candidate.candidateId !== keeper.candidateId)
+        .map((candidate) => candidate.candidateId)
+        .sort((a, b) => a.localeCompare(b)),
     });
   }
   plans.sort((a, b) => a.personKey.localeCompare(b.personKey));
   return plans;
+}
+
+export function planPresidentialDuplicates(
+  candidates: readonly Candidate[],
+): PresidentialDuplicatePlan[] {
+  return planSamePersonDuplicates(candidates.filter((candidate) => candidate.office === "president"));
+}
+
+/**
+ * One line for a collapsed row. Each party is named once. Every FEC id in
+ * the group is listed so a citation can point at the filing that reported it.
+ */
+export function multiFilingNote(keeper: Candidate, alternates: readonly Candidate[]): string | null {
+  if (alternates.length === 0) return null;
+  const byParty = new Map<string, string[]>();
+  for (const row of [keeper, ...alternates]) {
+    const label = partyLabel(partyCode(row.partyAffiliation), row.partyLabel);
+    const id = row.fecCandidateId?.trim() || row.candidateId;
+    const list = byParty.get(label) ?? [];
+    if (!list.includes(id)) list.push(id);
+    byParty.set(label, list);
+  }
+  const parts = [...byParty.entries()].map(([label, ids]) => `${label} (${ids.join(", ")})`);
+  if (byParty.size > 1) {
+    return `Parties filed under multiple FEC ids: ${parts.join("; ")}.`;
+  }
+  return `Filed under multiple FEC ids: ${parts.join("; ")}.`;
+}
+
+function pickKeeper(group: readonly Candidate[]): Candidate {
+  return [...group].sort((a, b) => {
+    const byLoad = (b.sourceLoadedAt ?? "").localeCompare(a.sourceLoadedAt ?? "");
+    if (byLoad !== 0) return byLoad;
+    return a.candidateId.localeCompare(b.candidateId);
+  })[0] as Candidate;
+}
+
+function personTokens(displayName: string): string | null {
+  const name = normalizePersonName(displayName);
+  if (!name) return null;
+  const tokens = name
+    .toLowerCase()
+    .split(/\s+/)
+    .map((token) => token.replace(/[^a-z]/g, ""))
+    .filter((token) => token.length >= 2);
+  if (tokens.length < 2) return null;
+  return tokens.join(" ");
 }

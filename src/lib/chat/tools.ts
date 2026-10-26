@@ -1,4 +1,5 @@
 import type { ApiRepository } from "../api/deps";
+import { contestAnnotation, cycleCalendar, upcomingRaceRank } from "../data/calendar";
 import { FORM2_SCOPE, FORM2_SCOPE_NOTE, houseCoverageForRaces } from "../data/coverage";
 import { cyclesFromEnv, parseCycle } from "../data/cycles";
 import { isPostalState } from "../data/states";
@@ -55,7 +56,7 @@ const tools: readonly ToolSpec[] = [
   {
     name: "list_races",
     description:
-      "List stored federal races. Pass a state, or office president. Do not call this without a state to list every Senate or House race. This is not a ranking. Omit cycle to use the public index year window. The result includes house coverage (districts with Form 2 filings out of apportioned districts).",
+      "List stored federal races. Pass a state, or office president. Do not call this without a state to list every Senate or House race. This is not a ranking. Omit cycle to use the public index year window. The result includes house coverage (districts with Form 2 filings out of apportioned districts) and cycleCalendar. A presidential race in a year that is not divisible by 4 has ballotRole out-of-cycle-presidential-filing. That is an early or out-of-cycle Form 2 filing, not a general election. Midterm onBallot is senate and house.",
     inputSchema: {
       type: "object",
       properties: {
@@ -70,7 +71,7 @@ const tools: readonly ToolSpec[] = [
   {
     name: "get_race",
     description:
-      "Get one stored race and its candidates by raceId, for example 2026-senate-CA or 2028-president. Candidates are alphabetical by display name.",
+      "Get one stored race and its candidates by raceId, for example 2026-senate-CA or 2028-president. Candidates are alphabetical by display name. The same normalized name on this race is one row; multiFilingNote lists the other FEC ids and parties. Read ballotRole before calling a presidential race a general election.",
     inputSchema: {
       type: "object",
       properties: {
@@ -199,11 +200,13 @@ async function listRaces(
         if (office.value && race.office !== office.value) return false;
         return true;
       })
-      .sort((a, b) => a.raceId.localeCompare(b.raceId))
-      .slice(0, limit.value);
+      .sort((a, b) => upcomingRaceRank(a) - upcomingRaceRank(b) || a.raceId.localeCompare(b.raceId))
+      .slice(0, limit.value)
+      .map(chatRace);
     const sources = races.flatMap((race) => sourcesForRace(race, ctx.root));
     return ok(races.length, sources, races.map(raceSnippet), {
       cycles,
+      cycleCalendar: cycles.map(cycleCalendar),
       races,
       coverage: {
         scope: FORM2_SCOPE,
@@ -230,15 +233,16 @@ async function getRace(
       return ok(0, [], [], { race: null, candidates: [], sources: [] });
     }
     const candidates = await loadPublicCandidates(ctx.repo, race.raceId);
+    const annotated = chatRace(race);
     const sources = [
-      ...sourcesForRace(race, ctx.root),
+      ...sourcesForRace(annotated, ctx.root),
       ...candidates.flatMap((candidate) => sourcesForCandidate(candidate, ctx.root)),
     ];
     return ok(
       1 + candidates.length,
       sources,
-      [raceSnippet(race), ...candidates.map(candidateSnippet)],
-      { race, candidates, sources: sources.slice(0, MAX_SOURCES) },
+      [raceSnippet(annotated), ...candidates.map(candidateSnippet)],
+      { race: annotated, candidates, sources: sources.slice(0, MAX_SOURCES) },
     );
   } catch (error) {
     return unavailable("getRace", error);
@@ -271,7 +275,7 @@ async function searchCandidates(
         const race = await loadVisibleRace(ctx.repo, direct.raceId);
         const sources = sourcesForCandidate(direct, ctx.root);
         return ok(1, sources, [candidateSnippet(direct)], {
-          matches: [{ candidate: direct, race }],
+          matches: [{ candidate: direct, race: race ? chatRace(race) : null }],
           scannedRaces: 0,
           truncated: false,
           sources,
@@ -296,7 +300,7 @@ async function searchCandidates(
         const candidates = await loadPublicCandidates(ctx.repo, race.raceId);
         for (const candidate of candidates) {
           if (!matchesCandidate(candidate, needle)) continue;
-          matches.push({ candidate, race });
+          matches.push({ candidate, race: chatRace(race) });
           if (matches.length >= limit.value) break;
         }
         if (matches.length >= limit.value) break;
@@ -341,7 +345,7 @@ async function getCandidate(
     ];
     return ok(1, sources, [candidateSnippet(candidate)], {
       candidate,
-      race,
+      race: race ? chatRace(race) : null,
       sources: sources.slice(0, MAX_SOURCES),
     });
   } catch (error) {
@@ -501,7 +505,15 @@ function sourcesForRace(race: Race, root: string): ChatSource[] {
 }
 
 function sourcesForCandidate(
-  candidate: Pick<PublicCandidate, "displayName" | "candidateId" | "updatedAt" | "sourceLoadedAt" | "sourceUrl">,
+  candidate: Pick<
+    PublicCandidate,
+    | "displayName"
+    | "candidateId"
+    | "updatedAt"
+    | "sourceLoadedAt"
+    | "sourceUrl"
+    | "alternateFilings"
+  >,
   root: string,
 ): ChatSource[] {
   const sources = [
@@ -517,6 +529,15 @@ function sourcesForCandidate(
     candidate.updatedAt ?? candidate.sourceLoadedAt,
   );
   if (fec) sources.push(fec);
+  for (const alternate of candidate.alternateFilings ?? []) {
+    const id = alternate.fecCandidateId ?? alternate.candidateId;
+    const extra = externalSource(
+      `${candidate.displayName} (${id})`,
+      alternate.sourceUrl,
+      candidate.updatedAt ?? candidate.sourceLoadedAt,
+    );
+    if (extra) sources.push(extra);
+  }
   return sources;
 }
 
@@ -561,15 +582,21 @@ function dedupeSources(sources: readonly ChatSource[]): ChatSource[] {
   return unique;
 }
 
-function raceSnippet(race: Race): string {
-  return `${race.title} (\`${race.raceId}\`)`;
+function chatRace(race: Race): Race & ReturnType<typeof contestAnnotation> {
+  return { ...race, ...contestAnnotation(race) };
+}
+
+function raceSnippet(race: Race & { ballotNote?: string | null }): string {
+  const note = race.ballotNote ? ` ${race.ballotNote}` : "";
+  return `${race.title} (\`${race.raceId}\`).${note}`;
 }
 
 function candidateSnippet(candidate: PublicCandidate): string {
   const party = candidate.partyCode
     ? `${candidate.partyLabel} (${candidate.partyCode})`
     : candidate.partyLabel;
-  return `${candidate.displayName} — ${party} (\`${candidate.candidateId}\`)`;
+  const note = candidate.multiFilingNote ? ` ${candidate.multiFilingNote}` : "";
+  return `${candidate.displayName} — ${party} (\`${candidate.candidateId}\`).${note}`;
 }
 
 function filingSnippet(filing: Filing): string {

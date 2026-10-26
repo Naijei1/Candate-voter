@@ -1,7 +1,13 @@
 import { cache } from "react";
 import { cyclesFromEnv } from "./cycles";
 import { createDynamoRepository, type VoterRepository } from "./repository";
-import { cleanCandidate, loadVisibleCandidates, loadVisibleRace, visibleRaces } from "./view";
+import {
+  cleanCandidate,
+  loadPublicCandidates,
+  loadVisibleRace,
+  visibleRaces,
+  type PublicCandidate,
+} from "./view";
 import type { Candidate, Filing, IngestWatermark, Race } from "../types";
 
 export { racesByOffice } from "../races";
@@ -55,8 +61,8 @@ export const readCandidate = cache(
 );
 
 export const readCandidatesForRace = cache(
-  async (raceId: string): Promise<Candidate[]> => {
-    return loadVisibleCandidates(createDynamoRepository(), raceId);
+  async (raceId: string): Promise<PublicCandidate[]> => {
+    return loadPublicCandidates(createDynamoRepository(), raceId);
   },
 );
 

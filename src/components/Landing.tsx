@@ -493,7 +493,14 @@ function CandidateList({
             >
               {candidate.displayName}
             </Link>
-            <Affiliation party={candidate.partyAffiliation} provided={candidate.partyLabel} />
+            {candidate.partyLabels.length > 1 ? (
+              <span className="ml-2 text-muted">{candidate.partyLabels.join(" · ")}</span>
+            ) : (
+              <Affiliation party={candidate.partyAffiliation} provided={candidate.partyLabel} />
+            )}
+            {candidate.multiFilingNote ? (
+              <p className="text-sm text-muted">{candidate.multiFilingNote}</p>
+            ) : null}
           </li>
         ))}
       </ul>
