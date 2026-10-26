@@ -4,11 +4,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useAsk } from "@/components/chat/AskProvider";
+import { CandidateDisclosure } from "@/components/CandidateDisclosure";
 import { DataRefreshedBanner } from "@/components/DataRefreshedBanner";
-import { MultiFilingDetails } from "@/components/MultiFilingDetails";
 import { RecordMeta } from "@/components/RecordMeta";
+import { StateScoreboard, WhatAmILookingAt } from "@/components/StateScoreboard";
 import { StorageNotice } from "@/components/StorageNotice";
 import { MapLegend, UsMap } from "@/components/UsMap";
+import { ZipLookup } from "@/components/ZipLookup";
 import { askScopeForState, askScopeForYear, pageContextFromScope } from "@/lib/chat/scope";
 import { isAskPanelPath } from "@/lib/chat/ui";
 import { isPostalState, stateName, stateOptions } from "@/lib/data/states";
@@ -18,12 +20,12 @@ import {
   selectionFromLocation,
   selectionFromPop,
 } from "@/lib/landing/state-query";
-import { officeLabel, partyLabel, partyTone } from "@/lib/format";
+import { officeLabel } from "@/lib/format";
 import {
   presidentialRace,
   spotlightRaces,
-  stateCoverage,
   stateRaces,
+  stateScoreboard,
   statesWithRaces,
 } from "@/lib/landing";
 import { racesByStateOffice } from "@/lib/races";
@@ -67,6 +69,7 @@ export function Landing({
     seedCandidateCache(seededCandidates),
   );
   const [reloadKey, setReloadKey] = useState(0);
+  const [zipRaceIds, setZipRaceIds] = useState<string[]>([]);
   const entriesRef = useRef(entries);
   entriesRef.current = entries;
   const marked = statesWithRaces(races);
@@ -96,11 +99,16 @@ export function Landing({
     };
   }, []);
 
-  const panelRaceKey = selected ? stateRaces(races, selected).map((race) => race.raceId).join("\n") : "";
+  const reportZipRaces = useCallback((ids: string[]) => {
+    setZipRaceIds((prev) => (sameIds(prev, ids) ? prev : ids));
+  }, []);
+
+  const panelIds = selected ? stateRaces(races, selected).map((race) => race.raceId) : [];
+  const candidateRaceKey = [...new Set([...panelIds, ...zipRaceIds])].join("\n");
 
   useEffect(() => {
-    if (!panelRaceKey) return;
-    const ids = panelRaceKey.split("\n");
+    if (!candidateRaceKey) return;
+    const ids = candidateRaceKey.split("\n");
     const missing = ids.filter((id) => !entriesRef.current.has(id));
     if (missing.length === 0) return;
 
@@ -133,7 +141,7 @@ export function Landing({
       active = false;
       controller.abort();
     };
-  }, [panelRaceKey, reloadKey]);
+  }, [candidateRaceKey, reloadKey]);
 
   const retryRace = useCallback((raceId: string) => {
     setEntries((prev) => {
@@ -168,34 +176,52 @@ export function Landing({
     writeStateUrl(selected);
   }, [selected, writeStateUrl]);
 
-  const showRefreshed = Boolean(refreshedAt?.trim());
-
   return (
     <div className="space-y-10">
       <DataRefreshedBanner refreshedAt={refreshedAt} />
-      <section
-        data-testid="hero"
-        className={showRefreshed ? "map-hero map-hero-below-banner" : "map-hero"}
-        aria-labelledby="hero-heading"
-      >
+      <section data-testid="hero" aria-labelledby="hero-heading">
         {hasAnyRaces ? null : (
-          <div className="px-4 pt-4 sm:px-6">
+          <div className="mb-4">
             <StorageNotice>
               No races are stored for election years {cycleLabel}.
             </StorageNotice>
           </div>
         )}
+        <h1 id="hero-heading" className="text-3xl font-semibold tracking-tight text-ink">
+          Who&apos;s filed
+        </h1>
+        <p className="mt-2 max-w-2xl text-base leading-6 text-muted">
+          Candidates so far for federal races in {year}. This is not the final ballot. No endorsements.
+        </p>
+        <p className="mt-1 max-w-2xl text-sm leading-6 text-ink">
+          Find your races with a ZIP code, or browse the map. You can also <AskCue />.
+        </p>
+        <ZipLookup
+          year={year}
+          races={races}
+          onState={selectState}
+          onStoredRaceIds={reportZipRaces}
+          renderStoredRace={(race) => (
+            <RaceCard
+              race={race}
+              candidates={entries.get(race.raceId)}
+              onRetry={() => retryRace(race.raceId)}
+            />
+          )}
+        />
+      </section>
+      <section
+        className="map-hero map-hero-secondary"
+        aria-labelledby="map-heading"
+      >
         <div className="map-hero-grid">
           <div className="map-stage">
             <div className="map-overlay">
-              <h1 id="hero-heading" className="text-lg font-semibold tracking-tight text-ink">
-                Federal filings
-              </h1>
+              <h2 id="map-heading" className="text-base font-semibold tracking-tight text-ink">
+                Browse by state
+              </h2>
               <p className="mt-1 text-sm leading-5 text-muted">
-                Nonpartisan FEC Form 2 records for {year}. No endorsements, rankings, or vote advice.
-              </p>
-              <p className="mt-1 text-sm leading-5 text-ink">
-                Choose a state, or <AskCue />.
+                Or pick a state to see who&apos;s filed.
               </p>
               <div className="mt-3">
                 <label htmlFor="state-jump" className="text-sm font-medium text-muted">
@@ -228,7 +254,7 @@ export function Landing({
                 selected={selected}
                 statesWithRaces={marked}
                 onSelect={selectState}
-                label={`Map of the United States for ${year}. States with stored Senate or House filings are highlighted. Alaska and Hawaii are inset.`}
+                label={`Map of the United States for ${year}. States with filings stored are highlighted. Alaska and Hawaii are inset.`}
               />
             </div>
           </div>
@@ -238,6 +264,7 @@ export function Landing({
               races={races}
               selected={selected}
               cache={entries}
+              refreshedAt={refreshedAt}
               onRetryRace={retryRace}
             />
           </div>
@@ -313,18 +340,20 @@ function StatePanel({
   races,
   selected,
   cache,
+  refreshedAt,
   onRetryRace,
 }: {
   year: number;
   races: Race[];
   selected: string | null;
   cache: Map<string, CandidateCacheEntry>;
+  refreshedAt?: string | null;
   onRetryRace: (raceId: string) => void;
 }) {
   const listed = selected ? stateRaces(races, selected) : [];
   const groups = racesByStateOffice(listed);
   const president = presidentialRace(races);
-  const coverage = selected ? stateCoverage(races, selected, year) : null;
+  const board = selected ? stateScoreboard(races, selected, year) : null;
 
   return (
     <aside
@@ -333,32 +362,32 @@ function StatePanel({
     >
       <div className="border-b border-line bg-paper px-4 py-3">
         <h3 className="text-lg font-semibold tracking-tight">
-          {selected ? `${stateName(selected)} filings` : "State filings"}
+          {selected ? stateName(selected) : "State filings"}
         </h3>
-        <div className="text-sm leading-6 text-muted">
-          {selected && coverage ? (
-            <>
-              {coverage.lines.length > 0 ? (
-                coverage.lines.map((line) => <p key={line}>{line}</p>)
-              ) : (
-                <p>{`No Senate or House Form 2 e-file filings are stored for ${stateName(selected)} in ${year}.`}</p>
-              )}
-              <p>{coverage.scopeNote}</p>
-            </>
-          ) : (
-            <p>Select a state to list stored Senate and House filings.</p>
-          )}
-        </div>
+        {selected && board ? (
+          <>
+            <p className="mt-1 text-sm leading-6 text-muted">
+              Candidates so far, not the final ballot.
+            </p>
+            <StateScoreboard board={board} />
+            <WhatAmILookingAt refreshedAt={refreshedAt} />
+          </>
+        ) : (
+          <p className="mt-1 text-sm leading-6 text-muted">
+            Pick a state to see who&apos;s filed for Senate and House.
+          </p>
+        )}
       </div>
       <div className="flex-1 overflow-y-auto px-3 py-3">
         {!selected ? (
           <p className="px-1 py-8 text-center text-sm leading-6 text-muted">
-            Select a state on the map, or use the state list. The panel lists
-            filings stored for that state. It does not rank them.
+            Select a state on the map, or use the state list, to see candidates so far.
           </p>
         ) : groups.length === 0 ? (
           <div className="space-y-4 px-1 py-4">
-            <p className="text-sm font-medium text-ink">No filings yet.</p>
+            <p className="text-sm font-medium text-ink">
+              No Senate or House filings yet for {stateName(selected)} in {year}.
+            </p>
             <NationalContest year={year} president={president} />
           </div>
         ) : (
@@ -426,7 +455,7 @@ function RaceCard({
   onRetry: () => void;
 }) {
   return (
-    <li className="rounded-lg border border-line px-3 py-3">
+    <li className="rounded-lg border border-l-4 border-line border-l-accent px-3 py-3">
       <h5 className="font-semibold tracking-tight">
         <Link
           href={`/races/${race.raceId}`}
@@ -436,6 +465,13 @@ function RaceCard({
         </Link>
       </h5>
       <p className="text-sm text-muted">{race.jurisdiction}</p>
+      {candidates?.ok ? (
+        <p className="mt-1 text-sm font-semibold tabular-nums text-ink">
+          {candidates.candidates.length === 1
+            ? "1 candidate so far"
+            : `${candidates.candidates.length} candidates so far`}
+        </p>
+      ) : null}
       <CandidateList race={race} entry={candidates} onRetry={onRetry} />
       <RecordMeta sourceUrl={race.sourceUrl} updatedAt={race.updatedAt} />
     </li>
@@ -483,22 +519,14 @@ function CandidateList({
       <ul className="space-y-1">
         {preview.map((candidate) => (
           <li key={candidate.candidateId} className="text-sm">
-            <Link
+            <CandidateDisclosure
+              name={candidate.displayName}
+              cue={candidate.partyLabels.join(" · ")}
+              partyAffiliation={candidate.partyAffiliation}
               href={`/candidates/${candidate.candidateId}`}
-              className="font-medium text-ink underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
-            >
-              {candidate.displayName}
-            </Link>
-            {candidate.partyLabels.length > 1 ? (
-              <span className="ml-2 text-muted">{candidate.partyLabels.join(" · ")}</span>
-            ) : (
-              <Affiliation party={candidate.partyAffiliation} provided={candidate.partyLabel} />
-            )}
-            {candidate.multiFilingNote ? (
-              <MultiFilingDetails count={candidate.alternateFilingCount + 1}>
-                <p>{candidate.multiFilingNote}</p>
-              </MultiFilingDetails>
-            ) : null}
+              filingCount={candidate.alternateFilingCount + 1}
+              updatedAt={candidate.updatedAt}
+            />
           </li>
         ))}
       </ul>
@@ -510,7 +538,7 @@ function CandidateList({
           >
             All {entry.candidates.length} candidates
           </Link>
-          <span> are on the race page, in alphabetical order.</span>
+          <span> are on the race page, listed A to Z.</span>
         </p>
       ) : null}
     </div>
@@ -543,15 +571,6 @@ function unwatchLocation(listener: () => void) {
   locationListeners.delete(listener);
 }
 
-function Affiliation({
-  party,
-  provided,
-}: {
-  party: string | null;
-  provided?: string | null;
-}) {
-  const tone = partyTone(party);
-  const toneClass =
-    tone === "democratic" ? "text-accent" : tone === "republican" ? "text-rose-800" : "text-muted";
-  return <span className={`ml-2 ${toneClass}`}>{partyLabel(party, provided)}</span>;
+function sameIds(left: readonly string[], right: readonly string[]): boolean {
+  return left.length === right.length && left.every((id, index) => id === right[index]);
 }

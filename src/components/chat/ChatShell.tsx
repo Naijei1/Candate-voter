@@ -9,7 +9,6 @@ import {
   chatPageHref,
   contextLabel,
   rateLimitRemainingSeconds,
-  suggestedPrompts,
   type ChatContextInput,
 } from "@/lib/chat/ui";
 
@@ -44,7 +43,6 @@ export function ChatShell({
     [context.cycle, context.raceId, context.candidateId, context.messagePrefix, dismissed],
   );
   const label = dismissed ? null : contextLabel(context);
-  const prompts = suggestedPrompts(active);
   const titleId = mode === "page" ? "chat-page-title" : "ask-panel-title";
   const latest = [...chat.turns].reverse().find((turn) => turn.role === "assistant");
   const clockActive =
@@ -116,10 +114,8 @@ export function ChatShell({
       <div className="min-h-0 flex-1 overflow-y-auto">
         <ChatMessageList
           turns={chat.turns}
-          prompts={prompts}
           pending={chat.pending}
           now={now}
-          onPick={send}
           onRetry={() => void chat.retry(active)}
         />
       </div>

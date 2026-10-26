@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AskPageContext } from "@/components/chat/AskProvider";
+import { CandidateDisclosure } from "@/components/CandidateDisclosure";
 import { CoverageNote } from "@/components/CoverageNote";
 import { DataRefreshedBanner } from "@/components/DataRefreshedBanner";
-import { MultiFilingDetails } from "@/components/MultiFilingDetails";
 import { RecordMeta } from "@/components/RecordMeta";
 import { StorageNotice } from "@/components/StorageNotice";
 import { FORM2_SCOPE_NOTE } from "@/lib/data/coverage";
@@ -16,7 +16,6 @@ import {
   readWatermark,
 } from "@/lib/data/read";
 import { displayedPartyLabels, type PublicCandidate } from "@/lib/data/view";
-import { httpsUrl } from "@/lib/format";
 import { houseCoverageLine } from "@/lib/landing";
 import type { Race } from "@/lib/types";
 
@@ -125,36 +124,14 @@ function CandidateRow({ candidate }: { candidate: PublicCandidate }) {
   const parties = displayedPartyLabels(candidate);
   return (
     <li className="px-4 py-3">
-      <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
-        <Link
-          href={`/candidates/${candidate.candidateId}`}
-          className="font-medium text-ink underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
-        >
-          {candidate.displayName}
-        </Link>
-        <span className="text-sm text-muted">{parties.join(" · ")}</span>
-      </div>
-      {candidate.multiFilingNote ? (
-        <MultiFilingDetails count={candidate.alternateFilings.length + 1}>
-          <p>{candidate.multiFilingNote}</p>
-          {candidate.alternateFilings.map((alternate) => {
-            const href = httpsUrl(alternate.sourceUrl);
-            const label = `${alternate.partyLabel} ${alternate.fecCandidateId ?? alternate.candidateId}`;
-            if (!href) return null;
-            return (
-              <p key={alternate.candidateId}>
-                <a
-                  href={href}
-                  className="text-accent underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
-                >
-                  {label}
-                </a>
-              </p>
-            );
-          })}
-        </MultiFilingDetails>
-      ) : null}
-      <RecordMeta sourceUrl={candidate.sourceUrl} updatedAt={candidate.updatedAt} />
+      <CandidateDisclosure
+        name={candidate.displayName}
+        cue={parties.join(" · ")}
+        partyAffiliation={candidate.partyAffiliation}
+        href={`/candidates/${candidate.candidateId}`}
+        filingCount={candidate.alternateFilings.length + 1}
+        updatedAt={candidate.updatedAt}
+      />
     </li>
   );
 }

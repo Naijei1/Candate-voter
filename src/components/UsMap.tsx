@@ -187,7 +187,7 @@ const StatePath = memo(function StatePath({
       role="button"
       tabIndex={tabbable ? 0 : -1}
       aria-label={
-        hasRaces ? `${name}, stored federal races` : `${name}, no stored Senate or House races`
+        hasRaces ? `${name}, filings stored` : `${name}, no filings stored`
       }
       aria-pressed={isSelected ? "true" : "false"}
       onKeyDown={onKeyDown}
@@ -299,11 +299,11 @@ export function MapLegend() {
     <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted">
       <li className="inline-flex items-center gap-1.5">
         <span className="inline-block h-2.5 w-2.5 rounded-sm bg-map-data" aria-hidden="true" />
-        Stored races
+        Filings stored
       </li>
       <li className="inline-flex items-center gap-1.5">
         <span className="inline-block h-2.5 w-2.5 rounded-sm bg-map" aria-hidden="true" />
-        No stored races
+        No filings stored
       </li>
       <li className="inline-flex items-center gap-1.5">
         <span className="inline-block h-2.5 w-2.5 rounded-sm bg-accent" aria-hidden="true" />
