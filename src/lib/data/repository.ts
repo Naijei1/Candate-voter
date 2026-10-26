@@ -51,16 +51,24 @@ type DocumentClient = DynamoDBDocumentClient;
 
 let cached: { client: DocumentClient; tableName: string } | null = null;
 
+/** Public table name. Not a secret. Used when `CANDATE_TABLE_NAME` is unset. */
+export const DEFAULT_TABLE_NAME = "candate-voter";
+
+/**
+ * Resolve the DynamoDB table.
+ *
+ * A non-empty `CANDATE_TABLE_NAME` wins. Otherwise this returns
+ * `candate-voter`. Amplify WEB_COMPUTE does not pass console environment
+ * variables into the Next.js server unless `amplify.yml` copies them into
+ * `.env.production` before `next build`. The fallback still selects the
+ * public table when that file is absent. This function does not read
+ * `FEC_API_KEY`.
+ */
 export function tableNameFromEnv(
   env: Record<string, string | undefined> = process.env,
 ): string {
   const name = env.CANDATE_TABLE_NAME?.trim();
-  if (!name) {
-    throw new Error(
-      "Set CANDATE_TABLE_NAME to the DynamoDB table (default candate-voter).",
-    );
-  }
-  return name;
+  return name || DEFAULT_TABLE_NAME;
 }
 
 export function createDynamoRepository(
