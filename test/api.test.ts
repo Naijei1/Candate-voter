@@ -435,6 +435,7 @@ test("openapi and llms.txt describe the public read surface", () => {
     "/api/v1/candidates/{candidateId}:",
     "/api/v1/candidates/{candidateId}/filings:",
     "/api/v1/freshness:",
+    "/api/chat:",
   ]) {
     assert.equal(spec.includes(path), true, path);
   }

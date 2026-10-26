@@ -16,8 +16,12 @@ frontend:
         # to the Next.js server. Next loads .env.production when it serves
         # traffic. This script is the only writer. It copies
         # CANDATE_TABLE_NAME, CANDATE_API_KEY, CANDATE_CYCLES, AWS_REGION,
-        # and NEXT_PUBLIC_* when set. It does not copy FEC_API_KEY. An unset
-        # CANDATE_TABLE_NAME still falls back to candate-voter.
+        # CANDATE_CHAT_ENABLED, CANDATE_CHAT_MODEL, the chat rate-limit
+        # settings, BEDROCK_MODEL_ID, BEDROCK_SONNET_MODEL_ID, and
+        # NEXT_PUBLIC_* when set. It does not copy FEC_API_KEY. An unset
+        # CANDATE_TABLE_NAME still falls back to candate-voter. Chat stays
+        # off until CANDATE_CHAT_ENABLED is true. Bedrock uses the compute
+        # role, not a key.
         - rm -f .env.production
         - node scripts/write-amplify-server-env.mjs
         - npm run build

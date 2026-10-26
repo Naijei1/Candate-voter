@@ -15,6 +15,7 @@ const nextConfig: NextConfig = {
   // components can read DynamoDB without bundling it for the browser.
   serverExternalPackages: [
     "@aws-sdk/client-dynamodb",
+    "@aws-sdk/client-bedrock-runtime",
     "@aws-sdk/lib-dynamodb",
   ],
   ...(basePath

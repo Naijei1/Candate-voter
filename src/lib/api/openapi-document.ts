@@ -6,18 +6,20 @@
 export const OPENAPI_DOCUMENT = `openapi: 3.0.3
 info:
   title: Candate read API
-  version: "1.0.0"
+  version: "1.1.0"
   description: |
     Read-only JSON for federal races, candidates, Form 2 filings, and the
     FEC electronic Form 2 ingest watermark stored in DynamoDB \`candate-voter\`.
 
     Party is the affiliation code a filing reported. This API has no scores,
     rankings, endorsements, or voting advice. It does not accept writes.
-    A later Elector Bot can call this HTTPS API with a key. This service does
-    not embed a chat bot.
+    \`/api/v1\` is the keyed read API. \`POST /api/chat\` is a separate
+    same-origin browser route. It does not use the API key. It answers from
+    these stored records through tools and refuses voting advice. The reply
+    is one buffered JSON body. Amplify Hosting compute does not stream it.
 
     HTML pages, including /agent, /openapi.yaml, and /llms.txt, are public.
-    Every /api/v1 route requires an API key.
+    Every /api/v1 route requires an API key. POST /api/chat does not.
 servers:
   - url: __SERVER_URL__
     description: This host
@@ -28,6 +30,7 @@ tags:
   - name: races
   - name: candidates
   - name: freshness
+  - name: chat
 paths:
   /api/v1/races:
     get:
@@ -164,6 +167,63 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "503":
           $ref: "#/components/responses/Unavailable"
+  /api/chat:
+    post:
+      tags: [chat]
+      operationId: postChat
+      security: []
+      summary: Buffered browser chat over stored records
+      description: |
+        Same-origin route for the public site. No API key. The server calls
+        Amazon Bedrock with tools that read the same DynamoDB rows as
+        \`/api/v1\`. The response is buffered JSON, not a stream.
+        \`refused: true\` is still HTTP 200: voting advice, rankings,
+        endorsements, or no matching stored record. \`threadId\` is echoed
+        or minted for the client. This spike does not store the thread.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChatRequest"
+            example:
+              message: Which Senate races are stored for California in 2026?
+              cycle: 2026
+      responses:
+        "200":
+          description: A grounded answer, or a refusal that is still a success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatResponse"
+              example:
+                answer_markdown: California has a Senate race stored for 2026.
+                sources:
+                  - title: U.S. Senate, California
+                    url: https://voter.naijei.com/races/2026-senate-CA
+                    as_of: "2026-10-26T05:00:00.000Z"
+                refused: false
+                threadId: 4f1c0b7e-6a2d-4c1a-9d0e-2b6a9c8d7e11
+        "400":
+          description: The JSON body is missing or invalid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+              example:
+                error: bad_request
+                message: message must be a string from 1 to 2000 characters
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "503":
+          description: Chat is disabled or the model or table is unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+              example:
+                error: unavailable
+                message: Chat is disabled
 components:
   securitySchemes:
     bearerAuth:
@@ -273,6 +333,21 @@ components:
             $ref: "#/components/schemas/Error"
           example:
             error: not_found
+    RateLimited:
+      description: Too many chat requests from this address
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+            minimum: 1
+          description: Seconds to wait before retrying.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorMessage"
+          example:
+            error: rate_limited
+            message: Too many chat requests. Try again later.
     Unavailable:
       description: The table read failed
       content:
@@ -525,6 +600,51 @@ components:
           nullable: true
           allOf:
             - $ref: "#/components/schemas/IngestWatermark"
+    ChatRequest:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        raceId:
+          type: string
+        candidateId:
+          type: string
+        cycle:
+          type: integer
+          minimum: 1980
+          maximum: 2100
+        threadId:
+          type: string
+          description: Client correlation id. The server does not store turns.
+    ChatSource:
+      type: object
+      required: [title, url, as_of]
+      properties:
+        title:
+          type: string
+        url:
+          type: string
+        as_of:
+          type: string
+          description: Stored timestamp, or unknown when the row has none.
+    ChatResponse:
+      type: object
+      required: [answer_markdown, sources, refused]
+      properties:
+        answer_markdown:
+          type: string
+        sources:
+          type: array
+          items:
+            $ref: "#/components/schemas/ChatSource"
+        refused:
+          type: boolean
+          description: Soft refusal. The HTTP status stays 200.
+        threadId:
+          type: string
 `;
 
 export function openApiDocument(serverUrl: string): string {
