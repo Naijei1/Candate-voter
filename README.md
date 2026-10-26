@@ -33,6 +33,7 @@ Package manager is npm. Commit `package-lock.json`. Amplify runs `npm ci`.
 | `/` | Federal races index |
 | `/races/[raceId]` | Race detail |
 | `/candidates/[candidateId]` | Candidate detail |
+| `/chat` | Ask about stored races and filings |
 | `/agent` | Read API documentation and live ingest freshness |
 | `/openapi.yaml` | OpenAPI 3.0 document for `/api/v1` |
 | `/llms.txt` | Short index for agents |
@@ -189,7 +190,9 @@ Responses are the domain objects from `src/lib/types.ts`, with `sourceUrl` and t
 
 `POST /api/chat` answers from the stored races, candidates, filings, and ingest watermark. Tools call `createDynamoRepository()` in process. They do not loop back through `/api/v1` and they do not read `CANDATE_API_KEY` or `FEC_API_KEY`.
 
-Amplify Hosting compute does not support Next.js streaming. The route waits for the tool calls and the model, then returns one JSON body. The page should show a waiting state and then the full answer.
+Amplify Hosting compute does not support Next.js streaming. The route waits for the tool calls and the model, then returns one JSON body. The Ask panel and `/chat` show a waiting state and then the full answer. They do not stream and they do not put credentials in the browser.
+
+The header **Ask** control opens a panel on `/`, `/races/[raceId]`, and `/candidates/[candidateId]`. On other pages it links to `/chat`. The panel’s “Open in full page” link keeps the race, candidate, and year context on that URL. A 429 disables Retry until the `Retry-After` seconds elapse.
 
 ```bash
 curl -sS -X POST \
