@@ -5,7 +5,7 @@ export default function NotFound() {
     <div className="space-y-4">
       <h1 className="text-3xl font-semibold tracking-tight">Page not found</h1>
       <p className="text-base leading-7 text-muted">
-        That race or candidate is not in the placeholder index.
+        That race or candidate is not stored.
       </p>
       <p>
         <Link

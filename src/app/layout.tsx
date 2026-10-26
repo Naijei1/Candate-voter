@@ -9,7 +9,7 @@ export const metadata: Metadata = {
     template: "%s · Candate",
   },
   description:
-    "Nonpartisan tracker for federal President, Senate, and House races. Candidate pages will cite public filings with sources and timestamps.",
+    "Nonpartisan tracker for federal President, Senate, and House races. Pages cite stored public filings with sources and timestamps.",
 };
 
 export default function RootLayout({

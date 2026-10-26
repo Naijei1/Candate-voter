@@ -2,7 +2,8 @@ import type { Candidate, Filing, Race } from "@/lib/types";
 
 /**
  * Layout fixtures only. These are not candidates, races, or FEC filings.
- * Replace this module with DynamoDB reads after ingest exists.
+ * Production pages do not import this module. They read DynamoDB through
+ * `createDynamoRepository()`.
  */
 export const SAMPLE_LABEL = "Sample";
 
