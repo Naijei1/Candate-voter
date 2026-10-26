@@ -90,7 +90,7 @@ export function isAlignmentRequest(message: string): boolean {
 
 export const CLARIFY_RACE_MARKDOWN = `Which state or race should I look at?
 
-I can list **who has an FEC Form 2 filing** once I know the contest. For example, a state and office such as the California Senate, or a race id like \`2026-senate-CA\`.
+I can list **who has an FEC Form 2 filing** once I know the contest. For example, a state and office such as the California Senate or U.S. Senate, California.
 
 I won't guess a national list. Stored records are **Form 2 filings so far**, not a full ballot.`;
 

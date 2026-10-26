@@ -1,3 +1,4 @@
+import { logReadError } from "../data/read";
 import { chatModelId } from "./config";
 import { finalizeAnswer, idsIn } from "./answer";
 import { textOf, toolUses } from "./converse";
@@ -78,7 +79,14 @@ export async function runGroundedChat(input: {
           toolsCalled,
         }),
       );
-      return { ...answer, mode: "factual", modelId, tools: toolNames, usage };
+      return {
+        ...answer,
+        mode: "factual",
+        modelId,
+        tools: toolNames,
+        usage,
+        refreshedAt: await readRefreshedAt(input.ctx),
+      };
     }
 
     const results: ChatMessage["content"] = [];
@@ -118,6 +126,15 @@ export async function runGroundedChat(input: {
   }
 
   throw new ChatUnavailableError("The model did not finish.");
+}
+
+async function readRefreshedAt(ctx: ToolContext): Promise<string | null> {
+  try {
+    return (await ctx.repo.getWatermark())?.updatedAt ?? null;
+  } catch (error) {
+    logReadError("getWatermark", error);
+    return null;
+  }
 }
 
 function collectRecordUrls(value: unknown, into: Set<string>): void {

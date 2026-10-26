@@ -11,6 +11,7 @@ import {
   chatModelId,
 } from "../src/lib/chat/config";
 import { postChat, type ChatDeps } from "../src/lib/chat/handler";
+import { labelForRaceId, polishSources } from "../src/lib/chat/polish";
 import { CHAT_SYSTEM_PROMPT } from "../src/lib/chat/prompt";
 import { createRateLimiter } from "../src/lib/chat/rate-limit";
 import { executeChatTool } from "../src/lib/chat/tools";
@@ -18,6 +19,12 @@ import type { ConverseFn, ConverseResponse } from "../src/lib/chat/types";
 import { MemoryVoterRepository } from "../src/lib/data/memory-repository";
 import { amplifyServerEnvLines } from "../scripts/write-amplify-server-env.mjs";
 import type { Candidate, Filing, IngestWatermark, Race } from "../src/lib/types";
+
+const RACE_SLUG = /(?:19|20)\d{2}-(?:president|senate-[A-Z]{2}|house-[A-Z]{2}-\d{2})/;
+
+function proseWithoutUrls(markdown: string): string {
+  return markdown.replace(/https?:\/\/[^\s)]+/g, "");
+}
 
 const updatedAt = "2026-10-26T05:00:00.000Z";
 const now = new Date("2026-10-26T12:00:00.000Z");
@@ -226,7 +233,8 @@ test("a grounded answer repairs sources when the model omits them", async () => 
   };
   assert.equal(payload.refused, false);
   assert.equal(payload.threadId, "thread-1");
-  assert.match(payload.answer_markdown, /2026-senate-CA/);
+  assert.match(payload.answer_markdown, /U\.S\. Senate, California/);
+  assert.equal(RACE_SLUG.test(proseWithoutUrls(payload.answer_markdown)), false);
   assert.ok(payload.sources.length >= 1);
   for (const source of payload.sources) {
     assert.equal(typeof source.title, "string");
@@ -496,9 +504,11 @@ test("openapi, llms.txt, and /agent document the browser chat route", () => {
   assert.match(spec, /multiFilingNote/);
   assert.match(spec, /alternateFilings/);
   assert.match(spec, /districtsWithFilings/);
+  assert.match(spec, /page-level data-refreshed/);
   assert.equal(spec.includes("FEC_API_KEY"), false);
 
   const text = llmsText({ origin: "https://voter.example", basePath: "" });
+  assert.match(text, /refreshedAt/);
   assert.match(text, /POST https:\/\/voter\.example\/api\/chat/);
   assert.match(text, /does not use the API key/);
   assert.match(text, /multiFilingNote/);
@@ -715,7 +725,12 @@ test("2026 coming-up answers lead with the midterm ballot, not a presidential ge
   );
   assert.equal(called, false);
   assert.equal(response.status, 200);
-  const payload = (await response.json()) as { answer_markdown: string; mode: string };
+  const payload = (await response.json()) as {
+    answer_markdown: string;
+    mode: string;
+    refreshedAt: string | null;
+    sources: Array<{ title: string; url: string }>;
+  };
   assert.equal(payload.mode, "factual");
   assert.match(payload.answer_markdown, /^\*\*2026 is a midterm year\.\*\*/);
   assert.match(payload.answer_markdown, /U\.S\. Senate and U\.S\. House/);
@@ -724,7 +739,21 @@ test("2026 coming-up answers lead with the midterm ballot, not a presidential ge
   const senateAt = payload.answer_markdown.indexOf("U.S. Senate");
   const filingAt = payload.answer_markdown.search(/out-of-cycle/i);
   assert.equal(senateAt >= 0 && filingAt > senateAt, true);
-  assert.match(payload.answer_markdown, /2026-president/);
+  assert.match(payload.answer_markdown, /2026 U\.S\. presidential filings/);
+  assert.equal(RACE_SLUG.test(proseWithoutUrls(payload.answer_markdown)), false);
+  assert.equal(payload.answer_markdown.match(/is a midterm year/gi)?.length, 1);
+  assert.equal(payload.answer_markdown.match(/not a full ballot/gi)?.length, 1);
+  assert.equal(payload.answer_markdown.match(/no presidential general election/gi)?.length, 1);
+  assert.equal(payload.refreshedAt, null);
+  assert.equal(new Set(payload.sources.map((source) => source.url)).size, payload.sources.length);
+  for (const source of payload.sources) {
+    assert.equal(RACE_SLUG.test(source.title), false);
+    assert.match(source.title, /2026 U\.S\. presidential filings/);
+  }
+  assert.equal(
+    payload.sources.some((source) => source.url.includes("2026-senate-NY")),
+    false,
+  );
 
   const ny = await postChat(
     post({ message: "What elections are coming up in New York?", cycle: 2026 }),
@@ -732,9 +761,21 @@ test("2026 coming-up answers lead with the midterm ballot, not a presidential ge
       throw new Error("model should not be called");
     }),
   );
-  const nyBody = (await ny.json()) as { answer_markdown: string };
+  const nyBody = (await ny.json()) as {
+    answer_markdown: string;
+    sources: Array<{ title: string; url: string }>;
+  };
   assert.match(nyBody.answer_markdown, /U\.S\. Senate, New York/);
   assert.match(nyBody.answer_markdown, /^\*\*2026 is a midterm year\.\*\*/);
+  assert.equal(nyBody.answer_markdown.match(/is a midterm year/gi)?.length, 1);
+  assert.equal(RACE_SLUG.test(proseWithoutUrls(nyBody.answer_markdown)), false);
+  assert.equal(
+    nyBody.sources.some((source) => source.title === "U.S. Senate, New York"),
+    true,
+  );
+  for (const source of nyBody.sources) {
+    assert.equal(RACE_SLUG.test(source.title), false);
+  }
 
   const presidentialYear = await postChat(
     post({ message: "What elections are coming up", cycle: 2028 }),
@@ -744,6 +785,9 @@ test("2026 coming-up answers lead with the midterm ballot, not a presidential ge
   );
   const yearBody = (await presidentialYear.json()) as { answer_markdown: string };
   assert.match(yearBody.answer_markdown, /^\*\*2028 is a presidential election year\.\*\*/);
+  assert.match(yearBody.answer_markdown, /2028 U\.S\. presidential filings/);
+  assert.equal(RACE_SLUG.test(proseWithoutUrls(yearBody.answer_markdown)), false);
+  assert.equal(yearBody.answer_markdown.match(/is a presidential election year/gi)?.length, 1);
 
   const listed = await executeChatTool(
     "list_races",
@@ -759,4 +803,113 @@ test("2026 coming-up answers lead with the midterm ballot, not a presidential ge
   const calendar = listed.content.cycleCalendar as Array<{ onBallot: string[]; midterm: boolean }>;
   assert.equal(calendar[0]?.midterm, true);
   assert.deepEqual(calendar[0]?.onBallot, ["senate", "house"]);
+});
+
+test("repeated midterm framing is said once, including when the question already said it", async () => {
+  const repeated = await postChat(
+    post({ message: "Summarize the 2026 federal calendar in one note." }),
+    chatDeps(
+      new MemoryVoterRepository(),
+      scripted([
+        modelJson({
+          answer_markdown: [
+            "**2026 is a midterm year.** Federal contests on the ballot are U.S. Senate and U.S. House. There is no presidential general election.",
+            "2026 is a midterm year. There is no presidential general election. A stored presidential Form 2 for this cycle is an early or out-of-cycle filing, not the general election.",
+            "Stored records are FEC Form 2 filings so far, not a full ballot.",
+            "Stored records are FEC Form 2 filings so far, not a full ballot.",
+          ].join("\n\n"),
+          sources: [],
+          refused: false,
+        }),
+      ]),
+    ),
+  );
+  const body = (await repeated.json()) as { answer_markdown: string };
+  assert.equal(body.answer_markdown.match(/is a midterm year/gi)?.length, 1);
+  assert.equal(body.answer_markdown.match(/no presidential general election/gi)?.length, 1);
+  assert.equal(body.answer_markdown.match(/not a full ballot/gi)?.length, 1);
+  assert.match(body.answer_markdown, /early or out-of-cycle filing/i);
+
+  const alreadySaid = await postChat(
+    post({
+      message:
+        "What elections are coming up? 2026 is a midterm year. There is no presidential general election.",
+      cycle: 2026,
+    }),
+    chatDeps(new MemoryVoterRepository(), async () => {
+      throw new Error("model should not be called");
+    }),
+  );
+  const said = (await alreadySaid.json()) as { answer_markdown: string };
+  assert.equal(said.answer_markdown.match(/is a midterm year/gi)?.length ?? 0, 0);
+  assert.equal(said.answer_markdown.match(/no presidential general election/gi)?.length ?? 0, 0);
+  assert.match(said.answer_markdown, /U\.S\. Senate and U\.S\. House/);
+});
+
+test("source titles are human and equivalent urls collapse", async () => {
+  assert.equal(labelForRaceId("2026-president"), "2026 U.S. presidential filings");
+  assert.equal(labelForRaceId("2026-senate-KY"), "U.S. Senate, Kentucky");
+  assert.equal(labelForRaceId("2026-house-KY-03"), "U.S. House, Kentucky District 3");
+
+  const sources = polishSources([
+    {
+      title: "2026-senate-KY",
+      url: "https://voter.example/races/2026-senate-KY",
+      as_of: updatedAt,
+    },
+    {
+      title: "U.S. Senate, Kentucky",
+      url: "https://voter.example/races/2026-senate-KY/?utm_source=ask",
+      as_of: updatedAt,
+    },
+    {
+      title: "Form 2 100",
+      url: "https://docquery.fec.gov/cgi-bin/fecimg/?1&utm_medium=email",
+      as_of: updatedAt,
+    },
+    {
+      title: "FEC Form 2 — Ada Klein",
+      url: "https://docquery.fec.gov/cgi-bin/fecimg/?1",
+      as_of: updatedAt,
+    },
+    {
+      title: "S0KY00123",
+      url: "https://www.fec.gov/data/candidates/?state=KY&office=S&election_year=2026",
+      as_of: updatedAt,
+    },
+    {
+      title: "U.S. Senate, Kentucky",
+      url: "https://www.fec.gov/data/candidates/?election_year=2026&office=S&state=KY",
+      as_of: updatedAt,
+    },
+  ]);
+  assert.deepEqual(
+    sources.map((source) => source.title),
+    ["U.S. Senate, Kentucky", "FEC Form 2 — Ada Klein", "U.S. Senate, Kentucky"],
+  );
+  assert.equal(new Set(sources.map((source) => source.url)).size, sources.length);
+
+  const repo = new MemoryVoterRepository();
+  await repo.upsertCandidate(
+    candidate({ candidateId: "S0CA00123", displayName: "Ada Klein" }),
+  );
+  await repo.upsertFiling(filing({ filingId: "100", fecLoadTimestamp: "2026-10-01 00:00:00" }));
+  await repo.upsertFiling(
+    filing({
+      filingId: "200",
+      fecLoadTimestamp: "2026-10-20 00:00:00",
+      sourceUrl: "https://docquery.fec.gov/cgi-bin/forms/S0CA00123/1/?utm_source=fec",
+    }),
+  );
+  const listed = await executeChatTool(
+    "list_filings",
+    { candidateId: "S0CA00123" },
+    { repo, env: {}, now, root: ROOT },
+  );
+  assert.equal(listed.ok, true);
+  if (!listed.ok) return;
+  const titles = listed.sources.map((source) => source.title);
+  assert.equal(titles.includes("FEC Form 2 — Ada Klein"), true);
+  assert.equal(titles.some((title) => RACE_SLUG.test(title) || /^Form 2 \d/.test(title)), false);
+  assert.equal(new Set(listed.sources.map((source) => source.url)).size, listed.sources.length);
 });

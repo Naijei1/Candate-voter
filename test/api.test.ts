@@ -270,6 +270,8 @@ test("race list filters, paginates, and keeps domain fields", async () => {
   assert.equal(body.races[0].sourceUrl, "https://www.fec.gov/data/elections/");
   assert.equal(body.races[0].updatedAt, updatedAt);
   assert.equal(body.nextCursor, null);
+  assert.equal(body.refreshedAt, null);
+  assert.equal(body.coverage.refreshedAt, null);
   assert.equal(body.coverage.scope, "fec-efile-form2");
   assert.equal(body.coverage.filingsSoFarOnly, true);
   assert.deepEqual(body.coverage.house, [
@@ -357,6 +359,8 @@ test("race, candidate, and filing routes return stored shapes", async () => {
     ],
   );
   assert.equal(raceBody.coverage.filingsSoFarOnly, true);
+  assert.equal(raceBody.refreshedAt, null);
+  assert.equal(raceBody.coverage.refreshedAt, null);
   assert.equal(raceBody.candidates[0].multiFilingNote, null);
   assert.deepEqual(raceBody.candidates[0].alternateFilings, []);
 
@@ -460,6 +464,49 @@ test("route modules require a key before touching the table", async () => {
   }
 });
 
+test("race index, state filter, and race detail share top-level refreshedAt", async () => {
+  const repo = new MemoryVoterRepository();
+  await seed(repo);
+  const watermark: IngestWatermark = {
+    source: "fec-efile-form2",
+    lastLoadTimestamp: "2026-10-26 04:12:03",
+    lastRunAt: updatedAt,
+    lastStatus: "success",
+    lastError: null,
+    pagesFetched: 1,
+    filingsUpserted: 2,
+    skipped: 0,
+    updatedAt,
+  };
+  await repo.saveWatermark(watermark);
+
+  const index = await getRaces(authed("https://voter.example/api/v1/races?cycle=2026"), deps(repo));
+  const indexBody = await index.json();
+  assert.equal(indexBody.refreshedAt, updatedAt);
+  assert.equal(indexBody.coverage.refreshedAt, updatedAt);
+
+  const state = await getRaces(
+    authed("https://voter.example/api/v1/races?cycle=2026&state=CA"),
+    deps(repo),
+  );
+  const stateBody = await state.json();
+  assert.equal(stateBody.refreshedAt, updatedAt);
+  assert.equal(stateBody.coverage.refreshedAt, updatedAt);
+  assert.deepEqual(
+    stateBody.races.map((item: Race) => item.raceId),
+    ["2026-house-CA-07", "2026-senate-CA"],
+  );
+
+  const raceResponse = await getRace(
+    authed("https://voter.example/api/v1/races/2026-senate-CA"),
+    "2026-senate-CA",
+    deps(repo),
+  );
+  const raceBody = await raceResponse.json();
+  assert.equal(raceBody.refreshedAt, updatedAt);
+  assert.equal(raceBody.coverage.refreshedAt, updatedAt);
+});
+
 test("openapi and llms.txt describe the public read surface", () => {
   const spec = openApiDocument("https://voter.example");
   assert.match(spec, /servers:\n {2}- url: https:\/\/voter\.example/);
@@ -474,6 +521,9 @@ test("openapi and llms.txt describe the public read surface", () => {
     assert.equal(spec.includes(path), true, path);
   }
   assert.match(spec, /YOUR_API_KEY/);
+  assert.match(spec, /page-level data-refreshed/);
+  assert.match(spec, /required: \[cycles, races, nextCursor, refreshedAt\]/);
+  assert.match(spec, /required: \[race, candidates, refreshedAt\]/);
   assert.equal(spec.includes("FEC_API_KEY"), false);
   assert.equal(spec.includes("__SERVER_URL__"), false);
 

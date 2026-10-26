@@ -1,3 +1,5 @@
+import { logReadError } from "../data/read";
+import { humanRaceTitle } from "./polish";
 import { executeChatTool, type ToolContext } from "./tools";
 import type { ChatAnswer, ChatRequest } from "./types";
 import type { PublicCandidate } from "../data/view";
@@ -7,7 +9,7 @@ const INSUFFICIENT =
 
 export const ALIGNMENT_NEEDS_RACE_MARKDOWN = `${INSUFFICIENT}
 
-Which state or race should I cite? For example, \`2026-senate-CA\`.`;
+Which state or race should I cite? For example, U.S. Senate, California.`;
 
 export const ALIGNMENT_DISABLED_MARKDOWN =
   "I can't compare viewpoints or tell you who to support. Candate-voter is a nonpartisan record of FEC Form 2 filings. Ask about a stored race, candidate, or filing and I will cite that record.";
@@ -21,20 +23,27 @@ export async function answerAlignment(input: {
   request: ChatRequest;
   ctx: ToolContext;
 }): Promise<ChatAnswer | { unavailable: true; message: string }> {
+  const refreshedAt = await refreshedAtFrom(input.ctx);
   if (input.request.raceId) {
-    return fromTool(
-      await executeChatTool("get_race", { raceId: input.request.raceId }, input.ctx),
-      "race",
+    return withFreshness(
+      await fromTool(
+        await executeChatTool("get_race", { raceId: input.request.raceId }, input.ctx),
+        "race",
+      ),
+      refreshedAt,
     );
   }
   if (input.request.candidateId) {
-    return fromTool(
-      await executeChatTool(
-        "get_candidate",
-        { candidateId: input.request.candidateId },
-        input.ctx,
+    return withFreshness(
+      await fromTool(
+        await executeChatTool(
+          "get_candidate",
+          { candidateId: input.request.candidateId },
+          input.ctx,
+        ),
+        "candidate",
       ),
-      "candidate",
+      refreshedAt,
     );
   }
   return {
@@ -42,7 +51,25 @@ export async function answerAlignment(input: {
     sources: [],
     refused: false,
     mode: "alignment",
+    refreshedAt,
   };
+}
+
+async function refreshedAtFrom(ctx: ToolContext): Promise<string | null> {
+  try {
+    return (await ctx.repo.getWatermark())?.updatedAt ?? null;
+  } catch (error) {
+    logReadError("getWatermark", error);
+    return null;
+  }
+}
+
+function withFreshness(
+  answer: ChatAnswer | { unavailable: true; message: string },
+  refreshedAt: string | null,
+): ChatAnswer | { unavailable: true; message: string } {
+  if ("unavailable" in answer) return answer;
+  return { ...answer, refreshedAt };
 }
 
 function fromTool(
@@ -101,8 +128,21 @@ function readCandidates(content: Record<string, unknown>): PublicCandidate[] {
 function readTitle(content: Record<string, unknown>): string | null {
   const race = content.race;
   if (!race || typeof race !== "object" || Array.isArray(race)) return null;
-  const title = (race as { title?: unknown }).title;
-  return typeof title === "string" && title.trim() ? title.trim() : null;
+  const record = race as {
+    title?: unknown;
+    raceId?: unknown;
+    office?: unknown;
+    cycle?: unknown;
+  };
+  if (typeof record.raceId === "string") {
+    return humanRaceTitle({
+      raceId: record.raceId,
+      title: typeof record.title === "string" ? record.title : null,
+      office: typeof record.office === "string" ? record.office : null,
+      cycle: typeof record.cycle === "number" ? record.cycle : null,
+    });
+  }
+  return typeof record.title === "string" && record.title.trim() ? record.title.trim() : null;
 }
 
 function isCandidate(value: unknown): value is PublicCandidate {
