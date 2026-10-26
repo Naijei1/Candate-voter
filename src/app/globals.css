@@ -9,7 +9,7 @@
   --color-accent: #0f766e;
   --color-map: #e7eef2;
   --color-map-data: #b7ebe3;
-  --color-map-hover: #7ed9cc;
+  --color-map-hover: #c5e6df;
   --font-sans: "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
@@ -24,7 +24,7 @@ body {
   stroke: #ffffff;
   stroke-width: 1.25;
   cursor: pointer;
-  transition: fill 120ms ease;
+  transition: fill 180ms ease;
 }
 
 .us-map .us-state.has-data {
@@ -45,7 +45,7 @@ body {
 .us-map .us-state:focus-visible {
   outline: none;
   stroke: var(--color-ink);
-  stroke-width: 2.6;
+  stroke-width: 2;
 }
 
 .us-map .us-label {
@@ -62,4 +62,50 @@ body {
 
 .us-map .us-state[aria-pressed="true"] + .us-label {
   fill: #ffffff;
+}
+
+.us-map .us-dc-callout {
+  pointer-events: none;
+}
+
+.us-map .us-dc-callout line {
+  stroke: #64748b;
+  stroke-width: 0.8;
+}
+
+.us-map .us-label-dc {
+  fill: #334155;
+  font-size: 14px;
+  font-weight: 600;
+  user-select: none;
+}
+
+html.motion-ok .map-reveal {
+  opacity: 0;
+  transform: translateY(12px);
+}
+
+html.motion-ok .map-reveal.is-shown {
+  opacity: 1;
+  transform: none;
+  transition: opacity 420ms ease, transform 420ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  html.motion-ok .map-reveal,
+  html.motion-ok .map-reveal.is-shown {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
 }

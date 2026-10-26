@@ -1,7 +1,15 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { DC_CALLOUT } from "../src/lib/geo/dc-label";
 import { US_STATE_SHAPES } from "../src/lib/geo/us-states";
-import { parseRaceIds, spotlightRaces, stateRaces, statesWithRaces } from "../src/lib/landing";
+import {
+  filingCoverageLabel,
+  parseRaceIds,
+  presidentialRace,
+  spotlightRaces,
+  stateRaces,
+  statesWithRaces,
+} from "../src/lib/landing";
 import type { Race } from "../src/lib/types";
 
 const older = "2026-05-01T00:00:00.000Z";
@@ -71,7 +79,7 @@ test("spotlight fills open spots from the newest remaining race", () => {
   );
 });
 
-test("state view includes the presidential race and that state's contests only", () => {
+test("state view lists Senate and House only, with president kept national", () => {
   const races = [
     race({ raceId: "2026-president", office: "president", title: "President" }),
     race({
@@ -105,8 +113,19 @@ test("state view includes the presidential race and that state's contests only",
 
   assert.deepEqual(
     stateRaces(races, "VA").map((item) => item.raceId),
-    ["2026-president", "2026-senate-VA", "2026-house-VA-01", "2026-house-VA-02"],
+    ["2026-senate-VA", "2026-house-VA-01", "2026-house-VA-02"],
   );
+  assert.equal(presidentialRace(races)?.raceId, "2026-president");
+  assert.equal(stateRaces(races, "WY").length, 0);
+  assert.equal(
+    filingCoverageLabel(races, "WY"),
+    "0 of 1 House districts have filings. Counts are FEC Form 2 electronic filings stored so far, not a full ballot or a certified candidate list.",
+  );
+  assert.equal(
+    filingCoverageLabel(races, "VA"),
+    "1 Senate race with filings. 2 of 11 House districts have filings. Counts are FEC Form 2 electronic filings stored so far, not a full ballot or a certified candidate list.",
+  );
+  assert.match(filingCoverageLabel(races, "VA"), /2 of 11 House districts have filings/);
   assert.deepEqual(statesWithRaces(races), ["MD", "VA"]);
 });
 
@@ -137,4 +156,15 @@ test("the state map is one geographic outline per state and DC", () => {
     assert.match(shape.d, /^M[\d.-]/);
     assert.ok(shape.d.length > 40);
   }
+  const dc = US_STATE_SHAPES.find((shape) => shape.postal === "DC");
+  assert.ok(dc);
+  const nums = dc.d.match(/-?\d+(?:\.\d+)?/g)?.map(Number) ?? [];
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  for (let index = 0; index < nums.length; index += 2) {
+    maxX = Math.max(maxX, nums[index] ?? 0);
+    maxY = Math.max(maxY, nums[index + 1] ?? 0);
+  }
+  assert.ok(DC_CALLOUT.labelX > maxX);
+  assert.ok(DC_CALLOUT.labelY > maxY);
 });

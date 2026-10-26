@@ -14,6 +14,14 @@ export function MarkdownAnswer({ markdown }: { markdown: string }) {
   return (
     <div className="space-y-2">
       {blocks.map((block, index) => {
+        if (block.type === "h") {
+          const Tag = block.level === 1 ? "h2" : block.level === 2 ? "h3" : "h4";
+          return (
+            <Tag key={index} className="font-semibold tracking-tight">
+              <Inlines nodes={block.inlines} />
+            </Tag>
+          );
+        }
         if (block.type === "ul" || block.type === "ol") {
           const Tag = block.type;
           return (

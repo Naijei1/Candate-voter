@@ -7,12 +7,12 @@ import {
   partyLabel,
 } from "../src/lib/format";
 
-test("formatInstant renders UTC and keeps an unparseable value visible", () => {
+test("formatInstant renders Eastern Time and keeps an unparseable value visible", () => {
   assert.equal(formatInstant(null), null);
   assert.equal(formatInstant("   "), null);
   assert.equal(formatInstant("not-a-date"), "not-a-date");
-  const formatted = formatInstant("2026-10-26T05:00:00.000Z");
-  assert.equal(formatted, "Oct 26, 2026, 5:00 AM UTC");
+  assert.match(formatInstant("2026-10-26T05:00:00.000Z") ?? "", /^Oct 26, 2026, 1:00\sAM ET$/);
+  assert.match(formatInstant("2026-01-15T15:00:00.000Z") ?? "", /^Jan 15, 2026, 10:00\sAM ET$/);
 });
 
 test("httpsUrl allows only https links", () => {
@@ -38,6 +38,8 @@ test("party labels use a readable affiliation name and keep unknown codes", () =
   assert.equal(partyLabel("CON"), "Constitution");
   assert.equal(partyLabel("CRV"), "Conservative");
   assert.equal(partyLabel("XYZ"), "XYZ");
+  assert.equal(partyLabel("DEM", "Democratic Party"), "Democratic Party");
+  assert.equal(partyLabel("XYZ", "   "), "XYZ");
   assert.equal(partyLabel(null), "Affiliation not reported");
   assert.equal(partyLabel("  "), "Affiliation not reported");
   assert.equal(fecCandidateLabel("P80011018"), "FEC P80011018");

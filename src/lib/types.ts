@@ -40,6 +40,11 @@ export type Candidate = {
   office: FederalOffice;
   /** Party code as reported on the filing. Not an endorsement. */
   partyAffiliation: string | null;
+  /**
+   * Readable affiliation from the record, when the backend stored one.
+   * Absent until that field is written. Not an endorsement.
+   */
+  partyLabel?: string | null;
   /** FEC candidate id. Null when the filing did not include one. */
   fecCandidateId: string | null;
   /** Candidate profile or, if there is no FEC id, the filing document. */

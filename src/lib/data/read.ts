@@ -39,6 +39,10 @@ export async function readRaceIndex(
   return { cycles, groups };
 }
 
+export const readRacesForCycle = cache(async (cycle: number): Promise<Race[]> => {
+  return visibleRaces(await createDynamoRepository().listRacesByCycle(cycle));
+});
+
 export const readRace = cache(async (raceId: string): Promise<Race | null> => {
   return loadVisibleRace(createDynamoRepository(), raceId);
 });

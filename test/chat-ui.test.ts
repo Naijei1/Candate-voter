@@ -102,6 +102,7 @@ test("success parsing keeps refused and drops malformed sources", () => {
   const parsed = parseChatSuccess({
     answer_markdown: "Two candidates filed.",
     refused: false,
+    mode: "factual",
     threadId: "thread-1",
     sources: [
       { title: "Alaska Senate", url: "/races/2026-senate-AK", as_of: "2026-10-26T17:00:00Z" },
@@ -112,6 +113,7 @@ test("success parsing keeps refused and drops malformed sources", () => {
   assert.equal(parsed.ok, true);
   if (!parsed.ok) return;
   assert.equal(parsed.refused, false);
+  assert.equal(parsed.mode, "factual");
   assert.equal(parsed.threadId, "thread-1");
   assert.deepEqual(parsed.sources, [
     { title: "Alaska Senate", url: "/races/2026-senate-AK", as_of: "2026-10-26T17:00:00Z" },
@@ -121,10 +123,12 @@ test("success parsing keeps refused and drops malformed sources", () => {
     answer_markdown: "I can't recommend a candidate.",
     sources: [],
     refused: true,
+    mode: "alignment",
   });
   assert.equal(refused.ok, true);
   if (!refused.ok) return;
   assert.equal(refused.refused, true);
+  assert.equal(refused.mode, "alignment");
   assert.deepEqual(refused.sources, []);
   assert.equal(parseChatSuccess({ sources: [] }).ok, false);
 });
@@ -183,6 +187,7 @@ test("POST /api/chat maps 200, refused, 400, 429, 503, and network", async () =>
         answer_markdown: "One filing.",
         sources: [{ title: "Race", url: "/races/2026-senate-AK", as_of: "unknown" }],
         refused: false,
+        mode: "factual",
         threadId: "abc",
       });
     },
@@ -190,6 +195,7 @@ test("POST /api/chat maps 200, refused, 400, 429, 503, and network", async () =>
   assert.equal(done.ok, true);
   if (!done.ok) return;
   assert.equal(done.refused, false);
+  assert.equal(done.mode, "factual");
   assert.equal(done.sources.length, 1);
 
   const refused = await postChatMessage({
@@ -199,9 +205,11 @@ test("POST /api/chat maps 200, refused, 400, 429, 503, and network", async () =>
         answer_markdown: "I can't recommend a candidate.",
         sources: [],
         refused: true,
+        mode: "factual",
       }),
   });
   assert.equal(refused.ok && refused.refused, true);
+  assert.equal(refused.ok && refused.mode, "factual");
 
   const bad = await postChatMessage({
     body: { message: "x" },
@@ -258,6 +266,7 @@ test("message states render sources only after a successful answer", () => {
             id: "a",
             role: "assistant",
             status: "refused",
+            mode: "factual",
             markdown: "I can't recommend a candidate.",
             sources: [{ title: "FEC", url: "https://www.fec.gov/data/", as_of: "unknown" }],
           },
@@ -267,7 +276,31 @@ test("message states render sources only after a successful answer", () => {
   );
   assert.match(refused, /role="status"/);
   assert.match(refused, /Where to look/);
+  assert.match(refused, /recommend a candidate/);
   assert.doesNotMatch(refused, /Retry/);
+  assert.doesNotMatch(refused, /Viewpoint similarity uses public records only/);
+
+  const aligned = render(
+    React.createElement(
+      ChatMessageList,
+      baseList({
+        turns: [
+          user("Whose views are similar to mine?"),
+          {
+            id: "align",
+            role: "assistant",
+            status: "done",
+            mode: "alignment",
+            markdown: "Two stored filers discuss housing.",
+            sources: [],
+          },
+        ],
+      }),
+    ),
+  );
+  assert.match(aligned, /Viewpoint similarity uses public records only/);
+  assert.match(aligned, /This is not a voting recommendation/);
+  assert.doesNotMatch(aligned, /Retry/);
 
   const limited = render(
     React.createElement(
@@ -328,6 +361,7 @@ test("message states render sources only after a successful answer", () => {
             id: "d",
             role: "assistant",
             status: "done",
+            mode: "factual",
             markdown: "One **filing** is stored.",
             sources: [{ title: "Alaska Senate", url: "/races/2026-senate-AK", as_of: "2026-10-26T17:00:00Z" }],
           },

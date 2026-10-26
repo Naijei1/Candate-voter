@@ -9,6 +9,7 @@ export type CandidatePreview = {
   displayName: string;
   partyAffiliation: string | null;
   partyCode: string | null;
+  /** Stored label when the filing has one; otherwise the FEC code map or the raw code. */
   partyLabel: string;
   sourceUrl: string | null;
   updatedAt: string | null;

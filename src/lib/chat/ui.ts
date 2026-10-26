@@ -1,6 +1,6 @@
 import { isResourceId } from "../api/ids";
 import { resolveCycle } from "../data/cycles";
-import type { ChatRequest, ChatSource } from "./types";
+import type { ChatMode, ChatRequest, ChatSource } from "./types";
 
 export const MAX_CHAT_MESSAGE = 2000;
 
@@ -24,6 +24,11 @@ export type ChatContextInput = {
   raceId?: string;
   candidateId?: string;
   cycle?: number;
+  /**
+   * Prepended to the question in the POST body. Not a request field.
+   * Only a "Page context:" note from the state panel is forwarded.
+   */
+  messagePrefix?: string;
 };
 
 export type CitationView = {
@@ -37,6 +42,7 @@ export type InlineNode =
   | { type: "link"; href: string; external: boolean; children: InlineNode[] };
 
 export type MarkdownBlock =
+  | { type: "h"; level: 1 | 2 | 3; inlines: InlineNode[] }
   | { type: "p"; lines: InlineNode[][] }
   | { type: "ul"; items: InlineNode[][] }
   | { type: "ol"; items: InlineNode[][] };
@@ -60,6 +66,7 @@ export function contextFromLocation(input: {
       raceId: validId(input.searchParams.get("raceId")),
       candidateId: validId(input.searchParams.get("candidateId")),
       cycle,
+      messagePrefix: pageNote(input.searchParams.get("note")),
       panel: false,
     };
   }
@@ -97,6 +104,8 @@ export function chatPageHref(context: ChatContextInput, draft?: string): string 
   if (context.raceId) params.set("raceId", context.raceId);
   if (context.candidateId) params.set("candidateId", context.candidateId);
   if (context.cycle != null) params.set("year", String(context.cycle));
+  const note = pageNote(context.messagePrefix ?? null);
+  if (note) params.set("note", note);
   const question = draft?.trim() ?? "";
   if (question) params.set("q", question.slice(0, MAX_CHAT_MESSAGE));
   const query = params.toString();
@@ -165,6 +174,8 @@ export function parseChatSuccess(data: unknown):
       answer_markdown: string;
       sources: ChatSource[];
       refused: boolean;
+      /** Null only when an older payload omitted `mode`. Alignment is never inferred. */
+      mode: ChatMode | null;
       threadId?: string;
     }
   | { ok: false } {
@@ -178,6 +189,7 @@ export function parseChatSuccess(data: unknown):
     answer_markdown: record.answer_markdown,
     sources: parseSources(record.sources),
     refused: record.refused === true,
+    mode: record.mode === "alignment" || record.mode === "factual" ? record.mode : null,
     ...(typeof record.threadId === "string" && THREAD_ID.test(record.threadId)
       ? { threadId: record.threadId }
       : {}),
@@ -274,6 +286,19 @@ export function parseMarkdown(source: string, options: CitationOptions = {}): Ma
 
   for (let index = 0; index < lines.length; ) {
     const line = lines[index] ?? "";
+    const heading = /^(#{1,3})\s+(\S.*)$/.exec(line);
+    if (heading) {
+      flushParagraph();
+      const marks = heading[1] ?? "#";
+      const level = marks.length === 1 ? 1 : marks.length === 2 ? 2 : 3;
+      blocks.push({
+        type: "h",
+        level,
+        inlines: parseInlines(heading[2] ?? "", options, false),
+      });
+      index += 1;
+      continue;
+    }
     const unordered = /^[-*]\s+(.+)$/.exec(line);
     const ordered = /^\d+\.\s+(.+)$/.exec(line);
     if (!unordered && !ordered) {
@@ -398,6 +423,12 @@ function raceChipLabel(raceId: string): string {
   }
   if (/^\d{4}-president$/.test(raceId)) return "President";
   return raceId;
+}
+
+function pageNote(value: string | null): string | undefined {
+  const text = value?.trim() ?? "";
+  if (!text.startsWith("Page context:")) return undefined;
+  return text.slice(0, 500);
 }
 
 function validId(value: string | null): string | undefined {

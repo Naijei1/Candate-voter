@@ -14,7 +14,7 @@ import {
 } from "react";
 import { ChatShell } from "@/components/chat/ChatShell";
 import { useChat, type ChatController } from "@/components/chat/useChat";
-import { contextFromLocation, isAskPanelPath } from "@/lib/chat/ui";
+import { contextFromLocation, isAskPanelPath, type ChatContextInput } from "@/lib/chat/ui";
 
 type AskContextValue = {
   open: boolean;
@@ -22,6 +22,8 @@ type AskContextValue = {
   triggerRef: RefObject<HTMLButtonElement | null>;
   chat: ChatController;
   cycles: number[];
+  pageContext: ChatContextInput | null;
+  replacePageContext: (context: ChatContextInput) => () => void;
 };
 
 const AskContext = createContext<AskContextValue | null>(null);
@@ -35,15 +37,24 @@ export function useAsk(): AskContextValue {
 export function AskProvider({ cycles, children }: { cycles: number[]; children: ReactNode }) {
   const chat = useChat();
   const [open, setOpen] = useState(false);
+  const [pageContext, setPageContext] = useState<ChatContextInput | null>(null);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
+  const generation = useRef(0);
   const pathname = usePathname();
+  const replacePageContext = useCallback((next: ChatContextInput) => {
+    const id = ++generation.current;
+    setPageContext(next);
+    return () => {
+      if (generation.current === id) setPageContext(null);
+    };
+  }, []);
 
   useEffect(() => {
     if (!isAskPanelPath(pathname)) setOpen(false);
   }, [pathname]);
 
   return (
-    <AskContext.Provider value={{ open, setOpen, triggerRef, chat, cycles }}>
+    <AskContext.Provider value={{ open, setOpen, triggerRef, chat, cycles, pageContext, replacePageContext }}>
       {children}
       <Suspense fallback={null}>
         <AskPanel cycles={cycles} />
@@ -52,11 +63,27 @@ export function AskProvider({ cycles, children }: { cycles: number[]; children: 
   );
 }
 
+/** Race, candidate, and state pages publish ids the Ask request should send. */
+export function AskPageContext(context: ChatContextInput) {
+  const { replacePageContext } = useAsk();
+  const { raceId, candidateId, cycle, messagePrefix } = context;
+  useEffect(() => {
+    return replacePageContext({
+      ...(raceId ? { raceId } : {}),
+      ...(candidateId ? { candidateId } : {}),
+      ...(cycle != null ? { cycle } : {}),
+      ...(messagePrefix ? { messagePrefix } : {}),
+    });
+  }, [replacePageContext, raceId, candidateId, cycle, messagePrefix]);
+  return null;
+}
+
 function AskPanel({ cycles }: { cycles: number[] }) {
-  const { open, setOpen, triggerRef, chat } = useAsk();
+  const { open, setOpen, triggerRef, chat, pageContext } = useAsk();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const located = contextFromLocation({ pathname, searchParams, cycles });
+  const context = mergePageContext(located, pageContext);
   const panelRef = useRef<HTMLDivElement>(null);
   const [keyboardInset, setKeyboardInset] = useState(0);
   const close = useCallback(() => setOpen(false), [setOpen]);
@@ -84,10 +111,27 @@ function AskPanel({ cycles }: { cycles: number[] }) {
         style={keyboardInset > 0 ? { paddingBottom: keyboardInset } : undefined}
         className="absolute inset-0 flex min-h-0 flex-col border-t border-line bg-card shadow-xl md:left-auto md:w-[400px] md:border-t-0 md:border-l"
       >
-        <ChatShell mode="panel" context={located} chat={chat} onClose={close} />
+        <ChatShell mode="panel" context={context} chat={chat} onClose={close} />
       </div>
     </div>
   );
+}
+
+function mergePageContext(
+  located: ChatContextInput,
+  page: ChatContextInput | null,
+): ChatContextInput {
+  if (!page) return located;
+  return {
+    cycle: page.cycle ?? located.cycle,
+    ...(page.raceId || located.raceId ? { raceId: page.raceId ?? located.raceId } : {}),
+    ...(page.candidateId || located.candidateId
+      ? { candidateId: page.candidateId ?? located.candidateId }
+      : {}),
+    ...(page.messagePrefix || located.messagePrefix
+      ? { messagePrefix: page.messagePrefix ?? located.messagePrefix }
+      : {}),
+  };
 }
 
 function useScrollLock(active: boolean) {

@@ -33,9 +33,15 @@ export function ChatShell({
   const active = useMemo<ChatContextInput>(
     () => ({
       cycle: context.cycle,
-      ...(dismissed ? {} : { raceId: context.raceId, candidateId: context.candidateId }),
+      ...(dismissed
+        ? {}
+        : {
+            raceId: context.raceId,
+            candidateId: context.candidateId,
+            messagePrefix: context.messagePrefix,
+          }),
     }),
-    [context.cycle, context.raceId, context.candidateId, dismissed],
+    [context.cycle, context.raceId, context.candidateId, context.messagePrefix, dismissed],
   );
   const label = dismissed ? null : contextLabel(context);
   const prompts = suggestedPrompts(active);

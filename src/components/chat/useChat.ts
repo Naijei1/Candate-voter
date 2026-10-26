@@ -2,13 +2,14 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ChatCancelled, postChatMessage } from "@/lib/chat/browser";
+import { applyPagePrefix } from "@/lib/chat/scope";
 import {
   buildChatRequestBody,
   rateLimitRemainingSeconds,
   type ChatContextInput,
   type ChatErrorKind,
 } from "@/lib/chat/ui";
-import type { ChatSource } from "@/lib/chat/types";
+import type { ChatMode, ChatSource } from "@/lib/chat/types";
 
 const SESSION_KEY = "candate.chat.session";
 
@@ -22,6 +23,7 @@ export type AssistantTurn =
       status: "done";
       markdown: string;
       sources: ChatSource[];
+      mode: ChatMode | null;
     }
   | {
       id: string;
@@ -29,6 +31,7 @@ export type AssistantTurn =
       status: "refused";
       markdown: string;
       sources: ChatSource[];
+      mode: ChatMode | null;
     }
   | {
       id: string;
@@ -95,6 +98,7 @@ export function useChat() {
                     status: "refused",
                     markdown: result.answer_markdown,
                     sources: result.sources,
+                    mode: result.mode,
                   }
                 : {
                     id: assistantId,
@@ -102,6 +106,7 @@ export function useChat() {
                     status: "done",
                     markdown: result.answer_markdown,
                     sources: result.sources,
+                    mode: result.mode,
                   }
               : turn,
           ),
@@ -135,7 +140,7 @@ export function useChat() {
   const run = useCallback(
     async (message: string, context: ChatContextInput, assistantId: string, flight: number) => {
       const built = buildChatRequestBody({
-        message,
+        message: applyPagePrefix(context.messagePrefix, message),
         raceId: context.raceId,
         candidateId: context.candidateId,
         cycle: context.cycle,
@@ -166,12 +171,12 @@ export function useChat() {
       abortRef.current = controller;
       try {
         const result = await postChatMessage({ body: built.body, signal: controller.signal });
-        settle(flight, assistantId, built.body.message)(result);
+        settle(flight, assistantId, message)(result);
       } catch (error) {
         if (flightRef.current !== flight) return;
         setPending(false);
         if (error instanceof ChatCancelled) {
-          dropInFlight(assistantId, built.body.message, setDraft, setTurns);
+          dropInFlight(assistantId, message, setDraft, setTurns);
           return;
         }
         setTurns((current) =>
@@ -361,7 +366,12 @@ function isTurn(value: unknown): value is ChatTurn {
   if (turn.role !== "assistant") return false;
   if (turn.status === "loading") return false;
   if (turn.status === "done" || turn.status === "refused") {
-    return typeof turn.markdown === "string" && Array.isArray(turn.sources);
+    const mode = "mode" in turn ? turn.mode : null;
+    return (
+      typeof turn.markdown === "string" &&
+      Array.isArray(turn.sources) &&
+      (mode == null || mode === "factual" || mode === "alignment")
+    );
   }
   return turn.status === "error" && typeof turn.kind === "string";
 }

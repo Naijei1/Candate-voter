@@ -6,6 +6,7 @@ import { CitationCard } from "@/components/chat/CitationCard";
 import { MarkdownAnswer } from "@/components/chat/MarkdownAnswer";
 import { SuggestedPrompts } from "@/components/chat/SuggestedPrompts";
 import type { AssistantTurn, ChatTurn } from "@/components/chat/useChat";
+import { ALIGNMENT_DISCLAIMER, ASK_INTRO } from "@/lib/chat/scope";
 import { errorCopy, rateLimitRemainingSeconds } from "@/lib/chat/ui";
 
 export function ChatMessageList({
@@ -32,10 +33,7 @@ export function ChatMessageList({
   if (turns.length === 0) {
     return (
       <div className="space-y-4 px-4 py-4">
-        <p className="text-sm leading-6 text-muted">
-          Ask factual questions about federal races and filings. Answers cite sources. Candate does
-          not rank candidates or give voting advice.
-        </p>
+        <p className="text-sm leading-6 text-muted">{ASK_INTRO}</p>
         <SuggestedPrompts prompts={prompts} disabled={pending} onPick={onPick} />
       </div>
     );
@@ -122,6 +120,9 @@ function AssistantBubble({
       role={turn.status === "refused" ? "status" : undefined}
     >
       <MarkdownAnswer markdown={turn.markdown} />
+      {turn.mode === "alignment" ? (
+        <p className="mt-3 text-sm leading-6 text-muted">{ALIGNMENT_DISCLAIMER}</p>
+      ) : null}
       {turn.sources.length > 0 ? (
         <div className="mt-3">
           <h3 className="text-xs font-semibold tracking-wide text-muted uppercase">{heading}</h3>

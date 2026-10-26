@@ -4,7 +4,7 @@ import {
   parseRetryAfterSeconds,
   type ChatErrorKind,
 } from "./ui";
-import type { ChatRequest, ChatSource } from "./types";
+import type { ChatMode, ChatRequest, ChatSource } from "./types";
 
 /** Buffered wait. Tool rounds can take a while; the visitor can cancel sooner. */
 export const CHAT_TIMEOUT_MS = 90_000;
@@ -22,6 +22,7 @@ export type ChatCallResult =
       refused: boolean;
       answer_markdown: string;
       sources: ChatSource[];
+      mode: ChatMode | null;
       threadId?: string;
     }
   | {
@@ -82,6 +83,7 @@ export async function postChatMessage(input: {
         refused: parsed.refused,
         answer_markdown: parsed.answer_markdown,
         sources: parsed.sources,
+        mode: parsed.mode,
         ...(parsed.threadId ? { threadId: parsed.threadId } : {}),
       };
     }

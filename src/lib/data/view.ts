@@ -45,7 +45,7 @@ export function presentCandidate(candidate: Candidate): PublicCandidate | null {
     ...cleaned,
     partyAffiliation: code,
     partyCode: code,
-    partyLabel: partyLabel(code),
+    partyLabel: partyLabel(code, cleaned.partyLabel),
   };
 }
 
