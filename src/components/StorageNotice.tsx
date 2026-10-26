@@ -1,4 +1,5 @@
-import type { ReactNode } from "react";
+// Classic JSX runtime for `node --import tsx --test`. Next compiles this with the automatic runtime.
+import React, { type ReactNode } from "react";
 
 type StorageNoticeProps = {
   tone?: "empty" | "error";
