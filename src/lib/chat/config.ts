@@ -9,7 +9,7 @@ export const DEFAULT_HAIKU_MODEL_ID = "us.anthropic.claude-haiku-5-5";
 /** Optional quality model. Same profile rule as Haiku. */
 export const DEFAULT_SONNET_MODEL_ID = "us.anthropic.claude-sonnet-5-5";
 
-export const CHAT_PROMPT_VERSION = "2026-10-26.1";
+export const CHAT_PROMPT_VERSION = "2026-10-26.2";
 
 const DEFAULT_RATE_LIMIT = 20;
 const DEFAULT_RATE_WINDOW_SECONDS = 60;
@@ -18,6 +18,20 @@ export function chatEnabled(
   env: Record<string, string | undefined>,
 ): boolean {
   const value = env.CANDATE_CHAT_ENABLED?.trim().toLowerCase();
+  return value === "1" || value === "true" || value === "yes";
+}
+
+/**
+ * Explicit viewpoint-alignment answers. Unset means on. Set to `false`,
+ * `0`, or `no` to soft-refuse those asks the same way as voting advice.
+ * Alignment still cannot invent positions: the stored rows are Form 2
+ * filings, and the handler says so when no vote or statement fields exist.
+ */
+export function alignmentEnabled(
+  env: Record<string, string | undefined>,
+): boolean {
+  const value = env.CANDATE_CHAT_ALIGNMENT?.trim().toLowerCase();
+  if (value == null || value === "") return true;
   return value === "1" || value === "true" || value === "yes";
 }
 

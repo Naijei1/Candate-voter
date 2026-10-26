@@ -76,10 +76,24 @@ export function AgentApiDocs({ origin, basePath, freshness }: AgentApiDocsProps)
           <li>
             <code>POST /api/chat</code> — same-origin browser chat. No API key.
             One buffered JSON body (<code>answer_markdown</code>,{" "}
-            <code>sources</code>, <code>refused</code>). <code>refused: true</code>{" "}
-            is still HTTP 200.
+            <code>sources</code>, <code>refused</code>, <code>mode</code>).{" "}
+            <code>refused: true</code> is still HTTP 200. <code>mode</code> is{" "}
+            <code>factual</code> or <code>alignment</code>.
           </li>
         </ul>
+        <p className="max-w-2xl text-base leading-7 text-muted">
+          Records are FEC Form 2 electronic filings only, not a full ballot.
+          Race list and race detail responses include <code>coverage.house</code>{" "}
+          (<code>districtsWithFilings</code> of <code>districtsTotal</code>) and{" "}
+          <code>refreshedAt</code>. <code>GET /api/v1/freshness</code> repeats
+          that scope and the ingest watermark. Chat asks which state or race
+          when “who is running” has no contest. It soft-refuses voting advice.
+          An explicit viewpoint question sets <code>mode</code> to{" "}
+          <code>alignment</code>, cites stored filings, and does not recommend
+          a vote. The table has no vote or position text, so that answer says
+          the comparison cannot be made yet. <code>CANDATE_CHAT_ALIGNMENT</code>{" "}
+          defaults to on.
+        </p>
         <p className="text-sm leading-6 text-muted">
           The same records are on the{" "}
           <a

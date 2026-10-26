@@ -87,7 +87,8 @@ test("maps a House filing onto a zero-padded district race", () => {
   assert.equal(mapped.race.raceId, "2026-house-CA-07");
   assert.equal(mapped.race.district, "07");
   assert.equal(mapped.race.title, "U.S. House, California District 7");
-  assert.equal(mapped.candidate.displayName, "JANE DOE");
+  assert.equal(mapped.candidate.displayName, "Jane Doe");
+  assert.equal(mapped.candidate.nameAsFiled, "Doe, Jane");
   assert.equal(mapped.candidate.partyAffiliation, "DEM");
   assert.equal(mapped.loadTimestamp, "2026-01-02 03:04:05");
   assert.equal(
@@ -137,6 +138,70 @@ test("maps Senate and at-large House contests", () => {
   if (!atLarge.ok) return;
   assert.equal(atLarge.race.raceId, "2026-house-AK-00");
   assert.equal(atLarge.race.title, "U.S. House, Alaska at-large");
+});
+
+test("Wyoming House district 1 is the at-large race", () => {
+  const mapped = mapForm2Filing(
+    {
+      candidate_id: "H6WY01181",
+      candidate_first_name: "RICHARD",
+      candidate_last_name: "DODSON",
+      candidate_middle_name: "L",
+      candidate_office: "H",
+      candidate_party: "W",
+      candidate_district: "1",
+      election_state: "WY",
+      election_year: 2026,
+      file_number: 42,
+      load_timestamp: "2026-03-01 00:00:00",
+    },
+    { retrievedAt },
+  );
+  assert.equal(mapped.ok, true);
+  if (!mapped.ok) return;
+  assert.equal(mapped.race.raceId, "2026-house-WY-00");
+  assert.equal(mapped.race.district, "00");
+  assert.equal(mapped.race.title, "U.S. House, Wyoming at-large");
+  assert.equal(mapped.race.jurisdiction, "Wyoming at-large");
+  assert.equal(mapped.candidate.displayName, "Richard L Dodson");
+  assert.equal(mapped.candidate.partyAffiliation, "W");
+  assert.match(mapped.race.sourceUrl ?? "", /district=00/);
+});
+
+test("drops a filing whose only name is n/a and strips the token from a real name", () => {
+  const placeholder = mapForm2Filing(
+    {
+      candidate_id: "P80000001",
+      candidate_first_name: "N/A",
+      candidate_last_name: "n/a",
+      candidate_name: "N/A",
+      candidate_office: "P",
+      election_year: 2028,
+      file_number: 7,
+      load_timestamp: "2026-03-01 00:00:00",
+    },
+    { retrievedAt },
+  );
+  assert.deepEqual(placeholder, { ok: false, reason: "placeholder-name" });
+
+  const named = mapForm2Filing(
+    {
+      candidate_id: "P60024668",
+      candidate_first_name: "James",
+      candidate_middle_name: "n/a",
+      candidate_last_name: "Athans",
+      candidate_name: "Athans, James n/a",
+      candidate_office: "P",
+      election_year: 2026,
+      file_number: 8,
+      load_timestamp: "2026-03-01 00:00:00",
+    },
+    { retrievedAt },
+  );
+  assert.equal(named.ok, true);
+  if (!named.ok) return;
+  assert.equal(named.candidate.displayName, "James Athans");
+  assert.equal(named.candidate.nameAsFiled, "Athans, James");
 });
 
 test("skips filings that cannot form a stable race", () => {

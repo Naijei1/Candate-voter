@@ -30,6 +30,13 @@ test("party labels use a readable affiliation name and keep unknown codes", () =
   assert.equal(partyLabel("dem"), "Democratic");
   assert.equal(partyLabel("DFL"), "Democratic-Farmer-Labor");
   assert.equal(partyLabel("REP"), "Republican");
+  assert.equal(partyLabel("W"), "Write-in");
+  assert.equal(partyLabel("IND"), "Independent");
+  assert.equal(partyLabel("LIB"), "Libertarian");
+  assert.equal(partyLabel("GRE"), "Green");
+  assert.equal(partyLabel("UN"), "Unaffiliated");
+  assert.equal(partyLabel("CON"), "Constitution");
+  assert.equal(partyLabel("CRV"), "Conservative");
   assert.equal(partyLabel("XYZ"), "XYZ");
   assert.equal(partyLabel(null), "Affiliation not reported");
   assert.equal(partyLabel("  "), "Affiliation not reported");

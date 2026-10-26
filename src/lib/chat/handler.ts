@@ -3,8 +3,13 @@ import { basePathFromEnv } from "../base-path";
 import { createDynamoRepository } from "../data/repository";
 import { json } from "../api/http";
 import { originFromRequest } from "../api/public-origin";
-import { CHAT_PROMPT_VERSION, chatEnabled, rateLimitSettings } from "./config";
+import {
+  ALIGNMENT_DISABLED_MARKDOWN,
+  answerAlignment,
+} from "./alignment";
+import { alignmentEnabled, CHAT_PROMPT_VERSION, chatEnabled, rateLimitSettings } from "./config";
 import { createBedrockConverse } from "./converse";
+import { CLARIFY_RACE_MARKDOWN, isAlignmentRequest, needsRaceClarification } from "./intent";
 import { isVotingAdvice, VOTING_ADVICE_MARKDOWN } from "./prompt";
 import { clientAddress, createRateLimiter, type RateLimiter } from "./rate-limit";
 import { parseChatRequest } from "./request";
@@ -73,11 +78,69 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
 
   const threadId = parsed.value.threadId ?? randomUUID();
   if (isVotingAdvice(parsed.value.message)) {
-    logOutcome({ refused: true, tools: [], latencyMs: Date.now() - started });
+    logOutcome({ refused: true, tools: [], latencyMs: Date.now() - started, mode: "factual" });
     return json({
       answer_markdown: VOTING_ADVICE_MARKDOWN,
       sources: [],
       refused: true,
+      mode: "factual",
+      threadId,
+    });
+  }
+
+  if (isAlignmentRequest(parsed.value.message)) {
+    if (!alignmentEnabled(deps.env)) {
+      logOutcome({ refused: true, tools: [], latencyMs: Date.now() - started, mode: "factual" });
+      return json({
+        answer_markdown: ALIGNMENT_DISABLED_MARKDOWN,
+        sources: [],
+        refused: true,
+        mode: "factual",
+        threadId,
+      });
+    }
+    const siteRoot =
+      deps.siteRoot ?? `${originFromRequest(request)}${basePathFromEnv(deps.env)}`;
+    try {
+      const answer = await answerAlignment({
+        request: parsed.value,
+        ctx: {
+          repo: deps.repository(),
+          env: deps.env,
+          now,
+          root: siteRoot.replace(/\/+$/, ""),
+        },
+      });
+      if ("unavailable" in answer) {
+        return json({ error: "unavailable", message: answer.message }, 503);
+      }
+      logOutcome({
+        refused: answer.refused,
+        tools: ["alignment"],
+        latencyMs: Date.now() - started,
+        mode: "alignment",
+      });
+      return json({
+        answer_markdown: answer.answer_markdown,
+        sources: answer.sources,
+        refused: answer.refused,
+        mode: "alignment",
+        threadId,
+      });
+    } catch (error) {
+      const name = error instanceof Error ? error.name : "Error";
+      console.error(`Alignment lookup failed: ${name}`);
+      return json({ error: "unavailable", message: "Stored records are unavailable." }, 503);
+    }
+  }
+
+  if (needsRaceClarification(parsed.value)) {
+    logOutcome({ refused: false, tools: [], latencyMs: Date.now() - started, mode: "factual" });
+    return json({
+      answer_markdown: CLARIFY_RACE_MARKDOWN,
+      sources: [],
+      refused: false,
+      mode: "factual",
       threadId,
     });
   }
@@ -109,6 +172,7 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
       answer_markdown: answer.answer_markdown,
       sources: answer.sources,
       refused: answer.refused,
+      mode: answer.mode ?? "factual",
       threadId,
     });
   } catch (error) {

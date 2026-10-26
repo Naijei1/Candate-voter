@@ -1,12 +1,15 @@
 "use server";
 
 import { logReadError, readCandidatesForRace } from "@/lib/data/read";
+import { presentCandidate } from "@/lib/data/view";
 import { parseRaceIds } from "@/lib/landing";
 
 export type CandidatePreview = {
   candidateId: string;
   displayName: string;
   partyAffiliation: string | null;
+  partyCode: string | null;
+  partyLabel: string;
   sourceUrl: string | null;
   updatedAt: string | null;
 };
@@ -32,13 +35,21 @@ export async function loadCandidatesForRaces(
         const candidates = await readCandidatesForRace(raceId);
         return {
           raceId,
-          candidates: candidates.map((candidate) => ({
-            candidateId: candidate.candidateId,
-            displayName: candidate.displayName,
-            partyAffiliation: candidate.partyAffiliation,
-            sourceUrl: candidate.sourceUrl,
-            updatedAt: candidate.updatedAt,
-          })),
+          candidates: candidates.flatMap((candidate) => {
+            const presented = presentCandidate(candidate);
+            if (!presented) return [];
+            return [
+              {
+                candidateId: presented.candidateId,
+                displayName: presented.displayName,
+                partyAffiliation: presented.partyAffiliation,
+                partyCode: presented.partyCode,
+                partyLabel: presented.partyLabel,
+                sourceUrl: presented.sourceUrl,
+                updatedAt: presented.updatedAt,
+              },
+            ];
+          }),
         };
       } catch (error) {
         logReadError("listCandidatesForRace", error);

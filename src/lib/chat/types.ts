@@ -5,10 +5,15 @@ export type ChatSource = {
   as_of: string;
 };
 
+/** `factual` is the default. `alignment` is explicit viewpoint comparison. */
+export type ChatMode = "factual" | "alignment";
+
 export type ChatAnswer = {
   answer_markdown: string;
   sources: ChatSource[];
   refused: boolean;
+  /** Lets the page show a disclaimer. Omitted only by older clients' requests. */
+  mode?: ChatMode;
 };
 
 export type ChatRequest = {

@@ -42,6 +42,11 @@ export type VoterRepository = {
   listFilingsForCandidate(candidateId: string): Promise<Filing[]>;
   getWatermark(): Promise<IngestWatermark | null>;
   saveWatermark(watermark: IngestWatermark): Promise<void>;
+  /**
+   * Hide a duplicate candidate from reads. The row stays in the table.
+   * Filings are not moved by this call.
+   */
+  markCandidateSuperseded(candidateId: string, supersededBy: string): Promise<void>;
 };
 
 const CANDIDATE_MONOTONIC =
@@ -186,6 +191,25 @@ class DynamoVoterRepository implements VoterRepository {
 
   async saveWatermark(watermark: IngestWatermark): Promise<void> {
     await this.update(toWatermarkItem(watermark));
+  }
+
+  async markCandidateSuperseded(
+    candidateId: string,
+    supersededBy: string,
+  ): Promise<void> {
+    await this.client.send(
+      new UpdateCommand({
+        TableName: this.tableName,
+        Key: { pk: candidatePk(candidateId), sk: ENTITY_META_SK },
+        UpdateExpression: "SET #supersededBy = :supersededBy",
+        ExpressionAttributeNames: {
+          "#supersededBy": "supersededBy",
+          "#pk": "pk",
+        },
+        ExpressionAttributeValues: { ":supersededBy": supersededBy },
+        ConditionExpression: "attribute_exists(#pk)",
+      }),
+    );
   }
 
   private async update(
