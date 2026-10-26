@@ -35,12 +35,14 @@ test("map shapes drop the browser focus rectangle and keep a fill for the select
   assert.equal(/stroke:\s*var\(--color-ink\)/.test(focusBlock), false);
 });
 
-test("home section is titled Popular and disclaims a ranking", () => {
+test("home section is titled Popular with no ranking disclaimer", () => {
   const source = readFileSync(new URL("../src/components/Landing.tsx", import.meta.url), "utf8");
+  const popular = source.slice(source.indexOf('id="popular-heading"'));
   assert.match(source, /id="popular-heading"/);
   assert.match(source, />\s*Popular\s*</);
-  assert.match(source, /Recently updated filings — not a ranking\./);
-  assert.equal(source.includes("Not a rating"), false);
+  assert.equal(popular.includes("Recently updated filings"), false);
+  assert.equal(/not a ranking/i.test(popular), false);
+  assert.equal(/not a rating/i.test(popular), false);
   assert.equal(source.includes("newest stored update"), false);
   assert.equal(source.includes("Popular "), false);
   assert.equal(/<ol\b/.test(source), false);
