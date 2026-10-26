@@ -428,6 +428,7 @@ test("route modules require a key before touching the table", async () => {
     const routes = [
       "../src/app/api/v1/freshness/route.ts",
       "../src/app/api/v1/races/route.ts",
+      "../src/app/api/v1/lookup/zip/route.ts",
     ];
     for (const path of routes) {
       const routeModule = await import(path);
@@ -516,6 +517,7 @@ test("openapi and llms.txt describe the public read surface", () => {
     "/api/v1/candidates/{candidateId}:",
     "/api/v1/candidates/{candidateId}/filings:",
     "/api/v1/freshness:",
+    "/api/v1/lookup/zip:",
     "/api/chat:",
   ]) {
     assert.equal(spec.includes(path), true, path);

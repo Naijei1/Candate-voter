@@ -6,10 +6,11 @@
 export const OPENAPI_DOCUMENT = `openapi: 3.0.3
 info:
   title: Candate read API
-  version: "1.2.0"
+  version: "1.3.0"
   description: |
-    Read-only JSON for federal races, candidates, Form 2 filings, and the
-    FEC electronic Form 2 ingest watermark stored in DynamoDB \`candate-voter\`.
+    Read-only JSON for federal races, candidates, Form 2 filings, ZIP to
+    House district and Senate race lookup, and the FEC electronic Form 2
+    ingest watermark stored in DynamoDB \`candate-voter\`.
 
     Party is the affiliation code a filing reported. This API has no scores,
     rankings, endorsements, or voting advice. It does not accept writes.
@@ -30,6 +31,7 @@ tags:
   - name: races
   - name: candidates
   - name: freshness
+  - name: lookup
   - name: chat
 paths:
   /api/v1/races:
@@ -47,6 +49,8 @@ paths:
         Top-level \`refreshedAt\` is the ISO-8601 ingest cursor write time
         for the page-level data-refreshed banner. It is null when no cursor
         is stored. \`coverage.refreshedAt\` is the same timestamp.
+        The plain scoreboard reads \`coverage\` on this response. There is
+        no separate scoreboard route and no per-race \`candidateCount\`.
       parameters:
         - $ref: "#/components/parameters/cycle"
         - $ref: "#/components/parameters/state"
@@ -182,6 +186,75 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "503":
           $ref: "#/components/responses/Unavailable"
+  /api/v1/lookup/zip:
+    get:
+      tags: [lookup]
+      operationId: lookupZip
+      summary: Find House districts and the Senate race for a ZIP code
+      description: |
+        ZIP-only lookup for "Find my races". \`zip\` is required. \`year\` is
+        the election year. \`cycle\` is an alias of \`year\` (the same query
+        name as the race list). When both are set they must be equal.
+        The server intersects the Census ZIP Code Tabulation Area with
+        120th Congressional Districts (the maps for the 2026 election).
+        No API key beyond the \`/api/v1\` key is required. A ZCTA that
+        overlaps more than one district returns every district in that
+        state. Single-seat states and delegate districts use district
+        \`00\`. The District of Columbia, Puerto Rico, and the other
+        territories are included when Census publishes a ZCTA.
+        \`senateRaceId\` is \`{year}-senate-{state}\` for the 50 states and
+        null where there is no Senate seat. \`raceIds\` lists those ids even
+        when DynamoDB has no row yet. \`races\` contains only stored rows,
+        the same objects as \`GET /api/v1/races\`, in \`raceIds\` order.
+        An unknown ZIP is 404. The route does not invent a district.
+        Census calls share a 7 second deadline. Repeat lookups for the
+        same ZIP are cached in memory on the server process.
+      parameters:
+        - $ref: "#/components/parameters/zip"
+        - $ref: "#/components/parameters/year"
+        - name: cycle
+          in: query
+          required: false
+          description: Alias of \`year\`. When both are set they must be equal.
+          schema:
+            type: integer
+            minimum: 1980
+            maximum: 2100
+            example: 2026
+      responses:
+        "200":
+          description: State, House districts, and Senate race id for the ZIP
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ZipLookup"
+              example:
+                zip: "40502"
+                year: 2026
+                state: KY
+                districts:
+                  - district: "06"
+                    raceId: "2026-house-KY-06"
+                senateRaceId: "2026-senate-KY"
+                raceIds:
+                  - "2026-senate-KY"
+                  - "2026-house-KY-06"
+                races: []
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: Census has no congressional district for that ZIP
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+              example:
+                error: not_found
+                message: No congressional district is published for that ZIP
+        "503":
+          $ref: "#/components/responses/Unavailable"
   /api/chat:
     post:
       tags: [chat]
@@ -310,6 +383,28 @@ components:
       schema:
         type: string
         maxLength: 128
+    zip:
+      name: zip
+      in: query
+      required: true
+      description: Five-digit USPS ZIP. A ZIP+4 value uses the first five digits.
+      schema:
+        type: string
+        pattern: "^\\d{5}(-\\d{4})?$"
+        example: "40502"
+    year:
+      name: year
+      in: query
+      required: false
+      description: |
+        Election year used in race ids. Same meaning as \`cycle\` on the
+        race routes. Send \`year\` or \`cycle\`. When both are set they
+        must be equal.
+      schema:
+        type: integer
+        minimum: 1980
+        maximum: 2100
+        example: 2026
     raceId:
       name: raceId
       in: path
@@ -713,6 +808,11 @@ components:
     Coverage:
       type: object
       required: [scope, filingsSoFarOnly, scopeNote, refreshedAt, house]
+      description: |
+        Plain scoreboard fields. Frontend reads \`filingsSoFarOnly\`,
+        \`refreshedAt\`, and \`house[].districtsWithFilings\` /
+        \`districtsTotal\`. There is no per-race \`candidateCount\` and no
+        party breakdown.
       properties:
         scope:
           type: string
@@ -734,7 +834,11 @@ components:
             House districts with at least one stored Form 2 race.
             districtsTotal uses the 2020 census apportionment (435 seats).
             A single-seat state counts as one district. state null is the
-            50-state rollup.
+            50-state rollup. On the unfiltered race list, state rows are
+            only those with at least one stored House race. A \`state\`
+            filter returns that state's row even when
+            districtsWithFilings is 0. That filtered response is the
+            per-state scoreboard.
           items:
             type: object
             required: [cycle, state, districtsWithFilings, districtsTotal]
@@ -812,6 +916,59 @@ components:
             cursor is stored. Omitted for refusals that do not read the table.
         threadId:
           type: string
+    ZipLookup:
+      type: object
+      required: [zip, year, state, districts, senateRaceId, raceIds, races]
+      properties:
+        zip:
+          type: string
+          description: Five-digit ZIP that was looked up.
+          example: "40502"
+        year:
+          type: integer
+          description: Election year from \`year\` or its \`cycle\` alias.
+          example: 2026
+        state:
+          type: string
+          description: Postal state or territory that contains the ZCTA.
+          example: KY
+        districts:
+          type: array
+          description: |
+            Every House district the ZCTA overlaps in that state, district
+            code ascending. \`00\` is at-large, including delegate districts.
+          items:
+            type: object
+            required: [district, raceId]
+            properties:
+              district:
+                type: string
+                example: "06"
+              raceId:
+                type: string
+                example: "2026-house-KY-06"
+        senateRaceId:
+          type: string
+          nullable: true
+          description: |
+            \`{year}-senate-{state}\` for the 50 states. Null for the
+            District of Columbia and territories, which have no Senate seat.
+            The id is returned even when no Form 2 row is stored.
+          example: "2026-senate-KY"
+        raceIds:
+          type: array
+          description: |
+            Senate id first when the state has a Senate seat, then House
+            ids in district order. Listed even when DynamoDB has no row.
+          items:
+            type: string
+        races:
+          type: array
+          description: |
+            Stored race rows for \`raceIds\`, same objects as the race index,
+            in the same order. Ids with no stored row are omitted.
+          items:
+            $ref: "#/components/schemas/Race"
 `;
 
 export function openApiDocument(serverUrl: string): string {

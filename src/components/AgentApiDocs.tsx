@@ -73,6 +73,12 @@ export function AgentApiDocs({ origin, basePath, freshness }: AgentApiDocsProps)
             2 filings, newest FEC load timestamp first.
           </li>
           <li>
+            <code>GET /api/v1/lookup/zip?zip=40502&amp;year=2026</code> — ZIP
+            to state, House district(s), and the Senate race id.{" "}
+            <code>cycle</code> is an alias of <code>year</code>. A ZIP that
+            spans districts returns each one. Unknown ZIPs are 404.
+          </li>
+          <li>
             <code>GET /api/v1/freshness</code> — ingest watermark for{" "}
             <code>fec-efile-form2</code>.
           </li>
@@ -91,7 +97,11 @@ export function AgentApiDocs({ origin, basePath, freshness }: AgentApiDocsProps)
           banner. It is the ISO-8601 ingest cursor time, or null, and{" "}
           <code>coverage.refreshedAt</code> is the same value.{" "}
           <code>coverage.house</code> is <code>districtsWithFilings</code> of{" "}
-          <code>districtsTotal</code>. <code>GET /api/v1/freshness</code> repeats
+          <code>districtsTotal</code>. That object is the plain scoreboard.
+          Filter with <code>state</code> for one state row, including a
+          zero. The unfiltered list adds a row per state that already has a
+          House filing. There is no per-race candidate count.{" "}
+          <code>GET /api/v1/freshness</code> repeats
           that scope and the ingest watermark. Chat asks which state or race
           when “who is running” has no contest. It soft-refuses voting advice.
           An explicit viewpoint question sets <code>mode</code> to{" "}
@@ -129,6 +139,9 @@ export function AgentApiDocs({ origin, basePath, freshness }: AgentApiDocsProps)
         <Example label="X-Api-Key header">{`curl -sS \\
   -H "X-Api-Key: YOUR_API_KEY" \\
   "${racesUrl}"`}</Example>
+        <Example label="ZIP to races">{`curl -sS \\
+  -H "Authorization: Bearer YOUR_API_KEY" \\
+  "${root}/api/v1/lookup/zip?zip=40502&year=2026"`}</Example>
         <Example label="Browser chat, no API key">{`curl -sS -X POST \\
   -H "Content-Type: application/json" \\
   -d '{"message":"Which Senate races are stored for California in 2026?","cycle":2026}' \\
