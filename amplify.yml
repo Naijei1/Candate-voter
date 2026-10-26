@@ -1,0 +1,25 @@
+version: 1
+# Amplify Hosting compute (platform WEB_COMPUTE) for Next.js SSR.
+# artifacts.baseDirectory must stay `.next`.
+# Do not set `output: "export"` in next.config — that would publish a static site.
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - nvm install 22
+        - nvm use 22
+        - node -v
+        - npm ci
+    build:
+      commands:
+        # Amplify console env vars are already in the shell. Next inlines
+        # NEXT_PUBLIC_* (including NEXT_PUBLIC_BASE_PATH) during this build.
+        - npm run build
+  artifacts:
+    baseDirectory: .next
+    files:
+      - "**/*"
+  cache:
+    paths:
+      - node_modules/**/*
+      - .next/cache/**/*
