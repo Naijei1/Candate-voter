@@ -1,3 +1,5 @@
+import { canonicalDistrict } from "../data/at-large";
+import { isPlaceholderName, normalizeFiledName, normalizePersonName } from "../data/names";
 import { isPostalState, stateName } from "../data/states";
 import type { FecForm2Filing } from "./types";
 import type { Candidate, FederalOffice, Filing, Race } from "../types";
@@ -8,7 +10,8 @@ export type SkipReason =
   | "unsupported-office"
   | "invalid-election-year"
   | "missing-state"
-  | "invalid-district";
+  | "invalid-district"
+  | "placeholder-name";
 
 export type MappedForm2 = {
   ok: true;
@@ -52,7 +55,9 @@ export function mapForm2Filing(
     return { ok: false, reason: "missing-state" };
   }
 
-  const district = office === "house" ? normalizeDistrict(row.candidate_district) : null;
+  const rawDistrict = office === "house" ? normalizeDistrict(row.candidate_district) : null;
+  const district =
+    office === "house" ? canonicalDistrict(state, rawDistrict) : null;
   if (office === "house" && !district) {
     return { ok: false, reason: "invalid-district" };
   }
@@ -63,8 +68,11 @@ export function mapForm2Filing(
   const filingId = String(fileNumber);
   const sourceUrl = filingSourceUrl(row.pdf_url, row.image_number);
   const imageNumber = clean(row.image_number);
-  const nameAsFiled = clean(row.candidate_name);
-  const displayName = buildDisplayName(row) ?? nameAsFiled ?? "Unnamed candidate";
+  const nameAsFiled = normalizeFiledName(clean(row.candidate_name));
+  const displayName = normalizePersonName(buildDisplayName(row)) ?? nameAsFiled;
+  if (!displayName || isPlaceholderName(displayName)) {
+    return { ok: false, reason: "placeholder-name" };
+  }
 
   const race: Race = {
     raceId,

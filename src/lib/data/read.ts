@@ -1,6 +1,7 @@
 import { cache } from "react";
 import { cyclesFromEnv } from "./cycles";
 import { createDynamoRepository, type VoterRepository } from "./repository";
+import { cleanCandidate, loadVisibleCandidates, loadVisibleRace, visibleRaces } from "./view";
 import type { Candidate, Filing, IngestWatermark, Race } from "../types";
 
 export { racesByOffice } from "../races";
@@ -23,7 +24,7 @@ export async function listRacesForCycles(
   const groups = await Promise.all(
     cycles.map(async (cycle) => ({
       cycle,
-      races: await repo.listRacesByCycle(cycle),
+      races: visibleRaces(await repo.listRacesByCycle(cycle)),
     })),
   );
   return groups.filter((group) => group.races.length > 0);
@@ -39,19 +40,19 @@ export async function readRaceIndex(
 }
 
 export const readRace = cache(async (raceId: string): Promise<Race | null> => {
-  return createDynamoRepository().getRace(raceId);
+  return loadVisibleRace(createDynamoRepository(), raceId);
 });
 
 export const readCandidate = cache(
   async (candidateId: string): Promise<Candidate | null> => {
-    return createDynamoRepository().getCandidate(candidateId);
+    const candidate = await createDynamoRepository().getCandidate(candidateId);
+    return candidate ? cleanCandidate(candidate) : null;
   },
 );
 
 export const readCandidatesForRace = cache(
   async (raceId: string): Promise<Candidate[]> => {
-    const candidates = await createDynamoRepository().listCandidatesForRace(raceId);
-    return sortCandidates(candidates);
+    return loadVisibleCandidates(createDynamoRepository(), raceId);
   },
 );
 

@@ -3,7 +3,7 @@ export function llmsText(input: { origin: string; basePath: string }): string {
   const root = `${input.origin}${input.basePath}`;
   return `# Candate
 
-> Nonpartisan federal election records for President, Senate, and House, stored from FEC Form 2 filings. Read-only JSON with source links and timestamps. Party is the filing affiliation code. The API has no scores, rankings, endorsements, or voting advice, and it has no write methods. POST /api/chat is a same-origin browser route that answers from these records and does not use the API key. Other agents call /api/v1 with a key.
+> Nonpartisan federal election records for President, Senate, and House, stored from FEC Form 2 electronic filings only (not a full ballot). Read-only JSON with source links and timestamps. Party is the filing code plus a readable label (\`partyCode\`, \`partyLabel\`). Race payloads include \`coverage\` (House districts with filings out of the apportioned count) and freshness includes \`refreshedAt\`. The API has no scores, rankings, endorsements, or voting advice, and it has no write methods. POST /api/chat is a same-origin browser route and does not use the API key. \`mode\` is \`factual\` or \`alignment\`. Alignment is only for an explicit viewpoint question, cites stored filings, and does not say who to vote for. Other agents call /api/v1 with a key.
 
 ## Docs
 

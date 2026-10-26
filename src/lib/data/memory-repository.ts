@@ -9,6 +9,7 @@ export class MemoryVoterRepository implements VoterRepository {
   private readonly races = new Map<string, Race>();
   private readonly candidates = new Map<string, Candidate>();
   private readonly filings = new Map<string, Filing>();
+  private readonly superseded = new Set<string>();
   private watermark: IngestWatermark | null = null;
 
   async upsertRace(race: Race): Promise<void> {
@@ -44,12 +45,13 @@ export class MemoryVoterRepository implements VoterRepository {
   }
 
   async getCandidate(candidateId: string): Promise<Candidate | null> {
+    if (this.superseded.has(candidateId)) return null;
     return clone(this.candidates.get(candidateId) ?? null);
   }
 
   async listCandidatesForRace(raceId: string): Promise<Candidate[]> {
     return [...this.candidates.values()]
-      .filter((candidate) => candidate.raceId === raceId)
+      .filter((candidate) => candidate.raceId === raceId && !this.superseded.has(candidate.candidateId))
       .sort((a, b) => a.displayName.localeCompare(b.displayName))
       .map((candidate) => clone(candidate));
   }
@@ -72,6 +74,15 @@ export class MemoryVoterRepository implements VoterRepository {
 
   async saveWatermark(watermark: IngestWatermark): Promise<void> {
     this.watermark = clone(watermark);
+  }
+
+  async markCandidateSuperseded(
+    candidateId: string,
+    supersededBy: string,
+  ): Promise<void> {
+    if (!this.candidates.has(candidateId)) return;
+    if (!supersededBy.trim()) return;
+    this.superseded.add(candidateId);
   }
 }
 

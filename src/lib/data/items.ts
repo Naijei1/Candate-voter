@@ -160,6 +160,9 @@ export function fromCandidateItem(
   item: Record<string, unknown>,
 ): Candidate | null {
   if (item.entityType !== "candidate" || !isOffice(item.office)) return null;
+  if (typeof item.supersededBy === "string" && item.supersededBy.trim().length > 0) {
+    return null;
+  }
   const candidateId = asString(item.candidateId);
   const raceId = asString(item.raceId);
   const displayName = asString(item.displayName);

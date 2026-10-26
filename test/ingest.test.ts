@@ -82,6 +82,55 @@ test("upserts filings idempotently and does not regress a newer candidate", asyn
   assert.equal((await repo.getWatermark())?.lastLoadTimestamp, "2026-02-01 00:00:00");
 });
 
+test("presidential filings for the same person share one candidate id", async () => {
+  const repo = new MemoryVoterRepository();
+  const base = {
+    candidate_office: "P",
+    candidate_party: "REP",
+    election_year: 2028,
+    load_timestamp: "2026-05-01 00:00:00",
+  };
+  await runIngest({
+    repo,
+    fec: client([
+      {
+        page: 1,
+        pages: 1,
+        perPage: 100,
+        results: [
+          {
+            ...base,
+            candidate_id: "P80009640",
+            candidate_first_name: "CYRUS",
+            candidate_last_name: "SAJNA",
+            file_number: 11,
+          },
+          {
+            ...base,
+            candidate_id: "P00006890",
+            candidate_name: "SAJNA, CYRUS",
+            file_number: 12,
+            load_timestamp: "2026-05-02 00:00:00",
+          },
+        ],
+      },
+    ]),
+    now: () => new Date("2026-10-26T05:00:00.000Z"),
+  });
+  const candidates = await repo.listCandidatesForRace("2028-president");
+  assert.deepEqual(
+    candidates.map((candidate) => candidate.candidateId),
+    ["P80009640"],
+  );
+  assert.equal(candidates[0]?.displayName, "Cyrus Sajna");
+  const filings = await repo.listFilingsForCandidate("P80009640");
+  assert.deepEqual(
+    filings.map((filing) => filing.filingId).sort(),
+    ["11", "12"],
+  );
+  assert.equal(await repo.getCandidate("P00006890"), null);
+});
+
 test("records a skip and still advances the cursor past it", async () => {
   const repo = new MemoryVoterRepository();
   const summary = await runIngest({
