@@ -4,24 +4,19 @@
 import React, { useEffect } from "react";
 import { CitationCard } from "@/components/chat/CitationCard";
 import { MarkdownAnswer } from "@/components/chat/MarkdownAnswer";
-import { SuggestedPrompts } from "@/components/chat/SuggestedPrompts";
 import type { AssistantTurn, ChatTurn } from "@/components/chat/useChat";
 import { ALIGNMENT_DISCLAIMER, ASK_INTRO } from "@/lib/chat/scope";
 import { errorCopy, rateLimitRemainingSeconds } from "@/lib/chat/ui";
 
 export function ChatMessageList({
   turns,
-  prompts,
   pending,
   now,
-  onPick,
   onRetry,
 }: {
   turns: ChatTurn[];
-  prompts: string[];
   pending: boolean;
   now: number;
-  onPick: (prompt: string) => void;
   onRetry: () => void;
 }) {
   const endId = turns.length > 0 ? turns[turns.length - 1]?.id : "empty";
@@ -34,7 +29,6 @@ export function ChatMessageList({
     return (
       <div className="space-y-4 px-4 py-4">
         <p className="text-sm leading-6 text-muted">{ASK_INTRO}</p>
-        <SuggestedPrompts prompts={prompts} disabled={pending} onPick={onPick} />
       </div>
     );
   }
@@ -51,7 +45,7 @@ export function ChatMessageList({
             </div>
           ) : (
             <div key={turn.id} id={`chat-turn-${turn.id}`}>
-              <AssistantBubble turn={turn} now={now} prompts={prompts} pending={pending} onPick={onPick} onRetry={onRetry} />
+              <AssistantBubble turn={turn} now={now} pending={pending} onRetry={onRetry} />
             </div>
           ),
         )}
@@ -63,16 +57,12 @@ export function ChatMessageList({
 function AssistantBubble({
   turn,
   now,
-  prompts,
   pending,
-  onPick,
   onRetry,
 }: {
   turn: AssistantTurn;
   now: number;
-  prompts: string[];
   pending: boolean;
-  onPick: (prompt: string) => void;
   onRetry: () => void;
 }) {
   if (turn.status === "loading") {
@@ -131,11 +121,6 @@ function AssistantBubble({
               <CitationCard key={`${source.url}:${source.title}`} source={source} />
             ))}
           </ul>
-        </div>
-      ) : null}
-      {turn.status === "refused" ? (
-        <div className="mt-3">
-          <SuggestedPrompts prompts={prompts} disabled={pending} onPick={onPick} />
         </div>
       ) : null}
     </div>

@@ -61,14 +61,26 @@ export type StateCoverage = {
   scopeNote: string;
 };
 
+/** Counts already on the race index. `filingsSoFarOnly` is always true for Form 2. */
+export type StateScoreboard = {
+  senateFilings: number;
+  districtsWithFilings: number;
+  districtsTotal: number;
+  filingsSoFarOnly: true;
+};
+
 /**
- * Senate rows already loaded, plus House "X of Y" from `houseCoverageForRaces`.
- * `districtsTotal` is the apportionment on that coverage row. A zero total
- * (no apportionment for the postal) does not invent a denominator.
+ * Senate rows already loaded, plus House districts with filings out of the
+ * apportioned total. A zero total (no apportionment for the postal) stays
+ * zero so the UI does not invent a denominator.
  */
-export function stateCoverage(races: readonly Race[], postal: string, cycle?: number): StateCoverage {
+export function stateScoreboard(
+  races: readonly Race[],
+  postal: string,
+  cycle?: number,
+): StateScoreboard {
   const local = stateRaces(races, postal);
-  const senate = local.filter((race) => race.office === "senate").length;
+  const senateFilings = local.filter((race) => race.office === "senate").length;
   const cycles =
     cycle != null
       ? [cycle]
@@ -78,16 +90,32 @@ export function stateCoverage(races: readonly Race[], postal: string, cycle?: nu
           ),
         ];
   const row = houseCoverageForRaces(races, cycles, postal).find((item) => item.state === postal);
-  const lines: string[] = [];
-  if (senate > 0) lines.push(`${countPhrase(senate, "Senate")}.`);
-  if (row && row.districtsTotal > 0) {
-    lines.push(`${row.districtsWithFilings} of ${row.districtsTotal} House districts have filings.`);
-  } else if (row && row.districtsWithFilings > 0) {
-    lines.push(`${countPhrase(row.districtsWithFilings, "House")}.`);
-  }
-  const filedHouse = row?.districtsWithFilings ?? 0;
   return {
-    empty: senate === 0 && filedHouse === 0,
+    senateFilings,
+    districtsWithFilings: row?.districtsWithFilings ?? 0,
+    districtsTotal: row?.districtsTotal ?? 0,
+    filingsSoFarOnly: true,
+  };
+}
+
+/**
+ * Senate rows already loaded, plus House "X of Y" from `houseCoverageForRaces`.
+ * `districtsTotal` is the apportionment on that coverage row. A zero total
+ * (no apportionment for the postal) does not invent a denominator.
+ */
+export function stateCoverage(races: readonly Race[], postal: string, cycle?: number): StateCoverage {
+  const board = stateScoreboard(races, postal, cycle);
+  const lines: string[] = [];
+  if (board.senateFilings > 0) lines.push(`${countPhrase(board.senateFilings, "Senate")}.`);
+  if (board.districtsTotal > 0) {
+    lines.push(
+      `${board.districtsWithFilings} of ${board.districtsTotal} House districts have filings.`,
+    );
+  } else if (board.districtsWithFilings > 0) {
+    lines.push(`${countPhrase(board.districtsWithFilings, "House")}.`);
+  }
+  return {
+    empty: board.senateFilings === 0 && board.districtsWithFilings === 0,
     lines,
     scopeNote: FORM2_SCOPE_NOTE,
   };

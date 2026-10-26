@@ -173,6 +173,10 @@ body {
   margin-top: 0;
 }
 
+.map-hero.map-hero-secondary {
+  margin-top: 1.5rem;
+}
+
 @media (min-width: 1024px) {
   .map-hero-grid {
     grid-template-columns: minmax(0, 1fr) 23.5rem;

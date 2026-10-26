@@ -332,7 +332,9 @@ test("message states render sources only after a successful answer", () => {
   const empty = render(React.createElement(ChatMessageList, baseList({ turns: [] })));
   assert.match(empty, /Ask factual questions/);
   assert.match(empty, /does not rank candidates or give voting advice/);
-  assert.match(empty, /Who filed in Alaska Senate/);
+  assert.doesNotMatch(empty, /Who filed in Alaska Senate/);
+  assert.doesNotMatch(empty, /Suggested prompts/);
+  assert.doesNotMatch(empty, /<button/);
 
   const refused = render(
     React.createElement(
@@ -356,6 +358,7 @@ test("message states render sources only after a successful answer", () => {
   assert.match(refused, /Where to look/);
   assert.match(refused, /recommend a candidate/);
   assert.doesNotMatch(refused, /Retry/);
+  assert.doesNotMatch(refused, /Who filed in Alaska Senate/);
   assert.doesNotMatch(refused, /Viewpoint similarity uses public records only/);
 
   const aligned = render(
