@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useAsk } from "@/components/chat/AskProvider";
 import { RecordMeta } from "@/components/RecordMeta";
 import { StorageNotice } from "@/components/StorageNotice";
@@ -19,16 +19,17 @@ import {
 import { racesByStateOffice } from "@/lib/races";
 import {
   loadCandidatesForRaces,
-  type CandidatePreview,
   type RaceCandidatesResult,
 } from "@/lib/landing/candidates";
+import {
+  applyCandidateLoad,
+  isAbortError,
+  loadCandidatesForRacesWithTimeout,
+  type CandidateCacheEntry,
+} from "@/lib/landing/load-candidates";
 import type { Race } from "@/lib/types";
 
 const PREVIEW_LIMIT = 8;
-
-type CandidateCacheEntry =
-  | { ok: true; candidates: CandidatePreview[] }
-  | { ok: false };
 
 type LandingProps = {
   year: number;
@@ -52,8 +53,12 @@ export function Landing({
   refreshedAt = null,
 }: LandingProps) {
   const [selected, setSelected] = useState<string | null>(initialState);
-  const [candidateTick, setCandidateTick] = useState(0);
-  const cacheRef = useRef(seedCandidateCache(seededCandidates));
+  const [entries, setEntries] = useState<Map<string, CandidateCacheEntry>>(() =>
+    seedCandidateCache(seededCandidates),
+  );
+  const [reloadKey, setReloadKey] = useState(0);
+  const entriesRef = useRef(entries);
+  entriesRef.current = entries;
   const marked = statesWithRaces(races);
   const spotlight = spotlightRaces(races);
   const { replacePageContext } = useAsk();
@@ -67,36 +72,54 @@ export function Landing({
     setSelected(initialState);
   }, [initialState]);
 
+  const panelRaceKey = selected ? stateRaces(races, selected).map((race) => race.raceId).join("\n") : "";
+
   useEffect(() => {
-    if (!selected) return;
-    const ids = stateRaces(races, selected).map((race) => race.raceId);
-    const missing = ids.filter((id) => !cacheRef.current.has(id));
+    if (!panelRaceKey) return;
+    const ids = panelRaceKey.split("\n");
+    const missing = ids.filter((id) => !entriesRef.current.has(id));
     if (missing.length === 0) return;
 
-    let cancelled = false;
-    loadCandidatesForRaces(missing)
-      .then((result) => {
-        if (cancelled) return;
-        if (!result.ok) {
-          for (const id of missing) cacheRef.current.set(id, { ok: false });
-        } else {
-          for (const group of result.races) {
-            if ("error" in group) cacheRef.current.set(group.raceId, { ok: false });
-            else cacheRef.current.set(group.raceId, { ok: true, candidates: group.candidates });
-          }
-        }
-        setCandidateTick((tick) => tick + 1);
-      })
-      .catch(() => {
-        if (cancelled) return;
-        for (const id of missing) cacheRef.current.set(id, { ok: false });
-        setCandidateTick((tick) => tick + 1);
-      });
+    const controller = new AbortController();
+    let active = true;
+    let applied = false;
+    const fail = () => {
+      applied = true;
+      setEntries((prev) => applyCandidateLoad(prev, missing, { ok: false, error: "unavailable" }));
+    };
+
+    (async () => {
+      try {
+        const result = await loadCandidatesForRacesWithTimeout(missing, {
+          load: loadCandidatesForRaces,
+          signal: controller.signal,
+        });
+        if (!active) return;
+        applied = true;
+        setEntries((prev) => applyCandidateLoad(prev, missing, result));
+      } catch (error) {
+        if (!active || isAbortError(error)) return;
+        fail();
+      } finally {
+        if (active && !applied) fail();
+      }
+    })();
 
     return () => {
-      cancelled = true;
+      active = false;
+      controller.abort();
     };
-  }, [races, selected]);
+  }, [panelRaceKey, reloadKey]);
+
+  const retryRace = useCallback((raceId: string) => {
+    setEntries((prev) => {
+      if (!prev.has(raceId)) return prev;
+      const next = new Map(prev);
+      next.delete(raceId);
+      return next;
+    });
+    setReloadKey((key) => key + 1);
+  }, []);
 
   function selectState(postal: string, scroll: boolean) {
     setSelected(postal);
@@ -231,8 +254,8 @@ export function Landing({
             year={year}
             races={races}
             selected={selected}
-            cache={cacheRef.current}
-            cacheTick={candidateTick}
+            cache={entries}
+            onRetryRace={retryRace}
             refreshedAt={refreshedAt}
           />
         </div>
@@ -290,17 +313,16 @@ function StatePanel({
   races,
   selected,
   cache,
-  cacheTick,
   refreshedAt,
+  onRetryRace,
 }: {
   year: number;
   races: Race[];
   selected: string | null;
   cache: Map<string, CandidateCacheEntry>;
-  cacheTick: number;
   refreshedAt: string | null;
+  onRetryRace: (raceId: string) => void;
 }) {
-  void cacheTick;
   const listed = selected ? stateRaces(races, selected) : [];
   const groups = racesByStateOffice(listed);
   const president = presidentialRace(races);
@@ -355,7 +377,12 @@ function StatePanel({
                 </h4>
                 <ul className="mt-2 space-y-2">
                   {group.races.map((race) => (
-                    <RaceCard key={race.raceId} race={race} candidates={cache.get(race.raceId)} />
+                    <RaceCard
+                      key={race.raceId}
+                      race={race}
+                      candidates={cache.get(race.raceId)}
+                      onRetry={() => onRetryRace(race.raceId)}
+                    />
                   ))}
                 </ul>
               </section>
@@ -396,9 +423,11 @@ function NationalContest({
 function RaceCard({
   race,
   candidates,
+  onRetry,
 }: {
   race: Race;
   candidates: CandidateCacheEntry | undefined;
+  onRetry: () => void;
 }) {
   return (
     <li className="rounded-lg border border-line px-3 py-3">
@@ -411,7 +440,7 @@ function RaceCard({
         </Link>
       </h5>
       <p className="text-sm text-muted">{race.jurisdiction}</p>
-      <CandidateList race={race} entry={candidates} />
+      <CandidateList race={race} entry={candidates} onRetry={onRetry} />
       <RecordMeta sourceUrl={race.sourceUrl} updatedAt={race.updatedAt} />
     </li>
   );
@@ -420,19 +449,30 @@ function RaceCard({
 function CandidateList({
   race,
   entry,
+  onRetry,
 }: {
   race: Race;
   entry: CandidateCacheEntry | undefined;
+  onRetry: () => void;
 }) {
   if (!entry) {
     return <p className="mt-2 text-sm text-muted">Loading candidates…</p>;
   }
   if (!entry.ok) {
     return (
-      <p className="mt-2 text-sm text-muted">
-        Candidates could not be loaded. The race page still lists them when the
-        table is available.
-      </p>
+      <div className="mt-2">
+        <p className="text-sm text-muted">
+          Candidates could not be loaded. The race page still lists them when the
+          table is available.
+        </p>
+        <button
+          type="button"
+          onClick={onRetry}
+          className="mt-2 rounded-md border border-line bg-card px-2.5 py-1 text-sm font-semibold text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        >
+          Retry
+        </button>
+      </div>
     );
   }
   if (entry.candidates.length === 0) {

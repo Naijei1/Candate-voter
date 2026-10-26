@@ -10,6 +10,11 @@ import {
   stateRaces,
   statesWithRaces,
 } from "../src/lib/landing";
+import {
+  applyCandidateLoad,
+  isAbortError,
+  loadCandidatesForRacesWithTimeout,
+} from "../src/lib/landing/load-candidates";
 import type { Race } from "../src/lib/types";
 
 const older = "2026-05-01T00:00:00.000Z";
@@ -167,4 +172,83 @@ test("the state map is one geographic outline per state and DC", () => {
   }
   assert.ok(DC_CALLOUT.labelX > maxX);
   assert.ok(DC_CALLOUT.labelY > maxY);
+});
+
+test("KY panel loads Senate and House race ids for that state", () => {
+  const races = [
+    race({ raceId: "2026-president", office: "president", title: "President" }),
+    race({ raceId: "2026-senate-KY", office: "senate", title: "U.S. Senate, Kentucky", state: "KY" }),
+    race({ raceId: "2026-house-KY-06", office: "house", title: "House 6", state: "KY", district: "06" }),
+    race({ raceId: "2026-house-KY-04", office: "house", title: "House 4", state: "KY", district: "04" }),
+    race({ raceId: "2026-house-KY-05", office: "house", title: "House 5", state: "KY", district: "05" }),
+    race({ raceId: "2026-senate-TN", office: "senate", title: "U.S. Senate, Tennessee", state: "TN" }),
+  ];
+  assert.deepEqual(stateRaces(races, "KY").map((item) => item.raceId), [
+    "2026-senate-KY",
+    "2026-house-KY-04",
+    "2026-house-KY-05",
+    "2026-house-KY-06",
+  ]);
+});
+
+test("a finished candidate load records every requested race", () => {
+  const partial = applyCandidateLoad(new Map(), ["2026-senate-KY", "2026-house-KY-04"], {
+    ok: true,
+    races: [
+      {
+        raceId: "2026-senate-KY",
+        candidates: [
+          {
+            candidateId: "S6KY00001",
+            displayName: "Ada Lovelace",
+            partyAffiliation: "DEM",
+            partyCode: "DEM",
+            partyLabel: "Democratic",
+            sourceUrl: null,
+            updatedAt: null,
+          },
+        ],
+      },
+    ],
+  });
+  assert.equal(partial.get("2026-senate-KY")?.ok, true);
+  assert.equal(partial.get("2026-house-KY-04")?.ok, false);
+
+  const failed = applyCandidateLoad(new Map(), ["2026-senate-KY"], { ok: false, error: "timeout" });
+  assert.equal(failed.get("2026-senate-KY")?.ok, false);
+});
+
+test("candidate load timeout settles when the action never resolves", async () => {
+  const started = Date.now();
+  const result = await loadCandidatesForRacesWithTimeout(
+    ["2026-senate-KY", "2026-house-KY-04"],
+    {
+      timeoutMs: 30,
+      load: () => new Promise(() => {}),
+    },
+  );
+  assert.deepEqual(result, { ok: false, error: "timeout" });
+  assert.ok(Date.now() - started < 1_000);
+  const shown = applyCandidateLoad(new Map(), ["2026-senate-KY", "2026-house-KY-04"], result);
+  assert.equal(shown.get("2026-senate-KY")?.ok, false);
+  assert.equal(shown.get("2026-house-KY-04")?.ok, false);
+});
+
+test("aborting a candidate load is cancellation, not an error row", async () => {
+  const controller = new AbortController();
+  const pending = loadCandidatesForRacesWithTimeout(["2026-senate-KY"], {
+    timeoutMs: 5_000,
+    signal: controller.signal,
+    load: () => new Promise(() => {}),
+  });
+  controller.abort();
+  await assert.rejects(pending, (error: unknown) => isAbortError(error));
+});
+
+test("candidate load returns rows when the action settles", async () => {
+  const result = await loadCandidatesForRacesWithTimeout(["2026-senate-KY"], {
+    timeoutMs: 500,
+    load: async () => ({ ok: true, races: [{ raceId: "2026-senate-KY", candidates: [] }] }),
+  });
+  assert.equal(result.ok, true);
 });
