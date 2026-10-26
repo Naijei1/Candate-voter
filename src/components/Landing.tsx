@@ -248,9 +248,6 @@ export function Landing({
         <h2 id="popular-heading" className="text-lg font-semibold tracking-tight text-ink">
           Popular
         </h2>
-        <p className="mt-1 text-sm leading-6 text-muted">
-          Recently updated filings — not a ranking.
-        </p>
         {spotlight.length === 0 ? (
           <div className="mt-4">
             <StorageNotice>No races are stored for {year}.</StorageNotice>
