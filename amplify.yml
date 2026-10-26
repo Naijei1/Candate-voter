@@ -12,8 +12,13 @@ frontend:
         - npm ci
     build:
       commands:
-        # Amplify console env vars are already in the shell. Next inlines
-        # NEXT_PUBLIC_* (including NEXT_PUBLIC_BASE_PATH) during this build.
+        # Console env vars are in this shell, but WEB_COMPUTE does not pass
+        # them to Next.js server components. Next loads .env.production when
+        # it serves traffic. Copy only names the site reads. Never copy
+        # FEC_API_KEY. An unset CANDATE_TABLE_NAME still falls back to
+        # candate-voter in tableNameFromEnv.
+        - rm -f .env.production
+        - env | grep -e '^CANDATE_TABLE_NAME=' -e '^CANDATE_CYCLES=' -e '^NEXT_PUBLIC_' >> .env.production || true
         - npm run build
   artifacts:
     baseDirectory: .next

@@ -136,7 +136,9 @@ aws lambda invoke \
 
 ## Race pages
 
-`/`, `/races/[raceId]`, and `/candidates/[candidateId]` are server components. They call `createDynamoRepository()` and set `dynamic = "force-dynamic"`, so `next build` does not query the table and does not prebuild ids from `src/lib/placeholders.ts`. The Amplify SSR compute role (not the build role) needs `dynamodb:GetItem` and `dynamodb:Query` on the table and `gsi1`. Set `CANDATE_TABLE_NAME=candate-voter` and `AWS_REGION=us-east-1` on the branch. Leave `FEC_API_KEY` on the Lambda only.
+`/`, `/races/[raceId]`, and `/candidates/[candidateId]` are server components. They call `createDynamoRepository()` and set `dynamic = "force-dynamic"`, so `next build` does not query the table and does not prebuild ids from `src/lib/placeholders.ts`. The Amplify SSR compute role (not the build role) needs `dynamodb:GetItem` and `dynamodb:Query` on the table and `gsi1`. Leave `FEC_API_KEY` on the Lambda only.
+
+Amplify Hosting puts branch environment variables in the build shell and does not pass them to the Next.js server at request time. `amplify.yml` copies `CANDATE_TABLE_NAME`, `CANDATE_CYCLES`, and `NEXT_PUBLIC_*` into `.env.production` before `next build`. Next.js loads that file when it serves traffic. If `CANDATE_TABLE_NAME` is still unset, reads use `candate-voter`. `AWS_REGION` falls back to `us-east-1` in the repository client. Neither value is a secret.
 
 The home index queries `listRacesByCycle` for each year in a window: the previous UTC calendar year through six years ahead. `CANDATE_CYCLES` (comma-separated years) overrides that window. A query with no rows renders an empty state. A storage error renders an error message and does not substitute sample rows.
 
@@ -179,13 +181,13 @@ Build image Node is 22 (`nvm install 22` in `amplify.yml`, `.nvmrc`). Amplify bl
 
 ### Environment variables
 
-Set these in the Amplify console for the branch (they are available to `npm run build`):
+Branch environment variables are available to the build shell. `amplify.yml` copies the site's variables into `.env.production` so the Next.js server can read them. `CANDATE_TABLE_NAME` is optional: an empty value selects `candate-voter`.
 
 | Name | MVP value |
 | --- | --- |
 | `NEXT_PUBLIC_BASE_PATH` | Leave unset or empty. |
-| `AWS_REGION` | `us-east-1`. |
-| `CANDATE_TABLE_NAME` | `candate-voter`. |
+| `AWS_REGION` | Optional. `us-east-1` when unset. The repository client does not need this copied into `.env.production`. |
+| `CANDATE_TABLE_NAME` | Optional. `candate-voter` when unset. |
 | `CANDATE_CYCLES` | Optional. Comma-separated election years for the home index. When unset, the page queries the previous UTC year through six years ahead. |
 
 `FEC_API_KEY` stays on the ingest Lambda (or the shell that runs `npm run ingest`). The site does not call OpenFEC.
