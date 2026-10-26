@@ -19,6 +19,7 @@ Send the key as \`Authorization: Bearer YOUR_API_KEY\` or \`X-Api-Key: YOUR_API_
 - GET ${root}/api/v1/candidates/{candidateId}
 - GET ${root}/api/v1/candidates/{candidateId}/filings
 - GET ${root}/api/v1/freshness
+- GET ${root}/api/v1/lookup/zip?zip=40502&year=2026 (cycle is an alias of year; unknown ZIP is 404)
 - POST ${root}/api/chat (browser JSON, no API key, buffered response)
 `;
 }

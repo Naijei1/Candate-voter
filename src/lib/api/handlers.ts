@@ -13,8 +13,11 @@ import {
 import type { IngestWatermark, Race } from "../types";
 import type { ApiDeps, ApiRepository } from "./deps";
 import { isResourceId } from "./ids";
+import { censusZipDistricts, ZipLookupError } from "../geo/zip-districts";
 import { json, rejectUnauthorized } from "./http";
 import { parseRaceListQuery, type RaceListQuery } from "./race-query";
+import { zipLookupBody } from "./zip-lookup";
+import { parseZipLookupQuery } from "./zip-query";
 
 function notFound(): Response {
   return json({ error: "not_found" }, 404);
@@ -171,6 +174,48 @@ export async function getCandidateFilings(
   }
 }
 
+export async function getZipLookup(request: Request, deps: ApiDeps): Promise<Response> {
+  const denied = rejectUnauthorized(request, deps.env);
+  if (denied) return denied;
+
+  const parsed = parseZipLookupQuery(new URL(request.url));
+  if (!parsed.ok) return json({ error: "bad_request", message: parsed.message }, 400);
+
+  const lookup = deps.lookupZip ?? censusZipDistricts;
+  let hit;
+  try {
+    hit = await lookup(parsed.query.zip);
+  } catch (error) {
+    logZipLookup(error);
+    return unavailable();
+  }
+  if (!hit) {
+    return json(
+      {
+        error: "not_found",
+        message: "No congressional district is published for that ZIP",
+      },
+      404,
+    );
+  }
+
+  try {
+    const repo = deps.repository();
+    const stored = visibleRaces(await repo.listRacesByCycle(parsed.query.year));
+    return json(
+      zipLookupBody({
+        zip: parsed.query.zip,
+        year: parsed.query.year,
+        hit,
+        races: stored,
+      }),
+    );
+  } catch (error) {
+    logReadError("lookupZip", error);
+    return unavailable();
+  }
+}
+
 export async function getFreshness(
   request: Request,
   deps: ApiDeps,
@@ -204,6 +249,12 @@ function freshnessBody(watermark: IngestWatermark | null) {
     scopeNote: FORM2_SCOPE_NOTE,
     refreshedAt: watermark?.updatedAt ?? null,
   };
+}
+
+function logZipLookup(error: unknown): void {
+  const name = error instanceof ZipLookupError || error instanceof Error ? error.name : "Error";
+  const message = error instanceof Error ? error.message : "unknown error";
+  console.error(`ZIP lookup failed: ${name}: ${message}`);
 }
 
 async function refreshedAtFrom(repo: ApiRepository): Promise<string | null> {
