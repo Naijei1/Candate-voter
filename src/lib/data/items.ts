@@ -96,6 +96,7 @@ export function toRaceItem(race: Race): RaceItem {
 }
 
 export function toCandidateItem(candidate: Candidate): CandidateItem {
+  const { partyLabel, ...stored } = candidate;
   return {
     [TABLE_KEYS.partition]: candidatePk(candidate.candidateId),
     [TABLE_KEYS.sort]: ENTITY_META_SK,
@@ -103,7 +104,8 @@ export function toCandidateItem(candidate: Candidate): CandidateItem {
     [GSI1.sort]: candidateGsiSk(candidate.candidateId),
     entityType: "candidate",
     schemaVersion: SCHEMA_VERSION,
-    ...candidate,
+    ...stored,
+    ...(partyLabel ? { partyLabel } : {}),
   };
 }
 
@@ -171,6 +173,7 @@ export function fromCandidateItem(
     nameAsFiled: asString(item.nameAsFiled),
     office: item.office,
     partyAffiliation: asString(item.partyAffiliation),
+    partyLabel: asString(item.partyLabel),
     fecCandidateId: asString(item.fecCandidateId),
     sourceUrl: asString(item.sourceUrl),
     sourceLoadedAt: asString(item.sourceLoadedAt),

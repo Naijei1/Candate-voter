@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { stateName } from "@/lib/data/states";
+import { DC_CALLOUT } from "@/lib/geo/dc-label";
 import { US_MAP_VIEW, US_STATE_SHAPES } from "@/lib/geo/us-states";
 
 const ARROW: Record<string, readonly [number, number]> = {
@@ -79,7 +80,20 @@ export function UsMap({
                 document.getElementById(`${mapId}-${next.postal}`)?.focus();
               }}
             />
-            {labelled && !HIDE_LABEL.has(shape.postal) ? (
+            {shape.postal === "DC" && labelled ? (
+              <g className="us-dc-callout" aria-hidden="true">
+                <line x1={DC_CALLOUT.x1} y1={DC_CALLOUT.y1} x2={DC_CALLOUT.x2} y2={DC_CALLOUT.y2} />
+                <text
+                  x={DC_CALLOUT.labelX}
+                  y={DC_CALLOUT.labelY}
+                  textAnchor="start"
+                  dominantBaseline="central"
+                  className="us-label-dc"
+                >
+                  DC
+                </text>
+              </g>
+            ) : labelled && !HIDE_LABEL.has(shape.postal) ? (
               <text
                 x={shape.x}
                 y={shape.y}

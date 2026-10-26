@@ -30,10 +30,13 @@ export function spotlightRaces(races: readonly Race[]): Race[] {
   return picks;
 }
 
-/** President for the year, plus Senate and House races in one state. */
+/**
+ * Senate and House races stored for one state.
+ * The presidential contest is national and is not part of this list.
+ */
 export function stateRaces(races: readonly Race[], postal: string): Race[] {
   return races
-    .filter((race) => race.office === "president" || race.state === postal)
+    .filter((race) => race.state === postal && race.office !== "president")
     .sort((a, b) => {
       const byOffice = OFFICE_ORDER.indexOf(a.office) - OFFICE_ORDER.indexOf(b.office);
       if (byOffice !== 0) return byOffice;
@@ -41,6 +44,31 @@ export function stateRaces(races: readonly Race[], postal: string): Race[] {
       if (byDistrict !== 0) return byDistrict;
       return a.raceId.localeCompare(b.raceId);
     });
+}
+
+/** Nationwide presidential contest for the races already loaded, if one is stored. */
+export function presidentialRace(races: readonly Race[]): Race | null {
+  const matches = races.filter((race) => race.office === "president");
+  if (matches.length === 0) return null;
+  return [...matches].sort(byFreshest)[0] ?? null;
+}
+
+/**
+ * Counts of Senate and House rows already loaded for a state.
+ * TODO(backend): when filings-scope fields land (expected House seats or a
+ * completeness flag), render "X of Y" from those fields. Do not hardcode
+ * apportionment or invent districts that are missing from the table.
+ */
+export function filingCoverageLabel(races: readonly Race[], postal: string): string {
+  const local = stateRaces(races, postal);
+  const senate = local.filter((race) => race.office === "senate").length;
+  const house = local.filter((race) => race.office === "house").length;
+  if (senate === 0 && house === 0) return "No filings yet.";
+  const parts: string[] = [];
+  if (senate > 0) parts.push(countPhrase(senate, "Senate"));
+  if (house > 0) parts.push(countPhrase(house, "House"));
+  const joined = parts.length === 2 ? `${parts[0]} and ${parts[1]}` : parts[0];
+  return `Form 2 e-file filings so far: ${joined}. Not a complete ballot.`;
 }
 
 /** Postal codes that have a stored Senate or House race. */
@@ -76,6 +104,11 @@ export function parseRaceIds(
     }
   }
   return { ok: true, ids };
+}
+
+function countPhrase(count: number, office: string): string {
+  const noun = count === 1 ? "race" : "races";
+  return `${count} ${office} ${noun} with filings`;
 }
 
 function freshest(races: readonly Race[]): Race | null {

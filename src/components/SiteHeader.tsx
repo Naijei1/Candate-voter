@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Suspense } from "react";
+import { AskButton } from "@/components/AskChrome";
 import { YearSelect } from "@/components/YearSelect";
 
 export function SiteHeader({ cycles }: { cycles: number[] }) {
@@ -18,9 +19,12 @@ export function SiteHeader({ cycles }: { cycles: number[] }) {
             </span>
           </span>
         </Link>
-        <Suspense fallback={<div className="h-10 w-28 rounded-lg border border-line bg-card" aria-hidden="true" />}>
-          <YearSelect cycles={cycles} />
-        </Suspense>
+        <div className="flex items-center gap-2">
+          <AskButton />
+          <Suspense fallback={<div className="h-10 w-28 rounded-lg border border-line bg-card" aria-hidden="true" />}>
+            <YearSelect cycles={cycles} />
+          </Suspense>
+        </div>
       </div>
     </header>
   );

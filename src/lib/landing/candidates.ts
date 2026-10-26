@@ -7,6 +7,8 @@ export type CandidatePreview = {
   candidateId: string;
   displayName: string;
   partyAffiliation: string | null;
+  /** Backend label when the row has one. The panel falls back to the FEC code map. */
+  partyLabel: string | null;
   sourceUrl: string | null;
   updatedAt: string | null;
 };
@@ -36,6 +38,7 @@ export async function loadCandidatesForRaces(
             candidateId: candidate.candidateId,
             displayName: candidate.displayName,
             partyAffiliation: candidate.partyAffiliation,
+            partyLabel: candidate.partyLabel ?? null,
             sourceUrl: candidate.sourceUrl,
             updatedAt: candidate.updatedAt,
           })),

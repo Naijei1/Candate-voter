@@ -1,14 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useAsk } from "@/components/AskChrome";
 import { RecordMeta } from "@/components/RecordMeta";
 import { StorageNotice } from "@/components/StorageNotice";
 import { MapLegend, UsMap } from "@/components/UsMap";
+import { askScopeForState, askScopeForYear } from "@/lib/chat/scope";
 import { stateName, stateOptions } from "@/lib/data/states";
 import { officeLabel, partyLabel, partyTone } from "@/lib/format";
-import { spotlightRaces, stateRaces, statesWithRaces } from "@/lib/landing";
-import { racesByOffice } from "@/lib/races";
+import {
+  filingCoverageLabel,
+  presidentialRace,
+  spotlightRaces,
+  stateRaces,
+  statesWithRaces,
+} from "@/lib/landing";
+import { racesByStateOffice } from "@/lib/races";
 import {
   loadCandidatesForRaces,
   type CandidatePreview,
@@ -45,6 +53,12 @@ export function Landing({
   const cacheRef = useRef(seedCandidateCache(seededCandidates));
   const marked = statesWithRaces(races);
   const spotlight = spotlightRaces(races);
+  const { replaceScope } = useAsk();
+
+  useEffect(() => {
+    const scope = selected ? askScopeForState(year, selected, races) : askScopeForYear(year);
+    return replaceScope(scope);
+  }, [replaceScope, races, selected, year]);
 
   useEffect(() => {
     setSelected(initialState);
@@ -88,7 +102,11 @@ export function Landing({
     const query = params.toString();
     window.history.replaceState(null, "", query ? `?${query}` : "/");
     if (scroll) {
-      document.getElementById("browse")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      document.getElementById("browse")?.scrollIntoView({
+        behavior: reduce ? "auto" : "smooth",
+        block: "start",
+      });
     }
   }
 
@@ -100,35 +118,32 @@ export function Landing({
         </StorageNotice>
       )}
 
-      <section className="grid items-start gap-8 lg:grid-cols-[1.15fr_0.95fr]" aria-labelledby="hero-heading">
-        <div>
-          <h1 id="hero-heading" className="text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
-            Federal elections at a glance
-          </h1>
-          <p className="mt-3 max-w-xl text-base leading-7 text-muted">
-            President, Senate, and House contests stored from FEC Form 2 filings
-            for {year}. Affiliation is the party on the filing. Candate does not
-            endorse candidates, rank them, or suggest how to vote.
-          </p>
-          <div className="mt-6 rounded-xl border border-line bg-card p-3 shadow-sm sm:p-4">
-            <UsMap
-              mapId="hero-map"
-              labelled={false}
-              selected={selected}
-              statesWithRaces={marked}
-              onSelect={(postal) => selectState(postal, true)}
-              label={`Map of the United States for ${year}. States with stored Senate or House races are highlighted. Alaska and Hawaii are inset.`}
-            />
-            <MapLegend />
-          </div>
-        </div>
-
-        <div>
-          <h2 className="text-lg font-semibold tracking-tight text-ink">Spotlight races</h2>
+      <section
+        data-testid="hero"
+        className="flex min-h-[calc(100svh-8.5rem)] flex-col justify-center"
+        aria-labelledby="hero-heading"
+      >
+        <p className="text-sm font-semibold tracking-wide text-accent">{year}</p>
+        <h1 id="hero-heading" className="mt-2 max-w-2xl text-4xl font-semibold tracking-tight text-ink sm:text-5xl">
+          Federal filings, in one place
+        </h1>
+        <p className="mt-4 max-w-xl text-base leading-7 text-muted">
+          Candate lists President, Senate, and House contests stored from FEC
+          Form 2 e-file filings for {year}. Affiliation is the party on the
+          filing. This is not an endorsement, a ranking, or a complete ballot.
+        </p>
+        <p className="mt-6">
+          <a
+            href="#browse"
+            className="text-sm font-semibold text-accent underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
+          >
+            Browse by state
+          </a>
+        </p>
+        <div className="mt-12 max-w-xl">
+          <h2 className="text-lg font-semibold tracking-tight text-ink">Recently updated</h2>
           <p className="mt-1 text-sm leading-6 text-muted">
-            Up to three contests: President when one is stored, then the Senate
-            and House races with the newest stored update. Open spots follow
-            that same update order. This is not a rating or a recommendation.
+            A few contests with the newest stored update. Not a rating.
           </p>
           {spotlight.length === 0 ? (
             <div className="mt-4">
@@ -140,7 +155,7 @@ export function Landing({
                 <li key={race.raceId}>
                   <article className="rounded-xl border border-line bg-card p-4 shadow-sm">
                     <div className="flex gap-4">
-                      <span className="w-8 shrink-0 text-3xl font-semibold text-accent tabular-nums" aria-hidden="true">
+                      <span className="w-6 shrink-0 pt-0.5 text-sm font-semibold text-muted tabular-nums" aria-hidden="true">
                         {index + 1}
                       </span>
                       <div className="min-w-0">
@@ -149,7 +164,7 @@ export function Landing({
                             href={`/races/${race.raceId}`}
                             className="text-ink underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
                           >
-                            <span className="sr-only">Spotlight {index + 1}. </span>
+                            <span className="sr-only">Recently updated {index + 1}. </span>
                             {race.title}
                           </Link>
                         </h3>
@@ -165,15 +180,15 @@ export function Landing({
         </div>
       </section>
 
-      <section id="browse" className="scroll-mt-24" aria-labelledby="browse-heading">
+      <MapReveal>
+        <section id="browse" data-testid="browse" className="scroll-mt-24" aria-labelledby="browse-heading">
         <div className="mb-5">
           <h2 id="browse-heading" className="text-2xl font-semibold tracking-tight">
             Browse by state
           </h2>
           <p className="mt-1 max-w-2xl text-sm leading-6 text-muted">
-            Choose a state to list its stored Senate and House races for {year},
-            plus the presidential contest when one is stored. Territories are in
-            the list under the map. Alaska and Hawaii are inset.
+            Choose a state to list Senate and House Form 2 filings stored for {year}.
+            Territories are in the list under the map. Alaska and Hawaii are inset.
           </p>
         </div>
         <div className="grid items-start gap-5 lg:grid-cols-[1.35fr_0.9fr]">
@@ -184,7 +199,7 @@ export function Landing({
               selected={selected}
               statesWithRaces={marked}
               onSelect={(postal) => selectState(postal, false)}
-              label={`Browse federal races for ${year} by state.`}
+              label={`Map of the United States for ${year}. States with stored Senate or House filings are highlighted. Alaska and Hawaii are inset.`}
             />
             <MapLegend />
             <div className="mt-4 flex flex-wrap items-center gap-3">
@@ -217,7 +232,39 @@ export function Landing({
             cacheTick={candidateTick}
           />
         </div>
-      </section>
+        </section>
+      </MapReveal>
+    </div>
+  );
+}
+
+function MapReveal({ children }: { children: ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [shown, setShown] = useState(false);
+
+  useEffect(() => {
+    const node = ref.current;
+    if (!node) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setShown(true);
+      return;
+    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          setShown(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.18 },
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div ref={ref} className={shown ? "map-reveal is-shown" : "map-reveal"} data-testid="browse-map">
+      {children}
     </div>
   );
 }
@@ -249,38 +296,40 @@ function StatePanel({
 }) {
   void cacheTick;
   const listed = selected ? stateRaces(races, selected) : [];
-  const localCount = selected
-    ? races.filter((race) => race.state === selected).length
-    : 0;
-  const groups = racesByOffice(listed);
+  const groups = racesByStateOffice(listed);
+  const president = presidentialRace(races);
+  const coverage = selected ? filingCoverageLabel(races, selected) : null;
 
   return (
-    <aside className="flex max-h-[44rem] flex-col overflow-hidden rounded-xl border border-line bg-card shadow-sm">
+    <aside
+      data-testid="state-panel"
+      className="flex max-h-[44rem] flex-col overflow-hidden rounded-xl border border-line bg-card shadow-sm"
+    >
       <div className="border-b border-line bg-paper px-4 py-3">
         <h3 className="text-lg font-semibold tracking-tight">
-          {selected ? `${stateName(selected)} elections` : "State races"}
+          {selected ? `${stateName(selected)} filings` : "State filings"}
         </h3>
-        <p className="text-sm text-muted">
+        <p className="text-sm leading-6 text-muted">
           {selected
-            ? `Federal races in ${year}. Candidates are alphabetical. Affiliation is the party on the filing.`
-            : "Select a state to list stored races."}
+            ? groups.length === 0
+              ? `No Senate or House Form 2 e-file filings are stored for ${stateName(selected)} in ${year}.`
+              : coverage
+            : "Select a state to list stored Senate and House filings."}
         </p>
       </div>
       <div className="flex-1 overflow-y-auto px-3 py-3">
         {!selected ? (
           <p className="px-1 py-8 text-center text-sm leading-6 text-muted">
             Select a state on the map, or use the state list. The panel lists
-            races stored for that state. It does not rank them.
+            filings stored for that state. It does not rank them.
           </p>
         ) : groups.length === 0 ? (
-          <StorageNotice>No federal races are stored for {stateName(selected)} in {year}.</StorageNotice>
+          <div className="space-y-4 px-1 py-4">
+            <p className="text-sm font-medium text-ink">No filings yet.</p>
+            <NationalContest year={year} president={president} />
+          </div>
         ) : (
           <div className="space-y-5">
-            {localCount === 0 ? (
-              <StorageNotice>
-                No Senate or House races are stored for {stateName(selected)} in {year}.
-              </StorageNotice>
-            ) : null}
             {groups.map((group) => (
               <section key={group.office} aria-labelledby={`${selected}-${group.office}`}>
                 <h4
@@ -296,10 +345,36 @@ function StatePanel({
                 </ul>
               </section>
             ))}
+            <NationalContest year={year} president={president} />
           </div>
         )}
       </div>
     </aside>
+  );
+}
+
+function NationalContest({
+  year,
+  president,
+}: {
+  year: number;
+  president: Race | null;
+}) {
+  if (!president) return null;
+  const labelYear = president.cycle ?? year;
+  return (
+    <div className="border-t border-line px-1 pt-3">
+      <p className="text-xs font-medium tracking-wide text-muted uppercase">National</p>
+      <p className="mt-1 text-sm">
+        <Link
+          href={`/races/${president.raceId}`}
+          className="font-medium text-ink underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
+        >
+          Presidential · {labelYear}
+        </Link>
+      </p>
+      <RecordMeta sourceUrl={president.sourceUrl} updatedAt={president.updatedAt} />
+    </div>
   );
 }
 
@@ -363,7 +438,7 @@ function CandidateList({
             >
               {candidate.displayName}
             </Link>
-            <Affiliation party={candidate.partyAffiliation} />
+            <Affiliation party={candidate.partyAffiliation} provided={candidate.partyLabel} />
           </li>
         ))}
       </ul>
@@ -382,9 +457,15 @@ function CandidateList({
   );
 }
 
-function Affiliation({ party }: { party: string | null }) {
+function Affiliation({
+  party,
+  provided,
+}: {
+  party: string | null;
+  provided?: string | null;
+}) {
   const tone = partyTone(party);
   const toneClass =
     tone === "democratic" ? "text-accent" : tone === "republican" ? "text-rose-800" : "text-muted";
-  return <span className={`ml-2 ${toneClass}`}>{partyLabel(party)}</span>;
+  return <span className={`ml-2 ${toneClass}`}>{partyLabel(party, provided)}</span>;
 }

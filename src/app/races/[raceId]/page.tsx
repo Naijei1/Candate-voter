@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { AskScope } from "@/components/AskChrome";
 import { RecordMeta } from "@/components/RecordMeta";
 import { StorageNotice } from "@/components/StorageNotice";
 import {
@@ -8,6 +9,7 @@ import {
   readCandidatesForRace,
   readRace,
 } from "@/lib/data/read";
+import { askScopeForRace } from "@/lib/chat/scope";
 import { partyLabel } from "@/lib/format";
 import type { Candidate, Race } from "@/lib/types";
 
@@ -49,6 +51,7 @@ export default async function RacePage({ params }: RacePageProps) {
 
   return (
     <article className="space-y-8">
+      <AskScope {...askScopeForRace(race)} />
       <p className="text-sm">
         <Link
           href="/"
@@ -118,7 +121,9 @@ function CandidateRow({ candidate }: { candidate: Candidate }) {
         >
           {candidate.displayName}
         </Link>
-        <span className="text-sm text-muted">{partyLabel(candidate.partyAffiliation)}</span>
+        <span className="text-sm text-muted">
+          {partyLabel(candidate.partyAffiliation, candidate.partyLabel)}
+        </span>
       </div>
       <RecordMeta sourceUrl={candidate.sourceUrl} updatedAt={candidate.updatedAt} />
     </li>

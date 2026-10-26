@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { AskScope } from "@/components/AskChrome";
 import { RecordMeta } from "@/components/RecordMeta";
 import { StorageNotice } from "@/components/StorageNotice";
 import {
@@ -9,6 +10,7 @@ import {
   readFilingsForCandidate,
   readRace,
 } from "@/lib/data/read";
+import { askScopeForCandidate } from "@/lib/chat/scope";
 import { fecCandidateLabel, partyLabel } from "@/lib/format";
 import type { Candidate, Filing, Race } from "@/lib/types";
 
@@ -52,8 +54,18 @@ export default async function CandidatePage({ params }: CandidatePageProps) {
   ]);
   const filedName = nameAsFiled(candidate);
 
+  const cycle = race.ok && race.race ? race.race.cycle : null;
+
   return (
     <article className="space-y-8">
+      <AskScope
+        {...askScopeForCandidate({
+          candidateId: candidate.candidateId,
+          raceId: candidate.raceId,
+          displayName: candidate.displayName,
+          cycle,
+        })}
+      />
       <div className="space-y-2 text-sm">
         <RaceCrumb race={race} />
       </div>
@@ -62,7 +74,7 @@ export default async function CandidatePage({ params }: CandidatePageProps) {
           {candidate.displayName}
         </h1>
         <p className="text-base text-muted">
-          {partyLabel(candidate.partyAffiliation)}
+          {partyLabel(candidate.partyAffiliation, candidate.partyLabel)}
           <span className="mx-2" aria-hidden="true">
             ·
           </span>
