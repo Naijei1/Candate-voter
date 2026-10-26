@@ -34,14 +34,22 @@ test("repository creation does not require CANDATE_TABLE_NAME", () => {
   }
 });
 
-test("Amplify build exposes the table name to Next SSR and not the FEC key", () => {
+test("Amplify build writes server env once and does not copy the FEC key", () => {
   const spec = readFileSync("amplify.yml", "utf8");
-  const copy = spec
-    .split("\n")
-    .find((line) => line.includes("grep") && line.includes(".env.production"));
-  assert.ok(copy);
-  assert.match(copy, /\^CANDATE_TABLE_NAME=/);
-  assert.match(copy, /\^CANDATE_CYCLES=/);
-  assert.match(copy, /\^NEXT_PUBLIC_/);
-  assert.equal(copy.includes("FEC_API_KEY"), false);
+  assert.match(spec, /rm -f \.env\.production/);
+  assert.match(spec, /node scripts\/write-amplify-server-env\.mjs/);
+  assert.equal(spec.includes("grep"), false);
+  const script = readFileSync("scripts/write-amplify-server-env.mjs", "utf8");
+  for (const key of [
+    "CANDATE_TABLE_NAME",
+    "CANDATE_API_KEY",
+    "CANDATE_CYCLES",
+    "AWS_REGION",
+    "NEXT_PUBLIC_",
+  ]) {
+    assert.equal(script.includes(key), true, key);
+  }
+  const allowlistStart = script.indexOf("AMPLIFY_SERVER_ENV_KEYS = Object.freeze([");
+  const allowlist = script.slice(allowlistStart, script.indexOf("]);", allowlistStart));
+  assert.equal(allowlist.includes("FEC_API_KEY"), false);
 });
