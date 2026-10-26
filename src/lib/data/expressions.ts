@@ -23,7 +23,7 @@ export function buildSetExpression(attributes: Record<string, unknown>): {
     sets.push(`${nameKey} = ${valueKey}`);
   }
 
-  if (!Object.prototype.hasOwnProperty.call(values, ":updatedAt")) {
+  if (typeof values[":updatedAt"] !== "string" || values[":updatedAt"].length === 0) {
     throw new Error("updatedAt is required on every upsert");
   }
 

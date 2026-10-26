@@ -105,4 +105,5 @@ test("records a skip and still advances the cursor past it", async () => {
   const watermark = await repo.getWatermark();
   assert.equal(watermark?.lastStatus, "success");
   assert.equal(watermark?.source, "fec-efile-form2");
+  assert.equal(watermark?.updatedAt, "2026-10-26T05:00:00.000Z");
 });
