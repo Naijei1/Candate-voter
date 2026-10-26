@@ -226,12 +226,12 @@ export function Landing({
         </div>
       </section>
 
-      <section aria-labelledby="recent-heading">
-        <h2 id="recent-heading" className="text-lg font-semibold tracking-tight text-ink">
-          Recently updated
+      <section aria-labelledby="popular-heading">
+        <h2 id="popular-heading" className="text-lg font-semibold tracking-tight text-ink">
+          Popular
         </h2>
         <p className="mt-1 text-sm leading-6 text-muted">
-          A few contests with the newest stored update. Not a rating.
+          Recently updated filings — not a ranking.
         </p>
         {spotlight.length === 0 ? (
           <div className="mt-4">
@@ -252,7 +252,7 @@ export function Landing({
                           href={`/races/${race.raceId}`}
                           className="text-ink underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
                         >
-                          <span className="sr-only">Recently updated {index + 1}. </span>
+                          <span className="sr-only">Popular {index + 1}. </span>
                           {race.title}
                         </Link>
                       </h3>
