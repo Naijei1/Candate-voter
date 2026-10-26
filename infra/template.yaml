@@ -1,0 +1,140 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Candate voter data layer for account 402275401617 in us-east-1.
+  Creates one DynamoDB table, an IAM role, a Lambda function, a log group,
+  and an EventBridge schedule. Does not modify Amplify Hosting.
+
+Parameters:
+  TableName:
+    Type: String
+    Default: candate-voter
+    AllowedPattern: "[a-zA-Z0-9_.-]{3,255}"
+    Description: DynamoDB table name. The Next.js app reads CANDATE_TABLE_NAME.
+  FecApiKey:
+    Type: String
+    NoEcho: true
+    MinLength: 1
+    Description: >
+      api.data.gov key sent as api_key. DEMO_KEY is the public demo key
+      (about 10 calls per hour). A free key allows 1,000 calls per hour.
+      Do not commit this value.
+  ScheduleExpression:
+    Type: String
+    Default: rate(6 hours)
+    AllowedPattern: ^(rate\(.+\)|cron\(.+\))$
+    Description: EventBridge schedule. rate(6 hours) keeps filings within hours.
+
+Resources:
+  VoterTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: !Ref TableName
+      BillingMode: PAY_PER_REQUEST
+      DeletionProtectionEnabled: false
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      AttributeDefinitions:
+        - AttributeName: pk
+          AttributeType: S
+        - AttributeName: sk
+          AttributeType: S
+        - AttributeName: gsi1pk
+          AttributeType: S
+        - AttributeName: gsi1sk
+          AttributeType: S
+      KeySchema:
+        - AttributeName: pk
+          KeyType: HASH
+        - AttributeName: sk
+          KeyType: RANGE
+      GlobalSecondaryIndexes:
+        - IndexName: gsi1
+          KeySchema:
+            - AttributeName: gsi1pk
+              KeyType: HASH
+            - AttributeName: gsi1sk
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      Tags:
+        - Key: Project
+          Value: candate
+        - Key: Component
+          Value: voter-data
+
+  FecIngestLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /aws/lambda/candate-voter-fec-ingest
+      RetentionInDays: 30
+
+  FecIngestFunction:
+    Type: AWS::Serverless::Function
+    DependsOn: FecIngestLogGroup
+    Properties:
+      FunctionName: candate-voter-fec-ingest
+      Description: Upsert FEC electronic Form 2 filings into the Candate table.
+      CodeUri: ../
+      Handler: workers/fec-ingest/app.handler
+      Runtime: nodejs22.x
+      Architectures:
+        - arm64
+      Timeout: 900
+      MemorySize: 512
+      LoggingConfig:
+        LogGroup: !Ref FecIngestLogGroup
+      Environment:
+        Variables:
+          CANDATE_TABLE_NAME: !Ref TableName
+          FEC_API_KEY: !Ref FecApiKey
+          FEC_API_BASE_URL: https://api.open.fec.gov/v1
+          FEC_MIN_DELAY_MS: "250"
+      Policies:
+        - Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Action:
+                - dynamodb:GetItem
+                - dynamodb:UpdateItem
+                - dynamodb:Query
+              Resource:
+                - !GetAtt VoterTable.Arn
+                - !Sub "${VoterTable.Arn}/index/gsi1"
+      Events:
+        EverySixHours:
+          Type: Schedule
+          Properties:
+            Schedule: !Ref ScheduleExpression
+            Description: Pull new FEC Form 2 e-filings into the Candate table.
+            Enabled: true
+      Tags:
+        Project: candate
+        Component: voter-data
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        EntryPoints:
+          - workers/fec-ingest/app.ts
+        Target: es2022
+        Format: cjs
+        Platform: node
+        Minify: false
+        Sourcemap: true
+
+Outputs:
+  TableName:
+    Description: DynamoDB table. Set this as CANDATE_TABLE_NAME.
+    Value: !Ref VoterTable
+  TableArn:
+    Description: Table ARN for a later Amplify SSR read policy.
+    Value: !GetAtt VoterTable.Arn
+  IngestFunctionName:
+    Description: Scheduled Form 2 ingest function.
+    Value: !Ref FecIngestFunction
+  IngestFunctionArn:
+    Value: !GetAtt FecIngestFunction.Arn
+  LogGroupName:
+    Value: !Ref FecIngestLogGroup

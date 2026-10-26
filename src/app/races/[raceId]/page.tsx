@@ -84,8 +84,8 @@ export default async function RacePage({ params }: RacePageProps) {
           Sources
         </h2>
         <p className="text-sm leading-6 text-muted">
-          No filings loaded. FEC Form 2 ingest is not connected, so this page
-          has no source link and no retrieval time.
+          No filings are read from storage yet, so this page has no source link
+          and no retrieval time.
         </p>
       </section>
     </article>
