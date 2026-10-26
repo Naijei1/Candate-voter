@@ -1,10 +1,10 @@
 # Candate
 
-Nonpartisan federal election tracker. This repository is the January MVP skeleton: a Next.js app that will list U.S. President, Senate, and House races and candidate pages fed by FEC filings, with sources and retrieval timestamps.
+Nonpartisan federal election tracker. This Next.js app lists U.S. President, Senate, and House races and candidate pages from stored FEC Form 2 filings, with sources and retrieval timestamps.
 
-This commit is the scaffold only. It does not call the FEC, write to DynamoDB, or give voting advice.
+The site does not call the FEC and does not give voting advice. Ingest writes the table from the SAM stack described below.
 
-The planned public URL is [voter.naijei.com](https://voter.naijei.com). `naijei.com/voter` will redirect there. A later option is to serve this same app under the `/voter` path; see [Base path](#base-path).
+The public URL is [voter.naijei.com](https://voter.naijei.com). `naijei.com/voter` will redirect there. A later option is to serve this same app under the `/voter` path; see [Base path](#base-path).
 
 ## Run locally
 
@@ -34,11 +34,11 @@ Package manager is npm. Commit `package-lock.json`. Amplify runs `npm ci`.
 | `/races/[raceId]` | Race detail |
 | `/candidates/[candidateId]` | Candidate detail |
 
-Links use `next/link` with app-relative paths so they follow `basePath`. The pages currently render labeled sample records from `src/lib/placeholders.ts`, not live filings.
+Links use `next/link` with app-relative paths so they follow `basePath`. Server components read stored races, candidates, and filings through `createDynamoRepository()`. `src/lib/placeholders.ts` is a fixture module and is not imported by those pages.
 
 ## Data model
 
-Federal races, candidates, and Form 2 filings live in one DynamoDB table, `candate-voter`, in **us-east-1**. Shapes are `src/lib/types.ts`. Access helpers are `src/lib/data/repository.ts` (DynamoDB) and `src/lib/data/memory-repository.ts` (local dry run). The sample module `src/lib/placeholders.ts` is still what the pages render.
+Federal races, candidates, and Form 2 filings live in one DynamoDB table, `candate-voter`, in **us-east-1**. Shapes are `src/lib/types.ts`. Access helpers are `src/lib/data/repository.ts` (DynamoDB) and `src/lib/data/memory-repository.ts` (local dry run). Pages call `createDynamoRepository()` from `src/lib/data/read.ts`.
 
 One table fits this workload. The access patterns are known and hierarchical, the rows are small, and a federal Form 2 pass is thousands of items rather than a case for splitting storage. A separate ingest cursor lives in the same table. Party is the code the filing reported. There is no score, rating, ranking, or endorsement attribute.
 
@@ -134,15 +134,15 @@ aws lambda invoke \
   /tmp/candate-ingest.json
 ```
 
-## What comes next for the race UI
+## Race pages
 
-The pages still import `src/lib/placeholders.ts`, so the live site keeps rendering samples until a later change:
+`/`, `/races/[raceId]`, and `/candidates/[candidateId]` are server components. They call `createDynamoRepository()` and set `dynamic = "force-dynamic"`, so `next build` does not query the table and does not prebuild ids from `src/lib/placeholders.ts`. The Amplify SSR compute role (not the build role) needs `dynamodb:GetItem` and `dynamodb:Query` on the table and `gsi1`. Set `CANDATE_TABLE_NAME=candate-voter` and `AWS_REGION=us-east-1` on the branch. Leave `FEC_API_KEY` on the Lambda only.
 
-1. Attach a read policy to the Amplify SSR compute role (not the build role). Resource is the table ARN and `.../index/gsi1`. Actions: `dynamodb:GetItem` and `dynamodb:Query`.
-2. Set `CANDATE_TABLE_NAME=candate-voter` and `AWS_REGION=us-east-1` on the Amplify branch. Leave `FEC_API_KEY` on the Lambda only.
-3. In the server components, replace the placeholder reads with `createDynamoRepository()`. Render `sourceUrl`, `updatedAt`, and `retrievedAt` on every figure. Keep `filedAt` hidden until a source provides it.
-4. Stop prebuilding candidate and race paths from the sample list. The id set comes from the table, so those routes should be dynamic.
-5. Keep party as the reported code. Do not add scores or endorsements.
+The home index queries `listRacesByCycle` for each year in a window: the previous UTC calendar year through six years ahead. `CANDATE_CYCLES` (comma-separated years) overrides that window. A query with no rows renders an empty state. A storage error renders an error message and does not substitute sample rows.
+
+Each race and candidate shows `sourceUrl` and `updatedAt`. Each filing shows `sourceUrl`, `updatedAt`, and `retrievedAt`. `filedAt` is shown only when that filing has one. Party is the code stored from the filing. The pages do not show scores or endorsements. Candidates are listed alphabetically by display name.
+
+SSR compute role:
 
 ```json
 {
@@ -184,8 +184,9 @@ Set these in the Amplify console for the branch (they are available to `npm run 
 | Name | MVP value |
 | --- | --- |
 | `NEXT_PUBLIC_BASE_PATH` | Leave unset or empty. |
-| `AWS_REGION` | `us-east-1`, when a server component reads the table. |
-| `CANDATE_TABLE_NAME` | `candate-voter`, when a server component reads the table. |
+| `AWS_REGION` | `us-east-1`. |
+| `CANDATE_TABLE_NAME` | `candate-voter`. |
+| `CANDATE_CYCLES` | Optional. Comma-separated election years for the home index. When unset, the page queries the previous UTC year through six years ahead. |
 
 `FEC_API_KEY` stays on the ingest Lambda (or the shell that runs `npm run ingest`). The site does not call OpenFEC.
 
