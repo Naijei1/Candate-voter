@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ChatCancelled, postChatMessage } from "@/lib/chat/browser";
+import { ChatCancelled, postChatMessage, type ChatCallResult } from "@/lib/chat/browser";
 import { applyPagePrefix } from "@/lib/chat/scope";
 import {
   buildChatRequestBody,
@@ -47,6 +47,20 @@ export type AssistantTurn =
 
 export type ChatTurn = UserTurn | AssistantTurn;
 
+/** Replace the in-flight assistant row. A success or error never leaves that row loading. */
+export function settleAssistantTurn(
+  turns: ChatTurn[],
+  assistantId: string,
+  result: ChatCallResult,
+  now: number,
+): ChatTurn[] {
+  const direct = applyAssistantResult(turns, assistantId, result, now);
+  if (direct.matched) return direct.turns;
+  const fallbackId = lastLoadingId(turns);
+  if (!fallbackId || fallbackId === assistantId) return direct.turns;
+  return applyAssistantResult(turns, fallbackId, result, now).turns;
+}
+
 type SessionShape = {
   version: 1;
   threadId?: string;
@@ -64,15 +78,16 @@ export function useChat() {
   const threadRef = useRef(threadId);
   const abortRef = useRef<AbortController | null>(null);
   const flightRef = useRef(0);
+  const pendingRef = useRef(false);
   turnsRef.current = turns;
   threadRef.current = threadId;
 
   useEffect(() => {
     const stored = readSession();
     if (stored) {
-      setTurns(stored.turns);
-      setThreadId(stored.threadId);
-      if (stored.draft) setDraft(stored.draft);
+      setTurns((current) => (current.length > 0 ? current : stored.turns));
+      setThreadId((current) => current ?? stored.threadId);
+      setDraft((current) => (current ? current : stored.draft ?? ""));
     }
     setReady(true);
   }, []);
@@ -82,130 +97,67 @@ export function useChat() {
     writeSession({ version: 1, threadId, draft, turns: persistable(turns) });
   }, [ready, threadId, draft, turns]);
 
-  const settle = useCallback((flight: number, assistantId: string, sent: string) => {
-    return (result: Awaited<ReturnType<typeof postChatMessage>>) => {
-      if (flightRef.current !== flight) return;
-      setPending(false);
-      if (result.ok) {
-        if (result.threadId) setThreadId(result.threadId);
-        setTurns((current) =>
-          current.map((turn) =>
-            turn.id === assistantId
-              ? result.refused
-                ? {
-                    id: assistantId,
-                    role: "assistant",
-                    status: "refused",
-                    markdown: result.answer_markdown,
-                    sources: result.sources,
-                    mode: result.mode,
-                  }
-                : {
-                    id: assistantId,
-                    role: "assistant",
-                    status: "done",
-                    markdown: result.answer_markdown,
-                    sources: result.sources,
-                    mode: result.mode,
-                  }
-              : turn,
-          ),
-        );
-        return;
-      }
-      const now = Date.now();
-      const wait =
-        result.kind === "rate_limit" && result.retryAfterSeconds != null && result.retryAfterSeconds > 0
-          ? result.retryAfterSeconds
-          : null;
-      setTurns((current) =>
-        current.map((turn) =>
-          turn.id === assistantId
-            ? {
-                id: assistantId,
-                role: "assistant",
-                status: "error",
-                kind: result.kind,
-                retryAt: wait != null ? now + wait * 1000 : null,
-                retryAfterSeconds: result.kind === "rate_limit" ? result.retryAfterSeconds : null,
-                hadRetryAfter: result.kind === "rate_limit" && result.retryAfterSeconds != null,
-              }
-            : turn,
-        ),
-      );
-      if (result.kind === "bad_request") setDraft(sent);
-    };
-  }, []);
-
   const run = useCallback(
     async (message: string, context: ChatContextInput, assistantId: string, flight: number) => {
-      const built = buildChatRequestBody({
-        message: applyPagePrefix(context.messagePrefix, message),
-        raceId: context.raceId,
-        candidateId: context.candidateId,
-        cycle: context.cycle,
-        threadId: threadRef.current,
-      });
-      if (!built.ok) {
-        setPending(false);
-        setDraft(message);
-        setTurns((current) =>
-          current.map((turn) =>
-            turn.id === assistantId
-              ? {
-                  id: assistantId,
-                  role: "assistant",
-                  status: "error",
-                    kind: "bad_request",
-                    retryAt: null,
-                    retryAfterSeconds: null,
-                    hadRetryAfter: false,
-                }
-              : turn,
-          ),
-        );
-        return;
-      }
-
       const controller = new AbortController();
       abortRef.current = controller;
       try {
+        const built = buildChatRequestBody({
+          message: applyPagePrefix(context.messagePrefix, message),
+          raceId: context.raceId,
+          candidateId: context.candidateId,
+          cycle: context.cycle,
+          threadId: threadRef.current,
+        });
+        if (!built.ok) {
+          setDraft(message);
+          setTurns((current) =>
+            settleAssistantTurn(
+              current,
+              assistantId,
+              { ok: false, kind: "bad_request", retryAfterSeconds: null },
+              Date.now(),
+            ),
+          );
+          return;
+        }
+
         const result = await postChatMessage({ body: built.body, signal: controller.signal });
-        settle(flight, assistantId, message)(result);
+        if (flightRef.current !== flight) return;
+        if (result.ok && result.threadId) setThreadId(result.threadId);
+        if (!result.ok && result.kind === "bad_request") setDraft(message);
+        setTurns((current) => settleAssistantTurn(current, assistantId, result, Date.now()));
       } catch (error) {
         if (flightRef.current !== flight) return;
-        setPending(false);
         if (error instanceof ChatCancelled) {
           dropInFlight(assistantId, message, setDraft, setTurns);
           return;
         }
         setTurns((current) =>
-          current.map((turn) =>
-            turn.id === assistantId
-              ? {
-                  id: assistantId,
-                  role: "assistant",
-                  status: "error",
-                  kind: "network",
-                  retryAt: null,
-                  retryAfterSeconds: null,
-                  hadRetryAfter: false,
-                }
-              : turn,
+          settleAssistantTurn(
+            current,
+            assistantId,
+            { ok: false, kind: "network", retryAfterSeconds: null },
+            Date.now(),
           ),
         );
       } finally {
         if (abortRef.current === controller) abortRef.current = null;
+        if (flightRef.current === flight) {
+          pendingRef.current = false;
+          setPending(false);
+        }
       }
     },
-    [settle],
+    [],
   );
 
   const send = useCallback(
     async (message: string, context: ChatContextInput) => {
       const trimmed = message.trim();
-      if (!trimmed || pending) return;
+      if (!trimmed || pendingRef.current) return;
       if (rateLimitBlocks(turnsRef.current)) return;
+      pendingRef.current = true;
       const flight = flightRef.current + 1;
       flightRef.current = flight;
       const userId = newId();
@@ -219,12 +171,12 @@ export function useChat() {
       ]);
       await run(trimmed, context, assistantId, flight);
     },
-    [pending, run],
+    [run],
   );
 
   const retry = useCallback(
     async (context: ChatContextInput) => {
-      if (pending || rateLimitBlocks(turnsRef.current)) return;
+      if (pendingRef.current || rateLimitBlocks(turnsRef.current)) return;
       const current = turnsRef.current;
       let errorIndex = -1;
       for (let index = current.length - 1; index >= 0; index -= 1) {
@@ -240,6 +192,7 @@ export function useChat() {
       if (!errorTurn || errorTurn.role !== "assistant" || errorTurn.status !== "error") return;
       if (!userTurn || userTurn.role !== "user") return;
       if (errorTurn.kind === "bad_request") return;
+      pendingRef.current = true;
       const flight = flightRef.current + 1;
       flightRef.current = flight;
       setPending(true);
@@ -250,11 +203,12 @@ export function useChat() {
       );
       await run(userTurn.text, context, errorTurn.id, flight);
     },
-    [pending, run],
+    [run],
   );
 
   const cancel = useCallback(() => {
     flightRef.current += 1;
+    pendingRef.current = false;
     abortRef.current?.abort();
     setPending(false);
     const current = turnsRef.current;
@@ -293,6 +247,60 @@ export function useChat() {
 }
 
 export type ChatController = ReturnType<typeof useChat>;
+
+function applyAssistantResult(
+  turns: ChatTurn[],
+  assistantId: string,
+  result: ChatCallResult,
+  now: number,
+): { turns: ChatTurn[]; matched: boolean } {
+  let matched = false;
+  const next = turns.map((turn) => {
+    if (turn.id !== assistantId || turn.role !== "assistant") return turn;
+    matched = true;
+    if (result.ok) {
+      return result.refused
+        ? {
+            id: assistantId,
+            role: "assistant" as const,
+            status: "refused" as const,
+            markdown: result.answer_markdown,
+            sources: result.sources,
+            mode: result.mode,
+          }
+        : {
+            id: assistantId,
+            role: "assistant" as const,
+            status: "done" as const,
+            markdown: result.answer_markdown,
+            sources: result.sources,
+            mode: result.mode,
+          };
+    }
+    const wait =
+      result.kind === "rate_limit" && result.retryAfterSeconds != null && result.retryAfterSeconds > 0
+        ? result.retryAfterSeconds
+        : null;
+    return {
+      id: assistantId,
+      role: "assistant" as const,
+      status: "error" as const,
+      kind: result.kind,
+      retryAt: wait != null ? now + wait * 1000 : null,
+      retryAfterSeconds: result.kind === "rate_limit" ? result.retryAfterSeconds : null,
+      hadRetryAfter: result.kind === "rate_limit" && result.retryAfterSeconds != null,
+    };
+  });
+  return { turns: next, matched };
+}
+
+function lastLoadingId(turns: readonly ChatTurn[]): string | null {
+  for (let index = turns.length - 1; index >= 0; index -= 1) {
+    const turn = turns[index];
+    if (turn?.role === "assistant" && turn.status === "loading") return turn.id;
+  }
+  return null;
+}
 
 function dropInFlight(
   assistantId: string,

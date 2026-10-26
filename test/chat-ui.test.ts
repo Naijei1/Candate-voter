@@ -4,8 +4,8 @@ import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { ChatComposer } from "../src/components/chat/ChatComposer";
 import { ChatMessageList } from "../src/components/chat/ChatMessageList";
-import type { ChatTurn } from "../src/components/chat/useChat";
-import { postChatMessage } from "../src/lib/chat/browser";
+import { settleAssistantTurn, type ChatTurn } from "../src/components/chat/useChat";
+import { ChatCancelled, postChatMessage } from "../src/lib/chat/browser";
 import {
   buildChatRequestBody,
   chatPageHref,
@@ -248,6 +248,84 @@ test("POST /api/chat maps 200, refused, 400, 429, 503, and network", async () =>
   assert.equal(broken.ok, false);
   if (broken.ok) return;
   assert.equal("sources" in broken, false);
+});
+
+test("chat client timeout settles when fetch never resolves", async () => {
+  const started = Date.now();
+  const result = await postChatMessage({
+    body: { message: "Who filed?", raceId: "2026-senate-KY", cycle: 2026 },
+    timeoutMs: 40,
+    fetchImpl: async (_input, init) => {
+      const body = JSON.parse(String(init?.body));
+      assert.equal(body.raceId, "2026-senate-KY");
+      assert.equal(body.cycle, 2026);
+      assert.equal(body.message, "Who filed?");
+      return new Promise(() => {});
+    },
+  });
+  assert.deepEqual(result, { ok: false, kind: "network", retryAfterSeconds: null });
+  assert.ok(Date.now() - started < 1_000);
+});
+
+test("caller abort cancels even when fetch ignores the signal", async () => {
+  const controller = new AbortController();
+  const pending = postChatMessage({
+    body: { message: "Who filed?", raceId: "2026-senate-KY", cycle: 2026 },
+    signal: controller.signal,
+    timeoutMs: 5_000,
+    fetchImpl: () => new Promise(() => {}),
+  });
+  controller.abort();
+  await assert.rejects(pending, (error: unknown) => error instanceof ChatCancelled);
+});
+
+test("504 maps to the retryable unavailable error", async () => {
+  const gateway = await postChatMessage({
+    body: { message: "x" },
+    fetchImpl: async () => jsonResponse({ error: "timeout" }, 504),
+  });
+  assert.deepEqual(gateway, { ok: false, kind: "unavailable", retryAfterSeconds: null });
+});
+
+test("a settled answer or timeout replaces the loading row", () => {
+  const loading: ChatTurn[] = [
+    { id: "u", role: "user", text: "Who filed?" },
+    { id: "a", role: "assistant", status: "loading" },
+  ];
+  const done = settleAssistantTurn(
+    loading,
+    "a",
+    {
+      ok: true,
+      refused: false,
+      answer_markdown: "Two candidates filed.",
+      sources: [],
+      mode: "factual",
+    },
+    0,
+  );
+  assert.equal(done[1]?.role === "assistant" && done[1].status, "done");
+
+  const timedOut = settleAssistantTurn(loading, "missing", {
+    ok: false,
+    kind: "network",
+    retryAfterSeconds: null,
+  }, 0);
+  assert.equal(timedOut[1]?.role === "assistant" && timedOut[1].status, "error");
+  if (timedOut[1]?.role !== "assistant" || timedOut[1].status !== "error") return;
+  assert.equal(timedOut[1].kind, "network");
+
+  const markup = render(
+    React.createElement(
+      ChatMessageList,
+      baseList({
+        turns: timedOut,
+      }),
+    ),
+  );
+  assert.match(markup, /Check your connection and try again/);
+  assert.match(markup, /Retry/);
+  assert.doesNotMatch(markup, /Looking up public records/);
 });
 
 test("message states render sources only after a successful answer", () => {
