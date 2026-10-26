@@ -1,0 +1,116 @@
+import { chatModelId } from "./config";
+import { finalizeAnswer, idsIn } from "./answer";
+import { textOf, toolUses } from "./converse";
+import { CHAT_SYSTEM_PROMPT, userPrompt } from "./prompt";
+import { executeChatTool, type ToolContext } from "./tools";
+import type { ChatAnswer, ChatMessage, ChatRequest, ChatSource, ConverseFn } from "./types";
+
+const MAX_TOOL_ROUNDS = 4;
+const MAX_TOKENS = 1024;
+
+export class ChatUnavailableError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ChatUnavailableError";
+  }
+}
+
+export type ChatRunResult = ChatAnswer & {
+  modelId: string;
+  tools: string[];
+  usage: { inputTokens: number; outputTokens: number };
+};
+
+export async function runGroundedChat(input: {
+  request: ChatRequest;
+  ctx: ToolContext;
+  env: Record<string, string | undefined>;
+  converse: ConverseFn;
+}): Promise<ChatRunResult> {
+  const modelId = chatModelId(input.env);
+  const prompt = userPrompt(input.request);
+  const messages: ChatMessage[] = [
+    { role: "user", content: [{ text: prompt }] },
+  ];
+  const grounded = idsIn(prompt);
+  const sources: ChatSource[] = [];
+  const snippets: string[] = [];
+  const toolNames: string[] = [];
+  let records = 0;
+  let toolsCalled = 0;
+  const usage = { inputTokens: 0, outputTokens: 0 };
+
+  for (let round = 0; round < MAX_TOOL_ROUNDS; round += 1) {
+    let response;
+    try {
+      response = await input.converse({
+        modelId,
+        system: CHAT_SYSTEM_PROMPT,
+        messages,
+        maxTokens: MAX_TOKENS,
+      });
+    } catch (error) {
+      if (error instanceof ChatUnavailableError) throw error;
+      const name = error instanceof Error ? error.name : "Error";
+      console.error(`Bedrock Converse failed: ${name}`);
+      throw new ChatUnavailableError("The model is unavailable.");
+    }
+
+    usage.inputTokens += response.usage?.inputTokens ?? 0;
+    usage.outputTokens += response.usage?.outputTokens ?? 0;
+
+    if (response.stopReason === "max_tokens") {
+      throw new ChatUnavailableError("The model response was incomplete.");
+    }
+
+    const calls = toolUses(response.message);
+    messages.push({ role: "assistant", content: response.message.content });
+    if (calls.length === 0) {
+      const answer = finalizeAnswer({
+        modelText: textOf(response.message),
+        toolRecords: records,
+        toolSources: sources,
+        snippets,
+        groundedText: [...grounded].join(" "),
+        toolsCalled,
+      });
+      return { ...answer, modelId, tools: toolNames, usage };
+    }
+
+    const results: ChatMessage["content"] = [];
+    for (const call of calls) {
+      toolsCalled += 1;
+      toolNames.push(call.name);
+      const executed = await executeChatTool(call.name, call.input, input.ctx);
+      if (!executed.ok) {
+        if (executed.unavailable) {
+          throw new ChatUnavailableError(executed.message);
+        }
+        results.push({
+          toolResult: {
+            toolUseId: call.toolUseId,
+            status: "error",
+            content: { error: executed.message },
+          },
+        });
+        continue;
+      }
+      records += executed.records;
+      for (const source of executed.sources) {
+        if (!sources.some((item) => item.url === source.url)) sources.push(source);
+      }
+      snippets.push(...executed.snippets);
+      for (const id of idsIn(JSON.stringify(executed.content))) grounded.add(id);
+      results.push({
+        toolResult: {
+          toolUseId: call.toolUseId,
+          status: "success",
+          content: executed.content,
+        },
+      });
+    }
+    messages.push({ role: "user", content: results });
+  }
+
+  throw new ChatUnavailableError("The model did not finish.");
+}

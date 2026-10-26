@@ -3,7 +3,7 @@ export function llmsText(input: { origin: string; basePath: string }): string {
   const root = `${input.origin}${input.basePath}`;
   return `# Candate
 
-> Nonpartisan federal election records for President, Senate, and House, stored from FEC Form 2 filings. Read-only JSON with source links and timestamps. Party is the filing affiliation code. The API has no scores, rankings, endorsements, or voting advice, and it has no write methods. There is no on-site chat. A later Elector Bot can call this HTTPS API with a key.
+> Nonpartisan federal election records for President, Senate, and House, stored from FEC Form 2 filings. Read-only JSON with source links and timestamps. Party is the filing affiliation code. The API has no scores, rankings, endorsements, or voting advice, and it has no write methods. POST /api/chat is a same-origin browser route that answers from these records and does not use the API key. Other agents call /api/v1 with a key.
 
 ## Docs
 
@@ -19,5 +19,6 @@ Send the key as \`Authorization: Bearer YOUR_API_KEY\` or \`X-Api-Key: YOUR_API_
 - GET ${root}/api/v1/candidates/{candidateId}
 - GET ${root}/api/v1/candidates/{candidateId}/filings
 - GET ${root}/api/v1/freshness
+- POST ${root}/api/chat (browser JSON, no API key, buffered response)
 `;
 }

@@ -41,8 +41,8 @@ export function AgentApiDocs({ origin, basePath, freshness }: AgentApiDocsProps)
         </p>
         <p className="max-w-2xl text-base leading-7 text-muted">
           The API does not score, rank, endorse, or advise a vote, and it has
-          no write methods. There is no on-site chat. A later Elector Bot can
-          call this HTTPS API with a key.
+          no write methods. The browser chat route below does not use this
+          key. Other agents call <code>/api/v1</code> with a key.
         </p>
       </header>
 
@@ -72,6 +72,12 @@ export function AgentApiDocs({ origin, basePath, freshness }: AgentApiDocsProps)
           <li>
             <code>GET /api/v1/freshness</code> — ingest watermark for{" "}
             <code>fec-efile-form2</code>.
+          </li>
+          <li>
+            <code>POST /api/chat</code> — same-origin browser chat. No API key.
+            One buffered JSON body (<code>answer_markdown</code>,{" "}
+            <code>sources</code>, <code>refused</code>). <code>refused: true</code>{" "}
+            is still HTTP 200.
           </li>
         </ul>
         <p className="text-sm leading-6 text-muted">
@@ -103,6 +109,10 @@ export function AgentApiDocs({ origin, basePath, freshness }: AgentApiDocsProps)
         <Example label="X-Api-Key header">{`curl -sS \\
   -H "X-Api-Key: YOUR_API_KEY" \\
   "${racesUrl}"`}</Example>
+        <Example label="Browser chat, no API key">{`curl -sS -X POST \\
+  -H "Content-Type: application/json" \\
+  -d '{"message":"Which Senate races are stored for California in 2026?","cycle":2026}' \\
+  "${root}/api/chat"`}</Example>
       </section>
 
       <section className="space-y-3" aria-labelledby="freshness-heading">

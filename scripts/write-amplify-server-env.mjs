@@ -6,12 +6,19 @@ import { argv, env } from "node:process";
  * Amplify puts console env vars in the build shell only. AWS documents writing
  * the ones the server needs into `.env.production` before `next build`.
  * `FEC_API_KEY` is intentionally absent: the Next app does not call OpenFEC.
+ * Chat uses the Amplify compute role for Bedrock, not a key in this file.
  */
 export const AMPLIFY_SERVER_ENV_KEYS = Object.freeze([
   "CANDATE_TABLE_NAME",
   "CANDATE_API_KEY",
   "CANDATE_CYCLES",
   "AWS_REGION",
+  "CANDATE_CHAT_ENABLED",
+  "CANDATE_CHAT_MODEL",
+  "CANDATE_CHAT_RATE_LIMIT",
+  "CANDATE_CHAT_RATE_WINDOW_SECONDS",
+  "BEDROCK_MODEL_ID",
+  "BEDROCK_SONNET_MODEL_ID",
 ]);
 
 /** Prefix copied in addition to the named keys. `FEC_API_KEY` does not match. */

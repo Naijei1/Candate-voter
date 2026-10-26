@@ -45,6 +45,9 @@ test("Amplify build writes server env once and does not copy the FEC key", () =>
     "CANDATE_API_KEY",
     "CANDATE_CYCLES",
     "AWS_REGION",
+    "CANDATE_CHAT_ENABLED",
+    "BEDROCK_MODEL_ID",
+    "BEDROCK_SONNET_MODEL_ID",
     "NEXT_PUBLIC_",
   ]) {
     assert.equal(script.includes(key), true, key);

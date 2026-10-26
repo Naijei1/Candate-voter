@@ -5,10 +5,14 @@ const JSON_HEADERS = {
   "Cache-Control": "no-store",
 } as const;
 
-export function json(body: unknown, status = 200): Response {
+export function json(
+  body: unknown,
+  status = 200,
+  headers: Record<string, string> = {},
+): Response {
   return new Response(JSON.stringify(body), {
     status,
-    headers: JSON_HEADERS,
+    headers: { ...JSON_HEADERS, ...headers },
   });
 }
 
