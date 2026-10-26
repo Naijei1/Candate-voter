@@ -1,0 +1,140 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import { US_STATE_SHAPES } from "../src/lib/geo/us-states";
+import { parseRaceIds, spotlightRaces, stateRaces, statesWithRaces } from "../src/lib/landing";
+import type { Race } from "../src/lib/types";
+
+const older = "2026-05-01T00:00:00.000Z";
+const newer = "2026-10-01T00:00:00.000Z";
+
+function race(partial: Pick<Race, "raceId" | "office" | "title"> & Partial<Race>): Race {
+  return {
+    cycle: 2026,
+    state: null,
+    district: null,
+    jurisdiction: "United States",
+    sourceUrl: "https://www.fec.gov/data/candidates/",
+    updatedAt: older,
+    ...partial,
+  };
+}
+
+test("spotlight picks one race per office by newest update, not by party or size", () => {
+  const races = [
+    race({
+      raceId: "2026-senate-WY",
+      office: "senate",
+      title: "U.S. Senate, Wyoming",
+      state: "WY",
+      updatedAt: newer,
+    }),
+    race({
+      raceId: "2026-senate-CA",
+      office: "senate",
+      title: "U.S. Senate, California",
+      state: "CA",
+      updatedAt: older,
+    }),
+    race({
+      raceId: "2026-house-CA-12",
+      office: "house",
+      title: "U.S. House, California District 12",
+      state: "CA",
+      district: "12",
+      updatedAt: older,
+    }),
+    race({
+      raceId: "2026-house-TX-07",
+      office: "house",
+      title: "U.S. House, Texas District 7",
+      state: "TX",
+      district: "07",
+      updatedAt: newer,
+    }),
+    race({ raceId: "2028-president", office: "president", title: "President", cycle: 2028 }),
+  ];
+
+  assert.deepEqual(
+    spotlightRaces(races).map((item) => item.raceId),
+    ["2028-president", "2026-senate-WY", "2026-house-TX-07"],
+  );
+});
+
+test("spotlight fills open spots from the newest remaining race", () => {
+  const races = [
+    race({ raceId: "2026-senate-ME", office: "senate", title: "Senate ME", state: "ME", updatedAt: older }),
+    race({ raceId: "2026-senate-OR", office: "senate", title: "Senate OR", state: "OR", updatedAt: newer }),
+  ];
+  assert.deepEqual(
+    spotlightRaces(races).map((item) => item.raceId),
+    ["2026-senate-OR", "2026-senate-ME"],
+  );
+});
+
+test("state view includes the presidential race and that state's contests only", () => {
+  const races = [
+    race({ raceId: "2026-president", office: "president", title: "President" }),
+    race({
+      raceId: "2026-senate-VA",
+      office: "senate",
+      title: "U.S. Senate, Virginia",
+      state: "VA",
+      jurisdiction: "Virginia",
+    }),
+    race({
+      raceId: "2026-house-VA-02",
+      office: "house",
+      title: "House 2",
+      state: "VA",
+      district: "02",
+    }),
+    race({
+      raceId: "2026-house-VA-01",
+      office: "house",
+      title: "House 1",
+      state: "VA",
+      district: "01",
+    }),
+    race({
+      raceId: "2026-senate-MD",
+      office: "senate",
+      title: "U.S. Senate, Maryland",
+      state: "MD",
+    }),
+  ];
+
+  assert.deepEqual(
+    stateRaces(races, "VA").map((item) => item.raceId),
+    ["2026-president", "2026-senate-VA", "2026-house-VA-01", "2026-house-VA-02"],
+  );
+  assert.deepEqual(statesWithRaces(races), ["MD", "VA"]);
+});
+
+test("parseRaceIds accepts stored id shapes and rejects a long or malformed list", () => {
+  assert.deepEqual(parseRaceIds(["2026-president", "2026-president", "2026-house-CA-07"]), {
+    ok: true,
+    ids: ["2026-president", "2026-house-CA-07"],
+  });
+  assert.equal(parseRaceIds([]).ok, false);
+  assert.equal(parseRaceIds(["2026-senate-California"]).ok, false);
+  assert.equal(parseRaceIds(["1979-president"]).ok, false);
+  const tooMany = Array.from({ length: 81 }, (_, index) => {
+    const district = String((index % 53) + 1).padStart(2, "0");
+    const cycle = 2026 + Math.floor(index / 53);
+    return `${cycle}-house-CA-${district}`;
+  });
+  assert.equal(parseRaceIds(tooMany).ok, false);
+});
+
+test("the state map is one geographic outline per state and DC", () => {
+  assert.equal(US_STATE_SHAPES.length, 51);
+  const codes = US_STATE_SHAPES.map((shape) => shape.postal);
+  assert.equal(new Set(codes).size, 51);
+  for (const postal of ["CA", "TX", "NY", "AK", "HI", "DC", "VA"]) {
+    assert.ok(codes.includes(postal));
+  }
+  for (const shape of US_STATE_SHAPES) {
+    assert.match(shape.d, /^M[\d.-]/);
+    assert.ok(shape.d.length > 40);
+  }
+});

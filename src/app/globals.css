@@ -1,12 +1,15 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-paper: #f6f3ee;
-  --color-ink: #1c1917;
-  --color-muted: #57534e;
-  --color-line: #e4dcd0;
-  --color-card: #fffcf8;
-  --color-accent: #115e59;
+  --color-paper: #f4f7f8;
+  --color-ink: #0f172a;
+  --color-muted: #475569;
+  --color-line: #e2e8f0;
+  --color-card: #ffffff;
+  --color-accent: #0f766e;
+  --color-map: #e7eef2;
+  --color-map-data: #b7ebe3;
+  --color-map-hover: #7ed9cc;
   --font-sans: "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
@@ -14,4 +17,49 @@ body {
   background: var(--color-paper);
   color: var(--color-ink);
   font-family: var(--font-sans);
+}
+
+.us-map .us-state {
+  fill: var(--color-map);
+  stroke: #ffffff;
+  stroke-width: 1.25;
+  cursor: pointer;
+  transition: fill 120ms ease;
+}
+
+.us-map .us-state.has-data {
+  fill: var(--color-map-data);
+}
+
+.us-map .us-state:hover,
+.us-map .us-state:focus-visible {
+  fill: var(--color-map-hover);
+}
+
+.us-map .us-state[aria-pressed="true"],
+.us-map .us-state[aria-pressed="true"]:hover,
+.us-map .us-state[aria-pressed="true"]:focus-visible {
+  fill: var(--color-accent);
+}
+
+.us-map .us-state:focus-visible {
+  outline: none;
+  stroke: var(--color-ink);
+  stroke-width: 2.6;
+}
+
+.us-map .us-label {
+  fill: #334155;
+  font-size: 13px;
+  font-weight: 600;
+  pointer-events: none;
+  user-select: none;
+}
+
+.us-map .us-label-small {
+  font-size: 11px;
+}
+
+.us-map .us-state[aria-pressed="true"] + .us-label {
+  fill: #ffffff;
 }

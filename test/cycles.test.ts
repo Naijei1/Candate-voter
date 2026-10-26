@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { cyclesFromEnv, defaultCycles, formatCycleList } from "../src/lib/data/cycles";
+import { cyclesFromEnv, defaultCycles, formatCycleList, resolveCycle } from "../src/lib/data/cycles";
 
 const now = new Date("2026-10-26T12:00:00.000Z");
 
@@ -17,6 +17,15 @@ test("CANDATE_CYCLES overrides the window and drops years outside 1980–2100", 
 
 test("an empty CANDATE_CYCLES value keeps the default window", () => {
   assert.deepEqual(cyclesFromEnv({ CANDATE_CYCLES: "  " }, now), defaultCycles(now));
+});
+
+test("resolveCycle prefers the requested year, then the current UTC year", () => {
+  const cycles = [2025, 2026, 2027, 2028];
+  assert.equal(resolveCycle(cycles, "2028", now), 2028);
+  assert.equal(resolveCycle(cycles, "1999", now), 2026);
+  assert.equal(resolveCycle(cycles, undefined, now), 2026);
+  assert.equal(resolveCycle([], "2026", now), null);
+  assert.equal(resolveCycle([2024, 2030], undefined, now), 2024);
 });
 
 test("formatCycleList collapses a contiguous span", () => {

@@ -65,3 +65,10 @@ export function stateName(postal: string): string {
 export function isPostalState(value: string): boolean {
   return Object.prototype.hasOwnProperty.call(STATE_NAMES, value);
 }
+
+/** States and territories, sorted by name, for the browse list. */
+export function stateOptions(): Array<{ postal: string; name: string }> {
+  return Object.entries(STATE_NAMES)
+    .map(([postal, name]) => ({ postal, name }))
+    .sort((a, b) => a.name.localeCompare(b.name, "en"));
+}

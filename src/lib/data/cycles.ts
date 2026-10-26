@@ -40,6 +40,26 @@ export function cyclesFromEnv(
   return [...cycles].sort((a, b) => a - b);
 }
 
+/**
+ * Year the landing page shows. A requested year wins when it is in the
+ * query window. Otherwise the current UTC year, then the closest year.
+ */
+export function resolveCycle(
+  cycles: readonly number[],
+  requested: string | undefined,
+  now: Date = new Date(),
+): number | null {
+  if (cycles.length === 0) return null;
+  const sorted = [...cycles].sort((a, b) => a - b);
+  const parsed = Number(requested);
+  if (sorted.includes(parsed)) return parsed;
+  const current = now.getUTCFullYear();
+  if (sorted.includes(current)) return current;
+  return sorted.reduce((best, year) =>
+    Math.abs(year - current) < Math.abs(best - current) ? year : best,
+  );
+}
+
 /** Compact label for the years a query actually asked for. */
 export function formatCycleList(cycles: readonly number[]): string {
   if (cycles.length === 0) return "none";
