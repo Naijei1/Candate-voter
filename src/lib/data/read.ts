@@ -1,15 +1,9 @@
 import { cache } from "react";
 import { cyclesFromEnv } from "./cycles";
 import { createDynamoRepository, type VoterRepository } from "./repository";
-import type {
-  Candidate,
-  FederalOffice,
-  Filing,
-  IngestWatermark,
-  Race,
-} from "../types";
+import type { Candidate, Filing, IngestWatermark, Race } from "../types";
 
-const OFFICE_ORDER: readonly FederalOffice[] = ["president", "senate", "house"];
+export { racesByOffice } from "../races";
 
 /**
  * Server-component reads. Each function calls `createDynamoRepository()`.
@@ -91,13 +85,4 @@ export function sortFilings(filings: readonly Filing[]): Filing[] {
     if (byLoad !== 0) return byLoad;
     return b.filingId.localeCompare(a.filingId);
   });
-}
-
-export function racesByOffice(
-  races: readonly Race[],
-): Array<{ office: FederalOffice; races: Race[] }> {
-  return OFFICE_ORDER.map((office) => ({
-    office,
-    races: races.filter((race) => race.office === office),
-  })).filter((group) => group.races.length > 0);
 }

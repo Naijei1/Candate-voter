@@ -43,11 +43,62 @@ export function officeLabel(office: FederalOffice): string {
   return "House";
 }
 
-/** Party as stored. The code is not renamed and not treated as an endorsement. */
+/**
+ * Common names for FEC party codes. The code is the affiliation on the
+ * filing. A name is a readable label for that code, not an endorsement.
+ * Codes without a known name stay visible as filed.
+ */
+const PARTY_NAMES: Record<string, string> = {
+  DEM: "Democratic",
+  DFL: "Democratic-Farmer-Labor",
+  REP: "Republican",
+  IND: "Independent",
+  LIB: "Libertarian",
+  GRE: "Green",
+  GRN: "Green",
+  CON: "Conservative",
+  CST: "Constitution",
+  REF: "Reform",
+  AIP: "American Independent",
+  IAP: "Independent American",
+  NPA: "No Party Affiliation",
+  NNE: "None",
+  NON: "Nonpartisan",
+  UNK: "Unknown",
+  OTH: "Other",
+  WFP: "Working Families",
+  PFP: "Peace and Freedom",
+  SWP: "Socialist Workers",
+  IDP: "Independence",
+  NLP: "Natural Law",
+  PRO: "Progressive",
+  WRI: "Write-in",
+};
+
+/** Filing affiliation code, uppercased, or null when the filing left it blank. */
+export function partyCode(party: string | null | undefined): string | null {
+  const code = party?.trim().toUpperCase() ?? "";
+  return code.length > 0 ? code : null;
+}
+
+/** Readable affiliation label. Unknown codes are shown as stored. */
 export function partyLabel(party: string | null | undefined): string {
-  const code = party?.trim() ?? "";
-  if (!code) return "Party not reported";
-  return `Party ${code}`;
+  const code = partyCode(party);
+  if (!code) return "Affiliation not reported";
+  return PARTY_NAMES[code] ?? code;
+}
+
+/**
+ * Visual tone for an affiliation label. Color is a second cue next to the
+ * name. It is not a rating.
+ */
+export function partyTone(
+  party: string | null | undefined,
+): "democratic" | "republican" | "other" {
+  const code = partyCode(party);
+  if (code === "DEM" || code === "DFL") return "democratic";
+  if (code === "REP") return "republican";
+  return "other";
 }
 
 export function fecCandidateLabel(id: string | null | undefined): string {

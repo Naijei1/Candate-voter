@@ -1,6 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { cyclesFromEnv, defaultCycles, formatCycleList, parseCycle } from "../src/lib/data/cycles";
+import {
+  cyclesFromEnv,
+  defaultCycles,
+  formatCycleList,
+  parseCycle,
+  resolveCycle,
+} from "../src/lib/data/cycles";
 
 const now = new Date("2026-10-26T12:00:00.000Z");
 
@@ -25,6 +31,15 @@ test("parseCycle accepts the same year range as CANDATE_CYCLES", () => {
   assert.equal(parseCycle("2101"), null);
   assert.equal(parseCycle("2026.5"), null);
   assert.equal(parseCycle("nope"), null);
+});
+
+test("resolveCycle prefers the requested year, then the current UTC year", () => {
+  const cycles = [2025, 2026, 2027, 2028];
+  assert.equal(resolveCycle(cycles, "2028", now), 2028);
+  assert.equal(resolveCycle(cycles, "1999", now), 2026);
+  assert.equal(resolveCycle(cycles, undefined, now), 2026);
+  assert.equal(resolveCycle([], "2026", now), null);
+  assert.equal(resolveCycle([2024, 2030], undefined, now), 2024);
 });
 
 test("formatCycleList collapses a contiguous span", () => {

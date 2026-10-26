@@ -25,10 +25,14 @@ test("httpsUrl allows only https links", () => {
   );
 });
 
-test("party and FEC labels stay on the reported code", () => {
-  assert.equal(partyLabel("DEM"), "Party DEM");
-  assert.equal(partyLabel(null), "Party not reported");
-  assert.equal(partyLabel("  "), "Party not reported");
+test("party labels use a readable affiliation name and keep unknown codes", () => {
+  assert.equal(partyLabel("DEM"), "Democratic");
+  assert.equal(partyLabel("dem"), "Democratic");
+  assert.equal(partyLabel("DFL"), "Democratic-Farmer-Labor");
+  assert.equal(partyLabel("REP"), "Republican");
+  assert.equal(partyLabel("XYZ"), "XYZ");
+  assert.equal(partyLabel(null), "Affiliation not reported");
+  assert.equal(partyLabel("  "), "Affiliation not reported");
   assert.equal(fecCandidateLabel("P80011018"), "FEC P80011018");
   assert.equal(fecCandidateLabel(null), "FEC candidate id not reported");
 });
