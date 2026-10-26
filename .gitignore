@@ -44,5 +44,8 @@ next-env.d.ts
 
 # amplify
 .amplify/
+
+# sam build output
+.aws-sam/
 amplify_outputs.json
 amplifyconfiguration*

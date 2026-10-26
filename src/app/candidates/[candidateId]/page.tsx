@@ -73,9 +73,9 @@ export default async function CandidatePage({ params }: CandidatePageProps) {
         </h2>
         {filings.length === 0 ? (
           <p className="text-sm leading-6 text-muted">
-            No filings loaded. When FEC Form 2 ingest runs, each filing will
-            show its form, a source link, the filing time, and the time this
-            site retrieved it.
+            No filings are read from storage yet. When this page reads stored
+            Form 2 filings, each one will show its form, a source link, and
+            the time this site retrieved it.
           </p>
         ) : (
           <ul className="divide-y divide-line rounded-lg border border-line bg-card">

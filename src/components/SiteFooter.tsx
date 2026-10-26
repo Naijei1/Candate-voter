@@ -6,9 +6,8 @@ export function SiteFooter() {
         candidates, rank them, or tell you how to vote.
       </p>
       <p className="mt-3">
-        Race and candidate pages will cite public sources, including FEC
-        filings, with a link and the time each record was retrieved. Those
-        sources are not connected yet.
+        Race and candidate pages still show samples. Stored filings keep a
+        source link and the time each record was retrieved.
       </p>
     </footer>
   );

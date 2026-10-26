@@ -17,6 +17,12 @@ const basePath = normalizeBasePath(process.env.NEXT_PUBLIC_BASE_PATH);
 
 const nextConfig: NextConfig = {
   // SSR on Amplify Hosting compute. Do not set `output: "export"`.
+  // The data layer is server-side only. Keep the AWS SDK external so a later
+  // server-component read path does not try to bundle it for the browser.
+  serverExternalPackages: [
+    "@aws-sdk/client-dynamodb",
+    "@aws-sdk/lib-dynamodb",
+  ],
   ...(basePath
     ? {
         basePath,
