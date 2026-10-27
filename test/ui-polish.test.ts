@@ -55,7 +55,7 @@ const races: Race[] = [
   }),
 ];
 
-test("ask payload carries real ids and cycle, and does not send mode or state", () => {
+test("ask payload carries real ids, cycle, and the page state", () => {
   const stateBody = buildChatPayload({
     message: "Who has filed?",
     scope: askScopeForState(2026, "CA", races),
@@ -64,7 +64,8 @@ test("ask payload carries real ids and cycle, and does not send mode or state", 
   assert.equal(stateBody.raceId, "2026-senate-CA");
   assert.equal(stateBody.candidateId, undefined);
   assert.equal("mode" in stateBody, false);
-  assert.equal("state" in stateBody, false);
+  assert.equal(stateBody.state, "CA");
+  assert.equal(stateBody.zip, undefined);
   assert.match(stateBody.message, /California/);
   assert.match(stateBody.message, /2026-house-CA-02/);
   assert.match(stateBody.message, /Who has filed\?$/);

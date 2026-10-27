@@ -66,16 +66,18 @@ export function AskProvider({ cycles, children }: { cycles: number[]; children: 
 /** Race, candidate, and state pages publish ids the Ask request should send. */
 export function AskPageContext(context: ChatContextInput) {
   const { replacePageContext } = useAsk();
-  const { raceId, candidateId, cycle, messagePrefix, label } = context;
+  const { raceId, candidateId, cycle, state, zip, messagePrefix, label } = context;
   useEffect(() => {
     return replacePageContext({
       ...(raceId ? { raceId } : {}),
       ...(candidateId ? { candidateId } : {}),
       ...(cycle != null ? { cycle } : {}),
+      ...(state ? { state } : {}),
+      ...(zip ? { zip } : {}),
       ...(messagePrefix ? { messagePrefix } : {}),
       ...(label ? { label } : {}),
     });
-  }, [replacePageContext, raceId, candidateId, cycle, messagePrefix, label]);
+  }, [replacePageContext, raceId, candidateId, cycle, state, zip, messagePrefix, label]);
   return null;
 }
 
@@ -92,6 +94,13 @@ function AskPanel({ cycles }: { cycles: number[] }) {
   useFocusTrap(open && located.panel, panelRef, close, triggerRef);
   useScrollLock(open && located.panel);
   useKeyboardInset(open && located.panel, setKeyboardInset);
+  useEffect(() => {
+    if (!open) return;
+    document.documentElement.dataset.ask = "open";
+    return () => {
+      delete document.documentElement.dataset.ask;
+    };
+  }, [open]);
 
   if (!open || !located.panel) return null;
 
@@ -133,6 +142,8 @@ function mergePageContext(
       ? { messagePrefix: page.messagePrefix ?? located.messagePrefix }
       : {}),
     ...(page.label || located.label ? { label: page.label ?? located.label } : {}),
+    ...(page.state || located.state ? { state: page.state ?? located.state } : {}),
+    ...(page.zip || located.zip ? { zip: page.zip ?? located.zip } : {}),
   };
 }
 

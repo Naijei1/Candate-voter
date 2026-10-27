@@ -22,11 +22,11 @@ test("mobile shell keeps the desktop map grid and adds Safari safe areas", () =>
   assert.match(mobile, /\.state-sheet-body\s*\{[^}]*overflow-x:\s*hidden/);
   assert.match(mobile, /\.state-sheet-body\s*\{[^}]*overflow-y:\s*auto/);
   assert.match(mobile, /\.state-overview\s*\{[^}]*overflow:\s*hidden/);
-  assert.match(mobile, /\.state-overview\s*\{[^}]*max-height:\s*var\(--state-sheet-max\)/);
+  assert.match(mobile, /\.state-overview\s*\{[^}]*max-height:\s*var\(--sheet-height,\s*var\(--state-sheet-max\)\)/);
   assert.match(mobile, /--state-sheet-max:\s*min\(40dvh,\s*calc\(100dvh - 14rem\)\)/);
   assert.equal(/\.state-overview \.back-chrome\s*\{[^}]*position:\s*sticky/.test(mobile), false);
   assert.match(mobile, /\.state-overview \.back-chrome\s*\{[^}]*position:\s*static/);
-  assert.match(mobile, /\.state-map-pane\s*\{[^}]*bottom:\s*calc\(var\(--state-sheet-max\)/);
+  assert.match(mobile, /\.state-map-pane\s*\{[^}]*bottom:\s*calc\(var\(--sheet-height,\s*var\(--state-sheet-max\)\)/);
   assert.match(css, /\.party-cue\s*\{[^}]*overflow-wrap:\s*anywhere/);
   assert.match(css, /\.state-sheet-body\s*\{[^}]*display:\s*contents/);
   assert.match(mobile, /\.map-legend-dock\s*\{[^}]*left:/);

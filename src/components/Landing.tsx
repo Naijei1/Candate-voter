@@ -11,6 +11,7 @@ import { RecordMeta } from "@/components/RecordMeta";
 import { StateScoreboard } from "@/components/StateScoreboard";
 import { StorageNotice } from "@/components/StorageNotice";
 import { MapLegend, UsMap } from "@/components/UsMap";
+import { useMobileSheet } from "@/components/useMobileSheet";
 import { ZipLookup } from "@/components/ZipLookup";
 import { askScopeForState, askScopeForYear, pageContextFromScope } from "@/lib/chat/scope";
 import {
@@ -51,7 +52,7 @@ import {
   type MapContext,
 } from "@/lib/landing/state-query";
 import { findRacesByZip } from "@/lib/lookup/find-races";
-import { zipRaceSlots, zipSlotJurisdiction, zipSlotTitle, type ZipLookupPayload, type ZipLookupResult, type ZipRaceSlot } from "@/lib/lookup/zip-view";
+import { settleZipLookup, zipRaceSlots, zipSlotJurisdiction, zipSlotTitle, type ZipLookupPayload, type ZipLookupResult, type ZipRaceSlot } from "@/lib/lookup/zip-view";
 import { racesByStateOffice } from "@/lib/races";
 import type { Race } from "@/lib/types";
 
@@ -91,6 +92,7 @@ export function Landing({
   const [zipPayload, setZipPayload] = useState<ZipLookupPayload | null>(null);
   const [zipLoading, setZipLoading] = useState(Boolean(initialZip));
   const [zipFailed, setZipFailed] = useState(false);
+  const [zipNotice, setZipNotice] = useState<string | null>(null);
   const [showAll, setShowAll] = useState(false);
   const [hot, setHot] = useState<string | null>(null);
   const [entries, setEntries] = useState<Map<string, CandidateCacheEntry>>(() =>
@@ -110,8 +112,12 @@ export function Landing({
 
   useEffect(() => {
     const scope = selected ? askScopeForState(year, selected, races) : askScopeForYear(year);
-    return replacePageContext(pageContextFromScope(scope));
-  }, [replacePageContext, races, selected, year]);
+    const page = pageContextFromScope(scope);
+    return replacePageContext({
+      ...page,
+      ...(zipCode ? { zip: zipCode } : {}),
+    });
+  }, [replacePageContext, races, selected, year, zipCode]);
 
   const syncFromLocation = useCallback(() => {
     const postal = postalFromSearch(window.location.search);
@@ -149,6 +155,7 @@ export function Landing({
       setZipPayload(null);
       setZipLoading(false);
       setZipFailed(false);
+      setZipNotice(null);
       return;
     }
     const held = heldZip.current;
@@ -156,28 +163,33 @@ export function Landing({
       setZipPayload(held);
       setZipLoading(false);
       setZipFailed(false);
+      setZipNotice(null);
       return;
     }
     let active = true;
     setZipLoading(true);
     setZipFailed(false);
+    setZipNotice(null);
     (async () => {
       try {
-        const result = await (lookupZip ?? findRacesByZip)(zipCode, year);
+        const result = await settleZipLookup((lookupZip ?? findRacesByZip)(zipCode, year));
         if (!active) return;
         if (!result.ok || result.payload.state !== selected) {
           setZipPayload(null);
           setZipFailed(true);
+          setZipNotice(zipFailureNotice(result));
           setRememberedPostal(null);
           setHot(null);
           return;
         }
         heldZip.current = result.payload;
         setZipPayload(result.payload);
+        setZipNotice(null);
       } catch {
         if (!active) return;
         setZipPayload(null);
         setZipFailed(true);
+        setZipNotice("That ZIP didn't match.");
       } finally {
         if (active) setZipLoading(false);
       }
@@ -342,6 +354,7 @@ export function Landing({
           pinYours={pinYours}
           zipLoading={zipLoading}
           zipFailed={zipFailed}
+          zipNotice={zipNotice}
           yours={yours}
           showAll={showAll}
           onShowAll={() => setShowAll(true)}
@@ -401,6 +414,7 @@ function StateOverview({
   pinYours,
   zipLoading,
   zipFailed,
+  zipNotice,
   yours,
   showAll,
   onShowAll,
@@ -417,6 +431,7 @@ function StateOverview({
   pinYours: boolean;
   zipLoading: boolean;
   zipFailed: boolean;
+  zipNotice: string | null;
   yours: ReturnType<typeof zipRaceSlots>;
   showAll: boolean;
   onShowAll: () => void;
@@ -437,11 +452,29 @@ function StateOverview({
   const yourIds = new Set(yours.map((slot) => slot.raceId));
   const rest = listed.filter((race) => !yourIds.has(race.raceId));
   const showFull = !pinYours || showAll;
+  const sheet = useMobileSheet(onBack, postal);
 
   return (
-    <div className="state-overview" data-testid="state-page">
+    <div
+      ref={sheet.sheetRef}
+      className="state-overview"
+      data-testid="state-page"
+      onPointerDown={sheet.onPointerDown}
+    >
       <div className="back-chrome">
-        <span className="drawer-handle" aria-hidden="true" />
+        <div
+          className="sheet-grab"
+          role="slider"
+          tabIndex={0}
+          aria-orientation="vertical"
+          aria-label="Drag down to shrink the sheet and see the map"
+          aria-valuemin={0}
+          aria-valuemax={2}
+          aria-valuenow={1}
+          onKeyDown={sheet.onKeyDown}
+        >
+          <span className="drawer-handle" aria-hidden="true" />
+        </div>
         <div className="back-chrome-row">
           {onBack ? (
             <button type="button" onClick={onBack} data-testid="back-to-map" className="back-link">
@@ -455,9 +488,11 @@ function StateOverview({
       <div className="state-sheet-body">
       <p className="state-year">{year}</p>
       <StateScoreboard board={board} senatePeople={senatePeople} />
-      <p className="mt-3 text-sm leading-6 text-ink">{federalScopeLine()}</p>
-      <p className="text-sm leading-6 text-muted">{ballotVersusFilingLine(year)}</p>
-      <DataRefreshedBanner refreshedAt={refreshedAt} compact />
+      <div className="state-sheet-notes" data-testid="state-sheet-notes">
+        <p className="text-sm leading-6 text-ink">{federalScopeLine()}</p>
+        <p className="text-sm leading-6 text-muted">{ballotVersusFilingLine(year)}</p>
+        <DataRefreshedBanner refreshedAt={refreshedAt} compact />
+      </div>
       {pinYours ? (
         <section
           id="your-races"
@@ -560,7 +595,7 @@ function StateOverview({
       ) : null}
       {zipFailed ? (
         <div className="zip-guidance" data-testid="zip-guidance">
-          <p className="zip-status">That ZIP did not match this state.</p>
+          <p className="zip-status">{zipNotice ?? "That ZIP didn't match."}</p>
           <button type="button" className="zip-pick" onClick={onLeave}>
             Tap a state on the map
           </button>
@@ -810,16 +845,13 @@ function EmptyHouseLink({
   racesAnchor: boolean;
 }) {
   const step = emptyHouseNext(race, catalog);
-  const href = step
-    ? preserve(`/races/${step.raceId}`)
-    : racesAnchor
-      ? "#your-races"
-      : preserve("/#your-races");
+  if (!step && !racesAnchor) return null;
+  const href = step ? preserve(`/races/${step.raceId}`) : "#your-races";
   return (
     <p className="mt-2">
       <Link
         href={href}
-        className="text-sm font-semibold text-accent underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
+        className="tap-link text-sm font-semibold text-accent underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
       >
         {step ? step.label : "Back to Your races"}
       </Link>
@@ -850,6 +882,13 @@ function OfficeLine({
 function placeLine(title: string, jurisdiction: string | null): boolean {
   if (!jurisdiction) return false;
   return !jurisdictionRepeatsTitle(title, jurisdiction);
+}
+
+function zipFailureNotice(result: ZipLookupResult): string {
+  if (!result.ok && result.reason === "timeout") return "That lookup took too long.";
+  if (!result.ok && result.reason === "unavailable") return "ZIP lookup isn't available right now.";
+  if (!result.ok && result.reason === "bad_request") return "Enter a 5-digit ZIP.";
+  return "That ZIP didn't match.";
 }
 
 function houseCodes(slots: readonly ZipRaceSlot[]): string[] {

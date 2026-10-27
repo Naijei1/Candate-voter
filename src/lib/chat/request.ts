@@ -77,9 +77,9 @@ export function parseChatRequest(body: unknown): ParseChatResult {
       ...(raceId.value ? { raceId: raceId.value } : {}),
       ...(candidateId.value ? { candidateId: candidateId.value } : {}),
       ...(cycle != null ? { cycle } : {}),
-      ...(threadId ? { threadId } : {}),
       ...(state.value ? { state: state.value } : {}),
       ...(zip.value ? { zip: zip.value } : {}),
+      ...(threadId ? { threadId } : {}),
     },
   };
 }

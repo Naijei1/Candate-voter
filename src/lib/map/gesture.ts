@@ -1,0 +1,86 @@
+export type Point = { x: number; y: number };
+
+export type Pan = { x: number; y: number; scale: number };
+
+export const PAN_START: Pan = { x: 0, y: 0, scale: 1 };
+
+const MIN_SCALE = 1;
+const MAX_SCALE = 4;
+
+export function midpoint(points: readonly Point[]): Point {
+  if (points.length === 0) return { x: 0, y: 0 };
+  let x = 0;
+  let y = 0;
+  for (const point of points) {
+    x += point.x;
+    y += point.y;
+  }
+  return { x: x / points.length, y: y / points.length };
+}
+
+export function pointDistance(a: Point, b: Point): number {
+  return Math.hypot(a.x - b.x, a.y - b.y);
+}
+
+/** Next pan after a one-finger drag or a two-finger pinch, before clamping. */
+export function nextPan(
+  start: Pan,
+  startMid: Point,
+  startDistance: number,
+  points: readonly Point[],
+): Pan {
+  const mid = midpoint(points);
+  const moved = { x: mid.x - startMid.x, y: mid.y - startMid.y };
+  if (points.length >= 2 && startDistance > 0) {
+    const [first, second] = points;
+    if (!first || !second) return start;
+    return {
+      scale: start.scale * (pointDistance(first, second) / startDistance),
+      x: start.x + moved.x,
+      y: start.y + moved.y,
+    };
+  }
+  return { ...start, x: start.x + moved.x, y: start.y + moved.y };
+}
+
+/** Keep the map on screen. At 1x a drag can still move it by about half the frame. */
+export function clampPan(pan: Pan, width: number, height: number): Pan {
+  const scale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, pan.scale));
+  const span = 0.46 + (scale - 1) * 0.55;
+  const limitX = Math.max(0, width) * span;
+  const limitY = Math.max(0, height) * span;
+  return {
+    scale,
+    x: Math.min(limitX, Math.max(-limitX, pan.x)),
+    y: Math.min(limitY, Math.max(-limitY, pan.y)),
+  };
+}
+
+export type SheetSnaps = {
+  peek: number;
+  half: number;
+  full: number;
+};
+
+/** Snap a dragged sheet. Pulling well below the peek dismisses it. */
+export function sheetSnap(
+  height: number,
+  snaps: SheetSnaps,
+  canDismiss: boolean,
+): { height: number; dismiss: boolean } {
+  if (canDismiss && height < snaps.peek * 0.62) {
+    return { height: snaps.peek, dismiss: true };
+  }
+  const points = [snaps.peek, snaps.half, snaps.full];
+  const nearest = points.reduce((best, point) =>
+    Math.abs(point - height) < Math.abs(best - height) ? point : best,
+  );
+  return { height: nearest, dismiss: false };
+}
+
+export function sheetLevel(height: number, snaps: SheetSnaps): 0 | 1 | 2 {
+  const snapped = sheetSnap(height, snaps, false).height;
+  if (snapped === snaps.full) return 2;
+  if (snapped === snaps.peek) return 0;
+  return 1;
+}

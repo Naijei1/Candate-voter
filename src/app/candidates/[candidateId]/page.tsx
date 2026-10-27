@@ -84,6 +84,8 @@ export default async function CandidatePage({ params, searchParams }: CandidateP
         candidateId={candidate.candidateId}
         raceId={candidate.raceId}
         cycle={cycle ?? undefined}
+        state={context.state ?? undefined}
+        zip={context.zip ?? undefined}
         label={candidate.displayName}
       />
       <BackChrome

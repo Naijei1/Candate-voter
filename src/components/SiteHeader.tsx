@@ -11,7 +11,7 @@ export function SiteHeader({
   overlay?: boolean;
 }) {
   return (
-    <header className={overlay ? "map-chrome" : "site-header sticky top-0 z-30 border-b border-line bg-card/95 backdrop-blur"}>
+    <header className={overlay ? "map-chrome" : "site-header sticky top-0 z-50 border-b border-line bg-card/95 backdrop-blur"}>
       <div className={overlay ? "map-chrome-row" : "site-header-row flex w-full items-center justify-between gap-4 px-4 py-3 sm:px-6"}>
         <Link
           href="/"

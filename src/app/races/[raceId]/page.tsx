@@ -8,6 +8,7 @@ import { DataRefreshedBanner } from "@/components/DataRefreshedBanner";
 import { RecordMeta } from "@/components/RecordMeta";
 import { StorageNotice } from "@/components/StorageNotice";
 import { ballotVersusFilingLine, emptyHouseNext, emptyRaceSentence, federalScopeLine, jurisdictionRepeatsTitle, officeOneLiner, runningForLine } from "@/lib/copy";
+import { isBogusAtLargeContest } from "@/lib/data/at-large";
 import { withCrossContestFilings } from "@/lib/data/cross-filings";
 import { personFilingNote } from "@/lib/data/filing-note";
 import { createDynamoRepository } from "@/lib/data/repository";
@@ -38,7 +39,7 @@ export async function generateMetadata({
   const { raceId } = await params;
   try {
     const race = await readRace(raceId);
-    if (!race) return { title: "Race" };
+    if (!race || isBogusAtLargeContest(race)) return { title: "Race" };
     return { title: race.title };
   } catch (error) {
     logReadError("getRace", error);
@@ -57,7 +58,7 @@ export default async function RacePage({ params, searchParams }: RacePageProps) 
       </StorageNotice>
     );
   }
-  if (!loaded.race) notFound();
+  if (!loaded.race || isBogusAtLargeContest(loaded.race)) notFound();
 
   const race = loaded.race;
   const context: MapContext = {
@@ -78,6 +79,8 @@ export default async function RacePage({ params, searchParams }: RacePageProps) 
       <AskPageContext
         raceId={race.raceId}
         cycle={race.cycle ?? undefined}
+        state={race.state ?? undefined}
+        zip={query.zip}
         label={race.cycle != null ? `${race.title} · ${race.cycle}` : race.title}
       />
       <BackChrome state={race.state} year={race.cycle} zip={context.zip} district={race.office === "house"} />
@@ -115,11 +118,11 @@ export default async function RacePage({ params, searchParams }: RacePageProps) 
                   href={
                     next
                       ? withPreservedQuery(`/races/${next.raceId}`, context)
-                      : withPreservedQuery("/#your-races", context)
+                      : withPreservedQuery("/", context)
                   }
-                  className="text-sm font-semibold text-accent underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
+                  className="tap-link text-sm font-semibold text-accent underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
                 >
-                  {next ? next.label : "Back to Your races"}
+                  {next ? next.label : "Back to the map"}
                 </Link>
               </p>
             ) : null}

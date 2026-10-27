@@ -144,14 +144,53 @@ export function raceIdAliases(raceId: string): string[] {
   return canonical === legacy ? [canonical] : [canonical, legacy];
 }
 
+/**
+ * District `00` on a state that elects more than one House member.
+ * Texas `2026-house-TX-00` is this case. One-seat states (`WY-00`) are not.
+ * A missing state with district 00 is not a real at-large seat either.
+ */
+export function isBogusAtLargeDistrict(
+  state: string | null | undefined,
+  district: string | null | undefined,
+): boolean {
+  return districtCode(district) === "00" && !isSingleSeat(state);
+}
+
+export function isBogusAtLargeRaceId(raceId: string): boolean {
+  const match = HOUSE_RACE_ID.exec(raceId);
+  if (!match?.[2] || !match[3]) return false;
+  return isBogusAtLargeDistrict(match[2], match[3]);
+}
+
+/** Hide multi-district `*-house-{ST}-00` rows. Senate and real at-large seats stay. */
+export function isBogusAtLargeContest(race: {
+  raceId?: string | null;
+  office?: string | null;
+  state?: string | null;
+  district?: string | null;
+}): boolean {
+  if (race.office != null && race.office !== "house") return false;
+  if (race.raceId && isBogusAtLargeRaceId(race.raceId)) return true;
+  return isBogusAtLargeDistrict(race.state, race.district);
+}
+
+function districtCode(district: string | null | undefined): string | null {
+  if (!district) return null;
+  const trimmed = district.trim();
+  if (!/^\d{1,2}$/.test(trimmed)) return null;
+  return trimmed.padStart(2, "0");
+}
+
 export function houseContestTitle(state: string, district: string): string {
   const name = stateName(state);
-  if (district === "00") return `U.S. House, ${name} at-large`;
+  if (district === "00" && isSingleSeat(state)) return `U.S. House, ${name} at-large`;
+  if (district === "00") return `U.S. House, ${name}`;
   return `U.S. House, ${name} District ${Number(district)}`;
 }
 
 export function houseContestJurisdiction(state: string, district: string): string {
   const name = stateName(state);
-  if (district === "00") return `${name} at-large`;
+  if (district === "00" && isSingleSeat(state)) return `${name} at-large`;
+  if (district === "00") return name;
   return `${name} District ${Number(district)}`;
 }

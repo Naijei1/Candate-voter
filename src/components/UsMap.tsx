@@ -11,6 +11,7 @@ import React, {
   type MouseEvent,
   type PointerEvent,
 } from "react";
+import { MapGesture } from "@/components/MapGesture";
 import { isPostalState, stateName } from "@/lib/data/states";
 import { DC_CALLOUT } from "@/lib/geo/dc-label";
 import { US_MAP_VIEW, US_STATE_SHAPES, type UsStateShape } from "@/lib/geo/us-states";
@@ -144,6 +145,7 @@ export function UsMap({
   }
 
   return (
+    <MapGesture resetKey={selected ?? ""}>
     <svg
       viewBox={`0 0 ${US_MAP_VIEW.width} ${US_MAP_VIEW.height}`}
       className={hot ? "us-map is-dimming h-full w-full" : "us-map h-full w-full"}
@@ -190,6 +192,7 @@ export function UsMap({
         </g>
       ) : null}
     </svg>
+    </MapGesture>
   );
 }
 

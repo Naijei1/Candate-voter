@@ -1,4 +1,4 @@
-import { houseContestJurisdiction } from "./data/at-large";
+import { houseContestJurisdiction, isBogusAtLargeContest } from "./data/at-large";
 import { stateName } from "./data/states";
 import type { Race } from "./types";
 
@@ -191,8 +191,13 @@ export function emptyHouseNext(
   races: readonly EmptyHouseCandidate[],
 ): { raceId: string; label: string } | null {
   if (race.office !== "house" || race.empty !== true || !race.state) return null;
+  if (isBogusAtLargeContest(race)) return null;
   const same = races.filter(
-    (item) => item.raceId !== race.raceId && item.cycle === race.cycle && item.state === race.state,
+    (item) =>
+      item.raceId !== race.raceId &&
+      item.cycle === race.cycle &&
+      item.state === race.state &&
+      !isBogusAtLargeContest(item),
   );
   const senate = same.find((item) => item.office === "senate" && item.empty !== true);
   if (senate) return { raceId: senate.raceId, label: "See the Senate race" };

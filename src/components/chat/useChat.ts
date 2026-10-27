@@ -107,6 +107,8 @@ export function useChat() {
           raceId: context.raceId,
           candidateId: context.candidateId,
           cycle: context.cycle,
+          state: context.state,
+          zip: context.zip,
           threadId: threadRef.current,
         });
         if (!built.ok) {

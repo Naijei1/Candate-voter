@@ -22,6 +22,10 @@ export type AskScope = {
   candidateId?: string;
   /** Real Senate and House ids on a state panel. Display and message prefix only. */
   panelRaceIds?: readonly string[];
+  /** Two-letter postal code when the page is a state or ZIP sheet. */
+  state?: string;
+  /** Five-digit ZIP when the page was opened from a ZIP lookup. */
+  zip?: string;
 };
 
 export type ChatPostBody = {
@@ -31,6 +35,8 @@ export type ChatPostBody = {
   cycle?: number;
   /** Same integer as `cycle`. The server rejects the pair when they differ. */
   year?: number;
+  state?: string;
+  zip?: string;
   threadId?: string;
 };
 
@@ -57,6 +63,7 @@ export function askScopeForState(
     kind: "state",
     label: `${stateName(postal)} · ${year}`,
     cycle: year,
+    state: postal.trim().toUpperCase(),
     panelRaceIds: local.map((race) => race.raceId),
     ...optionalId(anchorRaceId(local)),
   };
@@ -110,6 +117,8 @@ export function pageContextFromScope(scope: AskScope): {
   raceId?: string;
   candidateId?: string;
   cycle?: number;
+  state?: string;
+  zip?: string;
   messagePrefix?: string;
 } {
   const prefix = stateContextPrefix(scope);
@@ -117,6 +126,8 @@ export function pageContextFromScope(scope: AskScope): {
     ...(scope.raceId ? { raceId: scope.raceId } : {}),
     ...(scope.candidateId ? { candidateId: scope.candidateId } : {}),
     ...(scope.cycle != null ? { cycle: scope.cycle } : {}),
+    ...(scope.state ? { state: scope.state } : {}),
+    ...(scope.zip ? { zip: scope.zip } : {}),
     ...(prefix ? { messagePrefix: prefix } : {}),
     ...(scope.kind === "year" ? {} : { label: scope.label }),
   };
@@ -137,6 +148,8 @@ export function buildChatPayload(input: {
     ...(scope?.raceId ? { raceId: scope.raceId } : {}),
     ...(scope?.candidateId ? { candidateId: scope.candidateId } : {}),
     ...(cycle != null ? { cycle, year: cycle } : {}),
+    ...(scope?.state ? { state: scope.state } : {}),
+    ...(scope?.zip ? { zip: scope.zip } : {}),
     ...(input.threadId ? { threadId: input.threadId } : {}),
   };
 }

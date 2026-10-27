@@ -2,8 +2,9 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type KeyboardEvent } from "react";
+import { MapGesture } from "@/components/MapGesture";
 import { MapLegend } from "@/components/UsMap";
-import { HOUSE_SEATS } from "@/lib/data/at-large";
+import { HOUSE_SEATS, isSingleSeat } from "@/lib/data/at-large";
 import { stateName } from "@/lib/data/states";
 import { withBasePath } from "@/lib/base-path";
 import { withPreservedQuery, type MapContext } from "@/lib/landing/state-query";
@@ -40,7 +41,7 @@ export function DistrictMap({
   const [failed, setFailed] = useState(false);
   const covered = HOUSE_SEATS[postal] != null;
   const yours = new Set(yourDistricts.map((code) => code.padStart(2, "0")));
-  const here = youAreHere(yourDistricts);
+  const here = youAreHere(postal, yourDistricts);
 
   function openRace(raceId: string) {
     router.push(context ? withPreservedQuery(`/races/${raceId}`, context) : `/races/${raceId}`);
@@ -85,6 +86,7 @@ export function DistrictMap({
             Loading districts…
           </p>
         ) : (
+          <MapGesture resetKey={postal} className="cd-gesture">
           <svg
             viewBox={`0 0 ${VIEW.width} ${VIEW.height}`}
             className="cd-map"
@@ -133,6 +135,7 @@ export function DistrictMap({
               );
             })}
           </svg>
+          </MapGesture>
         )}
       </div>
       {here ? (
@@ -145,10 +148,11 @@ export function DistrictMap({
   );
 }
 
-function youAreHere(codes: readonly string[]): string | null {
+function youAreHere(postal: string, codes: readonly string[]): string | null {
   const names = codes
     .map((code) => code.padStart(2, "0"))
     .filter((code) => /^\d{2}$/.test(code))
+    .filter((code) => code !== "00" || isSingleSeat(postal))
     .map((code) => (code === "00" ? "the at-large seat" : `District ${Number(code)}`));
   if (names.length === 0) return null;
   return `You are here · ${names.join(", ")}`;
@@ -157,7 +161,9 @@ function youAreHere(codes: readonly string[]): string | null {
 function districtLabel(postal: string, district: string, has: boolean, yours: boolean): string {
   const place =
     district === "00"
-      ? `${stateName(postal)} at-large`
+      ? isSingleSeat(postal)
+        ? `${stateName(postal)} at-large`
+        : stateName(postal)
       : `${stateName(postal)} District ${Number(district)}`;
   const filing = has ? "has candidates" : "no one has filed yet";
   return yours ? `${place}, you are here, ${filing}` : `${place}, ${filing}`;
