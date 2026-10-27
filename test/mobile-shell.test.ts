@@ -61,7 +61,9 @@ test("race and candidate pages keep a labeled way back to the map", () => {
   assert.match(landing, /withPreservedQuery/);
   assert.equal(landing.includes("homeValueLine"), false);
   assert.equal(landing.includes("WhatAmILookingAt"), false);
-  assert.equal(/onBack=\{pinYours \? null : backToMap\}/.test(landing), true);
+  assert.match(landing, /onBack=\{backToMap\}/);
+  assert.match(landing, /onSheetDismiss=\{pinYours \? null : backToMap\}/);
+  assert.equal(/onBack=\{pinYours \? null : backToMap\}/.test(landing), false);
 
   const css = readFileSync(new URL("../src/app/globals.css", import.meta.url), "utf8");
   const narrow = css.slice(css.indexOf("@media (max-width: 420px)"));

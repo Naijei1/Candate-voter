@@ -15,6 +15,19 @@ test("a finger drag pans the map and a pinch scales it", () => {
     { x: 100, y: 0 },
   ]);
   assert.equal(pinched.scale, 2);
+  const aroundFingers = nextPan(
+    { x: 0, y: 0, scale: 1 },
+    { x: 300, y: 200 },
+    100,
+    [
+      { x: 200, y: 200 },
+      { x: 400, y: 200 },
+    ],
+    { x: 200, y: 200 },
+  );
+  assert.equal(aroundFingers.scale, 2);
+  assert.equal(aroundFingers.x, -100);
+  assert.equal(aroundFingers.y, 0);
   const zoomed = clampPan({ x: 0, y: 0, scale: 9 }, 300, 200);
   assert.equal(zoomed.scale, 4);
 });
@@ -36,7 +49,9 @@ test("phone maps and the state sheet expose pan and drag targets", () => {
   assert.match(district, /<MapGesture/);
   assert.match(css, /\.map-gesture\s*\{[^}]*touch-action:\s*none/);
   assert.match(landing, /className="sheet-grab"/);
-  assert.match(landing, /useMobileSheet\(onBack, postal\)/);
+  assert.match(landing, /useMobileSheet\(onSheetDismiss, postal\)/);
+  assert.match(landing, /onSheetDismiss=\{pinYours \? null : backToMap\}/);
+  assert.match(landing, /onBack=\{backToMap\}/);
   assert.match(css, /--sheet-height,\s*var\(--state-sheet-max\)/);
   assert.match(css, /\.ask-sheet\s*\{[^}]*top:\s*var\(--chrome-block\)/);
   assert.match(css, /env\(safe-area-inset-top/);

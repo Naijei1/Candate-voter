@@ -358,7 +358,8 @@ export function Landing({
           yours={yours}
           showAll={showAll}
           onShowAll={() => setShowAll(true)}
-          onBack={pinYours ? null : backToMap}
+          onBack={backToMap}
+          onSheetDismiss={pinYours ? null : backToMap}
           onLeave={backToMap}
           onRetryRace={retryRace}
           preserve={preserve}
@@ -419,6 +420,7 @@ function StateOverview({
   showAll,
   onShowAll,
   onBack,
+  onSheetDismiss,
   onLeave,
   onRetryRace,
   preserve,
@@ -435,8 +437,10 @@ function StateOverview({
   yours: ReturnType<typeof zipRaceSlots>;
   showAll: boolean;
   onShowAll: () => void;
-  /** Country map. Null while a ZIP is showing, so that control cannot clear state and zip. */
-  onBack: (() => void) | null;
+  /** Country map. Shown after a state tap and after a ZIP visit. */
+  onBack: () => void;
+  /** Drag past the peek. Null on a ZIP visit so the sheet stops at peek and keeps the ZIP. */
+  onSheetDismiss: (() => void) | null;
   onLeave: () => void;
   onRetryRace: (raceId: string) => void;
   preserve: (path: string) => string;
@@ -452,7 +456,7 @@ function StateOverview({
   const yourIds = new Set(yours.map((slot) => slot.raceId));
   const rest = listed.filter((race) => !yourIds.has(race.raceId));
   const showFull = !pinYours || showAll;
-  const sheet = useMobileSheet(onBack, postal);
+  const sheet = useMobileSheet(onSheetDismiss, postal);
 
   return (
     <div
@@ -460,6 +464,9 @@ function StateOverview({
       className="state-overview"
       data-testid="state-page"
       onPointerDown={sheet.onPointerDown}
+      onPointerMove={sheet.onPointerMove}
+      onPointerUp={sheet.onPointerUp}
+      onPointerCancel={sheet.onPointerUp}
     >
       <div className="back-chrome">
         <div
@@ -476,12 +483,10 @@ function StateOverview({
           <span className="drawer-handle" aria-hidden="true" />
         </div>
         <div className="back-chrome-row">
-          {onBack ? (
-            <button type="button" onClick={onBack} data-testid="back-to-map" className="back-link">
-              <span aria-hidden="true">← </span>
-              Back to map
-            </button>
-          ) : null}
+          <button type="button" onClick={onBack} data-testid="back-to-map" className="back-link">
+            <span aria-hidden="true">← </span>
+            Back to map
+          </button>
           <h1 className="state-title">{name}</h1>
         </div>
       </div>

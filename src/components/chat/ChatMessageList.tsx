@@ -1,7 +1,7 @@
 "use client";
 
 // Classic JSX runtime for `node --import tsx --test`. Next compiles this with the automatic runtime.
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { CitationCard } from "@/components/chat/CitationCard";
 import { MarkdownAnswer } from "@/components/chat/MarkdownAnswer";
 import type { AssistantTurn, ChatTurn } from "@/components/chat/useChat";
@@ -68,7 +68,7 @@ function AssistantBubble({
   if (turn.status === "loading") {
     return (
       <div className="max-w-[95%] rounded-xl rounded-bl-sm border border-line bg-paper px-3 py-2" aria-busy="true">
-        <p className="text-sm text-muted">Looking up public records…</p>
+        <LoadingCopy />
         <div className="mt-2 h-2.5 w-[90%] rounded bg-line motion-safe:animate-pulse" />
         <div className="mt-2 h-2.5 w-[70%] rounded bg-line motion-safe:animate-pulse" />
       </div>
@@ -125,6 +125,28 @@ function AssistantBubble({
       ) : null}
     </div>
   );
+}
+
+function LoadingCopy() {
+  const [seconds, setSeconds] = useState(0);
+  useEffect(() => {
+    const started = Date.now();
+    const timer = window.setInterval(() => {
+      setSeconds(Math.floor((Date.now() - started) / 1000));
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+  if (seconds >= 8) {
+    return (
+      <p className="text-sm text-muted">
+        Still looking up public records ({seconds}s). Cancel if you want to stop, or try a narrower question.
+      </p>
+    );
+  }
+  if (seconds >= 4) {
+    return <p className="text-sm text-muted">Still looking up public records… You can cancel.</p>;
+  }
+  return <p className="text-sm text-muted">Looking up public records…</p>;
 }
 
 export function politeStatus(turns: ChatTurn[]): string {

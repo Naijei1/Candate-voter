@@ -1,12 +1,13 @@
 /**
- * DC is a few pixels wide on the Albers map. The abbreviation sits on a short
- * leader just outside the shape so it stays readable without covering Maryland.
+ * DC is a few pixels wide on the Albers map. The abbreviation sits on a
+ * leader in the Atlantic column with the other Northeast callouts, clear of
+ * Maryland.
  */
 export const DC_CALLOUT = {
-  x1: 827.6,
-  y1: 262.4,
-  x2: 886,
-  y2: 286,
-  labelX: 890,
-  labelY: 286,
+  x1: 825.8,
+  y1: 261.2,
+  x2: 976,
+  y2: 334,
+  labelX: 984,
+  labelY: 334,
 } as const;

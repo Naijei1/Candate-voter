@@ -143,7 +143,7 @@ export function DistrictMap({
           {here}
         </p>
       ) : null}
-      <MapLegend />
+      <MapLegend house />
     </div>
   );
 }

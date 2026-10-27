@@ -13,7 +13,7 @@ import React, {
 } from "react";
 import { MapGesture } from "@/components/MapGesture";
 import { isPostalState, stateName } from "@/lib/data/states";
-import { DC_CALLOUT } from "@/lib/geo/dc-label";
+import { CALLOUT_POSTALS, LABEL_GUTTER, STATE_CALLOUTS } from "@/lib/geo/state-labels";
 import { US_MAP_VIEW, US_STATE_SHAPES, type UsStateShape } from "@/lib/geo/us-states";
 
 const ARROW: Record<string, readonly [number, number]> = {
@@ -23,7 +23,6 @@ const ARROW: Record<string, readonly [number, number]> = {
   ArrowDown: [0, 1],
 };
 
-const SMALL_LABEL = new Set(["CT", "DE", "DC", "MA", "MD", "NH", "NJ", "RI", "VT"]);
 /** Extra hit area for states that are only a few pixels wide. */
 const HIT_RADIUS: Record<string, number> = {
   MA: 14,
@@ -147,7 +146,7 @@ export function UsMap({
   return (
     <MapGesture resetKey={selected ?? ""}>
     <svg
-      viewBox={`0 0 ${US_MAP_VIEW.width} ${US_MAP_VIEW.height}`}
+      viewBox={`0 0 ${US_MAP_VIEW.width + LABEL_GUTTER} ${US_MAP_VIEW.height}`}
       className={hot ? "us-map is-dimming h-full w-full" : "us-map h-full w-full"}
       role="group"
       aria-label={`${label} Arrow keys move between states. Enter selects.`}
@@ -182,6 +181,31 @@ export function UsMap({
       ))}
       {labelled ? (
         <g className="us-labels" aria-hidden="true">
+          <g className="us-callouts">
+            {STATE_CALLOUTS.map((callout) => (
+              <g key={`callout-${callout.postal}`} data-postal={callout.postal}>
+                <line
+                  className="us-callout-line"
+                  x1={callout.x1}
+                  y1={callout.y1}
+                  x2={callout.x2}
+                  y2={callout.y2}
+                />
+                <text
+                  data-postal={callout.postal}
+                  x={callout.labelX}
+                  y={callout.labelY}
+                  textAnchor="start"
+                  dominantBaseline="central"
+                  className={
+                    selected === callout.postal ? "us-label us-label-callout is-selected" : "us-label us-label-callout"
+                  }
+                >
+                  {callout.postal}
+                </text>
+              </g>
+            ))}
+          </g>
           {US_STATE_SHAPES.map((shape) => (
             <StateLabel
               key={`label-${shape.postal}`}
@@ -242,28 +266,8 @@ const StateLabel = memo(function StateLabel({
   shape: UsStateShape;
   isSelected: boolean;
 }) {
-  if (shape.postal === "DC") {
-    return (
-      <g data-postal="DC">
-        <g className="us-dc-callout">
-          <line x1={DC_CALLOUT.x1} y1={DC_CALLOUT.y1} x2={DC_CALLOUT.x2} y2={DC_CALLOUT.y2} />
-        </g>
-        <text
-          data-postal="DC"
-          x={DC_CALLOUT.labelX}
-          y={DC_CALLOUT.labelY}
-          textAnchor="start"
-          dominantBaseline="central"
-          className="us-label-dc"
-        >
-          DC
-        </text>
-      </g>
-    );
-  }
-  if (HIDE_LABEL.has(shape.postal)) return null;
-  const small = SMALL_LABEL.has(shape.postal);
-  const selectedClass = isSelected && !small ? " is-selected" : "";
+  if (HIDE_LABEL.has(shape.postal) || CALLOUT_POSTALS.has(shape.postal)) return null;
+  const selectedClass = isSelected ? " is-selected" : "";
   return (
     <text
       data-postal={shape.postal}
@@ -271,7 +275,7 @@ const StateLabel = memo(function StateLabel({
       y={shape.y}
       textAnchor="middle"
       dominantBaseline="central"
-      className={`${small ? "us-label us-label-small" : "us-label"}${selectedClass}`}
+      className={`us-label${selectedClass}`}
     >
       {shape.postal}
     </text>
@@ -334,16 +338,16 @@ function neighbor(
   return best;
 }
 
-export function MapLegend() {
+export function MapLegend({ house = false }: { house?: boolean }) {
   return (
-    <ul className="map-legend" aria-label="Map legend">
+    <ul className="map-legend" aria-label={house ? "House district colors" : "Map legend"}>
       <li className="inline-flex items-center gap-1.5">
         <span className="map-swatch is-data" aria-hidden="true" />
-        Has candidates
+        {house ? "House filing" : "Has candidates"}
       </li>
       <li className="inline-flex items-center gap-1.5">
         <span className="map-swatch" aria-hidden="true" />
-        No one has filed yet
+        {house ? "No House filing yet" : "No one has filed yet"}
       </li>
     </ul>
   );
