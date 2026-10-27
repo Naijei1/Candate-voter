@@ -1070,3 +1070,51 @@ test("ask answers use a party label and public FEC wording", async () => {
   );
   assert.deepEqual(Object.keys(kept.sources[0] ?? {}).sort(), ["as_of", "title", "url"]);
 });
+
+test("ask polish strips partyLabel echoes and site-database provenance", () => {
+  const polished = (markdown: string) =>
+    polishChatAnswer({ answer_markdown: markdown, sources: [], refused: false }).answer_markdown;
+
+  assert.equal(polished("DEM, partyLabel: Democratic"), "Democratic (DEM)");
+  assert.equal(polished("(DEM, partyLabel: Democratic)"), "Democratic (DEM)");
+  assert.equal(polished('DEM, partyLabel: "Democratic"'), "Democratic (DEM)");
+  assert.equal(polished('(DEM, partyLabel: "Democratic")'), "Democratic (DEM)");
+  assert.equal(polished("(DEM, partyLabel: “Democratic”)"), "Democratic (DEM)");
+  assert.equal(polished("(DEM, partyLabel: 'Democratic')"), "Democratic (DEM)");
+  assert.equal(polished("REP, PartyLabel: \"Republican\""), "Republican (REP)");
+  assert.equal(polished("Ada Klein is partyLabel: Democratic."), "Ada Klein is Democratic.");
+  assert.equal(polished("A bare partyLabel token."), "A bare token.");
+  assert.equal(polished("Field partyLabel:."), "Field.");
+  assert.doesNotMatch(polished("See partyLabel and PartyLabel: next."), /partyLabel/i);
+
+  assert.equal(
+    polished("These records come from FEC Form 2 filings stored in this site's database."),
+    "Based on public FEC records.",
+  );
+  assert.equal(
+    polished("These records come from FEC Form 2 filings stored in this site’s database."),
+    "Based on public FEC records.",
+  );
+  assert.equal(
+    polished("Names are in the site's database."),
+    "Names are in public FEC records.",
+  );
+  assert.equal(polished("This site's database."), "Based on public FEC records.");
+  assert.doesNotMatch(polished("Listed in the site's database today."), /site['’]s database/i);
+  assert.match(polished("Listed in the site's database today."), /public FEC records/);
+
+  assert.equal(
+    polished(
+      "**Ada Klein** DEM, partyLabel: Democratic. These records come from FEC Form 2 filings stored in this site's database.",
+    ),
+    "**Ada Klein** Democratic (DEM). Based on public FEC records.",
+  );
+  assert.equal(
+    polished("Stored records are FEC Form 2 filings so far, not a full ballot."),
+    "Stored records are FEC Form 2 filings so far, not a full ballot.",
+  );
+  assert.equal(
+    polished("Based on public FEC records, Ada Klein filed as Democratic (DEM)."),
+    "Based on public FEC records, Ada Klein filed as Democratic (DEM).",
+  );
+});
