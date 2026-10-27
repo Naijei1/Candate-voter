@@ -7,7 +7,10 @@ import { CandidateDisclosure } from "@/components/CandidateDisclosure";
 import { DataRefreshedBanner } from "@/components/DataRefreshedBanner";
 import { RecordMeta } from "@/components/RecordMeta";
 import { StorageNotice } from "@/components/StorageNotice";
-import { emptyHouseNext, emptyRaceSentence, jurisdictionRepeatsTitle, officeOneLiner, runningForLine } from "@/lib/copy";
+import { ballotVersusFilingLine, emptyHouseNext, emptyRaceSentence, federalScopeLine, jurisdictionRepeatsTitle, officeOneLiner, runningForLine } from "@/lib/copy";
+import { withCrossContestFilings } from "@/lib/data/cross-filings";
+import { personFilingNote } from "@/lib/data/filing-note";
+import { createDynamoRepository } from "@/lib/data/repository";
 import { isPresidentialElectionYear } from "@/lib/data/calendar";
 import {
   logReadError,
@@ -63,7 +66,7 @@ export default async function RacePage({ params, searchParams }: RacePageProps) 
     zip: query.zip ?? null,
   };
   const [candidates, refreshedAt, cycleRaces] = await Promise.all([
-    loadCandidates(race.raceId),
+    loadCandidates(race),
     loadRefreshedAt(),
     race.empty === true && race.office === "house" ? loadCycleRaces(race.cycle) : Promise.resolve([]),
   ]);
@@ -88,6 +91,9 @@ export default async function RacePage({ params, searchParams }: RacePageProps) 
             There is no presidential race on the {race.cycle} ballot. This page lists
             national statements of candidacy (Form 2) only.
           </p>
+        ) : null}
+        {race.cycle != null ? (
+          <p className="mt-2 max-w-2xl text-base leading-6 text-ink">{ballotVersusFilingLine(race.cycle)}</p>
         ) : null}
       </header>
       <section aria-labelledby="candidates-heading" className="race-candidates">
@@ -121,19 +127,25 @@ export default async function RacePage({ params, searchParams }: RacePageProps) 
         ) : (
           <ul className="mt-3 divide-y divide-line rounded-lg border border-line bg-card">
             {candidates.list.map((candidate) => (
-              <CandidateRow key={candidate.candidateId} candidate={candidate} race={race} context={context} />
+              <CandidateRow
+                key={candidate.candidateId}
+                candidate={candidate}
+                race={race}
+                context={context}
+                filingNote={personFilingNote(candidate.filings)}
+              />
             ))}
           </ul>
         )}
       </section>
-      {sourceHref ? (
-        <details className="page-details">
-          <summary>Details</summary>
-          <div className="page-details-body">
-            <RecordMeta sourceUrl={race.sourceUrl} updatedAt={race.updatedAt} />
-          </div>
-        </details>
-      ) : null}
+      <details className="page-details">
+        <summary>Details</summary>
+        <div className="page-details-body">
+          <p>{federalScopeLine()}</p>
+          {race.cycle != null ? <p>{ballotVersusFilingLine(race.cycle)}</p> : null}
+          {sourceHref ? <RecordMeta sourceUrl={race.sourceUrl} updatedAt={race.updatedAt} /> : null}
+        </div>
+      </details>
       <div className="page-refresh">
         <DataRefreshedBanner refreshedAt={refreshedAt} compact />
       </div>
@@ -166,10 +178,12 @@ function CandidateRow({
   candidate,
   race,
   context,
+  filingNote,
 }: {
   candidate: PublicCandidate;
   race: Race;
   context: MapContext;
+  filingNote: string | null;
 }) {
   const parties = displayedPartyLabels(candidate);
   return (
@@ -182,6 +196,7 @@ function CandidateRow({
         filingCount={candidate.alternateFilings.length + 1}
         updatedAt={candidate.updatedAt}
         runningFor={runningForLine(race)}
+        filingNote={filingNote}
       />
     </li>
   );
@@ -219,11 +234,11 @@ async function loadRace(
 }
 
 async function loadCandidates(
-  raceId: string,
+  race: Race,
 ): Promise<{ ok: true; list: PublicCandidate[] } | { ok: false }> {
   try {
-    const list = await readCandidatesForRace(raceId);
-    return { ok: true, list };
+    const list = await readCandidatesForRace(race.raceId);
+    return { ok: true, list: await withCrossContestFilings(createDynamoRepository(), list, race) };
   } catch (error) {
     logReadError("listCandidatesForRace", error);
     return { ok: false };

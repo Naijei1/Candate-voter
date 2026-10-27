@@ -25,7 +25,10 @@ export type ChatRequest = {
   message: string;
   raceId?: string;
   candidateId?: string;
+  /** Election year. `year` on the wire is the same integer. */
   cycle?: number;
+  /** Alias of `cycle`. Present only when it equals `cycle`. */
+  year?: number;
   threadId?: string;
 };
 

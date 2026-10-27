@@ -79,6 +79,21 @@ test("district join uses raceId and does not treat at-large 01 as 00", () => {
   assert.equal(raceForDistrict([legacy], "WY", "00"), null);
   assert.equal(raceForDistrict([legacy], "WY", "01"), null);
   assert.equal(raceForDistrict([filed], "KY", "03"), null);
+  assert.equal(districtHasCandidates({ ...filed, hasCandidates: false }), false);
+  assert.equal(districtHasCandidates(empty), false);
+
+  const idaho01: Race = {
+    ...empty,
+    raceId: "2026-house-ID-01",
+    state: "ID",
+    district: "01",
+    title: "U.S. House, Idaho District 1",
+    jurisdiction: "Idaho District 1",
+    hasCandidates: false,
+  };
+  const idaho02: Race = { ...idaho01, raceId: "2026-house-ID-02", district: "02" };
+  assert.equal(districtHasCandidates(idaho01), false);
+  assert.equal(districtHasCandidates(idaho02), false);
 });
 
 test("a district feature projects to an even-odd path", () => {

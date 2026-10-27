@@ -22,11 +22,14 @@ const VIEW = { width: 1000, height: 640 };
 export function DistrictMap({
   postal,
   races,
+  year,
   yourDistricts = [],
   context = null,
 }: {
   postal: string;
   races: readonly Race[];
+  /** Cycle on the page. A district from another cycle stays grey. */
+  year: number;
   /** Two-digit House codes from a ZIP match. Empty when the visitor did not arrive by ZIP. */
   yourDistricts?: readonly string[];
   /** Year, state, and zip to keep on the race URL. */
@@ -90,7 +93,8 @@ export function DistrictMap({
           >
             {shapes.map((shape) => {
               const race = raceForDistrict(races, postal, shape.district);
-              const has = districtHasCandidates(race);
+              const has =
+                districtHasCandidates(race) && (race?.cycle == null || race.cycle === year);
               const hereDistrict = yours.has(shape.district);
               const label = districtLabel(postal, shape.district, has, hereDistrict);
               const className = [

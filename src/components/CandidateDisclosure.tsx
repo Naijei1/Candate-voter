@@ -18,6 +18,7 @@ export function CandidateDisclosure({
   filingCount,
   updatedAt,
   runningFor = null,
+  filingNote = null,
 }: {
   name: string;
   cue: string;
@@ -27,6 +28,8 @@ export function CandidateDisclosure({
   updatedAt: string | null;
   /** Plain office, such as "U.S. Senate — Kentucky". Shown after the row opens. */
   runningFor?: string | null;
+  /** Same person, more than one Form 2. Always visible. Null hides the line. */
+  filingNote?: string | null;
 }) {
   const [open, setOpen] = useState(false);
   const panelId = useId();
@@ -49,6 +52,11 @@ export function CandidateDisclosure({
         </span>
         <span className={`party-cue text-sm ${toneClass}`}>{cue}</span>
       </button>
+      {filingNote ? (
+        <p data-testid="person-filing-note" className="person-filing-note mt-1 text-sm leading-5 text-ink">
+          {filingNote}
+        </p>
+      ) : null}
       {open ? (
         <div id={panelId} className="mt-2 rounded-md border border-line bg-paper px-3 py-2">
           {runningFor ? (

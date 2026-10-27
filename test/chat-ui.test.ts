@@ -6,7 +6,7 @@ import { ChatComposer } from "../src/components/chat/ChatComposer";
 import { ChatMessageList } from "../src/components/chat/ChatMessageList";
 import { MarkdownAnswer } from "../src/components/chat/MarkdownAnswer";
 import { settleAssistantTurn, type ChatTurn } from "../src/components/chat/useChat";
-import { ChatCancelled, postChatMessage } from "../src/lib/chat/browser";
+import { CHAT_TIMEOUT_MS, ChatCancelled, postChatMessage } from "../src/lib/chat/browser";
 import {
   buildChatRequestBody,
   chatPageHref,
@@ -40,8 +40,11 @@ test("request body keeps the locked fields and drops an invalid thread id", () =
     message: "Who filed in Alaska Senate?",
     raceId: "2026-senate-AK",
     cycle: 2026,
+    year: 2026,
   });
   assert.equal("sources" in built.body, false);
+  assert.equal(built.body.year, built.body.cycle);
+  assert.equal(CHAT_TIMEOUT_MS, 25_000);
 });
 
 test("context comes from the route and the year control", () => {
@@ -81,6 +84,12 @@ test("suggested prompts and error copy stay factual", () => {
   assert.equal(NEUTRAL.test(errorCopy("rate_limit", 12)), false);
   assert.equal(NEUTRAL.test(errorCopy("unavailable", null)), false);
   assert.equal(NEUTRAL.test(errorCopy("network", null)), false);
+  assert.equal(NEUTRAL.test(errorCopy("timeout", null)), false);
+  assert.equal(NEUTRAL.test(errorCopy("incomplete", null)), false);
+  assert.equal(NEUTRAL.test(errorCopy("model_unavailable", null)), false);
+  assert.equal(errorCopy("timeout", null), "The answer took too long. Try a narrower question.");
+  assert.equal(errorCopy("incomplete", null), "The answer was incomplete. Try one race at a time.");
+  assert.equal(errorCopy("model_unavailable", null), "The model is unavailable.");
   assert.match(errorCopy("rate_limit", 12), /12 seconds/);
   assert.match(errorCopy("rate_limit", 0), /You can retry/);
   assert.match(errorCopy("rate_limit", null), /wait a minute/);
@@ -264,7 +273,7 @@ test("chat client timeout settles when fetch never resolves", async () => {
       return new Promise(() => {});
     },
   });
-  assert.deepEqual(result, { ok: false, kind: "network", retryAfterSeconds: null });
+  assert.deepEqual(result, { ok: false, kind: "timeout", retryAfterSeconds: null });
   assert.ok(Date.now() - started < 1_000);
 });
 
@@ -278,6 +287,32 @@ test("caller abort cancels even when fetch ignores the signal", async () => {
   });
   controller.abort();
   await assert.rejects(pending, (error: unknown) => error instanceof ChatCancelled);
+});
+
+test("503 code picks the visitor sentence and a missing code stays on status", async () => {
+  const timed = await postChatMessage({
+    body: { message: "x" },
+    fetchImpl: async () => jsonResponse({ error: "unavailable", message: "slow", code: "timeout" }, 503),
+  });
+  assert.deepEqual(timed, { ok: false, kind: "timeout", retryAfterSeconds: null });
+
+  const model = await postChatMessage({
+    body: { message: "x" },
+    fetchImpl: async () => jsonResponse({ error: "unavailable", code: "model_unavailable" }, 503),
+  });
+  assert.deepEqual(model, { ok: false, kind: "model_unavailable", retryAfterSeconds: null });
+
+  const incomplete = await postChatMessage({
+    body: { message: "x" },
+    fetchImpl: async () => jsonResponse({ error: "unavailable", code: "incomplete" }, 503),
+  });
+  assert.deepEqual(incomplete, { ok: false, kind: "incomplete", retryAfterSeconds: null });
+
+  const plain = await postChatMessage({
+    body: { message: "x" },
+    fetchImpl: async () => jsonResponse({ error: "unavailable", message: "down" }, 503),
+  });
+  assert.deepEqual(plain, { ok: false, kind: "unavailable", retryAfterSeconds: null });
 });
 
 test("504 maps to the retryable unavailable error", async () => {
