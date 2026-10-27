@@ -140,6 +140,27 @@ test("even-year lists include every House district and only in-cycle Senate seat
   assert.equal(folded.find((item) => item.office === "house")?.raceId, "2026-house-WY-00");
   assert.notEqual(folded.find((item) => item.office === "house")?.empty, true);
 
+  const texas = appendExpectedRaces(
+    [
+      race({
+        raceId: "2026-house-TX-00",
+        office: "house",
+        cycle: 2026,
+        state: "TX",
+        district: "00",
+        title: "U.S. House, Texas at-large",
+        jurisdiction: "Texas at-large",
+      }),
+    ],
+    [2026],
+    { state: "TX" },
+  );
+  const texasHouse = texas.filter((item) => item.office === "house");
+  assert.equal(texasHouse.length, HOUSE_SEATS.TX);
+  assert.equal(texasHouse.some((item) => item.raceId === "2026-house-TX-00"), false);
+  assert.equal(expectedRaceById("2026-house-TX-00"), null);
+  assert.equal(visibleRaces(texas).some((item) => item.raceId === "2026-house-TX-00"), false);
+
   const national = houseCoverageForRaces(appendExpectedRaces([], [2026]), [2026], null);
   assert.deepEqual(national, [
     { cycle: 2026, state: null, districtsWithFilings: 0, districtsTotal: HOUSE_SEATS_TOTAL },

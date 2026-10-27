@@ -199,7 +199,7 @@ export async function getZipLookup(request: Request, deps: ApiDeps): Promise<Res
   if (denied) return denied;
 
   const parsed = parseZipLookupQuery(new URL(request.url));
-  if (!parsed.ok) return json({ error: "bad_request", message: parsed.message }, 400);
+  if (!parsed.ok) return zipBadRequest(parsed.message);
 
   const lookup = deps.lookupZip ?? censusZipDistricts;
   let hit;
@@ -207,6 +207,7 @@ export async function getZipLookup(request: Request, deps: ApiDeps): Promise<Res
     hit = await lookup(parsed.query.zip);
   } catch (error) {
     logZipLookup(error);
+    if (isZipTimeout(error)) return zipTimeout();
     return unavailable();
   }
   if (!hit) {
@@ -214,6 +215,7 @@ export async function getZipLookup(request: Request, deps: ApiDeps): Promise<Res
       {
         error: "not_found",
         message: "No congressional district is published for that ZIP",
+        code: "zip_not_found",
       },
       404,
     );
@@ -286,6 +288,38 @@ function freshnessBody(watermark: IngestWatermark | null) {
     scopeNote: FORM2_SCOPE_NOTE,
     refreshedAt: watermark?.updatedAt ?? null,
   };
+}
+
+function zipBadRequest(message: string): Response {
+  const invalidZip = /zip must be a 5-digit/i.test(message);
+  return json(
+    {
+      error: "bad_request",
+      message,
+      ...(invalidZip ? { code: "invalid_zip" } : {}),
+    },
+    400,
+  );
+}
+
+function zipTimeout(): Response {
+  return json(
+    {
+      error: "unavailable",
+      message: "ZIP lookup did not finish in time.",
+      code: "timeout",
+    },
+    503,
+  );
+}
+
+function isZipTimeout(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  return (
+    error.name === "AbortError" ||
+    error.name === "TimeoutError" ||
+    (error instanceof ZipLookupError && /timed out/i.test(error.message))
+  );
 }
 
 function logZipLookup(error: unknown): void {

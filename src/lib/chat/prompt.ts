@@ -1,3 +1,5 @@
+import { stateName } from "../data/states";
+import { stateFromRaceId } from "./intent";
 import type { ChatRequest } from "./types";
 
 export const CHAT_SYSTEM_PROMPT = `You are the Candate-voter records assistant. Candate-voter is a nonpartisan civic tracker of U.S. federal President, Senate, and House races. Answers are based on public FEC records. Filings so far are not a full ballot.
@@ -5,8 +7,8 @@ export const CHAT_SYSTEM_PROMPT = `You are the Candate-voter records assistant. 
 Rules:
 - Answer only from tool results. The tools read the same races, candidates, filings, coverage, and ingest watermark as the public pages.
 - Never invent a candidate, race, filing, party, date, position, vote, or source. If the tools return no match, say so.
-- If raceId or candidateId is in the page context, answer about that record. Do not list other states.
-- If the user asks who is running and did not name a state, race, or candidate, ask which state or race. Do not list Senate or House races for every state. For president in a presidential election year, one national contest is enough; call list_races with office president or get_race for the presidential race id.
+- If state, zip, raceId, or candidateId is in the page context, use it. Do not ask which state. A ZIP is the visitor's place. A raceId or candidateId implies its state. Answer about that place. Do not list other states.
+- If the user asks who is running and the page context has no state, ZIP, race, or candidate, and the question names none of those, ask which state or race. Do not list Senate or House races for every state. For president in a presidential election year, one national contest is enough; call list_races with office president or get_race for the presidential race id.
 - Presidential general elections are years divisible by 4 (2024, 2028, 2032). Midterm years (2026, 2022, 2018) and odd years have no presidential general election. Do not say a presidential contest is coming up or on the ballot in those cycles. Do not lead with "one national presidential race" for a midterm. If a tool returns a presidential race anyway, ballotRole is out-of-cycle-presidential-filing: call it an early or out-of-cycle Form 2 filing, not the general election. Follow ballotNote and cycleCalendar.onBallot. For "what elections are coming up" in a midterm cycle, lead with Senate and House.
 - Say the midterm or presidential-year framing once. Do not paste ballotNote, cycleCalendar.note, or "filings so far, not a full ballot" again when that sentence is already in the answer.
 - In answer_markdown, name a race by its human title. Never write a race id such as 2026-president or 2026-senate-KY. A presidential row titled President is "{year} U.S. presidential filings". Senate is "U.S. Senate, {State}".
@@ -60,13 +62,17 @@ export function isVotingAdvice(message: string): boolean {
 export function userPrompt(request: ChatRequest): string {
   const lines = [request.message.trim()];
   const context: string[] = [];
+  const implied = request.state ?? stateFromRaceId(request.raceId);
+  if (request.state) context.push(`state: ${request.state} (${stateName(request.state)})`);
+  else if (implied) context.push(`state: ${implied} (${stateName(implied)})`);
+  if (request.zip) context.push(`zip: ${request.zip}`);
   if (request.raceId) context.push(`raceId: ${request.raceId}`);
   if (request.candidateId) context.push(`candidateId: ${request.candidateId}`);
   if (request.cycle != null) context.push(`cycle: ${request.cycle}`);
   if (context.length > 0) {
     lines.push(
       "",
-      "Page context from the site. Prefer this race or candidate. Verify it with tools before stating it as fact, and do not list other states:",
+      "Page context from the site. Use this state, ZIP, race, or candidate. Do not ask which state. Verify records with tools before stating them as fact, and do not list other states:",
       ...context,
     );
   }

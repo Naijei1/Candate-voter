@@ -1,4 +1,4 @@
-import { canonicalDistrict } from "../data/at-large";
+import { canonicalDistrict, isListedHouseDistrict } from "../data/at-large";
 import { isPlaceholderName, normalizeFiledName, normalizePersonName } from "../data/names";
 import { isPostalState, stateName } from "../data/states";
 import type { FecForm2Filing } from "./types";
@@ -58,7 +58,7 @@ export function mapForm2Filing(
   const rawDistrict = office === "house" ? normalizeDistrict(row.candidate_district) : null;
   const district =
     office === "house" ? canonicalDistrict(state, rawDistrict) : null;
-  if (office === "house" && !district) {
+  if (office === "house" && (!district || !isListedHouseDistrict(state, district))) {
     return { ok: false, reason: "invalid-district" };
   }
 

@@ -39,6 +39,10 @@ export type ToolContext = {
    * instead of the whole public index window.
    */
   cycle?: number;
+  /** Postal code from the Ask page. Tools use it when the model omits state. */
+  state?: string;
+  /** Five-digit ZIP from the Ask page. */
+  zip?: string;
 };
 
 export type ToolOutput =
@@ -67,7 +71,7 @@ const tools: readonly ToolSpec[] = [
   {
     name: "list_races",
     description:
-      "List federal races. Pass a state, or office president. Do not call this without a state to list every Senate or House race. An even-year state list includes every apportioned House district, including districts with no Form 2 filing (empty: true, candidates none), and a Senate race when that state's class is up. At-large is district 00. Off-cycle Senate seats and odd years are not invented. This is not a ranking. Omit cycle to use the public index year window. A state list defaults to 80 so the full slate fits. The result includes house coverage (districts with Form 2 filings out of apportioned districts; empty stubs are not counted) and cycleCalendar. A presidential race in a year that is not divisible by 4 has ballotRole out-of-cycle-presidential-filing. That is an early or out-of-cycle Form 2 filing, not a general election. Midterm onBallot is senate and house.",
+      "List federal races. Pass a state, or office president. Do not call this without a state to list every Senate or House race. If the page context already includes a state, omit state and that state is used. Do not ask the visitor which state. An even-year state list includes every apportioned House district, including districts with no Form 2 filing (empty: true, candidates none), and a Senate race when that state's class is up. At-large is district 00 and only for a single-seat state. Multi-seat states do not include district 00. Off-cycle Senate seats and odd years are not invented. This is not a ranking. Omit cycle to use the public index year window. A state list defaults to 80 so the full slate fits. The result includes house coverage (districts with Form 2 filings out of apportioned districts; empty stubs are not counted) and cycleCalendar. A presidential race in a year that is not divisible by 4 has ballotRole out-of-cycle-presidential-filing. That is an early or out-of-cycle Form 2 filing, not a general election. Midterm onBallot is senate and house.",
     inputSchema: {
       type: "object",
       properties: {
@@ -190,10 +194,14 @@ async function listRaces(
 ): Promise<ToolOutput> {
   const cycle = resolveCycles(input, ctx);
   if (!cycle.ok) return toolError(cycle.message);
-  const state = readState(input.state);
-  if (!state.ok) return toolError(state.message);
   const office = readOffice(input.office);
   if (!office.ok) return toolError(office.message);
+  const requested = readState(input.state);
+  if (!requested.ok) return toolError(requested.message);
+  const state = {
+    ok: true as const,
+    value: requested.value ?? (office.value === "president" ? null : (ctx.state ?? null)),
+  };
   const limit = readLimit(
     input.limit,
     state.value ? LIST_STATE_DEFAULT : LIST_DEFAULT,

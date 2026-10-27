@@ -6,6 +6,7 @@ import {
   houseContestJurisdiction,
   houseContestTitle,
   houseDistrictCodes,
+  isListedHouseDistrict,
 } from "./at-large";
 import { parseCycle } from "./cycles";
 import { senateSeatUp } from "./senate-classes";
@@ -34,6 +35,7 @@ export function appendExpectedRaces(
   const byId = new Map<string, Race>();
   for (const race of races) {
     const raceId = canonicalRaceId(race.raceId);
+    if (!listedHouseId(raceId)) continue;
     const current = byId.get(raceId);
     if (!current || (current.empty === true && race.empty !== true)) {
       byId.set(raceId, race);
@@ -93,6 +95,13 @@ export function expectedRaceById(raceId: string): Race | null {
     return senateStub(cycle, state);
   }
   return null;
+}
+
+/** A stored multi-seat `00` row is not a contest. Single-seat `00` stays. */
+function listedHouseId(raceId: string): boolean {
+  const house = HOUSE_ID.exec(raceId);
+  if (!house?.[2] || !house[3]) return true;
+  return isListedHouseDistrict(house[2], house[3]);
 }
 
 function onHouseBallot(cycle: number): boolean {

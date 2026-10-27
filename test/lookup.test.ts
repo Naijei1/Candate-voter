@@ -293,7 +293,11 @@ test("unknown and invalid ZIPs do not invent a district", async () => {
     calls,
   );
   assert.equal(invalid.status, 400);
-  assert.equal((await invalid.json()).error, "bad_request");
+  assert.deepEqual(await invalid.json(), {
+    error: "bad_request",
+    message: "zip must be a 5-digit ZIP code",
+    code: "invalid_zip",
+  });
 
   let lookedUp = false;
   const missing = await getZipLookup(
@@ -307,6 +311,7 @@ test("unknown and invalid ZIPs do not invent a district", async () => {
   assert.equal(missing.status, 404);
   const body = await missing.json();
   assert.equal(body.error, "not_found");
+  assert.equal(body.code, "zip_not_found");
   assert.equal(typeof body.message, "string");
   assert.equal(JSON.stringify(body).includes("district\":"), false);
 
@@ -317,7 +322,23 @@ test("unknown and invalid ZIPs do not invent a district", async () => {
     }),
   );
   assert.equal(down.status, 503);
-  assert.deepEqual(await down.json(), { error: "unavailable" });
+  assert.deepEqual(await down.json(), {
+    error: "unavailable",
+    code: "timeout",
+    message: "ZIP lookup did not finish in time.",
+  });
+});
+
+test("a stalled Census lookup rejects inside the budget", async () => {
+  clearZipDistrictCache();
+  const stalled: typeof fetch = () => new Promise(() => {});
+  const started = Date.now();
+  await assert.rejects(
+    () => censusZipDistricts("99999", stalled, Date.now(), 40),
+    (error: unknown) => error instanceof ZipLookupError && /timed out/.test(error.message),
+  );
+  assert.ok(Date.now() - started < 500);
+  clearZipDistrictCache();
 });
 
 test("openapi and llms.txt document ZIP lookup and the scoreboard fields", () => {

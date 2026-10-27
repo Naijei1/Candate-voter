@@ -58,17 +58,37 @@ export function cycleMentionedIn(message: string): number | null {
   return parseCycle(match[0]);
 }
 
+/** Page already named a place. Answers must not ask which state. */
+export function hasPlaceContext(request: ChatRequest): boolean {
+  return Boolean(request.state || request.zip || request.raceId || request.candidateId);
+}
+
+/** State implied by a Senate or House race id. President has none. */
+export function stateFromRaceId(raceId: string | null | undefined): string | null {
+  if (!raceId) return null;
+  const senate = /^(?:19|20)\d{2}-senate-([A-Z]{2})$/.exec(raceId);
+  if (senate?.[1] && isPostalState(senate[1])) return senate[1];
+  const house = /^(?:19|20)\d{2}-house-([A-Z]{2})-\d{2}$/.exec(raceId);
+  if (house?.[1] && isPostalState(house[1])) return house[1];
+  return null;
+}
+
+/** Who-is-running wording that used to become a national list. */
+export function isVagueRunningQuestion(message: string): boolean {
+  const text = message.trim();
+  if (RACE_ID.test(text)) return false;
+  if (/\bpresidents?\b/i.test(text)) return false;
+  return VAGUE_RUNNING.some((pattern) => pattern.test(text));
+}
+
 /**
- * A who-is-running question with no race, candidate, state, or presidential
- * contest. Those questions used to become a national Senate list.
+ * A who-is-running question with no race, candidate, state, ZIP, or
+ * presidential contest. Those questions used to become a national Senate list.
  */
 export function needsRaceClarification(request: ChatRequest): boolean {
-  if (request.raceId || request.candidateId) return false;
-  const message = request.message.trim();
-  if (RACE_ID.test(message)) return false;
-  if (/\bpresidents?\b/i.test(message)) return false;
-  if (mentionsState(message)) return false;
-  return VAGUE_RUNNING.some((pattern) => pattern.test(message));
+  if (hasPlaceContext(request)) return false;
+  if (mentionsState(request.message)) return false;
+  return isVagueRunningQuestion(request.message);
 }
 
 const ALIGNMENT: readonly RegExp[] = [

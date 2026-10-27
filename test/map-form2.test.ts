@@ -168,6 +168,42 @@ test("Wyoming House district 1 is the at-large race", () => {
   assert.match(mapped.race.sourceUrl ?? "", /district=00/);
 });
 
+test("Texas district 00 is not an at-large House race", () => {
+  const bogus = mapForm2Filing(
+    {
+      candidate_id: "H6TX00001",
+      candidate_last_name: "Ng",
+      candidate_first_name: "Ada",
+      candidate_office: "H",
+      election_state: "TX",
+      election_year: "2026",
+      file_number: 12,
+      load_timestamp: "2026-03-01 00:00:00",
+      candidate_district: "00",
+    },
+    { retrievedAt },
+  );
+  assert.deepEqual(bogus, { ok: false, reason: "invalid-district" });
+
+  const real = mapForm2Filing(
+    {
+      candidate_id: "H6TX07001",
+      candidate_last_name: "Ng",
+      candidate_first_name: "Ada",
+      candidate_office: "H",
+      election_state: "TX",
+      election_year: "2026",
+      file_number: 13,
+      load_timestamp: "2026-03-01 00:00:00",
+      candidate_district: "7",
+    },
+    { retrievedAt },
+  );
+  assert.equal(real.ok, true);
+  if (!real.ok) return;
+  assert.equal(real.race.raceId, "2026-house-TX-07");
+});
+
 test("drops a filing whose only name is n/a and strips the token from a real name", () => {
   const placeholder = mapForm2Filing(
     {

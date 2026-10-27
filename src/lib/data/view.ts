@@ -5,6 +5,7 @@ import {
   canonicalRaceId,
   houseContestJurisdiction,
   houseContestTitle,
+  isListedHouseDistrict,
   raceIdAliases,
 } from "./at-large";
 import { collapseSamePerson, multiFilingNote, type CollapsedCandidate } from "./dedupe";
@@ -163,6 +164,7 @@ export function visibleRaces(races: readonly Race[]): Race[] {
   }
   return [...best.values()]
     .map((item) => item.presented)
+    .filter((race) => listedContest(race))
     .sort((a, b) => a.raceId.localeCompare(b.raceId));
 }
 
@@ -181,7 +183,9 @@ export async function loadVisibleRace(
     rows.find((row) => row.district === "00") ??
     rows.find((row) => row.raceId === canonicalRaceId(row.raceId)) ??
     rows[0];
-  return preferred ? presentRace(preferred) : null;
+  if (!preferred) return null;
+  const presented = presentRace(preferred);
+  return listedContest(presented) ? presented : null;
 }
 
 export async function loadVisibleCandidates(
@@ -206,6 +210,12 @@ export async function loadPublicCandidates(
     const presented = presentCandidate(candidate);
     return presented ? [presented] : [];
   });
+}
+
+/** Drop a House row whose district is not apportioned. Multi-seat `00` is not at-large. */
+function listedContest(race: Race): boolean {
+  if (race.office !== "house") return true;
+  return isListedHouseDistrict(race.state, race.district);
 }
 
 function preferRace(next: Race, current: Race): boolean {

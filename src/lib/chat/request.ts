@@ -1,6 +1,9 @@
 import { parseCycle } from "../data/cycles";
+import { isPostalState } from "../data/states";
 import { isResourceId } from "../api/ids";
 import type { ChatRequest } from "./types";
+
+const ZIP = /^(\d{5})(?:-\d{4})?$/;
 
 const THREAD_ID = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,80}$/;
 const MAX_MESSAGE = 2000;
@@ -62,6 +65,11 @@ export function parseChatRequest(body: unknown): ParseChatResult {
     threadId = record.threadId;
   }
 
+  const state = readStateField(record);
+  if (!state.ok) return state;
+  const zip = readZipField(record);
+  if (!zip.ok) return zip;
+
   return {
     ok: true,
     value: {
@@ -70,8 +78,41 @@ export function parseChatRequest(body: unknown): ParseChatResult {
       ...(candidateId.value ? { candidateId: candidateId.value } : {}),
       ...(cycle != null ? { cycle } : {}),
       ...(threadId ? { threadId } : {}),
+      ...(state.value ? { state: state.value } : {}),
+      ...(zip.value ? { zip: zip.value } : {}),
     },
   };
+}
+
+function readStateField(
+  record: Record<string, unknown>,
+): { ok: true; value?: string } | { ok: false; message: string } {
+  if (!("state" in record) || record.state == null) return { ok: true };
+  if (typeof record.state !== "string") {
+    return { ok: false, message: "state must be a two-letter postal code" };
+  }
+  const trimmed = record.state.trim();
+  if (!trimmed) return { ok: true };
+  const postal = trimmed.toUpperCase();
+  if (!isPostalState(postal)) {
+    return { ok: false, message: "state must be a two-letter postal code" };
+  }
+  return { ok: true, value: postal };
+}
+
+function readZipField(
+  record: Record<string, unknown>,
+): { ok: true; value?: string } | { ok: false; message: string } {
+  if (!("zip" in record) || record.zip == null) return { ok: true };
+  if (typeof record.zip !== "string") {
+    return { ok: false, message: "zip must be a 5-digit ZIP code" };
+  }
+  const trimmed = record.zip.trim();
+  if (!trimmed) return { ok: true };
+  const match = ZIP.exec(trimmed);
+  const zip = match?.[1];
+  if (!zip) return { ok: false, message: "zip must be a 5-digit ZIP code" };
+  return { ok: true, value: zip };
 }
 
 function readYearField(

@@ -94,6 +94,21 @@ export function houseDistrictCodes(state: string): string[] {
   return codes;
 }
 
+/**
+ * Districts the race list, stubs, and ingest may emit.
+ * `00` is at-large only for a single-seat state or delegate district.
+ * A multi-seat state uses `01` through its apportioned count
+ * (Texas is `01`–`38`, never `00`).
+ */
+export function isListedHouseDistrict(
+  state: string | null | undefined,
+  district: string | null | undefined,
+): boolean {
+  if (!state || !district) return false;
+  if (houseDistrictCodes(state).includes(district)) return true;
+  return isSingleSeat(state) && district === "00";
+}
+
 const HOUSE_RACE_ID = /^(\d{4})-house-([A-Z]{2})-(\d{2})$/;
 
 export function isSingleSeat(state: string | null | undefined): boolean {

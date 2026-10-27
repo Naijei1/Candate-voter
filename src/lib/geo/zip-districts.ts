@@ -11,7 +11,8 @@ import { isPostalState } from "../data/states";
  * geocode would hide the extra districts.
  *
  * Results are cached in memory on this server process. The Census calls
- * share a deadline under the client timeout.
+ * share a hard deadline under the client timeout. AbortSignal alone does
+ * not settle a stalled request, so the lookup also races a timer.
  */
 
 const TIGER =
@@ -21,7 +22,7 @@ const CD_LAYER = 54;
 const STATE_LAYER = 80;
 
 /** Shared budget for the ZCTA, state, and district requests. */
-const LOOKUP_BUDGET_MS = 7_000;
+export const LOOKUP_BUDGET_MS = 7_000;
 const HIT_TTL_MS = 24 * 60 * 60 * 1000;
 const MISS_TTL_MS = 60 * 60 * 1000;
 const MAX_CACHE = 5_000;
@@ -116,6 +117,7 @@ export async function censusZipDistricts(
   zip: string,
   fetchImpl: typeof fetch = fetch,
   now: number = Date.now(),
+  budgetMs: number = LOOKUP_BUDGET_MS,
 ): Promise<ZipDistrictHit | null> {
   const cached = cache.get(zip);
   if (cached) {
@@ -123,9 +125,37 @@ export async function censusZipDistricts(
     cache.delete(zip);
   }
 
-  const signal = AbortSignal.timeout(LOOKUP_BUDGET_MS);
+  const controller = new AbortController();
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const deadline = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => {
+      controller.abort();
+      reject(new ZipLookupError("Census district lookup timed out"));
+    }, budgetMs);
+  });
+  const work = lookupDistricts(zip, fetchImpl, controller.signal, now);
+  try {
+    return await Promise.race([work, deadline]);
+  } catch (error) {
+    if (isLookupTimeout(error)) {
+      throw new ZipLookupError("Census district lookup timed out");
+    }
+    throw error;
+  } finally {
+    if (timer) clearTimeout(timer);
+    void work.catch(() => {});
+    void deadline.catch(() => {});
+  }
+}
+
+async function lookupDistricts(
+  zip: string,
+  fetchImpl: typeof fetch,
+  signal: AbortSignal,
+  now: number,
+): Promise<ZipDistrictHit | null> {
   const zcta = await readJson(
-    await fetchImpl(zctaUrl(zip), { signal, headers: jsonHeaders() }),
+    await fetchImpl(zctaUrl(zip), { signal, headers: jsonHeaders(), cache: "no-store" }),
   );
   const feature = featuresOf(zcta)[0];
   if (!feature) {
@@ -140,11 +170,12 @@ export async function censusZipDistricts(
   const point = pointOf(feature);
   const headers = jsonHeaders();
   const statePromise = point
-    ? fetchImpl(stateUrl(point), { signal, headers }).then(readJson)
+    ? fetchImpl(stateUrl(point), { signal, headers, cache: "no-store" }).then(readJson)
     : Promise.resolve(null);
   const cdPromise = fetchImpl(cdUrl(), {
     method: "POST",
     signal,
+    cache: "no-store",
     headers: { ...headers, "content-type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({
       geometry: JSON.stringify(geometry),
@@ -161,6 +192,15 @@ export async function censusZipDistricts(
   const hit = resolveDistricts(stateOf(stateBody), cdsOf(cdBody));
   remember(zip, hit, now + (hit ? HIT_TTL_MS : MISS_TTL_MS));
   return hit;
+}
+
+function isLookupTimeout(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  return (
+    error.name === "AbortError" ||
+    error.name === "TimeoutError" ||
+    error.message === "Census district lookup timed out"
+  );
 }
 
 /**
