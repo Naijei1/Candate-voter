@@ -166,7 +166,7 @@ function hasUngroundedUrl(answer: string, allowed: Set<string>): boolean {
 function summaryFromSnippets(snippets: readonly string[]): string {
   const lines = snippets.slice(0, 12).map((snippet) => `- ${snippet}`);
   if (lines.length === 0) return EMPTY_RECORDS_MARKDOWN;
-  return `Stored Candate-voter records:\n\n${lines.join("\n")}`;
+  return `Based on public FEC records:\n\n${lines.join("\n")}`;
 }
 
 function dedupe(sources: readonly ChatSource[]): ChatSource[] {

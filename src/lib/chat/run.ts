@@ -3,7 +3,7 @@ import { chatModelId } from "./config";
 import { finalizeAnswer, idsIn } from "./answer";
 import { textOf, toolUses } from "./converse";
 import { CHAT_SYSTEM_PROMPT, userPrompt, VOTING_ADVICE_MARKDOWN } from "./prompt";
-import { executeChatTool, type ToolContext } from "./tools";
+import { executeChatTool, modelToolContent, type ToolContext } from "./tools";
 import type { ChatAnswer, ChatMessage, ChatRequest, ChatSource, ConverseFn } from "./types";
 
 const MAX_TOOL_ROUNDS = 4;
@@ -118,7 +118,7 @@ export async function runGroundedChat(input: {
         toolResult: {
           toolUseId: call.toolUseId,
           status: "success",
-          content: executed.content,
+          content: modelToolContent(executed.content),
         },
       });
     }
