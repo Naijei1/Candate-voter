@@ -15,9 +15,11 @@ export function AskNav() {
 
   if (!isAskPanelPath(pathname) || onChat) {
     return (
-      <Link href="/chat" aria-current={onChat ? "page" : undefined} className={askClass}>
+      <Link href="/chat" aria-current={onChat ? "page" : undefined} aria-label="Ask a question" className={askClass}>
         <AskMark />
-        Ask a question
+        <span className="ask-label">
+          Ask<span className="ask-label-rest"> a question</span>
+        </span>
       </Link>
     );
   }
@@ -30,10 +32,13 @@ export function AskNav() {
       aria-expanded={ask.open}
       aria-controls="ask-panel"
       aria-haspopup="dialog"
+      aria-label="Ask a question"
       onClick={() => ask.setOpen(!ask.open)}
     >
       <AskMark />
-      Ask a question
+      <span className="ask-label">
+        Ask<span className="ask-label-rest"> a question</span>
+      </span>
     </button>
   );
 }

@@ -1,8 +1,15 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { AppFrame } from "@/components/AppFrame";
 import { AskProvider } from "@/components/chat/AskProvider";
 import { cyclesFromEnv } from "@/lib/data/cycles";
 import "./globals.css";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  interactiveWidget: "resizes-content",
+};
 
 export const metadata: Metadata = {
   title: {
@@ -21,7 +28,7 @@ export default function RootLayout({
   const cycles = cyclesFromEnv();
   return (
     <html lang="en">
-      <body className="min-h-screen antialiased">
+      <body className="antialiased">
         <a
           href="#main"
           className="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-50 focus:rounded-md focus:bg-card focus:px-3 focus:py-2 focus:outline-2 focus:outline-accent"

@@ -101,7 +101,7 @@ export function YearSelect({ cycles }: { cycles: number[] }) {
       >
         <svg
           viewBox="0 0 24 24"
-          className="h-4 w-4 text-muted"
+          className="year-affordance h-4 w-4 text-muted"
           aria-hidden="true"
           fill="none"
           stroke="currentColor"
@@ -111,7 +111,7 @@ export function YearSelect({ cycles }: { cycles: number[] }) {
           <path d="M8 3.5v3M16 3.5v3M3.5 10h17" />
         </svg>
         <span className="tabular-nums">{selected}</span>
-        <svg viewBox="0 0 20 20" className="h-4 w-4 text-muted" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.6">
+        <svg viewBox="0 0 20 20" className="year-affordance h-4 w-4 text-muted" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.6">
           <path d="M5.5 7.5 10 12l4.5-4.5" />
         </svg>
       </button>

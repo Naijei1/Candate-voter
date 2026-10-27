@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
+import { BackChrome } from "@/components/BackChrome";
 import { AskPageContext } from "@/components/chat/AskProvider";
 import { CandidateDisclosure } from "@/components/CandidateDisclosure";
 import { CoverageNote } from "@/components/CoverageNote";
@@ -59,42 +59,27 @@ export default async function RacePage({ params }: RacePageProps) {
   const coverage = await loadCoverage(race);
 
   return (
-    <article className="space-y-8">
+    <article className="race-page">
       <AskPageContext
         raceId={race.raceId}
         cycle={race.cycle ?? undefined}
         label={race.cycle != null ? `${race.title} · ${race.cycle}` : race.title}
       />
-      <p className="text-sm">
-        <Link
-          href="/"
-          className="text-accent underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
-        >
-          Federal races
-        </Link>
-      </p>
-      <DataRefreshedBanner refreshedAt={coverage.refreshedAt} />
-      <header className="space-y-2">
-        <h1 className="text-3xl font-semibold tracking-tight">{race.title}</h1>
+      <BackChrome state={race.state} year={race.cycle} district={race.office === "house"} />
+      <header className="race-heading">
+        <h1 className="page-title">{race.title}</h1>
         <RacePlace race={race} />
         {race.office === "president" &&
         race.cycle != null &&
         !isPresidentialElectionYear(race.cycle) ? (
-          <p className="max-w-2xl text-sm leading-6 text-ink">
+          <p className="mt-2 max-w-2xl text-base leading-6 text-ink">
             There is no presidential race on the {race.cycle} ballot. This page lists
             national statements of candidacy (Form 2) only.
           </p>
-        ) : (
-          <p className="max-w-2xl text-sm leading-6 text-muted">{FILING_MEANS}</p>
-        )}
-        <RecordMeta sourceUrl={race.sourceUrl} updatedAt={race.updatedAt} />
-        <CoverageNote
-          lines={coverage.lines}
-          scopeNote="Counts are statements of candidacy (Form 2) stored so far, not the final ballot or a certified candidate list."
-        />
+        ) : null}
       </header>
-      <section aria-labelledby="candidates-heading">
-        <h2 id="candidates-heading" className="text-lg font-semibold">
+      <section aria-labelledby="candidates-heading" className="race-candidates">
+        <h2 id="candidates-heading" className="text-lg font-semibold text-ink">
           Candidates
         </h2>
         {candidates.ok === false && race.empty !== true ? (
@@ -104,7 +89,7 @@ export default async function RacePage({ params }: RacePageProps) {
             </StorageNotice>
           </div>
         ) : !candidates.ok || candidates.list.length === 0 ? (
-          <p className="mt-3 text-sm leading-6 text-ink">{emptyRaceSentence(race)}</p>
+          <p className="mt-3 text-base leading-6 text-ink">{emptyRaceSentence(race)}</p>
         ) : (
           <ul className="mt-3 divide-y divide-line rounded-lg border border-line bg-card">
             {candidates.list.map((candidate) => (
@@ -113,16 +98,28 @@ export default async function RacePage({ params }: RacePageProps) {
           </ul>
         )}
       </section>
-      <section aria-labelledby="sources-heading" className="space-y-2">
-        <h2 id="sources-heading" className="text-lg font-semibold">
-          Sources
-        </h2>
-        <RecordMeta sourceUrl={race.sourceUrl} updatedAt={race.updatedAt} />
-        <p className="text-sm leading-6 text-muted">
-          Each candidate page lists stored statements of candidacy (Form 2) with a
-          source link, the time the filing was retrieved, and the time the row was written.
-        </p>
-      </section>
+      <details className="page-details">
+        <summary>Details</summary>
+        <div className="page-details-body">
+          <p>{FILING_MEANS}</p>
+          <RecordMeta sourceUrl={race.sourceUrl} updatedAt={race.updatedAt} />
+          <CoverageNote
+            lines={coverage.lines}
+            scopeNote="Counts are statements of candidacy (Form 2) stored so far, not the final ballot or a certified candidate list."
+          />
+          <h2 id="sources-heading" className="details-subhead">
+            Sources
+          </h2>
+          <RecordMeta sourceUrl={race.sourceUrl} updatedAt={race.updatedAt} />
+          <p>
+            Each candidate page lists stored statements of candidacy (Form 2) with a
+            source link, the time the filing was retrieved, and the time the row was written.
+          </p>
+        </div>
+      </details>
+      <div className="page-refresh">
+        <DataRefreshedBanner refreshedAt={coverage.refreshedAt} compact />
+      </div>
     </article>
   );
 }
@@ -134,7 +131,7 @@ function RacePlace({ race }: { race: Race }) {
     <>
       {line ? <p className="text-base text-ink">{line}</p> : null}
       {place || race.cycle != null ? (
-        <p className="text-base text-muted">
+        <p className="text-base text-ink">
           {place}
           {place && race.cycle != null ? (
             <span className="mx-2" aria-hidden="true">
