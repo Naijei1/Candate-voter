@@ -78,6 +78,9 @@ export function ZipLookup({
           value={value}
           inputMode="numeric"
           autoComplete="postal-code"
+          autoCapitalize="none"
+          autoCorrect="off"
+          enterKeyHint="go"
           maxLength={5}
           placeholder={ZIP_PROMPT}
           disabled={pending}
@@ -88,8 +91,26 @@ export function ZipLookup({
             setValue(event.target.value.replace(/\D/g, "").slice(0, 5));
           }}
         />
-        <button type="submit" disabled={pending}>
-          {pending ? "Looking up…" : "Go"}
+        <button
+          type="submit"
+          className="zip-go"
+          disabled={pending}
+          aria-label={pending ? "Looking up" : "Go"}
+        >
+          <svg
+            viewBox="0 0 20 20"
+            className="zip-go-icon"
+            aria-hidden="true"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+          >
+            <path d="M4 10h11M11 6l4 4-4 4" />
+          </svg>
+          <span className="zip-go-pending" aria-hidden="true">
+            …
+          </span>
+          <span className="zip-go-label">{pending ? "Looking up…" : "Go"}</span>
         </button>
       </form>
       <div aria-live="polite">

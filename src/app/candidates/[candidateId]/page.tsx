@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { BackChrome } from "@/components/BackChrome";
 import { CandidateTechnicalDetails } from "@/components/CandidateTechnicalDetails";
 import { AskPageContext } from "@/components/chat/AskProvider";
 import { MultiFilingDetails } from "@/components/MultiFilingDetails";
@@ -63,38 +64,34 @@ export default async function CandidatePage({ params }: CandidatePageProps) {
   const cycle = race.ok && race.race ? race.race.cycle : null;
 
   return (
-    <article className="space-y-8">
+    <article className="race-page">
       <AskPageContext
         candidateId={candidate.candidateId}
         raceId={candidate.raceId}
         cycle={cycle ?? undefined}
         label={candidate.displayName}
       />
-      <div className="space-y-2 text-sm">
-        <RaceCrumb race={race} />
-      </div>
-      <header className="space-y-2">
-        <h1 className="text-3xl font-semibold tracking-tight">
-          {candidate.displayName}
-        </h1>
+      <BackChrome
+        state={race.ok && race.race ? race.race.state : null}
+        year={race.ok && race.race ? race.race.cycle : null}
+        district={Boolean(race.ok && race.race?.office === "house")}
+        raceHref={race.ok && race.race ? `/races/${race.race.raceId}` : null}
+        raceLabel={race.ok && race.race ? race.race.title : null}
+      />
+      <RaceFallback race={race} />
+      <header className="race-heading space-y-2">
+        <h1 className="page-title">{candidate.displayName}</h1>
         <RunningFor race={race} />
-        <p className="text-base text-muted">
+        <p className="text-base text-ink">
           {partyCue(
             group
               ? displayedPartyLabels(group)
               : [partyLabel(candidate.partyAffiliation, candidate.partyLabel)],
           )}
         </p>
-        <p className="max-w-2xl text-sm leading-6 text-ink">{FILING_MEANS}</p>
         <FilingGroupNote candidateId={candidate.candidateId} group={group} />
-        <RecordMeta sourceUrl={candidate.sourceUrl} updatedAt={candidate.updatedAt} />
-        <CandidateTechnicalDetails
-          fecCandidateId={candidate.fecCandidateId}
-          filedName={filedName}
-          filings={filings}
-        />
       </header>
-      <section aria-labelledby="filings-heading" className="space-y-2">
+      <section aria-labelledby="filings-heading" className="race-candidates space-y-2">
         <h2 id="filings-heading" className="text-lg font-semibold">
           Filings
         </h2>
@@ -103,7 +100,7 @@ export default async function CandidatePage({ params }: CandidatePageProps) {
             Filings could not be loaded from the table.
           </StorageNotice>
         ) : filings.list.length === 0 ? (
-          <p className="text-sm leading-6 text-muted">
+          <p className="text-base leading-6 text-ink">
             No statement of candidacy (Form 2) is stored for this candidate.
           </p>
         ) : (
@@ -114,43 +111,36 @@ export default async function CandidatePage({ params }: CandidatePageProps) {
           </ul>
         )}
       </section>
+      <details className="page-details">
+        <summary>Details</summary>
+        <div className="page-details-body">
+          <p>{FILING_MEANS}</p>
+          <RecordMeta sourceUrl={candidate.sourceUrl} updatedAt={candidate.updatedAt} />
+          <CandidateTechnicalDetails
+            fecCandidateId={candidate.fecCandidateId}
+            filedName={filedName}
+            filings={filings}
+          />
+        </div>
+      </details>
     </article>
   );
 }
 
-function RaceCrumb({
+function RaceFallback({
   race,
 }: {
   race: { ok: true; race: Race | null } | { ok: false };
 }) {
-  if (race.ok && race.race) {
-    return (
-      <Link
-        href={`/races/${race.race.raceId}`}
-        className="text-accent underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
-      >
-        {race.race.title}
-        <span className="text-muted"> · {race.race.jurisdiction}</span>
-      </Link>
-    );
-  }
-
+  if (race.ok && race.race) return null;
   return (
-    <>
-      <p>
-        <Link
-          href="/"
-          className="text-accent underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
-        >
-          Federal races
-        </Link>
-      </p>
+    <div className="mb-4">
       <StorageNotice tone={race.ok ? "empty" : "error"}>
         {race.ok
           ? "This candidate's race is not stored."
           : "The race for this candidate could not be loaded from the table."}
       </StorageNotice>
-    </>
+    </div>
   );
 }
 
@@ -169,7 +159,7 @@ function RunningFor({
     <div className="space-y-1">
       <p className="text-base text-ink">Running for: {line}</p>
       {midtermPresident ? (
-        <p className="max-w-2xl text-sm leading-6 text-muted">
+        <p className="max-w-2xl text-base leading-6 text-ink">
           There is no presidential race on the {race.race.cycle} ballot. This is a
           national statement of candidacy (Form 2) only.
         </p>

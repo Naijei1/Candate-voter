@@ -11,7 +11,7 @@ export function SiteHeader({
   overlay?: boolean;
 }) {
   return (
-    <header className={overlay ? "map-chrome" : "sticky top-0 z-30 border-b border-line bg-card/95 backdrop-blur"}>
+    <header className={overlay ? "map-chrome" : "site-header sticky top-0 z-30 border-b border-line bg-card/95 backdrop-blur"}>
       <div className={overlay ? "map-chrome-row" : "flex w-full items-center justify-between gap-4 px-4 py-3 sm:px-6"}>
         <Link
           href="/"
@@ -31,7 +31,8 @@ export function SiteHeader({
             )}
           </span>
         </Link>
-        <div className="flex items-center gap-2">
+        {overlay ? <div id="map-chrome-info" className="map-chrome-info" /> : null}
+        <div className={overlay ? "map-chrome-actions flex items-center gap-2" : "flex items-center gap-2"}>
           <Suspense fallback={<div className="h-10 w-28 rounded-lg border border-line bg-card" aria-hidden="true" />}>
             <YearSelect cycles={cycles} />
           </Suspense>

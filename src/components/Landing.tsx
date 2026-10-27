@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { useAsk } from "@/components/chat/AskProvider";
 import { CandidateDisclosure } from "@/components/CandidateDisclosure";
 import { DistrictMap } from "@/components/DistrictMap";
@@ -269,6 +270,9 @@ export function Landing({
 
   return (
     <div className={selected ? "state-shell" : "national-shell"}>
+      <ChromeInfo>
+        <WhatAmILookingAt refreshedAt={refreshedAt} icon />
+      </ChromeInfo>
       <div className="zip-slot">
         <ZipLookup year={year} onFound={openZip} onPickState={pickState} lookup={lookupZip} />
         {!selected ? (
@@ -375,16 +379,26 @@ function StateOverview({
 
   return (
     <div className="state-overview" data-testid="state-page">
-      <button type="button" onClick={onBack} data-testid="back-to-map" className="back-link">
-        <span aria-hidden="true">← </span>
-        Back to the map
-      </button>
-      <h1 className="mt-4 text-3xl font-semibold tracking-tight text-ink">{name}</h1>
-      <p className="mt-1 text-sm text-muted">{year}</p>
+      <div className="back-chrome">
+        <span className="drawer-handle" aria-hidden="true" />
+        <div className="back-chrome-row">
+          <button type="button" onClick={onBack} data-testid="back-to-map" className="back-link">
+            <span aria-hidden="true">← </span>
+            Back to map
+          </button>
+          <h1 className="state-title">{name}</h1>
+        </div>
+      </div>
+      <p className="state-year">{year}</p>
       <StateScoreboard board={board} />
       <WhatAmILookingAt refreshedAt={refreshedAt} />
       {pinYours ? (
-        <section data-testid="your-races" aria-labelledby="your-races-heading" className="mt-6">
+        <section
+          id="your-races"
+          data-testid="your-races"
+          aria-labelledby="your-races-heading"
+          className="your-races-block mt-6"
+        >
           <h2 id="your-races-heading" className="text-lg font-semibold tracking-tight text-ink">
             Your races
           </h2>
@@ -499,7 +513,7 @@ function RaceGroups({
     );
   }
   return (
-    <div className="mt-6 space-y-5">
+    <div className="race-groups mt-6 space-y-5">
       {heading ? <h2 className="text-lg font-semibold tracking-tight text-ink">{heading}</h2> : null}
       {groups.map((group) => (
         <section key={group.office} aria-labelledby={`${postal}-${group.office}`}>
@@ -696,6 +710,19 @@ function OfficeLine({
 function placeLine(title: string, jurisdiction: string | null): boolean {
   if (!jurisdiction) return false;
   return !jurisdictionRepeatsTitle(title, jurisdiction);
+}
+
+function ChromeInfo({ children }: { children: ReactNode }) {
+  const [slot, setSlot] = useState<HTMLElement | null>(null);
+  useEffect(() => {
+    setSlot(document.getElementById("map-chrome-info"));
+    document.documentElement.dataset.chromeInfo = "ready";
+    return () => {
+      delete document.documentElement.dataset.chromeInfo;
+    };
+  }, []);
+  if (!slot) return null;
+  return createPortal(children, slot);
 }
 
 function houseCodes(slots: readonly ZipRaceSlot[]): string[] {

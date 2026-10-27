@@ -96,7 +96,7 @@ function AskPanel({ cycles }: { cycles: number[] }) {
   if (!open || !located.panel) return null;
 
   return (
-    <div className="fixed inset-x-0 bottom-0 top-16 z-40">
+    <div className="ask-sheet fixed inset-x-0 bottom-0 z-40">
       <button
         type="button"
         aria-label="Close ask panel"
