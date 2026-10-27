@@ -202,27 +202,31 @@ test("candidate rows start with a name and keep full records closed", () => {
   assert.equal(html.includes("3 filings"), false);
 });
 
-test("home and ask copy stay plain and Popular stays title-only", () => {
+test("home and ask copy stay plain and the map does not lead with Popular", () => {
   const landing = readFileSync(new URL("../src/components/Landing.tsx", import.meta.url), "utf8");
   const zip = readFileSync(new URL("../src/components/ZipLookup.tsx", import.meta.url), "utf8");
   const legend = readFileSync(new URL("../src/components/UsMap.tsx", import.meta.url), "utf8");
+  const looking = readFileSync(new URL("../src/components/StateScoreboard.tsx", import.meta.url), "utf8");
   const ask = readFileSync(new URL("../src/components/chat/ChatMessageList.tsx", import.meta.url), "utf8");
   const shell = readFileSync(new URL("../src/components/chat/ChatShell.tsx", import.meta.url), "utf8");
-  assert.match(landing, /Who&apos;s filed/);
-  assert.match(landing, /not the final ballot/);
-  assert.match(landing, /statement of candidacy \(Form 2\)/i);
   assert.match(landing, /<WhatAmILookingAt/);
   assert.match(landing, /<ZipLookup/);
-  assert.match(landing, /onReject=\{rejectZip\}/);
   assert.match(landing, /searchWithoutState/);
-  assert.match(zip, /Find my races/);
+  assert.match(landing, /Your races/);
+  assert.match(landing, /See all/);
+  assert.match(looking, /statement of candidacy \(Form 2\)/i);
+  assert.match(looking, /not the final ballot/);
+  assert.match(zip, /Enter ZIP to find your races/);
+  assert.match(zip, /Check ZIP or tap a state/);
   assert.match(zip, /data-testid="zip-lookup"/);
   assert.match(zip, /findRacesByZip/);
-  assert.match(legend, /Filings stored/);
-  assert.match(legend, /No filings stored/);
-  const popular = landing.slice(landing.indexOf('id="popular-heading"'));
-  assert.match(popular, />\s*Popular\s*</);
-  assert.equal(/not a ranking/i.test(popular), false);
+  assert.match(legend, /Has candidates/);
+  assert.match(legend, /No candidates yet/);
+  assert.equal(legend.includes("Filings stored"), false);
+  assert.equal(legend.includes("No filings stored"), false);
+  assert.equal(landing.includes("popular-heading"), false);
+  assert.equal(landing.includes("state-jump"), false);
+  assert.equal(/not a ranking/i.test(landing), false);
   assert.equal(ask.includes("SuggestedPrompts"), false);
   assert.equal(shell.includes("suggestedPrompts"), false);
   assert.equal(landing.includes("Recently updated filings"), false);

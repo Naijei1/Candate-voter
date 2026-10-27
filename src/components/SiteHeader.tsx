@@ -3,27 +3,39 @@ import { Suspense } from "react";
 import { AskNav } from "@/components/chat/AskNav";
 import { YearSelect } from "@/components/YearSelect";
 
-export function SiteHeader({ cycles }: { cycles: number[] }) {
+export function SiteHeader({
+  cycles,
+  overlay = false,
+}: {
+  cycles: number[];
+  overlay?: boolean;
+}) {
   return (
-    <header className="sticky top-0 z-30 border-b border-line bg-card/95 backdrop-blur">
-      <div className="flex w-full items-center justify-between gap-4 px-4 py-3 sm:px-6">
+    <header className={overlay ? "map-chrome" : "sticky top-0 z-30 border-b border-line bg-card/95 backdrop-blur"}>
+      <div className={overlay ? "map-chrome-row" : "flex w-full items-center justify-between gap-4 px-4 py-3 sm:px-6"}>
         <Link
           href="/"
-          className="brand-link flex min-w-0 items-center gap-3 rounded-lg px-1.5 py-1 text-ink focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
+          className={
+            overlay
+              ? "glass-chip brand-link flex min-w-0 items-center gap-2 px-2 py-1 text-ink focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
+              : "brand-link flex min-w-0 items-center gap-3 rounded-lg px-1.5 py-1 text-ink focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
+          }
         >
           <BrandMark />
           <span className="min-w-0">
             <span className="brand-name block text-lg leading-5 font-semibold tracking-tight">Candate</span>
-            <span className="block truncate text-xs font-medium text-muted">
-              Nonpartisan federal races
-            </span>
+            {overlay ? null : (
+              <span className="block truncate text-xs font-medium text-muted">
+                Nonpartisan federal races
+              </span>
+            )}
           </span>
         </Link>
         <div className="flex items-center gap-2">
-          <AskNav />
           <Suspense fallback={<div className="h-10 w-28 rounded-lg border border-line bg-card" aria-hidden="true" />}>
             <YearSelect cycles={cycles} />
           </Suspense>
+          <AskNav />
         </div>
       </div>
     </header>

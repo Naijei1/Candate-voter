@@ -5,6 +5,7 @@ import React, {
   memo,
   useCallback,
   useEffect,
+  useRef,
   useState,
   type KeyboardEvent,
   type MouseEvent,
@@ -41,8 +42,11 @@ type UsMapProps = {
   mapId: string;
   labelled: boolean;
   selected: string | null;
+  /** Postal under the pointer. Other states dim while this is set. */
+  hot?: string | null;
   statesWithRaces: readonly string[];
   onSelect: (postal: string) => void;
+  onHover?: (postal: string | null) => void;
   label: string;
 };
 
@@ -50,12 +54,25 @@ export function UsMap({
   mapId,
   labelled,
   selected,
+  hot = null,
   statesWithRaces,
   onSelect,
+  onHover,
   label,
 }: UsMapProps) {
   const withRaces = new Set(statesWithRaces);
   const [tabStop, setTabStop] = useState(selected ?? "KS");
+  const hotRef = useRef(hot);
+  hotRef.current = hot;
+
+  const reportHover = useCallback(
+    (postal: string | null) => {
+      if (hotRef.current === postal) return;
+      hotRef.current = postal;
+      onHover?.(postal);
+    },
+    [onHover],
+  );
 
   useEffect(() => {
     if (selected) setTabStop(selected);
@@ -116,13 +133,25 @@ export function UsMap({
     }
   }
 
+  function onMapPointerMove(event: PointerEvent<SVGSVGElement>) {
+    const target = event.target;
+    const fromTarget = target instanceof Element ? postalFromTarget(target) : null;
+    if (fromTarget) {
+      reportHover(fromTarget);
+      return;
+    }
+    reportHover(smallestShapeAt(event.currentTarget, event.clientX, event.clientY, mapId));
+  }
+
   return (
     <svg
       viewBox={`0 0 ${US_MAP_VIEW.width} ${US_MAP_VIEW.height}`}
-      className="us-map h-full w-full"
+      className={hot ? "us-map is-dimming h-full w-full" : "us-map h-full w-full"}
       role="group"
       aria-label={`${label} Arrow keys move between states. Enter selects.`}
       onPointerDown={onMapPointerDown}
+      onPointerMove={onHover ? onMapPointerMove : undefined}
+      onPointerLeave={onHover ? () => reportHover(null) : undefined}
       onClick={onMapClick}
     >
       {US_STATE_SHAPES.map((shape) => (
@@ -132,8 +161,10 @@ export function UsMap({
           mapId={mapId}
           hasRaces={withRaces.has(shape.postal)}
           isSelected={selected === shape.postal}
+          isHot={hot === shape.postal}
           tabbable={shape.postal === tabStop}
           onKeyDown={onKeyDown}
+          onFocusPostal={onHover ? reportHover : undefined}
         />
       ))}
       {US_STATE_SHAPES.filter((shape) => HIT_RADIUS[shape.postal] != null).map((shape) => (
@@ -167,30 +198,36 @@ const StatePath = memo(function StatePath({
   mapId,
   hasRaces,
   isSelected,
+  isHot,
   tabbable,
   onKeyDown,
+  onFocusPostal,
 }: {
   shape: UsStateShape;
   mapId: string;
   hasRaces: boolean;
   isSelected: boolean;
+  isHot: boolean;
   tabbable: boolean;
   onKeyDown: (event: KeyboardEvent<SVGPathElement>) => void;
+  onFocusPostal?: (postal: string) => void;
 }) {
   const name = stateName(shape.postal);
+  const classes = ["us-state"];
+  if (hasRaces) classes.push("has-data");
+  if (isHot) classes.push("is-hot");
   return (
     <path
       id={`${mapId}-${shape.postal}`}
       data-postal={shape.postal}
       d={shape.d}
-      className={hasRaces ? "us-state has-data" : "us-state"}
+      className={classes.join(" ")}
       role="button"
       tabIndex={tabbable ? 0 : -1}
-      aria-label={
-        hasRaces ? `${name}, filings stored` : `${name}, no filings stored`
-      }
+      aria-label={hasRaces ? `${name}, has candidates` : `${name}, no candidates yet`}
       aria-pressed={isSelected ? "true" : "false"}
       onKeyDown={onKeyDown}
+      onFocus={onFocusPostal ? () => onFocusPostal(shape.postal) : undefined}
     />
   );
 });
@@ -296,18 +333,14 @@ function neighbor(
 
 export function MapLegend() {
   return (
-    <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted">
+    <ul className="map-legend" aria-label="Map legend">
       <li className="inline-flex items-center gap-1.5">
-        <span className="inline-block h-2.5 w-2.5 rounded-sm bg-map-data" aria-hidden="true" />
-        Filings stored
+        <span className="map-swatch is-data" aria-hidden="true" />
+        Has candidates
       </li>
       <li className="inline-flex items-center gap-1.5">
-        <span className="inline-block h-2.5 w-2.5 rounded-sm bg-map" aria-hidden="true" />
-        No filings stored
-      </li>
-      <li className="inline-flex items-center gap-1.5">
-        <span className="inline-block h-2.5 w-2.5 rounded-sm bg-accent" aria-hidden="true" />
-        Selected
+        <span className="map-swatch" aria-hidden="true" />
+        No candidates yet
       </li>
     </ul>
   );

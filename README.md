@@ -30,7 +30,7 @@ Package manager is npm. Commit `package-lock.json`. Amplify runs `npm ci`.
 
 | Path | Page |
 | --- | --- |
-| `/` | Federal races index |
+| `/` | Full-bleed United States map. `?state=KY` opens that state. `?state=KY&zip=40502` pins Your races. |
 | `/races/[raceId]` | Race detail |
 | `/candidates/[candidateId]` | Candidate detail |
 | `/chat` | Ask about stored races and filings |
@@ -39,6 +39,20 @@ Package manager is npm. Commit `package-lock.json`. Amplify runs `npm ci`.
 | `/llms.txt` | Short index for agents |
 
 `/api/v1` is a separate read-only JSON surface. See [Agent API](#agent-api).
+
+## District map
+
+The state page draws U.S. House districts from static GeoJSON in this app. There is no Backend geo route.
+
+| | |
+| --- | --- |
+| Source | U.S. Census Bureau cartographic boundary `cb_2024_us_cd119_5m` |
+| Congress | 119 |
+| Vintage | 2024 |
+| Cycle | 2026 |
+| Files | `public/geo/cd119/{ST}.json` |
+
+Each feature is one district. `properties.state` is the postal code and `properties.district` is two digits. The map joins that pair to a race already on the page: `{cycle}-house-{ST}-{DD}`, for example `2026-house-KY-01`. At-large states (AK, DE, ND, SD, VT, WY) use `00` only (`2026-house-WY-00`). The map does not join a legacy `01` id. Fills come from those race rows: `empty: true` means no candidates yet. The file is the 50 states and 435 districts. DC and territories are not included. Alaska longitudes east of the antimeridian are shifted west so the state draws as one shape.
 
 Links use `next/link` with app-relative paths so they follow `basePath`. Server components read stored races, candidates, and filings through `createDynamoRepository()`. `src/lib/placeholders.ts` is a fixture module and is not imported by those pages.
 

@@ -1,39 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useAsk } from "@/components/chat/AskProvider";
 import { CandidateDisclosure } from "@/components/CandidateDisclosure";
 import { DataRefreshedBanner } from "@/components/DataRefreshedBanner";
+import { DistrictMap } from "@/components/DistrictMap";
 import { RecordMeta } from "@/components/RecordMeta";
 import { StateScoreboard, WhatAmILookingAt } from "@/components/StateScoreboard";
 import { StorageNotice } from "@/components/StorageNotice";
 import { MapLegend, UsMap } from "@/components/UsMap";
 import { ZipLookup } from "@/components/ZipLookup";
 import { askScopeForState, askScopeForYear, pageContextFromScope } from "@/lib/chat/scope";
-import { isAskPanelPath } from "@/lib/chat/ui";
-import { emptyRaceSentence, runningForLine } from "@/lib/copy";
-import { isPresidentialElectionYear } from "@/lib/data/calendar";
-import { isPostalState, stateName, stateOptions } from "@/lib/data/states";
-import {
-  postalFromSearch,
-  readZipOwnedState,
-  searchWithoutState,
-  searchWithState,
-  selectionFromLocation,
-  selectionFromPop,
-  writeZipOwnedState,
-} from "@/lib/landing/state-query";
+import { emptyRaceSentence, runningForLine, stateHoverLine } from "@/lib/copy";
+import { stateName } from "@/lib/data/states";
 import { officeLabel, partyCue } from "@/lib/format";
-import {
-  presidentialRace,
-  spotlightRaces,
-  stateRaces,
-  stateScoreboard,
-  statesWithRaces,
-} from "@/lib/landing";
-import { racesByStateOffice } from "@/lib/races";
+import { stateRaces, stateScoreboard, statesWithRaces } from "@/lib/landing";
 import {
   loadCandidatesForRaces,
   type RaceCandidatesResult,
@@ -44,7 +26,16 @@ import {
   loadCandidatesForRacesWithTimeout,
   type CandidateCacheEntry,
 } from "@/lib/landing/load-candidates";
-import type { ZipLookupResult } from "@/lib/lookup/zip-view";
+import {
+  searchWithoutState,
+  searchWithState,
+  searchWithZip,
+  postalFromSearch,
+  zipFromSearch,
+} from "@/lib/landing/state-query";
+import { findRacesByZip } from "@/lib/lookup/find-races";
+import { zipRaceSlots, zipSlotJurisdiction, zipSlotTitle, type ZipLookupPayload, type ZipLookupResult } from "@/lib/lookup/zip-view";
+import { racesByStateOffice } from "@/lib/races";
 import type { Race } from "@/lib/types";
 
 const PREVIEW_LIMIT = 8;
@@ -53,11 +44,12 @@ type LandingProps = {
   year: number;
   races: Race[];
   initialState: string | null;
+  initialZip?: string | null;
   hasAnyRaces: boolean;
   cycleLabel: string;
-  /** Candidates already read for the state in the URL, so the panel can render with the races. */
+  /** Candidates already read for the state in the URL, so the list can render with the races. */
   seededCandidates?: RaceCandidatesResult | null;
-  /** Top-level race-index `refreshedAt`. Null omits the page banner. */
+  /** Top-level race-index `refreshedAt`. Null omits the chip. */
   refreshedAt?: string | null;
   /** Defaults to the live ZIP lookup. Pages do not pass this. */
   lookupZip?: (zip: string, year: number) => Promise<ZipLookupResult>;
@@ -67,6 +59,7 @@ export function Landing({
   year,
   races,
   initialState,
+  initialZip = null,
   hasAnyRaces,
   cycleLabel,
   seededCandidates = null,
@@ -74,59 +67,103 @@ export function Landing({
   lookupZip,
 }: LandingProps) {
   const [selected, setSelected] = useState<string | null>(initialState);
+  const [zipCode, setZipCode] = useState<string | null>(initialZip);
+  const [zipPayload, setZipPayload] = useState<ZipLookupPayload | null>(null);
+  const [zipLoading, setZipLoading] = useState(Boolean(initialZip));
+  const [zipFailed, setZipFailed] = useState(false);
+  const [showAll, setShowAll] = useState(false);
+  const [hot, setHot] = useState<string | null>(null);
   const [entries, setEntries] = useState<Map<string, CandidateCacheEntry>>(() =>
     seedCandidateCache(seededCandidates),
   );
   const [reloadKey, setReloadKey] = useState(0);
-  const [zipRaceIds, setZipRaceIds] = useState<string[]>([]);
   const entriesRef = useRef(entries);
   entriesRef.current = entries;
+  const heldZip = useRef<ZipLookupPayload | null>(null);
   const marked = statesWithRaces(races);
-  const spotlight = spotlightRaces(
-    isPresidentialElectionYear(year)
-      ? races
-      : races.filter((race) => race.office !== "president"),
-  );
-  const zipOwned = useRef<string | null>(null);
   const { replacePageContext } = useAsk();
-  const rememberZipOwned = useCallback((postal: string | null) => {
-    zipOwned.current = postal;
-    writeZipOwnedState(window.sessionStorage, postal);
-  }, []);
 
   useEffect(() => {
     const scope = selected ? askScopeForState(year, selected, races) : askScopeForYear(year);
     return replacePageContext(pageContextFromScope(scope));
   }, [replacePageContext, races, selected, year]);
 
-  useLayoutEffect(() => {
-    const fromUrl = postalFromSearch(window.location.search);
-    const owned = readZipOwnedState(window.sessionStorage);
-    zipOwned.current = owned && owned === fromUrl ? owned : null;
-    if (owned && owned !== fromUrl) writeZipOwnedState(window.sessionStorage, null);
-    setSelected(selectionFromLocation(window.location.search, initialState));
-  }, [initialState]);
+  const syncFromLocation = useCallback(() => {
+    setSelected(postalFromSearch(window.location.search));
+    setZipCode(zipFromSearch(window.location.search));
+  }, []);
 
   useLayoutEffect(() => {
-    const onUrl = () => {
-      const fromUrl = postalFromSearch(window.location.search);
-      if (fromUrl) setSelected(fromUrl);
-    };
-    const onPop = () => setSelected(selectionFromPop(window.location.search));
-    watchLocation(onUrl);
-    window.addEventListener("popstate", onPop);
+    syncFromLocation();
+    watchLocation(syncFromLocation);
+    window.addEventListener("popstate", syncFromLocation);
     return () => {
-      unwatchLocation(onUrl);
-      window.removeEventListener("popstate", onPop);
+      unwatchLocation(syncFromLocation);
+      window.removeEventListener("popstate", syncFromLocation);
     };
-  }, []);
+  }, [syncFromLocation]);
 
-  const reportZipRaces = useCallback((ids: string[]) => {
-    setZipRaceIds((prev) => (sameIds(prev, ids) ? prev : ids));
-  }, []);
+  useEffect(() => {
+    setShowAll(false);
+  }, [selected, zipCode]);
 
-  const panelIds = selected ? stateRaces(races, selected).map((race) => race.raceId) : [];
-  const candidateRaceKey = [...new Set([...panelIds, ...zipRaceIds])].join("\n");
+  useEffect(() => {
+    document.documentElement.dataset.mapView = selected ? "state" : "national";
+    return () => {
+      delete document.documentElement.dataset.mapView;
+    };
+  }, [selected]);
+
+  useEffect(() => {
+    if (!zipCode || !selected) {
+      heldZip.current = null;
+      setZipPayload(null);
+      setZipLoading(false);
+      setZipFailed(false);
+      return;
+    }
+    const held = heldZip.current;
+    if (held && held.zip === zipCode && held.state === selected) {
+      setZipPayload(held);
+      setZipLoading(false);
+      setZipFailed(false);
+      return;
+    }
+    let active = true;
+    setZipLoading(true);
+    setZipFailed(false);
+    (async () => {
+      try {
+        const result = await (lookupZip ?? findRacesByZip)(zipCode, year);
+        if (!active) return;
+        if (!result.ok || result.payload.state !== selected) {
+          setZipPayload(null);
+          setZipFailed(true);
+          return;
+        }
+        heldZip.current = result.payload;
+        setZipPayload(result.payload);
+      } catch {
+        if (!active) return;
+        setZipPayload(null);
+        setZipFailed(true);
+      } finally {
+        if (active) setZipLoading(false);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [lookupZip, selected, year, zipCode]);
+
+  const listed = selected ? stateRaces(races, selected) : [];
+  const yours = zipPayload && zipPayload.state === selected ? zipRaceSlots(races, zipPayload) : [];
+  const yourIds = new Set(yours.map((slot) => slot.raceId));
+  const pinYours = Boolean(zipCode && selected && !zipFailed);
+  const visibleIds = (
+    pinYours && !showAll ? listed.filter((race) => yourIds.has(race.raceId)) : listed
+  ).map((race) => race.raceId);
+  const candidateRaceKey = visibleIds.join("\n");
   const emptyIdsKey = races
     .filter((race) => race.empty === true)
     .map((race) => race.raceId)
@@ -180,198 +217,282 @@ export function Landing({
     setReloadKey((key) => key + 1);
   }, []);
 
-  const writeStateUrl = useCallback((code: string) => {
-    const next = `${searchWithState(window.location.search, code)}${window.location.hash}`;
-    const current = `${window.location.search}${window.location.hash}`;
+  const writeUrl = useCallback((search: string) => {
+    const next = `${window.location.pathname}${search}${window.location.hash}`;
+    const current = `${window.location.pathname}${window.location.search}${window.location.hash}`;
     if (next === current) return;
-    // Pass null so Next.js copies its history state and keeps this query
-    // as the canonical URL. Passing history.state skips that sync and a
-    // later navigation can wipe `state`.
-    window.history.replaceState(null, "", next);
+    window.history.pushState(null, "", next);
   }, []);
 
-  const selectState = useCallback((postal: string) => {
-    const code = postal.trim().toUpperCase();
-    if (!isPostalState(code)) return;
-    rememberZipOwned(null);
-    setSelected(code);
-    writeStateUrl(code);
-  }, [rememberZipOwned, writeStateUrl]);
+  const selectState = useCallback(
+    (postal: string) => {
+      heldZip.current = null;
+      writeUrl(searchWithState(window.location.search, postal));
+    },
+    [writeUrl],
+  );
 
-  const selectFromZip = useCallback((postal: string) => {
-    const code = postal.trim().toUpperCase();
-    if (!isPostalState(code)) return;
-    rememberZipOwned(code);
-    setSelected(code);
-    writeStateUrl(code);
-  }, [rememberZipOwned, writeStateUrl]);
+  const openZip = useCallback(
+    (payload: ZipLookupPayload) => {
+      if (!payload.state) return;
+      heldZip.current = payload;
+      writeUrl(searchWithZip(window.location.search, payload.state, payload.zip));
+    },
+    [writeUrl],
+  );
 
-  const rejectZip = useCallback(() => {
-    const owned = zipOwned.current ?? readZipOwnedState(window.sessionStorage);
-    rememberZipOwned(null);
-    if (!owned) return;
-    setSelected((current) => (current === owned ? null : current));
-    if (postalFromSearch(window.location.search) !== owned) return;
-    const nextSearch = searchWithoutState(window.location.search);
-    const next = `${window.location.pathname}${nextSearch}${window.location.hash}`;
-    const current = `${window.location.pathname}${window.location.search}${window.location.hash}`;
-    if (next !== current) window.history.replaceState(null, "", next);
-  }, [rememberZipOwned]);
+  const backToMap = useCallback(() => {
+    heldZip.current = null;
+    setHot(null);
+    writeUrl(searchWithoutState(window.location.search));
+  }, [writeUrl]);
 
-  useEffect(() => {
-    if (!selected) return;
-    if (postalFromSearch(window.location.search) === selected) return;
-    writeStateUrl(selected);
-  }, [selected, writeStateUrl]);
+  const hotBoard = hot ? stateScoreboard(races, hot, year) : null;
+  const hotCaption =
+    hot && hotBoard
+      ? stateHoverLine(stateName(hot), hotBoard.senateFilings, hotBoard.districtsWithFilings, hotBoard.districtsTotal)
+      : null;
 
   return (
-    <div className="space-y-6">
-      <DataRefreshedBanner refreshedAt={refreshedAt} />
-      <ZipLookup
-        year={year}
-        races={races}
-        onState={selectFromZip}
-        onReject={rejectZip}
-        lookup={lookupZip}
-        onStoredRaceIds={reportZipRaces}
-        renderStoredRace={(race) => (
-          <RaceCard
-            race={race}
-            candidates={entries.get(race.raceId)}
-            onRetry={() => retryRace(race.raceId)}
-          />
-        )}
-        renderLayout={({ form, status }) => (
-          <section className="map-hero" aria-labelledby="hero-heading">
-            <div className="map-hero-grid">
-              <div className="browse-column">
-                <div className="flow-hero" data-testid="hero">
-                  {hasAnyRaces ? null : (
-                    <div className="mb-3">
-                      <StorageNotice>
-                        No races are stored for election years {cycleLabel}.
-                      </StorageNotice>
-                    </div>
-                  )}
-                  <h1 id="hero-heading" className="text-3xl font-semibold tracking-tight text-ink">
-                    Who&apos;s filed
-                  </h1>
-                  <p className="mt-2 max-w-2xl text-sm leading-6 text-ink">
-                    A statement of candidacy (Form 2) is an FEC filing that someone intends to
-                    run. Candidates so far for {year}, not the final ballot. No endorsements.
-                  </p>
-                  <WhatAmILookingAt refreshedAt={refreshedAt} />
-                  <p className="mt-2 text-sm leading-6 text-muted">
-                    Find races with a ZIP code, or pick a state on the map. You can also <AskCue />.
-                  </p>
-                  <div className="mt-4">{form}</div>
-                </div>
-                <div className="zip-results mt-4">{status}</div>
-                <div id="browse" data-testid="browse" className="map-panel mt-6">
-                  <StatePanel
-                    year={year}
-                    races={races}
-                    selected={selected}
-                    cache={entries}
-                    onRetryRace={retryRace}
-                  />
-                </div>
-              </div>
-              <div className="map-stage">
-                <h2 id="map-heading" className="map-stage-label">
-                  Browse by state
-                </h2>
-                <div className="map-canvas">
-                  <UsMap
-                    mapId="hero-map"
-                    labelled
-                    selected={selected}
-                    statesWithRaces={marked}
-                    onSelect={selectState}
-                    label={`Map of the United States for ${year}. States with filings stored are highlighted. Alaska and Hawaii are inset.`}
-                  />
-                </div>
-                <div className="map-key">
-                  <MapLegend />
-                  <label htmlFor="state-jump" className="mt-3 block text-xs font-medium text-muted">
-                    Jump to a state
-                    <select
-                      id="state-jump"
-                      data-testid="state-jump"
-                      value={selected ?? ""}
-                      onChange={(event) => {
-                        const value = event.target.value;
-                        if (value) selectState(value);
-                      }}
-                      className="mt-1 block w-full rounded-lg border border-line bg-card px-3 py-2 text-sm text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-                    >
-                      <option value="">Choose a state</option>
-                      {stateOptions().map((option) => (
-                        <option key={option.postal} value={option.postal}>
-                          {option.name}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                </div>
-              </div>
-            </div>
-          </section>
-        )}
-      />
-
-      <section aria-labelledby="popular-heading">
-        <h2 id="popular-heading" className="text-lg font-semibold tracking-tight text-ink">
-          Popular
-        </h2>
-        <p className="mt-1 max-w-2xl text-sm leading-6 text-muted">
-          Races with the latest updates in this year&apos;s records.
-        </p>
-        {spotlight.length === 0 ? (
-          <div className="mt-4">
-            <StorageNotice>No races are stored for {year}.</StorageNotice>
+    <div className={selected ? "state-shell" : "national-shell"}>
+      <div className="zip-slot">
+        <ZipLookup year={year} onFound={openZip} lookup={lookupZip} />
+        {!selected && !hasAnyRaces ? (
+          <div className="mt-2">
+            <StorageNotice>No races are stored for election years {cycleLabel}.</StorageNotice>
           </div>
-        ) : (
-          <ul className="mt-4 space-y-3">
-            {spotlight.map((race) => (
-              <li key={race.raceId}>
-                <article className="rounded-xl border border-line bg-card p-4 shadow-sm">
-                  <h3 className="text-base font-semibold tracking-tight">
-                    <Link
-                      href={`/races/${race.raceId}`}
-                      className="text-ink underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
-                    >
-                      {race.title}
-                    </Link>
-                  </h3>
-                  <p className="text-sm text-muted">{race.jurisdiction}</p>
-                  <RecordMeta sourceUrl={race.sourceUrl} updatedAt={race.updatedAt} />
-                </article>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+        ) : null}
+      </div>
+
+      {selected ? (
+        <StateOverview
+          year={year}
+          races={races}
+          postal={selected}
+          refreshedAt={refreshedAt}
+          cache={entries}
+          pinYours={pinYours}
+          zipLoading={zipLoading}
+          zipFailed={zipFailed}
+          yours={yours}
+          showAll={showAll}
+          onShowAll={() => setShowAll(true)}
+          onBack={backToMap}
+          onRetryRace={retryRace}
+        />
+      ) : null}
+
+      {selected ? (
+        <DistrictMap postal={selected} races={races} />
+      ) : (
+        <div className="map-bleed" data-testid="national-map">
+          <h1 className="sr-only">Find races on the map</h1>
+          <UsMap
+            mapId="hero-map"
+            labelled
+            selected={null}
+            hot={hot}
+            statesWithRaces={marked}
+            onSelect={selectState}
+            onHover={setHot}
+            label={`Map of the United States for ${year}. States with candidates are filled. Alaska and Hawaii are inset.`}
+          />
+          {hotCaption ? (
+            <p className="glass-chip map-hover-card" role="status">
+              {hotCaption}
+            </p>
+          ) : null}
+          <div className="map-legend-dock">
+            <MapLegend />
+          </div>
+          <div className="map-meta-dock">
+            <DataRefreshedBanner refreshedAt={refreshedAt} compact />
+            <WhatAmILookingAt refreshedAt={refreshedAt} glass />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-function AskCue() {
-  const pathname = usePathname();
-  const ask = useAsk();
-  const className =
-    "font-semibold text-accent underline decoration-accent/40 underline-offset-4 hover:decoration-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
-  if (!isAskPanelPath(pathname)) {
-    return (
-      <Link href="/chat" className={className}>
-        ask a question
-      </Link>
+function StateOverview({
+  year,
+  races,
+  postal,
+  refreshedAt,
+  cache,
+  pinYours,
+  zipLoading,
+  zipFailed,
+  yours,
+  showAll,
+  onShowAll,
+  onBack,
+  onRetryRace,
+}: {
+  year: number;
+  races: readonly Race[];
+  postal: string;
+  refreshedAt?: string | null;
+  cache: Map<string, CandidateCacheEntry>;
+  pinYours: boolean;
+  zipLoading: boolean;
+  zipFailed: boolean;
+  yours: ReturnType<typeof zipRaceSlots>;
+  showAll: boolean;
+  onShowAll: () => void;
+  onBack: () => void;
+  onRetryRace: (raceId: string) => void;
+}) {
+  const name = stateName(postal);
+  const board = stateScoreboard(races, postal, year);
+  const listed = stateRaces(races, postal);
+  const yourIds = new Set(yours.map((slot) => slot.raceId));
+  const rest = listed.filter((race) => !yourIds.has(race.raceId));
+  const showFull = !pinYours || showAll;
+
+  return (
+    <div className="state-overview" data-testid="state-page">
+      <button type="button" onClick={onBack} data-testid="back-to-map" className="back-link">
+        Back to the map
+      </button>
+      <h1 className="mt-3 text-3xl font-semibold tracking-tight text-ink">{name}</h1>
+      <p className="mt-1 text-sm text-muted">{year}</p>
+      <div className="mt-3">
+        <DataRefreshedBanner refreshedAt={refreshedAt} compact />
+      </div>
+      <StateScoreboard board={board} />
+      <WhatAmILookingAt refreshedAt={refreshedAt} />
+      {pinYours ? (
+        <section data-testid="your-races" aria-labelledby="your-races-heading" className="mt-6">
+          <h2 id="your-races-heading" className="text-lg font-semibold tracking-tight text-ink">
+            Your races
+          </h2>
+          {zipLoading ? (
+            <p className="mt-2 text-sm text-muted" aria-busy="true">
+              Finding your races…
+            </p>
+          ) : yours.length === 0 ? (
+            <p className="mt-2 text-sm text-ink">No Senate or House race came back for this ZIP.</p>
+          ) : (
+            <div className="mt-3 space-y-4">
+              {(["senate", "house"] as const).map((office) => {
+                const group = yours.filter((slot) => slot.office === office);
+                if (group.length === 0) return null;
+                return (
+                  <section key={office} aria-label={officeLabel(office)}>
+                    <h3 className="text-xs font-semibold tracking-wide text-accent uppercase">
+                      {officeLabel(office)}
+                    </h3>
+                    <ul className="mt-2 space-y-2">
+                      {group.map((slot) =>
+                        slot.race ? (
+                          <RaceCard
+                            key={slot.race.raceId}
+                            race={slot.race}
+                            candidates={cache.get(slot.race.raceId)}
+                            onRetry={() => onRetryRace(slot.race!.raceId)}
+                          />
+                        ) : (
+                          <li key={slot.raceId} className="race-row">
+                            <h4 className="font-semibold tracking-tight text-ink">
+                              <Link
+                                href={`/races/${slot.raceId}`}
+                                className="text-ink underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
+                              >
+                                {zipSlotTitle(slot, postal)}
+                              </Link>
+                            </h4>
+                            {zipSlotJurisdiction(slot, postal) ? (
+                              <p className="text-sm text-muted">{zipSlotJurisdiction(slot, postal)}</p>
+                            ) : null}
+                            <p className="mt-1 text-sm text-ink">
+                              {emptyRaceSentence({
+                                office: slot.office,
+                                district: slot.district,
+                              })}
+                            </p>
+                          </li>
+                        ),
+                      )}
+                    </ul>
+                  </section>
+                );
+              })}
+            </div>
+          )}
+          {!showAll ? (
+            <button
+              type="button"
+              data-testid="see-all-races"
+              className="see-all"
+              aria-expanded="false"
+              onClick={onShowAll}
+            >
+              See all {name} races
+            </button>
+          ) : null}
+        </section>
+      ) : null}
+      {zipFailed ? <p className="zip-status">Check ZIP or tap a state.</p> : null}
+      {showFull ? (
+        <RaceGroups
+          postal={postal}
+          races={showAll ? rest : listed}
+          cache={cache}
+          onRetryRace={onRetryRace}
+          heading={showAll ? `All ${name} races` : null}
+        />
+      ) : null}
+    </div>
+  );
+}
+
+function RaceGroups({
+  postal,
+  races,
+  cache,
+  onRetryRace,
+  heading,
+}: {
+  postal: string;
+  races: Race[];
+  cache: Map<string, CandidateCacheEntry>;
+  onRetryRace: (raceId: string) => void;
+  heading: string | null;
+}) {
+  const groups = racesByStateOffice(races);
+  if (groups.length === 0) {
+    return heading ? null : (
+      <p className="mt-6 text-sm text-ink">
+        No Senate or House races for {stateName(postal)}.
+      </p>
     );
   }
   return (
-    <button type="button" className={className} onClick={() => ask.setOpen(true)}>
-      ask a question
-    </button>
+    <div className="mt-6 space-y-5">
+      {heading ? <h2 className="text-lg font-semibold tracking-tight text-ink">{heading}</h2> : null}
+      {groups.map((group) => (
+        <section key={group.office} aria-labelledby={`${postal}-${group.office}`}>
+          <h3
+            id={`${postal}-${group.office}`}
+            className="text-xs font-semibold tracking-wide text-accent uppercase"
+          >
+            {officeLabel(group.office)}
+          </h3>
+          <ul className="mt-2 space-y-2">
+            {group.races.map((race) => (
+              <RaceCard
+                key={race.raceId}
+                race={race}
+                candidates={cache.get(race.raceId)}
+                onRetry={() => onRetryRace(race.raceId)}
+              />
+            ))}
+          </ul>
+        </section>
+      ))}
+    </div>
   );
 }
 
@@ -387,154 +508,6 @@ function seedCandidateCache(
   return cache;
 }
 
-function StatePanel({
-  year,
-  races,
-  selected,
-  cache,
-  onRetryRace,
-}: {
-  year: number;
-  races: Race[];
-  selected: string | null;
-  cache: Map<string, CandidateCacheEntry>;
-  onRetryRace: (raceId: string) => void;
-}) {
-  const listed = selected ? stateRaces(races, selected) : [];
-  const groups = racesByStateOffice(listed);
-  const president = isPresidentialElectionYear(year) ? presidentialRace(races) : null;
-  const board = selected ? stateScoreboard(races, selected, year) : null;
-  const senate = groups.find((group) => group.office === "senate");
-  const house = groups.find((group) => group.office === "house");
-  const showHouse = (house?.races.length ?? 0) > 0;
-
-  return (
-    <aside data-testid="state-panel" className="min-w-0">
-      <div className="border-t border-line pt-4">
-        <h3 className="text-lg font-semibold tracking-tight">
-          {selected ? stateName(selected) : "State filings"}
-        </h3>
-        {selected && board ? (
-          <StateScoreboard board={board} />
-        ) : (
-          <p className="mt-1 text-sm leading-6 text-muted">
-            Pick a state to see who&apos;s filed for Senate and House.
-          </p>
-        )}
-      </div>
-      <div className="py-3">
-        {!selected ? (
-          <p className="px-1 py-4 text-sm leading-6 text-muted">
-            Select a state on the map, or use Jump to a state, to see candidates so far.
-          </p>
-        ) : !senate && !showHouse ? (
-          <div className="space-y-4 px-1 py-2">
-            <p className="text-sm font-medium text-ink">
-              No Senate or House filings yet for {stateName(selected)} in {year}.
-            </p>
-            <NationalContest year={year} president={president} />
-          </div>
-        ) : (
-          <div className="space-y-5">
-            {senate ? (
-              <OfficeList
-                postal={selected}
-                office="senate"
-                races={senate.races}
-                cache={cache}
-                onRetryRace={onRetryRace}
-              />
-            ) : null}
-            {showHouse ? (
-              <section aria-labelledby={`${selected}-house`}>
-                <h4
-                  id={`${selected}-house`}
-                  className="px-1 text-xs font-semibold tracking-wide text-accent uppercase"
-                >
-                  {officeLabel("house")}
-                </h4>
-                {house && house.races.length > 0 ? (
-                  <ul className="mt-2 space-y-2">
-                    {house.races.map((race) => (
-                      <RaceCard
-                        key={race.raceId}
-                        race={race}
-                        candidates={cache.get(race.raceId)}
-                        onRetry={() => onRetryRace(race.raceId)}
-                      />
-                    ))}
-                  </ul>
-                ) : null}
-              </section>
-            ) : null}
-            <NationalContest year={year} president={president} />
-          </div>
-        )}
-      </div>
-    </aside>
-  );
-}
-
-function OfficeList({
-  postal,
-  office,
-  races,
-  cache,
-  onRetryRace,
-}: {
-  postal: string;
-  office: "senate" | "house";
-  races: Race[];
-  cache: Map<string, CandidateCacheEntry>;
-  onRetryRace: (raceId: string) => void;
-}) {
-  return (
-    <section aria-labelledby={`${postal}-${office}`}>
-      <h4
-        id={`${postal}-${office}`}
-        className="px-1 text-xs font-semibold tracking-wide text-accent uppercase"
-      >
-        {officeLabel(office)}
-      </h4>
-      <ul className="mt-2 space-y-2">
-        {races.map((race) => (
-          <RaceCard
-            key={race.raceId}
-            race={race}
-            candidates={cache.get(race.raceId)}
-            onRetry={() => onRetryRace(race.raceId)}
-          />
-        ))}
-      </ul>
-    </section>
-  );
-}
-
-function NationalContest({
-  year,
-  president,
-}: {
-  year: number;
-  president: Race | null;
-}) {
-  if (!president || !isPresidentialElectionYear(year)) return null;
-  const labelYear = president.cycle ?? year;
-  return (
-    <div className="border-t border-line px-1 pt-3">
-      <p className="text-xs font-medium tracking-wide text-muted uppercase">National</p>
-      <p className="mt-1 text-sm">
-        <Link
-          href={`/races/${president.raceId}`}
-          className="font-medium text-ink underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
-        >
-          Presidential · {labelYear}
-        </Link>
-      </p>
-      <RecordMeta sourceUrl={president.sourceUrl} updatedAt={president.updatedAt} />
-    </div>
-  );
-}
-
 function RaceCard({
   race,
   candidates,
@@ -545,15 +518,15 @@ function RaceCard({
   onRetry: () => void;
 }) {
   return (
-    <li className="rounded-lg border border-l-4 border-line border-l-accent px-3 py-3">
-      <h5 className="font-semibold tracking-tight">
+    <li className="race-row">
+      <h4 className="font-semibold tracking-tight">
         <Link
           href={`/races/${race.raceId}`}
           className="text-ink underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
         >
           {race.title}
         </Link>
-      </h5>
+      </h4>
       <p className="text-sm text-muted">{race.jurisdiction}</p>
       {candidates?.ok && candidates.candidates.length > 0 ? (
         <p className="mt-1 text-sm font-semibold tabular-nums text-ink">
@@ -665,8 +638,4 @@ function watchLocation(listener: () => void) {
 
 function unwatchLocation(listener: () => void) {
   locationListeners.delete(listener);
-}
-
-function sameIds(left: readonly string[], right: readonly string[]): boolean {
-  return left.length === right.length && left.every((id, index) => id === right[index]);
 }

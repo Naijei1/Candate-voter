@@ -16,6 +16,22 @@ export function senateScoreSentence(count: number): string {
   return `${count} Senate races have a filing`;
 }
 
+/** Short map hover: state name and a filing count, or that nobody has filed. */
+export function stateHoverLine(
+  name: string,
+  senateFilings: number,
+  districtsWithFilings: number,
+  districtsTotal: number,
+): string {
+  if (senateFilings <= 0 && districtsWithFilings <= 0) return `${name} · No candidates yet`;
+  const parts = [name];
+  if (senateFilings === 1) parts.push("Senate filed");
+  else if (senateFilings > 1) parts.push(`${senateFilings} Senate filed`);
+  if (districtsTotal > 0) parts.push(`${districtsWithFilings} of ${districtsTotal} House`);
+  else if (districtsWithFilings > 0) parts.push(`${districtsWithFilings} House`);
+  return parts.join(" · ");
+}
+
 /** House coverage is districts with a stored filing, out of the apportioned total. */
 export function houseScoreSentence(withFilings: number, total: number): string {
   const filed = Math.max(0, withFilings);
