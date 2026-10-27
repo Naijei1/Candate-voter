@@ -78,6 +78,8 @@ export function toRaceItem(race: Race): RaceItem {
   if (race.cycle == null) {
     throw new Error(`Race ${race.raceId} is missing a cycle`);
   }
+  const { hasCandidates, ...stored } = race;
+  void hasCandidates;
   return {
     [TABLE_KEYS.partition]: racePk(race.raceId),
     [TABLE_KEYS.sort]: ENTITY_META_SK,
@@ -90,7 +92,7 @@ export function toRaceItem(race: Race): RaceItem {
     }),
     entityType: "race",
     schemaVersion: SCHEMA_VERSION,
-    ...race,
+    ...stored,
     cycle: race.cycle,
   };
 }

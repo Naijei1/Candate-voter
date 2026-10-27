@@ -1,5 +1,6 @@
-import type { CandidateUpsertResult, VoterRepository } from "./repository";
 import type { Candidate, Filing, IngestWatermark, Race } from "../types";
+import { raceMatchesCycle } from "./cycle-match";
+import type { CandidateUpsertResult, VoterRepository } from "./repository";
 
 /**
  * In-memory store with the same keys and monotonic candidate rule as DynamoDB.
@@ -39,7 +40,7 @@ export class MemoryVoterRepository implements VoterRepository {
 
   async listRacesByCycle(cycle: number): Promise<Race[]> {
     return [...this.races.values()]
-      .filter((race) => race.cycle === cycle)
+      .filter((race) => raceMatchesCycle(race, cycle))
       .sort((a, b) => a.raceId.localeCompare(b.raceId))
       .map((race) => clone(race));
   }

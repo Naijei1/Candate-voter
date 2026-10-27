@@ -1,6 +1,7 @@
 "use server";
 
-import { displayedPartyLabels } from "@/lib/data/view";
+import { linkPersonFilings, type PersonFiling } from "@/lib/data/person-filings";
+import { displayedPartyLabels, type PublicCandidate } from "@/lib/data/view";
 import { logReadError, readCandidatesForRace } from "@/lib/data/read";
 import { parseRaceIds } from "@/lib/landing";
 
@@ -16,6 +17,12 @@ export type CandidatePreview = {
   multiFilingNote: string | null;
   /** Other FEC ids already collapsed into this row. The keeper is not included. */
   alternateFilingCount: number;
+  /** Same person across contests. The row is not removed when this list is long. */
+  filings: PersonFiling[];
+  /** True when any filing in `filings` is a write-in (W or WRI). */
+  writeIn: boolean;
+  /** True when `filings` lists more than one FEC id or contest. */
+  multiFiling: boolean;
   sourceUrl: string | null;
   updatedAt: string | null;
 };
@@ -35,31 +42,48 @@ export async function loadCandidatesForRaces(
   const parsed = parseRaceIds(raceIds);
   if (!parsed.ok) return { ok: false, error: parsed.error };
 
-  const races = await Promise.all(
-    parsed.ids.map(async (raceId): Promise<RaceCandidateGroup> => {
+  const loaded = await Promise.all(
+    parsed.ids.map(async (raceId) => {
       try {
         const candidates = await readCandidatesForRace(raceId);
-        return {
-          raceId,
-          candidates: candidates.map((candidate) => ({
-            candidateId: candidate.candidateId,
-            displayName: candidate.displayName,
-            partyAffiliation: candidate.partyAffiliation,
-            partyCode: candidate.partyCode,
-            partyLabel: candidate.partyLabel,
-            partyLabels: displayedPartyLabels(candidate),
-            multiFilingNote: candidate.multiFilingNote,
-            alternateFilingCount: candidate.alternateFilings.length,
-            sourceUrl: candidate.sourceUrl,
-            updatedAt: candidate.updatedAt,
-          })),
-        };
+        return { raceId, candidates };
       } catch (error) {
         logReadError("listCandidatesForRace", error);
-        return { raceId, error: true };
+        return { raceId, error: true as const };
       }
     }),
   );
+  const linked = linkPersonFilings(
+    loaded.flatMap((group) => ("error" in group ? [] : group.candidates)),
+  );
+  const byId = new Map(linked.map((row) => [row.candidateId, row]));
+  const races: RaceCandidateGroup[] = loaded.map((group) => {
+    if ("error" in group) return { raceId: group.raceId, error: true };
+    return {
+      raceId: group.raceId,
+      candidates: group.candidates.map((candidate) =>
+        toPreview(byId.get(candidate.candidateId) ?? candidate),
+      ),
+    };
+  });
 
   return { ok: true, races };
+}
+
+function toPreview(candidate: PublicCandidate): CandidatePreview {
+  return {
+    candidateId: candidate.candidateId,
+    displayName: candidate.displayName,
+    partyAffiliation: candidate.partyAffiliation,
+    partyCode: candidate.partyCode,
+    partyLabel: candidate.partyLabel,
+    partyLabels: displayedPartyLabels(candidate),
+    multiFilingNote: candidate.multiFilingNote,
+    alternateFilingCount: candidate.alternateFilings.length,
+    filings: candidate.filings,
+    writeIn: candidate.writeIn,
+    multiFiling: candidate.multiFiling,
+    sourceUrl: candidate.sourceUrl,
+    updatedAt: candidate.updatedAt,
+  };
 }

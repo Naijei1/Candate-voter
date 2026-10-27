@@ -8,6 +8,8 @@ import {
   raceIdAliases,
 } from "./at-large";
 import { collapseSamePerson, multiFilingNote, type CollapsedCandidate } from "./dedupe";
+import { raceHasCandidates } from "./candidate-signal";
+import { personFilingsForRow, type PersonFiling } from "./person-filings";
 import { expectedRaceById } from "./expected-races";
 import { normalizeFiledName, normalizePersonName } from "./names";
 
@@ -33,6 +35,15 @@ export type PublicCandidate = Candidate & {
    * Each party is named once. Null for a single filing.
    */
   multiFilingNote: string | null;
+  /**
+   * This person's FEC ids on this race and, when linked, on other contests
+   * in the same state and year. The row itself is never removed.
+   */
+  filings: PersonFiling[];
+  /** True when any filing in `filings` is a write-in (W or WRI). */
+  writeIn: boolean;
+  /** True when `filings` lists more than one FEC id or contest. */
+  multiFiling: boolean;
 };
 
 type RaceLookup = {
@@ -62,20 +73,35 @@ export function presentCandidate(
   const cleaned = cleanCandidate(candidate);
   if (!cleaned) return null;
   const code = partyCode(cleaned.partyAffiliation);
+  const label = partyLabel(code, cleaned.partyLabel);
   const alternateFilings = alternates.flatMap((row) => {
     const next = cleanCandidate(row);
     return next ? [toAlternate(next)] : [];
+  });
+  const cleanedAlternates = alternates.flatMap((row) => {
+    const next = cleanCandidate(row);
+    return next ? [next] : [];
+  });
+  const filings = personFilingsForRow({
+    candidateId: cleaned.candidateId,
+    displayName: cleaned.displayName,
+    fecCandidateId: cleaned.fecCandidateId,
+    partyCode: code,
+    partyLabel: label,
+    raceId: cleaned.raceId,
+    office: cleaned.office,
+    alternateFilings,
   });
   return {
     ...cleaned,
     partyAffiliation: code,
     partyCode: code,
-    partyLabel: partyLabel(code, cleaned.partyLabel),
+    partyLabel: label,
     alternateFilings,
-    multiFilingNote: multiFilingNote(cleaned, alternates.flatMap((row) => {
-      const next = cleanCandidate(row);
-      return next ? [next] : [];
-    })),
+    multiFilingNote: multiFilingNote(cleaned, cleanedAlternates),
+    filings,
+    writeIn: filings.some((filing) => filing.writeIn),
+    multiFiling: filings.length > 1,
   };
 }
 
@@ -183,8 +209,8 @@ export async function loadPublicCandidates(
 }
 
 function preferRace(next: Race, current: Race): boolean {
-  const nextFiled = next.empty !== true;
-  const currentFiled = current.empty !== true;
+  const nextFiled = raceHasCandidates(next);
+  const currentFiled = raceHasCandidates(current);
   if (nextFiled !== currentFiled) return nextFiled;
   const nextAtLarge = next.district === "00";
   const currentAtLarge = current.district === "00";

@@ -7,7 +7,15 @@ import {
   ALIGNMENT_DISABLED_MARKDOWN,
   answerAlignment,
 } from "./alignment";
-import { alignmentEnabled, CHAT_PROMPT_VERSION, chatEnabled, rateLimitSettings } from "./config";
+import {
+  alignmentEnabled,
+  CHAT_PROMPT_VERSION,
+  chatBudgetMs,
+  chatEnabled,
+  rateLimitSettings,
+} from "./config";
+import { definitionAnswer } from "./definitions";
+import { CHAT_TIMEOUT_MESSAGE, ChatUnavailableError, unavailableBody } from "./errors";
 import { createBedrockConverse } from "./converse";
 import {
   CLARIFY_RACE_MARKDOWN,
@@ -20,7 +28,8 @@ import { answerUpcoming } from "./upcoming";
 import { isVotingAdvice, VOTING_ADVICE_MARKDOWN } from "./prompt";
 import { clientAddress, createRateLimiter, type RateLimiter } from "./rate-limit";
 import { parseChatRequest } from "./request";
-import { ChatUnavailableError, runGroundedChat } from "./run";
+import { isStateRosterQuestion, answerStateRoster } from "./roster";
+import { runGroundedChat } from "./run";
 import type { ChatAnswer, ConverseFn } from "./types";
 import type { ApiRepository } from "../api/deps";
 
@@ -32,6 +41,8 @@ export type ChatDeps = {
   rateLimiter?: RateLimiter;
   /** Origin plus base path. Tests set this; the route derives it from the request. */
   siteRoot?: string;
+  /** Test override. Production uses `chatBudgetMs` (default 20s). */
+  budgetMs?: number;
 };
 
 export function liveChatDeps(
@@ -121,12 +132,7 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
     try {
       const answer = await answerAlignment({
         request: parsed.value,
-        ctx: {
-          repo: deps.repository(),
-          env: deps.env,
-          now,
-          root: siteRoot.replace(/\/+$/, ""),
-        },
+        ctx: chatCtx(deps, now, siteRoot, parsed.value.cycle),
       });
       if ("unavailable" in answer) {
         return json({ error: "unavailable", message: answer.message }, 503);
@@ -145,18 +151,45 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
     }
   }
 
+  if (isStateRosterQuestion(parsed.value.message)) {
+    const siteRoot =
+      deps.siteRoot ?? `${originFromRequest(request)}${basePathFromEnv(deps.env)}`;
+    try {
+      const answer = await withBudget(
+        answerStateRoster({
+          request: parsed.value,
+          ctx: chatCtx(deps, now, siteRoot, parsed.value.cycle),
+        }),
+        budgetMs(deps),
+      );
+      if ("unavailable" in answer) {
+        return json({ error: "unavailable", message: answer.message }, 503);
+      }
+      logOutcome({
+        refused: answer.refused,
+        tools: ["roster"],
+        latencyMs: Date.now() - started,
+        mode: "factual",
+      });
+      return json(chatBody(answer, threadId, parsed.value.message));
+    } catch (error) {
+      return json(unavailableBody(error), 503);
+    }
+  }
+
+  const defined = definitionAnswer(parsed.value.message);
+  if (defined) {
+    logOutcome({ refused: false, tools: [], latencyMs: Date.now() - started, mode: "factual" });
+    return json(chatBody(defined, threadId, parsed.value.message));
+  }
+
   if (isUpcomingElectionsQuestion(parsed.value.message)) {
     const siteRoot =
       deps.siteRoot ?? `${originFromRequest(request)}${basePathFromEnv(deps.env)}`;
     try {
       const answer = await answerUpcoming({
         request: parsed.value,
-        ctx: {
-          repo: deps.repository(),
-          env: deps.env,
-          now,
-          root: siteRoot.replace(/\/+$/, ""),
-        },
+        ctx: chatCtx(deps, now, siteRoot, parsed.value.cycle),
       });
       if ("unavailable" in answer) {
         return json({ error: "unavailable", message: answer.message }, 503);
@@ -194,18 +227,18 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
   const siteRoot =
     deps.siteRoot ??
     `${originFromRequest(request)}${basePathFromEnv(deps.env)}`;
+  const budget = budgetMs(deps);
   try {
-    const answer = await runGroundedChat({
-      request: parsed.value,
-      env: deps.env,
-      converse: deps.converse ?? createBedrockConverse(deps.env),
-      ctx: {
-        repo: deps.repository(),
+    const answer = await withBudget(
+      runGroundedChat({
+        request: parsed.value,
         env: deps.env,
-        now,
-        root: siteRoot.replace(/\/+$/, ""),
-      },
-    });
+        converse: deps.converse ?? createBedrockConverse(deps.env),
+        deadlineMs: Date.now() + budget,
+        ctx: chatCtx(deps, now, siteRoot, parsed.value.cycle),
+      }),
+      budget,
+    );
     logOutcome({
       refused: answer.refused,
       tools: answer.tools,
@@ -216,15 +249,7 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
     });
     return json(chatBody(answer, threadId, parsed.value.message));
   } catch (error) {
-    const message =
-      error instanceof ChatUnavailableError
-        ? error.message
-        : "The model is unavailable.";
-    if (!(error instanceof ChatUnavailableError)) {
-      const name = error instanceof Error ? error.name : "Error";
-      console.error(`Chat failed: ${name}`);
-    }
-    return json({ error: "unavailable", message }, 503);
+    return json(unavailableBody(error), 503);
   }
 }
 
@@ -238,6 +263,39 @@ function chatBody(answer: ChatAnswer, threadId: string, priorMessage: string) {
     threadId,
     ...(polished.refreshedAt !== undefined ? { refreshedAt: polished.refreshedAt } : {}),
   };
+}
+
+function budgetMs(deps: ChatDeps): number {
+  return deps.budgetMs ?? chatBudgetMs(deps.env);
+}
+
+function chatCtx(
+  deps: ChatDeps,
+  now: Date,
+  siteRoot: string,
+  cycle: number | undefined,
+) {
+  const root = (deps.siteRoot ?? siteRoot).replace(/\/+$/, "");
+  return {
+    repo: deps.repository(),
+    env: deps.env,
+    now,
+    root,
+    ...(cycle != null ? { cycle } : {}),
+  };
+}
+
+function withBudget<T>(work: Promise<T>, budget: number): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => {
+      reject(new ChatUnavailableError(CHAT_TIMEOUT_MESSAGE, "timeout"));
+    }, budget);
+  });
+  void work.catch(() => {});
+  return Promise.race([work, timeout]).finally(() => {
+    if (timer) clearTimeout(timer);
+  });
 }
 
 function logOutcome(fields: Record<string, unknown>): void {

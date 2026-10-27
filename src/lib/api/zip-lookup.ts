@@ -1,4 +1,6 @@
 import { HOUSE_SEATS } from "../data/at-large";
+import { signalRace } from "../data/candidate-signal";
+import { raceMatchesCycle } from "../data/cycle-match";
 import { buildRaceId } from "../fec/map-form2";
 import type { Race } from "../types";
 import type { ZipDistrictHit } from "../geo/zip-districts";
@@ -60,7 +62,8 @@ export function zipLookupBody(input: {
     raceIds,
     races: raceIds.flatMap((raceId) => {
       const race = byId.get(raceId);
-      return race ? [race] : [];
+      if (!race || !raceMatchesCycle(race, input.year)) return [];
+      return [signalRace(race)];
     }),
   };
 }

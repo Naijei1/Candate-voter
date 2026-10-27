@@ -28,6 +28,7 @@ import {
   toWatermarkItem,
 } from "./items";
 import type { Candidate, Filing, IngestWatermark, Race } from "../types";
+import { raceMatchesCycle } from "./cycle-match";
 
 export type CandidateUpsertResult = "applied" | "kept-newer";
 
@@ -138,7 +139,7 @@ class DynamoVoterRepository implements VoterRepository {
     });
     return items.flatMap((item) => {
       const race = fromRaceItem(item);
-      return race ? [race] : [];
+      return race && raceMatchesCycle(race, cycle) ? [race] : [];
     });
   }
 

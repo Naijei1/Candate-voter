@@ -29,6 +29,21 @@ function one(
   return { ok: true, value: values[0] ?? null };
 }
 
+function readYear(
+  value: string | null,
+  name: "year" | "cycle",
+): { ok: true; value: number | null } | { ok: false; message: string } {
+  if (value == null) return { ok: true, value: null };
+  if (value.trim() === "") {
+    return { ok: false, message: `${name} must be an integer from 1980 to 2100` };
+  }
+  const parsed = parseCycle(value);
+  if (parsed == null) {
+    return { ok: false, message: `${name} must be an integer from 1980 to 2100` };
+  }
+  return { ok: true, value: parsed };
+}
+
 function parseOffice(value: string): FederalOffice | null {
   const office = value.trim().toLowerCase();
   if (office === "president" || office === "senate" || office === "house") {
@@ -44,6 +59,8 @@ export function parseRaceListQuery(
 ): RaceQueryResult {
   const cycle = one(url, "cycle");
   if (!cycle.ok) return cycle;
+  const year = one(url, "year");
+  if (!year.ok) return year;
   const state = one(url, "state");
   if (!state.ok) return state;
   const office = one(url, "office");
@@ -53,18 +70,24 @@ export function parseRaceListQuery(
   const cursor = one(url, "cursor");
   if (!cursor.ok) return cursor;
 
+  const cycleResult = readYear(cycle.value, "cycle");
+  if (!cycleResult.ok) return cycleResult;
+  const yearResult = readYear(year.value, "year");
+  if (!yearResult.ok) return yearResult;
+  if (
+    cycleResult.value != null &&
+    yearResult.value != null &&
+    cycleResult.value !== yearResult.value
+  ) {
+    return { ok: false, message: "year and cycle must match" };
+  }
+
   let cycles: number[];
-  if (cycle.value == null || cycle.value.trim() === "") {
-    if (cycle.value != null) {
-      return { ok: false, message: "cycle must be an integer from 1980 to 2100" };
-    }
+  const selected = yearResult.value ?? cycleResult.value;
+  if (selected == null) {
     cycles = cyclesFromEnv(env, now);
   } else {
-    const parsed = parseCycle(cycle.value);
-    if (parsed == null) {
-      return { ok: false, message: "cycle must be an integer from 1980 to 2100" };
-    }
-    cycles = [parsed];
+    cycles = [selected];
   }
 
   let stateCode: string | null = null;

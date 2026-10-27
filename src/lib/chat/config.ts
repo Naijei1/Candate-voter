@@ -9,7 +9,17 @@ export const DEFAULT_HAIKU_MODEL_ID = "us.anthropic.claude-haiku-5-5";
 /** Optional quality model. Same profile rule as Haiku. */
 export const DEFAULT_SONNET_MODEL_ID = "us.anthropic.claude-sonnet-5-5";
 
-export const CHAT_PROMPT_VERSION = "2026-10-27.1";
+export const CHAT_PROMPT_VERSION = "2026-10-27.2";
+
+/**
+ * Wall clock for one Ask request, including Bedrock calls and tool reads.
+ * Default 20s. The browser aborts at 30s (`CHAT_TIMEOUT_MS`) and Amplify
+ * compute cuts the function off around 30s, so the handler returns before
+ * either of those. Bedrock SDK retries are off (`maxAttempts: 1`) so a slow
+ * call cannot stack past this budget. Override with `CANDATE_CHAT_BUDGET_MS`
+ * (3000–25000). Tool rounds are capped at 3 in the Converse loop.
+ */
+export const DEFAULT_CHAT_BUDGET_MS = 20_000;
 
 const DEFAULT_RATE_LIMIT = 20;
 const DEFAULT_RATE_WINDOW_SECONDS = 60;
@@ -46,6 +56,10 @@ export function chatModelId(env: Record<string, string | undefined>): string {
     return env.BEDROCK_SONNET_MODEL_ID?.trim() || DEFAULT_SONNET_MODEL_ID;
   }
   return env.BEDROCK_MODEL_ID?.trim() || DEFAULT_HAIKU_MODEL_ID;
+}
+
+export function chatBudgetMs(env: Record<string, string | undefined>): number {
+  return boundedInt(env.CANDATE_CHAT_BUDGET_MS, DEFAULT_CHAT_BUDGET_MS, 3_000, 25_000);
 }
 
 export function rateLimitSettings(env: Record<string, string | undefined>): {

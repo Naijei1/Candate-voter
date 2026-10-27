@@ -1,10 +1,14 @@
+import { signalRace } from "../data/candidate-signal";
 import {
   FORM2_SCOPE,
   FORM2_SCOPE_NOTE,
   houseCoverageForRaces,
 } from "../data/coverage";
+import { withCrossContestFilings } from "../data/cross-filings";
+import { raceMatchesCycle } from "../data/cycle-match";
 import { appendExpectedRaces } from "../data/expected-races";
-import { logReadError, sortFilings } from "../data/read";
+import { collapseIdenticalFilings } from "../data/filings";
+import { logReadError } from "../data/read";
 import {
   loadPublicCandidates,
   loadVisibleRace,
@@ -68,11 +72,13 @@ export async function getRaces(request: Request, deps: ApiDeps): Promise<Respons
     const groups = await Promise.all(
       parsed.query.cycles.map((cycle) => repo.listRacesByCycle(cycle)),
     );
-    const stored = visibleRaces(groups.flat());
+    const stored = visibleRaces(groups.flat()).filter((race) =>
+      parsed.query.cycles.some((cycle) => raceMatchesCycle(race, cycle)),
+    );
     const listed = appendExpectedRaces(stored, parsed.query.cycles, {
       state: parsed.query.state,
       office: parsed.query.office,
-    });
+    }).map(signalRace);
     const page = pageRaces(listed, parsed.query);
     const refreshedAt = await refreshedAtFrom(repo);
     return json({
@@ -111,12 +117,21 @@ export async function getRace(
     const repo = deps.repository();
     const race = await loadVisibleRace(repo, raceId);
     if (!race) return notFound();
-    const candidates = await loadPublicCandidates(repo, race.raceId);
+    const candidates = await withCrossContestFilings(
+      repo,
+      await loadPublicCandidates(repo, race.raceId),
+      race,
+    );
+    const signaled = signalRace(race);
     const cycleRaces =
-      race.cycle == null ? [] : visibleRaces(await repo.listRacesByCycle(race.cycle));
+      race.cycle == null
+        ? []
+        : visibleRaces(await repo.listRacesByCycle(race.cycle)).filter((item) =>
+            race.cycle == null ? false : raceMatchesCycle(item, race.cycle),
+          );
     const refreshedAt = await refreshedAtFrom(repo);
     return json({
-      race,
+      race: signaled,
       candidates,
       refreshedAt,
       coverage: {
@@ -171,7 +186,7 @@ export async function getCandidateFilings(
     if (!candidate) return notFound();
     const presented = presentCandidate(candidate);
     if (!presented) return notFound();
-    const filings = sortFilings(await repo.listFilingsForCandidate(candidateId));
+    const filings = collapseIdenticalFilings(await repo.listFilingsForCandidate(candidateId));
     return json({ candidate: presented, filings });
   } catch (error) {
     logReadError("listFilingsForCandidate", error);
@@ -243,7 +258,24 @@ async function loadCandidateWithRace(repo: ApiRepository, candidateId: string) {
   const presented = presentCandidate(candidate);
   if (!presented) return null;
   const race = await loadVisibleRace(repo, candidate.raceId);
-  return { candidate: presented, race };
+  const listed = race ? await loadPublicCandidates(repo, race.raceId) : [];
+  const group =
+    listed.find(
+      (row) =>
+        row.candidateId === presented.candidateId ||
+        row.alternateFilings.some((alternate) => alternate.candidateId === presented.candidateId),
+    ) ?? presented;
+  const linked = race ? await withCrossContestFilings(repo, [group], race) : [group];
+  const person = linked[0] ?? group;
+  return {
+    candidate: {
+      ...presented,
+      filings: person.filings,
+      writeIn: person.writeIn,
+      multiFiling: person.multiFiling,
+    },
+    race: race ? signalRace(race) : null,
+  };
 }
 
 function freshnessBody(watermark: IngestWatermark | null) {

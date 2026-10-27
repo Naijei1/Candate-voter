@@ -1,5 +1,5 @@
 import { houseScoreSentence, senateScoreSentence } from "./copy";
-import { FORM2_SCOPE_NOTE, houseCoverageForRaces } from "./data/coverage";
+import { FORM2_SCOPE_NOTE, houseCoverageForRaces, raceHasCandidates } from "./data/coverage";
 import { OFFICE_ORDER } from "./races";
 import type { Race } from "./types";
 
@@ -14,7 +14,7 @@ const MAX_RACE_IDS = 80;
  * the same newest-update order. This is a reading order, not a ranking.
  */
 export function spotlightRaces(races: readonly Race[]): Race[] {
-  const stored = races.filter((race) => race.empty !== true);
+  const stored = races.filter((race) => raceHasCandidates(race));
   const picks: Race[] = [];
   const president = freshest(stored.filter((race) => race.office === "president"));
   const senate = freshest(stored.filter((race) => race.office === "senate"));
@@ -107,7 +107,9 @@ export function stateScoreboard(
   cycle?: number,
 ): StateScoreboard {
   const local = stateRaces(races, postal);
-  const senateFilings = local.filter((race) => race.office === "senate" && race.empty !== true).length;
+  const senateFilings = local.filter(
+    (race) => race.office === "senate" && raceHasCandidates(race),
+  ).length;
   const cycles =
     cycle != null
       ? [cycle]
@@ -174,7 +176,7 @@ export function statesWithRaces(races: readonly Race[]): string[] {
   return [
     ...new Set(
       races
-        .filter((race) => race.empty !== true)
+        .filter((race) => raceHasCandidates(race))
         .map((race) => race.state)
         .filter((state): state is string => state != null && state.length > 0),
     ),
