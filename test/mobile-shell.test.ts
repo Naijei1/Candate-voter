@@ -22,6 +22,8 @@ test("mobile shell keeps the desktop map grid and adds Safari safe areas", () =>
   assert.match(mobile, /\.state-overview\s*\{[^}]*overflow:\s*auto/);
   assert.match(mobile, /max-height:\s*min\(52dvh/);
   assert.match(mobile, /\.map-legend-dock\s*\{[^}]*left:/);
+  assert.match(mobile, /\.map-bottom-dock\s*\{[^}]*flex-direction:\s*column/);
+  assert.match(mobile, /\.map-bottom-dock \.map-meta-dock/);
   assert.match(mobile, /html\.keyboard-open \.zip-slot/);
 });
 
@@ -56,4 +58,10 @@ test("race and candidate pages keep a labeled way back to the map", () => {
   assert.equal(/clip:\s*rect\(0,\s*0,\s*0,\s*0\)/.test(narrow), false);
   assert.match(narrow, /\.map-chrome \.brand-name[\s\S]*?white-space:\s*nowrap/);
   assert.match(narrow, /\.site-header \.brand-name/);
+  const brand = narrow.slice(narrow.indexOf(".map-chrome .brand-name"), narrow.indexOf(".site-header .brand-tagline"));
+  assert.equal(/clip:/.test(brand), false);
+  assert.equal(css.includes(".details-subhead"), false);
+  assert.equal(css.includes(".home-cue"), false);
+  assert.equal(css.includes(".home-line"), false);
+  assert.equal(css.includes(".map-chrome-info"), false);
 });

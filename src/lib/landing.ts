@@ -72,9 +72,34 @@ export type StateScoreboard = {
 };
 
 /**
+ * People on stored Senate races for the state footer.
+ * `countFor` returns the loaded candidate total, `null` when that read
+ * failed, or `undefined` when it has not finished. Empty stubs are zero
+ * and do not wait. A missing read returns null so the footer does not
+ * fall back to a race-row count.
+ */
+export function senateCandidateCount(
+  races: readonly Pick<Race, "office" | "raceId" | "empty">[],
+  countFor: (raceId: string) => number | null | undefined,
+): number | null {
+  const senate = races.filter((race) => race.office === "senate");
+  if (senate.length === 0) return 0;
+  let total = 0;
+  for (const race of senate) {
+    if (race.empty === true) continue;
+    const count = countFor(race.raceId);
+    if (count == null) return null;
+    total += count;
+  }
+  return total;
+}
+
+/**
  * Senate rows already loaded, plus House districts with filings out of the
  * apportioned total. A zero total (no apportionment for the postal) stays
  * zero so the UI does not invent a denominator.
+ * `senateFilings` is a race-row count for coverage and map hover, not the
+ * people count on the state footer.
  */
 export function stateScoreboard(
   races: readonly Race[],

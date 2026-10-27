@@ -6,6 +6,7 @@ import {
   filingCoverageLabel,
   parseRaceIds,
   presidentialRace,
+  senateCandidateCount,
   spotlightRaces,
   stateRaces,
   statesWithRaces,
@@ -313,4 +314,37 @@ test("candidate load returns rows when the action settles", async () => {
     load: async () => ({ ok: true, races: [{ raceId: "2026-senate-KY", candidates: [] }] }),
   });
   assert.equal(result.ok, true);
+});
+
+test("senate footer count is people on the race, not the race row", () => {
+  const races = [
+    race({
+      raceId: "2026-senate-KY",
+      office: "senate",
+      title: "U.S. Senate, Kentucky",
+      state: "KY",
+      jurisdiction: "Kentucky",
+    }),
+    race({
+      raceId: "2026-house-KY-03",
+      office: "house",
+      title: "U.S. House, Kentucky District 3",
+      state: "KY",
+      district: "03",
+    }),
+  ];
+  assert.equal(
+    senateCandidateCount(races, (id) => (id === "2026-senate-KY" ? 2 : undefined)),
+    2,
+  );
+  assert.equal(senateCandidateCount(races, () => undefined), null);
+  assert.equal(senateCandidateCount(races, () => null), null);
+  assert.equal(
+    senateCandidateCount(
+      races.map((item) => (item.office === "senate" ? { ...item, empty: true } : item)),
+      () => undefined,
+    ),
+    0,
+  );
+  assert.equal(senateCandidateCount([], () => 4), 0);
 });
