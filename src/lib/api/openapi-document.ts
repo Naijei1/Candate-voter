@@ -1013,6 +1013,16 @@ components:
           description: |
             Alias of \`cycle\`. The page URL uses \`year\`. When both are
             set they must be equal. A \`raceId\` year prefix must match.
+        state:
+          type: string
+          description: |
+            Optional two-letter postal code for the page the visitor is on.
+            When present, answer about that state instead of asking which state.
+        zip:
+          type: string
+          description: |
+            Optional five-digit ZIP when the page was opened from a ZIP lookup.
+            Sent with \`state\` when both are on the page.
         threadId:
           type: string
           description: Client correlation id. The server does not store turns.

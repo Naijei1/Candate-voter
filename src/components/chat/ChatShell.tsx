@@ -32,6 +32,8 @@ export function ChatShell({
   const active = useMemo<ChatContextInput>(
     () => ({
       cycle: context.cycle,
+      ...(context.state ? { state: context.state } : {}),
+      ...(context.zip ? { zip: context.zip } : {}),
       ...(dismissed
         ? {}
         : {
@@ -40,7 +42,15 @@ export function ChatShell({
             messagePrefix: context.messagePrefix,
           }),
     }),
-    [context.cycle, context.raceId, context.candidateId, context.messagePrefix, dismissed],
+    [
+      context.cycle,
+      context.state,
+      context.zip,
+      context.raceId,
+      context.candidateId,
+      context.messagePrefix,
+      dismissed,
+    ],
   );
   const label = dismissed ? null : contextLabel(context);
   const titleId = mode === "page" ? "chat-page-title" : "ask-panel-title";

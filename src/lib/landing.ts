@@ -1,3 +1,4 @@
+import { isBogusAtLargeContest } from "./data/at-large";
 import { houseScoreSentence, senateScoreSentence } from "./copy";
 import { FORM2_SCOPE_NOTE, houseCoverageForRaces, raceHasCandidates } from "./data/coverage";
 import { OFFICE_ORDER } from "./races";
@@ -39,7 +40,10 @@ export function spotlightRaces(races: readonly Race[]): Race[] {
  */
 export function stateRaces(races: readonly Race[], postal: string): Race[] {
   return races
-    .filter((race) => race.state === postal && race.office !== "president")
+    .filter(
+      (race) =>
+        race.state === postal && race.office !== "president" && !isBogusAtLargeContest(race),
+    )
     .sort((a, b) => {
       const byOffice = OFFICE_ORDER.indexOf(a.office) - OFFICE_ORDER.indexOf(b.office);
       if (byOffice !== 0) return byOffice;

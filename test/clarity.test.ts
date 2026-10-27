@@ -21,6 +21,7 @@ import { stateRaces, stateScoreboard } from "../src/lib/landing";
 import { buildZipLookupRequest, requestZipLookup } from "../src/lib/lookup/zip-request";
 import {
   parseZipLookup,
+  settleZipLookup,
   zipLookupErrorCopy,
   zipRaceSlots,
   zipSlotTitle,
@@ -142,6 +143,42 @@ test("lookup times out inside the UI budget and can be told from a hang", async 
   assert.match(zipLookupErrorCopy(result), /too long/);
 });
 
+test("client ZIP deadline clears Looking up without waiting on the server", async () => {
+  const started = Date.now();
+  const result = await settleZipLookup(new Promise(() => {}), 25);
+  assert.equal(result.ok, false);
+  if (result.ok) return;
+  assert.equal(result.reason, "timeout");
+  assert.ok(Date.now() - started < 500);
+});
+
+test("zip_not_found and invalid_zip codes map to clear failures", async () => {
+  const missing = await requestZipLookup({
+    zip: "99999",
+    year: 2026,
+    origin: "https://voter.naijei.com",
+    callHandler: async () =>
+      Response.json(
+        { error: "not_found", code: "zip_not_found", message: "No congressional district is published for that ZIP" },
+        { status: 422 },
+      ),
+  });
+  assert.equal(missing.ok, false);
+  if (missing.ok) return;
+  assert.equal(missing.reason, "not_found");
+
+  const invalid = await requestZipLookup({
+    zip: "99999",
+    year: 2026,
+    origin: "https://voter.naijei.com",
+    callHandler: async () =>
+      Response.json({ error: "bad_request", code: "invalid_zip", message: "Enter a 5-digit ZIP code." }, { status: 409 }),
+  });
+  assert.equal(invalid.ok, false);
+  if (invalid.ok) return;
+  assert.equal(invalid.reason, "bad_request");
+});
+
 test("scoreboard uses coverage counts and the explainer stays plain", () => {
   const races: Race[] = [
     {
@@ -205,7 +242,8 @@ test("candidate rows start with a name and keep full records closed", () => {
   );
   assert.match(html, /Ada Lovelace/);
   assert.match(html, /party-cue/);
-  assert.match(html, /flex-wrap/);
+  assert.match(html, /candidate-line/);
+  assert.equal(html.includes("flex-wrap"), false);
   assert.equal(html.includes("shrink-0"), false);
   assert.match(html, /text-party-dem">Democratic/);
   assert.equal(html.includes("text-accent\">Democratic"), false);
@@ -371,6 +409,43 @@ test("empty district copy follows returned stubs and leaves coverage on filings"
   );
   assert.equal(emptyHouseNext(listed[0]!, races), null);
   assert.equal(stateRaces([atLarge], "WY")[0]?.raceId, "2026-house-WY-00");
+  const texasAtLarge: Race = {
+    ...atLarge,
+    raceId: "2026-house-TX-00",
+    state: "TX",
+    district: "00",
+    title: "U.S. House, Texas at-large",
+    jurisdiction: "Texas at-large",
+  };
+  const texasDistrict: Race = {
+    ...texasAtLarge,
+    raceId: "2026-house-TX-07",
+    district: "07",
+    title: "U.S. House, Texas District 7",
+    jurisdiction: "Texas District 7",
+  };
+  assert.deepEqual(
+    stateRaces([texasAtLarge, texasDistrict], "TX").map((race) => race.raceId),
+    ["2026-house-TX-07"],
+  );
+  const txZip = parseZipLookup({
+    zip: "78701",
+    year: 2026,
+    state: "TX",
+    districts: [
+      { district: "00", raceId: "2026-house-TX-00" },
+      { district: "37", raceId: "2026-house-TX-37" },
+    ],
+    senateRaceId: "2026-senate-TX",
+    raceIds: ["2026-senate-TX", "2026-house-TX-00", "2026-house-TX-37"],
+    races: [],
+  });
+  assert.ok(txZip);
+  assert.deepEqual(
+    zipRaceSlots([], txZip!).map((slot) => slot.raceId),
+    ["2026-senate-TX", "2026-house-TX-37"],
+  );
+  assert.equal(zipSlotTitle({ raceId: "2026-house-WY-00", office: "house", district: "00", race: null }, "WY").includes("at-large"), true);
 
   const board = stateScoreboard(races, "KY", 2026);
   assert.equal(board.senateFilings, 0);

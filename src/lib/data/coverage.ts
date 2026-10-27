@@ -1,5 +1,5 @@
 import type { Race } from "../types";
-import { HOUSE_SEATS, HOUSE_SEATS_TOTAL } from "./at-large";
+import { HOUSE_SEATS, HOUSE_SEATS_TOTAL, isBogusAtLargeContest } from "./at-large";
 import { isEmptyRace, raceHasCandidates, signalRace } from "./candidate-signal";
 import { raceMatchesCycle } from "./cycle-match";
 import { visibleRaces } from "./view";
@@ -39,7 +39,8 @@ export function houseCoverageForRaces(
         race.office === "house" &&
         raceMatchesCycle(race, cycle) &&
         race.state &&
-        raceHasCandidates(race),
+        raceHasCandidates(race) &&
+        !isBogusAtLargeContest(race),
     );
     if (state) {
       rows.push({

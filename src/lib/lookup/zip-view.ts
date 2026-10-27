@@ -1,6 +1,13 @@
-import { houseContestJurisdiction, houseContestTitle } from "@/lib/data/at-large";
+import {
+  houseContestJurisdiction,
+  houseContestTitle,
+  isBogusAtLargeContest,
+} from "@/lib/data/at-large";
 import { isPostalState, stateName } from "@/lib/data/states";
 import type { FederalOffice, Race } from "@/lib/types";
+
+/** Client and server budget for one ZIP lookup. Looking up must not sit past this. */
+export const ZIP_LOOKUP_TIMEOUT_MS = 8_000;
 
 const ZIP = /^(\d{5})(?:-\d{4})?$/;
 const SENATE_ID = /^(\d{4})-senate-([A-Z]{2})$/;
@@ -41,6 +48,29 @@ export type ZipRaceSlot = {
   /** Stored race from the page index or the lookup `races` array. */
   race: Race | null;
 };
+
+/**
+ * Stop the spinner if the lookup does not settle.
+ * The server action may keep running; the page does not.
+ */
+export function settleZipLookup(
+  lookup: Promise<ZipLookupResult>,
+  timeoutMs = ZIP_LOOKUP_TIMEOUT_MS,
+): Promise<ZipLookupResult> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timedOut = new Promise<ZipLookupResult>((resolve) => {
+    timer = setTimeout(() => {
+      resolve({ ok: false, reason: "timeout", message: null });
+    }, timeoutMs);
+  });
+  const guarded = lookup.then(
+    (result) => result,
+    () => ({ ok: false as const, reason: "unavailable" as const, message: null }),
+  );
+  return Promise.race([guarded, timedOut]).finally(() => {
+    if (timer) clearTimeout(timer);
+  });
+}
 
 /** Five-digit ZIP. ZIP+4 keeps the first five digits, matching the API. */
 export function normalizeZip(input: string): string | null {
@@ -160,6 +190,16 @@ export function zipRaceSlots(
     const district =
       office === "house" ? (districtByRace.get(raceId) ?? known?.district ?? districtFromId(raceId)) : null;
     if (office === "house" && !district) continue;
+    if (
+      isBogusAtLargeContest({
+        raceId,
+        office,
+        state: payload.state,
+        district,
+      })
+    ) {
+      continue;
+    }
     slots.push({ raceId, office, district, race: known });
   }
   return slots;

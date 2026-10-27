@@ -1,10 +1,11 @@
 "use client";
 
 // Classic JSX runtime for `node --import tsx --test`. Next compiles this with the automatic runtime.
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { findRacesByZip } from "@/lib/lookup/find-races";
 import {
   normalizeZip,
+  settleZipLookup,
   type ZipLookupFailureReason,
   type ZipLookupPayload,
   type ZipLookupResult,
@@ -34,6 +35,7 @@ export function ZipLookup({
   const [pending, setPending] = useState(false);
   const [failed, setFailed] = useState(false);
   const [failLead, setFailLead] = useState(ZIP_FAIL);
+  const flight = useRef(0);
 
   async function submit(raw: string) {
     const zip = normalizeZip(raw);
@@ -43,11 +45,14 @@ export function ZipLookup({
       onReject?.();
       return;
     }
+    const id = flight.current + 1;
+    flight.current = id;
     setPending(true);
     setFailed(false);
     setValue(zip);
     try {
-      const result = await lookup(zip, year);
+      const result = await settleZipLookup(lookup(zip, year));
+      if (flight.current !== id) return;
       if (!result.ok || !result.payload.state) {
         setFailLead(result.ok ? ZIP_FAIL : failLeadFor(result.reason));
         setFailed(true);
@@ -56,11 +61,12 @@ export function ZipLookup({
       }
       onFound(result.payload);
     } catch {
+      if (flight.current !== id) return;
       setFailLead("ZIP lookup isn't available right now.");
       setFailed(true);
       onReject?.();
     } finally {
-      setPending(false);
+      if (flight.current === id) setPending(false);
     }
   }
 

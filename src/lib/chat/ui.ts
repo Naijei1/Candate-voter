@@ -1,5 +1,7 @@
 import { isResourceId } from "../api/ids";
 import { resolveCycle } from "../data/cycles";
+import { isPostalState, stateName } from "../data/states";
+import { normalizeZip } from "../lookup/zip-view";
 import {
   CHAT_INCOMPLETE_MESSAGE,
   CHAT_MODEL_UNAVAILABLE_MESSAGE,
@@ -40,6 +42,10 @@ export type ChatContextInput = {
   raceId?: string;
   candidateId?: string;
   cycle?: number;
+  /** Two-letter postal code from the page URL or sheet. */
+  state?: string;
+  /** Five-digit ZIP from the page URL or sheet. */
+  zip?: string;
   /**
    * Prepended to the question in the POST body. Not a request field.
    * Only a "Page context:" note from the state panel is forwarded.
@@ -79,6 +85,7 @@ export function contextFromLocation(input: {
 }): ChatContextInput & { panel: boolean } {
   const requested = input.searchParams.get("year") ?? undefined;
   const cycle = resolveCycle(input.cycles, requested, input.now) ?? undefined;
+  const geo = pageGeo(input.searchParams.get("state"), input.searchParams.get("zip"));
   if (input.pathname === "/chat") {
     return {
       raceId: validId(input.searchParams.get("raceId")),
@@ -86,6 +93,7 @@ export function contextFromLocation(input: {
       cycle,
       messagePrefix: pageNote(input.searchParams.get("note")),
       panel: false,
+      ...geo,
     };
   }
 
@@ -96,6 +104,7 @@ export function contextFromLocation(input: {
     candidateId: candidateMatch ? validId(decodeURIComponent(candidateMatch[1])) : undefined,
     cycle,
     panel: input.pathname === "/" || raceMatch != null || candidateMatch != null,
+    ...geo,
   };
 }
 
@@ -114,6 +123,8 @@ export function contextLabel(context: ChatContextInput): string | null {
   const parts: string[] = [];
   if (context.raceId) parts.push(raceChipLabel(context.raceId));
   if (context.candidateId) parts.push("This candidate");
+  if (parts.length === 0 && context.state) parts.push(stateName(context.state));
+  else if (parts.length === 0 && context.zip) parts.push(`ZIP ${context.zip}`);
   if (parts.length === 0) return null;
   if (context.cycle != null) parts.push(String(context.cycle));
   return parts.join(" · ");
@@ -134,6 +145,8 @@ export function chatPageHref(context: ChatContextInput, draft?: string): string 
   if (context.raceId) params.set("raceId", context.raceId);
   if (context.candidateId) params.set("candidateId", context.candidateId);
   if (context.cycle != null) params.set("year", String(context.cycle));
+  if (context.state) params.set("state", context.state);
+  if (context.zip) params.set("zip", context.zip);
   const note = pageNote(context.messagePrefix ?? null);
   if (note) params.set("note", note);
   const question = draft?.trim() ?? "";
@@ -179,6 +192,8 @@ export function buildChatRequestBody(input: {
   raceId?: string;
   candidateId?: string;
   cycle?: number;
+  state?: string;
+  zip?: string;
   threadId?: string;
 }): { ok: true; body: ChatRequest } | { ok: false; reason: "empty" | "too_long" } {
   const message = input.message.trim();
@@ -187,6 +202,8 @@ export function buildChatRequestBody(input: {
   const threadId =
     input.threadId && THREAD_ID.test(input.threadId) ? input.threadId : undefined;
   const cycle = alignedCycle(input.cycle, input.raceId);
+  const state = readPostal(input.state);
+  const zip = readZip(input.zip);
   return {
     ok: true,
     body: {
@@ -194,6 +211,8 @@ export function buildChatRequestBody(input: {
       ...(input.raceId ? { raceId: input.raceId } : {}),
       ...(input.candidateId ? { candidateId: input.candidateId } : {}),
       ...(cycle != null ? { cycle, year: cycle } : {}),
+      ...(state ? { state } : {}),
+      ...(zip ? { zip } : {}),
       ...(threadId ? { threadId } : {}),
     },
   };
@@ -515,6 +534,25 @@ function raceChipLabel(raceId: string): string {
   }
   if (/^\d{4}-president$/.test(raceId)) return "President";
   return labelForRaceId(raceId) ?? "This race";
+}
+
+function pageGeo(state: string | null, zip: string | null): { state?: string; zip?: string } {
+  const postal = readPostal(state);
+  const code = readZip(zip);
+  return {
+    ...(postal ? { state: postal } : {}),
+    ...(code ? { zip: code } : {}),
+  };
+}
+
+export function readPostal(value: string | null | undefined): string | undefined {
+  const postal = value?.trim().toUpperCase() ?? "";
+  return isPostalState(postal) ? postal : undefined;
+}
+
+export function readZip(value: string | null | undefined): string | undefined {
+  if (!value) return undefined;
+  return normalizeZip(value) ?? undefined;
 }
 
 function pageNote(value: string | null): string | undefined {

@@ -29,7 +29,7 @@ export function RecordMeta({
       {source ? (
         <a
           href={source}
-          className="text-accent underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
+          className="tap-link text-accent underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
         >
           Source
         </a>

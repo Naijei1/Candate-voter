@@ -29,6 +29,10 @@ export type ChatRequest = {
   cycle?: number;
   /** Alias of `cycle`. Present only when it equals `cycle`. */
   year?: number;
+  /** Two-letter postal code for the page the visitor is on. */
+  state?: string;
+  /** Five-digit ZIP when the page was opened from a ZIP lookup. */
+  zip?: string;
   threadId?: string;
   /**
    * Two-letter postal code from the page (`/?state=KY`).

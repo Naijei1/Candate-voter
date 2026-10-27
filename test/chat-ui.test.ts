@@ -71,6 +71,36 @@ test("context comes from the route and the year control", () => {
     chatPageHref({ raceId: "2026-senate-AK", cycle: 2026 }, "Who filed?"),
     "/chat?raceId=2026-senate-AK&year=2026&q=Who+filed%3F",
   );
+
+  const home = contextFromLocation({
+    pathname: "/",
+    searchParams: new URLSearchParams("year=2026&state=tx&zip=78701-1234"),
+    cycles: [2026, 2028],
+  });
+  assert.equal(home.panel, true);
+  assert.equal(home.state, "TX");
+  assert.equal(home.zip, "78701");
+  assert.equal(home.cycle, 2026);
+  assert.equal(contextLabel(home), "Texas · 2026");
+  const zipBody = buildChatRequestBody({
+    message: "Who's running?",
+    state: home.state,
+    zip: home.zip,
+    cycle: home.cycle,
+  });
+  assert.equal(zipBody.ok, true);
+  if (!zipBody.ok) return;
+  assert.deepEqual(zipBody.body, {
+    message: "Who's running?",
+    state: "TX",
+    zip: "78701",
+    cycle: 2026,
+    year: 2026,
+  });
+  assert.equal(
+    chatPageHref({ state: "TX", zip: "78701", cycle: 2026 }),
+    "/chat?year=2026&state=TX&zip=78701",
+  );
 });
 
 test("suggested prompts and error copy stay factual", () => {

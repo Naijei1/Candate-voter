@@ -44,13 +44,13 @@ export function CandidateDisclosure({
         aria-expanded={open}
         aria-controls={panelId}
         onClick={() => setOpen((value) => !value)}
-        className="flex w-full min-w-0 max-w-full flex-wrap items-center gap-x-2 gap-y-0.5 rounded-md py-0.5 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        className="candidate-line rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
       >
-        <span className="min-w-0 break-words font-medium text-ink">{name}</span>
+        <span className="candidate-name">{name}</span>
+        <span className={`party-cue text-sm ${toneClass}`}>{cue}</span>
         <span className="row-cue">
           Details <span aria-hidden="true">{open ? "▾" : "›"}</span>
         </span>
-        <span className={`party-cue text-sm ${toneClass}`}>{cue}</span>
       </button>
       {filingNote ? (
         <p data-testid="person-filing-note" className="person-filing-note mt-1 text-sm leading-5 text-ink">

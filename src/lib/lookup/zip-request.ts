@@ -4,11 +4,11 @@ import { withBasePath } from "@/lib/base-path";
 import {
   normalizeZip,
   parseZipLookup,
+  ZIP_LOOKUP_TIMEOUT_MS,
   type ZipLookupResult,
 } from "@/lib/lookup/zip-view";
 
-/** Matches the Census budget (about 7s) with a little room for the UI. */
-export const ZIP_LOOKUP_TIMEOUT_MS = 8_000;
+export { ZIP_LOOKUP_TIMEOUT_MS };
 
 export function buildZipLookupRequest(input: {
   zip: string;
@@ -81,18 +81,27 @@ async function readZipResponse(response: Response): Promise<ZipLookupResult> {
     if (!payload) return { ok: false, reason: "bad_response", message: null };
     return { ok: true, payload };
   }
-  const message = await readMessage(response);
-  if (response.status === 404) return { ok: false, reason: "not_found", message };
-  if (response.status === 400) return { ok: false, reason: "bad_request", message };
+  const detail = await readErrorDetail(response);
+  if (response.status === 404 || detail.code === "zip_not_found") {
+    return { ok: false, reason: "not_found", message: detail.message };
+  }
+  if (response.status === 400 || detail.code === "invalid_zip") {
+    return { ok: false, reason: "bad_request", message: detail.message };
+  }
   return { ok: false, reason: "unavailable", message: null };
 }
 
-async function readMessage(response: Response): Promise<string | null> {
+async function readErrorDetail(
+  response: Response,
+): Promise<{ message: string | null; code: string | null }> {
   try {
-    const body = (await response.json()) as { message?: unknown };
-    return typeof body.message === "string" && body.message.trim() ? body.message.trim() : null;
+    const body = (await response.json()) as { message?: unknown; code?: unknown };
+    return {
+      message: typeof body.message === "string" && body.message.trim() ? body.message.trim() : null,
+      code: typeof body.code === "string" && body.code.trim() ? body.code.trim() : null,
+    };
   } catch {
-    return null;
+    return { message: null, code: null };
   }
 }
 
