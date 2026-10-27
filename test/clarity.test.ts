@@ -5,7 +5,15 @@ import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { CandidateDisclosure } from "../src/components/CandidateDisclosure";
 import { StateScoreboard } from "../src/components/StateScoreboard";
-import { emptyHouseNext, emptyRaceSentence, jurisdictionRepeatsTitle, officeOneLiner, runningForLine } from "../src/lib/copy";
+import {
+  candidatesSoFarLine,
+  emptyHouseNext,
+  emptyRaceSentence,
+  jurisdictionRepeatsTitle,
+  officeOneLiner,
+  runningForLine,
+  senateBoardLine,
+} from "../src/lib/copy";
 import { partyCue } from "../src/lib/format";
 import { presentAskMarkdown } from "../src/lib/chat/polish";
 import { citationLabel } from "../src/lib/chat/ui";
@@ -164,13 +172,24 @@ test("scoreboard uses coverage counts and the explainer stays plain", () => {
   assert.equal(board.districtsWithFilings, 1);
   assert.equal(board.districtsTotal, 6);
   assert.equal(board.filingsSoFarOnly, true);
-  const html = renderToStaticMarkup(React.createElement(StateScoreboard, { board }));
-  assert.match(html, /Senate — 1 filing for the statewide seat/);
+  const html = renderToStaticMarkup(
+    React.createElement(StateScoreboard, { board, senatePeople: 2 }),
+  );
+  assert.match(html, /Senate — 2 candidates so far/);
+  assert.equal(html.includes("1 filing"), false);
   assert.match(html, /House — 1 of 6 districts has a filing/);
+  assert.equal(senateBoardLine(2), `Senate — ${candidatesSoFarLine(2)}.`);
+  assert.equal(candidatesSoFarLine(1), "1 candidate so far");
+  assert.equal(senateBoardLine(0), "Senate — no filing yet for the statewide seat.");
   assert.equal(/districts so far/.test(html), false);
   assert.equal(/filed so far/.test(html), false);
   assert.equal(/What am I looking at/.test(html), false);
   assert.equal(/not a ranking/i.test(html), false);
+  const waiting = renderToStaticMarkup(
+    React.createElement(StateScoreboard, { board, senatePeople: null }),
+  );
+  assert.equal(/Senate —/.test(waiting), false);
+  assert.match(waiting, /House — 1 of 6 districts has a filing/);
 });
 
 test("candidate rows start with a name and keep full records closed", () => {
@@ -205,6 +224,12 @@ test("home and ask copy stay plain and the map does not lead with Popular", () =
   assert.equal(landing.includes("WhatAmILookingAt"), false);
   assert.equal(landing.includes("ChromeInfo"), false);
   assert.equal(landing.includes("homeValueLine"), false);
+  assert.match(landing, /candidatesSoFarLine/);
+  assert.match(landing, /senateCandidateCount/);
+  assert.match(landing, /highlightedPostal/);
+  assert.match(landing, /selected=\{mapPostal\}/);
+  assert.equal(landing.includes("1 candidate so far"), false);
+  assert.equal(landing.includes("candidates so far"), false);
   assert.equal(looking.includes("What am I looking at"), false);
   assert.equal(header.includes("map-chrome-info"), false);
   assert.equal(footer.includes("does not endorse"), false);

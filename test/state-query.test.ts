@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  highlightedPostal,
   mapHomeHref,
   postalFromSearch,
   searchWithState,
@@ -26,6 +27,13 @@ test("state query keeps the year and replaces a previous state", () => {
   assert.equal(searchWithZip("?year=2026", "ky", "40502"), "?year=2026&state=KY&zip=40502");
   assert.equal(zipFromSearch("?state=KY&zip=40502-1234"), "40502");
   assert.equal(zipFromSearch("?state=KY"), null);
+});
+
+test("country map keeps the last state when Back drops state from the URL", () => {
+  assert.equal(highlightedPostal("KY", null), "KY");
+  assert.equal(highlightedPostal(null, "KY"), "KY");
+  assert.equal(highlightedPostal("OH", "KY"), "OH");
+  assert.equal(highlightedPostal(null, null), null);
 });
 
 test("year navigation keeps the selected state on the home page", () => {

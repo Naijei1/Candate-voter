@@ -250,6 +250,15 @@ html[data-map-view="state"] .map-chrome {
   max-width: min(28rem, calc(100% - 11rem));
 }
 
+.map-bottom-dock {
+  pointer-events: none;
+}
+
+.map-bottom-dock .map-meta-dock,
+.map-bottom-dock .map-legend-dock {
+  pointer-events: auto;
+}
+
 .state-shell {
   display: flex;
   flex-direction: column;
@@ -702,13 +711,6 @@ html[data-map-view="state"] .map-chrome {
   line-height: 1.5;
 }
 
-.details-subhead {
-  margin-top: 0.9rem;
-  color: var(--color-ink);
-  font-size: 1rem;
-  font-weight: 700;
-}
-
 .page-refresh {
   margin-top: 1.35rem;
 }
@@ -794,6 +796,32 @@ html[data-map-view="state"] .map-chrome {
     left: max(0.65rem, env(safe-area-inset-left, 0px));
     right: auto;
     bottom: calc(env(safe-area-inset-bottom, 0px) + 0.65rem);
+  }
+
+  .map-bottom-dock {
+    position: absolute;
+    z-index: 24;
+    left: max(0.65rem, env(safe-area-inset-left, 0px));
+    right: max(0.65rem, env(safe-area-inset-right, 0px));
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 0.65rem);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.45rem;
+  }
+
+  .map-bottom-dock .map-meta-dock,
+  .map-bottom-dock .map-legend-dock {
+    position: static;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    max-width: 100%;
+  }
+
+  .map-bottom-dock .glass-chip,
+  .map-bottom-dock .map-legend {
+    max-width: 100%;
   }
 
   .map-legend-dock .map-legend,
@@ -1042,12 +1070,6 @@ html[data-map-view="state"] .map-chrome {
 
   .map-chrome .brand-name,
   .site-header .brand-name {
-    position: static;
-    width: auto;
-    height: auto;
-    margin: 0;
-    overflow: visible;
-    clip: auto;
     white-space: nowrap;
   }
 

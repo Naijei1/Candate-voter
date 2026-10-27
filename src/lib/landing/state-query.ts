@@ -20,6 +20,15 @@ export function searchWithState(search: string, postal: string): string {
   return query ? `?${query}` : "";
 }
 
+/**
+ * Postal to paint on the country map.
+ * A `state` query wins. Back that drops `state` keeps the last selection,
+ * so the ZIP field and the highlight still refer to the same state.
+ */
+export function highlightedPostal(urlPostal: string | null, remembered: string | null): string | null {
+  return urlPostal ?? remembered;
+}
+
 /** Five-digit ZIP in `?zip=`, or null when the query has none. */
 export function zipFromSearch(search: string): string | null {
   const params = new URLSearchParams(search.startsWith("?") ? search.slice(1) : search);

@@ -16,11 +16,23 @@ export function senateScoreSentence(count: number): string {
   return `${count} Senate races have a filing`;
 }
 
-/** State overview: a plain Senate line plus the filing count. */
+/**
+ * People with a stored filing. Shared by the state footer and the race card
+ * so those two lines cannot count different things.
+ */
+export function candidatesSoFarLine(count: number): string {
+  const people = Math.max(0, Math.trunc(count));
+  if (people === 1) return "1 candidate so far";
+  return `${people} candidates so far`;
+}
+
+/**
+ * State overview Senate line. `count` is people on that statewide seat,
+ * the same number `candidatesSoFarLine` shows on the race card.
+ */
 export function senateBoardLine(count: number): string {
   if (count <= 0) return "Senate — no filing yet for the statewide seat.";
-  if (count === 1) return "Senate — 1 filing for the statewide seat.";
-  return `Senate — ${count} filings for statewide seats.`;
+  return `Senate — ${candidatesSoFarLine(count)}.`;
 }
 
 /** State overview: a plain House line plus the district count. */

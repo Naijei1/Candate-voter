@@ -13,6 +13,7 @@ import { MapLegend, UsMap } from "@/components/UsMap";
 import { ZipLookup } from "@/components/ZipLookup";
 import { askScopeForState, askScopeForYear, pageContextFromScope } from "@/lib/chat/scope";
 import {
+  candidatesSoFarLine,
   emptyHouseNext,
   emptyRaceSentence,
   jurisdictionRepeatsTitle,
@@ -22,7 +23,7 @@ import {
 } from "@/lib/copy";
 import { stateName } from "@/lib/data/states";
 import { officeLabel, partyCue } from "@/lib/format";
-import { stateRaces, stateScoreboard, statesWithRaces } from "@/lib/landing";
+import { senateCandidateCount, stateRaces, stateScoreboard, statesWithRaces } from "@/lib/landing";
 import {
   loadCandidatesForRaces,
   type RaceCandidatesResult,
@@ -34,6 +35,7 @@ import {
   type CandidateCacheEntry,
 } from "@/lib/landing/load-candidates";
 import {
+  highlightedPostal,
   searchWithoutState,
   searchWithState,
   searchWithZip,
@@ -76,6 +78,7 @@ export function Landing({
   lookupZip,
 }: LandingProps) {
   const [selected, setSelected] = useState<string | null>(initialState);
+  const [rememberedPostal, setRememberedPostal] = useState<string | null>(initialState);
   const [zipCode, setZipCode] = useState<string | null>(initialZip);
   const [zipPayload, setZipPayload] = useState<ZipLookupPayload | null>(null);
   const [zipLoading, setZipLoading] = useState(Boolean(initialZip));
@@ -98,8 +101,10 @@ export function Landing({
   }, [replacePageContext, races, selected, year]);
 
   const syncFromLocation = useCallback(() => {
-    setSelected(postalFromSearch(window.location.search));
+    const postal = postalFromSearch(window.location.search);
+    setSelected(postal);
     setZipCode(zipFromSearch(window.location.search));
+    if (postal) setRememberedPostal(postal);
   }, []);
 
   useLayoutEffect(() => {
@@ -276,6 +281,7 @@ export function Landing({
       : null;
 
   const mapContext: MapContext = { year, state: selected, zip: zipCode };
+  const mapPostal = highlightedPostal(selected, rememberedPostal);
 
   return (
     <div className={selected ? "state-shell" : "national-shell"}>
@@ -321,7 +327,7 @@ export function Landing({
           <UsMap
             mapId="hero-map"
             labelled
-            selected={null}
+            selected={mapPostal}
             hot={hot}
             statesWithRaces={marked}
             onSelect={selectState}
@@ -333,11 +339,13 @@ export function Landing({
               {hotCaption}
             </p>
           ) : null}
-          <div className="map-meta-dock">
-            <DataRefreshedBanner refreshedAt={refreshedAt} compact />
-          </div>
-          <div className="map-legend-dock">
-            <MapLegend />
+          <div className="map-bottom-dock">
+            <div className="map-meta-dock">
+              <DataRefreshedBanner refreshedAt={refreshedAt} compact />
+            </div>
+            <div className="map-legend-dock">
+              <MapLegend />
+            </div>
           </div>
         </div>
       )}
@@ -382,6 +390,11 @@ function StateOverview({
   const name = stateName(postal);
   const board = stateScoreboard(races, postal, year);
   const listed = stateRaces(races, postal);
+  const senatePeople = senateCandidateCount(listed, (raceId) => {
+    const entry = cache.get(raceId);
+    if (!entry) return undefined;
+    return entry.ok ? entry.candidates.length : null;
+  });
   const yourIds = new Set(yours.map((slot) => slot.raceId));
   const rest = listed.filter((race) => !yourIds.has(race.raceId));
   const showFull = !pinYours || showAll;
@@ -401,7 +414,7 @@ function StateOverview({
         </div>
       </div>
       <p className="state-year">{year}</p>
-      <StateScoreboard board={board} />
+      <StateScoreboard board={board} senatePeople={senatePeople} />
       <DataRefreshedBanner refreshedAt={refreshedAt} compact />
       {pinYours ? (
         <section
@@ -623,9 +636,7 @@ function RaceCard({
       ) : null}
       {candidates?.ok && candidates.candidates.length > 0 ? (
         <p className="mt-1 text-sm font-semibold tabular-nums text-ink">
-          {candidates.candidates.length === 1
-            ? "1 candidate so far"
-            : `${candidates.candidates.length} candidates so far`}
+          {candidatesSoFarLine(candidates.candidates.length)}
         </p>
       ) : null}
       <CandidateList race={race} entry={candidates} onRetry={onRetry} preserve={preserve} />
