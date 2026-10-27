@@ -183,18 +183,24 @@ export function UsMap({
         <g className="us-labels" aria-hidden="true">
           <g className="us-callouts">
             {STATE_CALLOUTS.map((callout) => (
-              <g key={`callout-${callout.postal}`} data-postal={callout.postal}>
-                <line
-                  className="us-callout-line"
-                  x1={callout.x1}
-                  y1={callout.y1}
-                  x2={callout.x2}
-                  y2={callout.y2}
-                />
+              <polyline
+                key={`callout-line-${callout.postal}`}
+                className="us-callout-line"
+                points={calloutLane(callout)}
+              />
+            ))}
+            {STATE_CALLOUTS.map((callout) => (
+              <g
+                key={`callout-${callout.postal}`}
+                data-postal={callout.postal}
+                className="us-callout"
+                transform={`translate(${callout.labelX} ${callout.labelY})`}
+              >
+                <rect className="us-label-plate" x="-0.7em" y="-0.72em" width="2.85em" height="1.44em" rx="0.18em" />
                 <text
                   data-postal={callout.postal}
-                  x={callout.labelX}
-                  y={callout.labelY}
+                  x="0"
+                  y="0"
                   textAnchor="start"
                   dominantBaseline="central"
                   className={
@@ -259,6 +265,14 @@ const StatePath = memo(function StatePath({
   );
 });
 
+/** Shared gutter east of the coast. Leaders turn here, left of every label. */
+const CALLOUT_GUTTER_X = 968;
+
+function calloutLane(callout: { x1: number; y1: number; x2: number; y2: number }): string {
+  const { x1, y1, x2, y2 } = callout;
+  return `${x1},${y1} ${CALLOUT_GUTTER_X},${y1} ${CALLOUT_GUTTER_X},${y2} ${x2},${y2}`;
+}
+
 const StateLabel = memo(function StateLabel({
   shape,
   isSelected,
@@ -268,6 +282,25 @@ const StateLabel = memo(function StateLabel({
 }) {
   if (HIDE_LABEL.has(shape.postal) || CALLOUT_POSTALS.has(shape.postal)) return null;
   const selectedClass = isSelected ? " is-selected" : "";
+  if (shape.postal === "MD") {
+    return (
+      <g className="us-callout" transform={`translate(${shape.x} ${shape.y})`}>
+        {isSelected ? null : (
+          <rect className="us-label-plate" x="-1.2em" y="-0.72em" width="2.4em" height="1.44em" rx="0.18em" />
+        )}
+        <text
+          data-postal={shape.postal}
+          x="0"
+          y="0"
+          textAnchor="middle"
+          dominantBaseline="central"
+          className={`us-label${selectedClass}`}
+        >
+          {shape.postal}
+        </text>
+      </g>
+    );
+  }
   return (
     <text
       data-postal={shape.postal}

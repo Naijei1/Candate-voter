@@ -35,6 +35,9 @@ test("mobile shell keeps the desktop map grid and adds Safari safe areas", () =>
   assert.match(mobile, /html\.keyboard-open \.zip-slot/);
   assert.match(mobile, /\.row-cue\s*\{[^}]*min-height:\s*44px/);
   assert.match(mobile, /\.row-cue\s*\{[^}]*min-width:\s*44px/);
+  assert.match(css, /\.ask-entry,\s*\.nav-control\s*\{[^}]*min-height:\s*44px/);
+  assert.match(css, /\.ask-entry,\s*\.nav-control\s*\{[^}]*min-width:\s*44px/);
+  assert.match(css, /\.ask-entry,\s*\.nav-control\s*\{[^}]*height:\s*44px/);
 });
 
 test("race and candidate pages keep a labeled way back to the map", () => {

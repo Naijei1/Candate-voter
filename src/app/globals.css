@@ -132,10 +132,25 @@ body {
   stroke-linejoin: round;
 }
 
+.us-map .us-callout {
+  font-size: 13px;
+}
+
+.us-map .us-label-plate {
+  fill: var(--color-paper);
+  stroke: none;
+  pointer-events: none;
+}
+
 .us-map .us-label-small,
 .us-map .us-label-callout {
   font-size: 13px;
   font-weight: 700;
+  stroke: var(--color-paper);
+  stroke-width: 0.42em;
+  paint-order: stroke fill;
+  stroke-linejoin: round;
+  stroke-linecap: round;
 }
 
 .us-map .us-label.is-selected {
@@ -895,9 +910,17 @@ html[data-ask="open"] .map-chrome {
   }
 
   /* viewBox units: 34px is about 12 CSS pixels on a 390px-wide phone. */
-  .us-map .us-label {
+  .us-map .us-label,
+  .us-map .us-callout {
     font-size: 34px;
+  }
+
+  .us-map .us-label {
     stroke-width: 8px;
+  }
+
+  .us-map .us-label-callout {
+    stroke-width: 0.42em;
   }
 
   .us-map .us-callout-line {
@@ -1350,6 +1373,14 @@ html[data-ask="open"] .map-chrome {
 
 .brand-link:hover .brand-name {
   color: var(--color-accent);
+}
+
+.ask-entry,
+.nav-control {
+  box-sizing: border-box;
+  min-width: 44px;
+  min-height: 44px;
+  height: 44px;
 }
 
 .nav-control:hover {
