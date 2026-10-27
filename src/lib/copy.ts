@@ -16,6 +16,50 @@ export function senateScoreSentence(count: number): string {
   return `${count} Senate races have a filing`;
 }
 
+/** One line under the ZIP bar on the national map. */
+export function homeValueLine(year: number): string {
+  return `Find who's running in your area for ${year}. Type your ZIP or tap your state.`;
+}
+
+/** State overview: a plain Senate line plus the filing count. */
+export function senateBoardLine(count: number): string {
+  if (count <= 0) return "Senate — no filing yet for the statewide seat.";
+  if (count === 1) return "Senate — 1 filing for the statewide seat.";
+  return `Senate — ${count} filings for statewide seats.`;
+}
+
+/** State overview: a plain House line plus the district count. */
+export function houseBoardLine(withFilings: number, total: number): string {
+  const filed = Math.max(0, withFilings);
+  if (total > 0) {
+    const verb = filed === 1 ? "has" : "have";
+    return `House — ${filed} of ${total} districts ${verb} a filing.`;
+  }
+  if (filed === 0) return "House — no filing yet.";
+  if (filed === 1) return "House — 1 filing.";
+  return `House — ${filed} filings.`;
+}
+
+/** What the office is, in one sentence, on a race card. */
+export function officeOneLiner(
+  race: Pick<Race, "office" | "district">,
+): string | null {
+  if (race.office === "senate") return "The U.S. Senate seat for the whole state.";
+  if (race.office === "house") {
+    const code = race.district?.trim() ?? "";
+    if (code === "00" || code === "0") return "The U.S. House seat for the whole state.";
+    return "The U.S. House seat for this district.";
+  }
+  return null;
+}
+
+/** True when the jurisdiction is already written in the title. */
+export function jurisdictionRepeatsTitle(title: string, jurisdiction: string): boolean {
+  const place = jurisdiction.trim().toLowerCase();
+  if (!place) return true;
+  return title.toLowerCase().includes(place);
+}
+
 /** Short map hover: state name and a filing count, or that nobody has filed. */
 export function stateHoverLine(
   name: string,
@@ -23,7 +67,7 @@ export function stateHoverLine(
   districtsWithFilings: number,
   districtsTotal: number,
 ): string {
-  if (senateFilings <= 0 && districtsWithFilings <= 0) return `${name} · No candidates yet`;
+  if (senateFilings <= 0 && districtsWithFilings <= 0) return `${name} · No one has filed yet`;
   const parts = [name];
   if (senateFilings === 1) parts.push("Senate filed");
   else if (senateFilings > 1) parts.push(`${senateFilings} Senate filed`);

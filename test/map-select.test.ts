@@ -47,13 +47,14 @@ test("landing is a map shell without a Popular list or ranking copy", () => {
   assert.match(source, /data-testid="your-races"/);
 });
 
-test("national map fills the viewport and the state page stacks until desktop", () => {
+test("national map fills the viewport and the state page uses one scroll", () => {
   const css = readFileSync(new URL("../src/app/globals.css", import.meta.url), "utf8");
   assert.match(css, /\.national-shell\s*\{[^}]*height:\s*100dvh/);
+  assert.match(css, /\.map-main\s*\{[^}]*overflow:\s*auto/);
   assert.match(css, /\.state-shell\s*\{[^}]*flex-direction:\s*column/);
   const block = css.slice(css.indexOf("@media (min-width: 1024px)"));
   assert.match(block, /\.state-shell\s*\{[^}]*display:\s*grid/);
-  assert.match(block, /\.state-shell\s*\{[^}]*height:\s*100dvh/);
-  assert.match(block, /\.state-shell\s*\{[^}]*max-height:\s*100dvh/);
-  assert.match(block, /\.state-overview\s*\{[^}]*overflow:\s*auto/);
+  assert.match(block, /\.state-map-pane\s*\{[^}]*position:\s*sticky/);
+  assert.equal(/\.state-overview\s*\{[^}]*overflow:\s*auto/.test(block), false);
+  assert.equal(/max-height:\s*100dvh/.test(block), false);
 });

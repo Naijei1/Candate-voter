@@ -21,14 +21,19 @@ const VIEW = { width: 1000, height: 640 };
 export function DistrictMap({
   postal,
   races,
+  yourDistricts = [],
 }: {
   postal: string;
   races: readonly Race[];
+  /** Two-digit House codes from a ZIP match. Empty when the visitor did not arrive by ZIP. */
+  yourDistricts?: readonly string[];
 }) {
   const router = useRouter();
   const [shapes, setShapes] = useState<ProjectedDistrict[] | null>(null);
   const [failed, setFailed] = useState(false);
   const covered = HOUSE_SEATS[postal] != null;
+  const yours = new Set(yourDistricts.map((code) => code.padStart(2, "0")));
+  const here = youAreHere(yourDistricts);
 
   function openRace(raceId: string) {
     router.push(`/races/${raceId}`);
@@ -82,8 +87,15 @@ export function DistrictMap({
             {shapes.map((shape) => {
               const race = raceForDistrict(races, postal, shape.district);
               const has = districtHasCandidates(race);
-              const label = districtLabel(postal, shape.district, has);
-              const className = has ? "cd-district has-data" : "cd-district";
+              const hereDistrict = yours.has(shape.district);
+              const label = districtLabel(postal, shape.district, has, hereDistrict);
+              const className = [
+                "cd-district",
+                has ? "has-data" : "",
+                hereDistrict ? "is-yours" : "",
+              ]
+                .filter(Boolean)
+                .join(" ");
               if (!race) {
                 return (
                   <path key={shape.district} d={shape.d} className={className} fillRule="evenodd">
@@ -115,17 +127,32 @@ export function DistrictMap({
           </svg>
         )}
       </div>
+      {here ? (
+        <p className="you-are-here" data-testid="you-are-here">
+          {here}
+        </p>
+      ) : null}
       <MapLegend />
     </div>
   );
 }
 
-function districtLabel(postal: string, district: string, has: boolean): string {
+function youAreHere(codes: readonly string[]): string | null {
+  const names = codes
+    .map((code) => code.padStart(2, "0"))
+    .filter((code) => /^\d{2}$/.test(code))
+    .map((code) => (code === "00" ? "the at-large seat" : `District ${Number(code)}`));
+  if (names.length === 0) return null;
+  return `You are here · ${names.join(", ")}`;
+}
+
+function districtLabel(postal: string, district: string, has: boolean, yours: boolean): string {
   const place =
     district === "00"
       ? `${stateName(postal)} at-large`
       : `${stateName(postal)} District ${Number(district)}`;
-  return has ? `${place}, has candidates` : `${place}, no candidates yet`;
+  const filing = has ? "has candidates" : "no one has filed yet";
+  return yours ? `${place}, you are here, ${filing}` : `${place}, ${filing}`;
 }
 
 function isAbort(error: unknown): boolean {

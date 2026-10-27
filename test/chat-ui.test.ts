@@ -4,6 +4,7 @@ import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { ChatComposer } from "../src/components/chat/ChatComposer";
 import { ChatMessageList } from "../src/components/chat/ChatMessageList";
+import { MarkdownAnswer } from "../src/components/chat/MarkdownAnswer";
 import { settleAssistantTurn, type ChatTurn } from "../src/components/chat/useChat";
 import { ChatCancelled, postChatMessage } from "../src/lib/chat/browser";
 import {
@@ -62,7 +63,7 @@ test("context comes from the route and the year control", () => {
   });
   assert.equal(chat.panel, false);
   assert.equal(chat.candidateId, "H0AK00123");
-  assert.equal(contextLabel(chat), "Candidate H0AK00123 · 2026");
+  assert.equal(contextLabel(chat), "This candidate · 2026");
   assert.equal(
     chatPageHref({ raceId: "2026-senate-AK", cycle: 2026 }, "Who filed?"),
     "/chat?raceId=2026-senate-AK&year=2026&q=Who+filed%3F",
@@ -452,8 +453,22 @@ test("message states render sources only after a successful answer", () => {
   );
   assert.match(done, /Sources/);
   assert.match(done, /Alaska Senate/);
+  assert.match(done, /As of/);
   assert.match(done, /href="\/races\/2026-senate-AK"/);
   assert.doesNotMatch(done, /target="_blank"/);
+
+  const leaked = render(
+    React.createElement(MarkdownAnswer, {
+      markdown:
+        'See partyLabel: "Republican" in this site\'s database. [https://www.fec.gov/data/](https://www.fec.gov/data/) [2026-house-KY-01](/races/2026-house-KY-01)',
+    }),
+  );
+  assert.doesNotMatch(leaked, /partyLabel/);
+  assert.doesNotMatch(leaked, /database/i);
+  assert.match(leaked, /Republican/);
+  assert.match(leaked, /public FEC records/);
+  assert.match(leaked, /U\.S\. House, Kentucky District 1/);
+  assert.doesNotMatch(leaked, />https:\/\/www\.fec\.gov/);
 
   const composer = render(
     React.createElement(ChatComposer, {

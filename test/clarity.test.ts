@@ -5,8 +5,9 @@ import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { CandidateDisclosure } from "../src/components/CandidateDisclosure";
 import { StateScoreboard, WhatAmILookingAt } from "../src/components/StateScoreboard";
-import { emptyRaceSentence, runningForLine } from "../src/lib/copy";
+import { emptyRaceSentence, jurisdictionRepeatsTitle, officeOneLiner, runningForLine } from "../src/lib/copy";
 import { partyCue } from "../src/lib/format";
+import { presentAskMarkdown } from "../src/lib/chat/polish";
 import { citationLabel } from "../src/lib/chat/ui";
 import { stateRaces, stateScoreboard } from "../src/lib/landing";
 import { buildZipLookupRequest, requestZipLookup } from "../src/lib/lookup/zip-request";
@@ -171,8 +172,8 @@ test("scoreboard uses coverage counts and the explainer stays plain", () => {
       React.createElement(WhatAmILookingAt, { refreshedAt: "2026-10-26T18:48:47.307Z" }),
     ),
   );
-  assert.match(html, /Someone has filed for Senate/);
-  assert.match(html, /1 of 6 districts has a filing/);
+  assert.match(html, /Senate — 1 filing for the statewide seat/);
+  assert.match(html, /House — 1 of 6 districts has a filing/);
   assert.equal(/districts so far/.test(html), false);
   assert.equal(/filed so far/.test(html), false);
   assert.match(html, /What am I looking at\?/);
@@ -217,11 +218,15 @@ test("home and ask copy stay plain and the map does not lead with Popular", () =
   assert.match(looking, /statement of candidacy \(Form 2\)/i);
   assert.match(looking, /not the final ballot/);
   assert.match(zip, /Enter ZIP to find your races/);
-  assert.match(zip, /Check ZIP or tap a state/);
+  assert.match(zip, /That ZIP didn't match/);
+  assert.match(zip, /Tap a state on the map/);
+  assert.match(landing, /homeValueLine/);
+  assert.match(landing, /officeOneLiner/);
+  assert.match(landing, /Details/);
   assert.match(zip, /data-testid="zip-lookup"/);
   assert.match(zip, /findRacesByZip/);
   assert.match(legend, /Has candidates/);
-  assert.match(legend, /No candidates yet/);
+  assert.match(legend, /No one has filed yet/);
   assert.equal(legend.includes("Filings stored"), false);
   assert.equal(legend.includes("No filings stored"), false);
   assert.equal(landing.includes("popular-heading"), false);
@@ -230,6 +235,9 @@ test("home and ask copy stay plain and the map does not lead with Popular", () =
   assert.equal(ask.includes("SuggestedPrompts"), false);
   assert.equal(shell.includes("suggestedPrompts"), false);
   assert.equal(landing.includes("Recently updated filings"), false);
+  const districts = readFileSync(new URL("../src/components/DistrictMap.tsx", import.meta.url), "utf8");
+  assert.match(districts, /you-are-here/);
+  assert.match(districts, /is-yours/);
   const askNav = readFileSync(new URL("../src/components/chat/AskNav.tsx", import.meta.url), "utf8");
   const candidatePage = readFileSync(
     new URL("../src/app/candidates/[candidateId]/page.tsx", import.meta.url),
@@ -244,6 +252,7 @@ test("home and ask copy stay plain and the map does not lead with Popular", () =
   assert.match(shell, /Clear context/);
   assert.match(candidatePage, /CandidateTechnicalDetails/);
   assert.match(technical, /Technical details/);
+  assert.doesNotMatch(technical, /<details[^>]*\sopen/);
   assert.match(candidatePage, /Running for:/);
   assert.equal(candidatePage.includes("Form {filing.formType}"), false);
 });
@@ -347,6 +356,30 @@ test("empty district copy follows returned stubs and leaves coverage on filings"
     }),
     "Source",
   );
+  assert.equal(
+    citationLabel({
+      title: "2026-senate-KY",
+      url: "/races/2026-senate-KY",
+    }),
+    "U.S. Senate, Kentucky",
+  );
+  assert.equal(citationLabel({ title: "partyLabel: Democratic", url: "https://example.com/a" }), "Democratic");
+  const leaked = presentAskMarkdown(
+    "Ada Klein (DEM, partyLabel: Democratic). FEC Form 2 filings stored in this site's database.",
+  );
+  assert.equal(leaked.includes("partyLabel"), false);
+  assert.doesNotMatch(leaked, /database/i);
+  assert.match(leaked, /Democratic/);
+  assert.match(leaked, /public FEC records/i);
+  assert.equal(
+    officeOneLiner({ office: "senate", district: null }),
+    "The U.S. Senate seat for the whole state.",
+  );
+  assert.equal(
+    officeOneLiner({ office: "house", district: "06" }),
+    "The U.S. House seat for this district.",
+  );
+  assert.equal(jurisdictionRepeatsTitle("U.S. Senate, Kentucky", "Kentucky"), true);
   assert.equal(
     citationLabel({
       title: "FEC Form 2 — Ada Klein",

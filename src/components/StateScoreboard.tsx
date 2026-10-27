@@ -1,6 +1,6 @@
 // Classic JSX runtime for `node --import tsx --test`. Next compiles this with the automatic runtime.
 import React from "react";
-import { houseScoreSentence, senateScoreSentence } from "@/lib/copy";
+import { houseBoardLine, senateBoardLine } from "@/lib/copy";
 import { formatInstant, instantDateTime } from "@/lib/format";
 import type { StateScoreboard as Scoreboard } from "@/lib/landing";
 
@@ -14,8 +14,11 @@ export function WhatAmILookingAt({
   const refreshed = formatInstant(refreshedAt);
   const dateTime = instantDateTime(refreshedAt);
   return (
-    <details data-testid="looking-at" className={glass ? "glass-details" : "mt-3"}>
-      <summary className={glass ? "glass-summary" : "inline-flex cursor-pointer list-none rounded-full border border-line bg-card px-3 py-1 text-xs font-semibold text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent [&::-webkit-details-marker]:hidden"}>
+    <details
+      data-testid="looking-at"
+      className={glass ? "glass-details glass-details-drop looking-at" : "looking-at mt-3"}
+    >
+      <summary className={glass ? "glass-summary" : "looking-summary"}>
         What am I looking at?
       </summary>
       <div className={glass ? "glass-panel" : "mt-2 rounded-lg border border-line bg-card p-3 text-sm leading-5 text-ink"}>
@@ -41,11 +44,9 @@ export function WhatAmILookingAt({
 
 export function StateScoreboard({ board }: { board: Scoreboard }) {
   return (
-    <p data-testid="state-scoreboard" className="mt-3 text-sm leading-6 text-ink">
-      {senateScoreSentence(board.senateFilings)}
-      <span aria-hidden="true"> · </span>
-      <span className="sr-only"> </span>
-      {houseScoreSentence(board.districtsWithFilings, board.districtsTotal)}
-    </p>
+    <div data-testid="state-scoreboard" className="state-board">
+      <p>{senateBoardLine(board.senateFilings)}</p>
+      <p>{houseBoardLine(board.districtsWithFilings, board.districtsTotal)}</p>
+    </div>
   );
 }
