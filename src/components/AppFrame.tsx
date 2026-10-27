@@ -38,23 +38,56 @@ function useChromeHeight(pathname: string) {
     if (!(header instanceof HTMLElement)) return;
     const root = document.documentElement;
     const apply = () => {
-      const height = Math.ceil(header.getBoundingClientRect().height);
-      if (height > 0) root.style.setProperty("--chrome-block", `${height}px`);
+      const shift = window.visualViewport?.offsetTop ?? 0;
+      const rect = header.getBoundingClientRect();
+      const safe = safeAreaTop();
+      const headerBottom = Math.ceil(rect.bottom + shift);
+      const block = Math.max(headerBottom, Math.ceil(safe + 40));
+      if (block > 0) root.style.setProperty("--chrome-block", `${block}px`);
+
+      const zip = document.querySelector(".zip-slot");
+      if (zip instanceof HTMLElement && zip.getClientRects().length > 0) {
+        const zipBottom = Math.ceil(zip.getBoundingClientRect().bottom + shift + 8);
+        const cap = Math.round((window.visualViewport?.height ?? window.innerHeight) * 0.46);
+        const clearance = Math.min(Math.max(zipBottom, block + 8), Math.max(cap, block + 8));
+        root.style.setProperty("--map-clearance", `${clearance}px`);
+      }
     };
     apply();
     const observer = new ResizeObserver(apply);
     observer.observe(header);
+    const zip = document.querySelector(".zip-slot");
+    if (zip instanceof HTMLElement) observer.observe(zip);
+    const main = document.getElementById("main");
+    const mutations = new MutationObserver(() => {
+      const nextZip = document.querySelector(".zip-slot");
+      if (nextZip instanceof HTMLElement) observer.observe(nextZip);
+      requestAnimationFrame(apply);
+    });
+    if (main) mutations.observe(main, { childList: true, subtree: true });
     window.addEventListener("resize", apply);
     const viewport = window.visualViewport;
     viewport?.addEventListener("resize", apply);
     viewport?.addEventListener("scroll", apply);
     return () => {
       observer.disconnect();
+      mutations.disconnect();
       window.removeEventListener("resize", apply);
       viewport?.removeEventListener("resize", apply);
       viewport?.removeEventListener("scroll", apply);
     };
   }, [pathname]);
+}
+
+function safeAreaTop(): number {
+  const probe = document.getElementById("safe-top-probe") ?? document.createElement("div");
+  if (!probe.isConnected) {
+    probe.id = "safe-top-probe";
+    probe.style.cssText =
+      "position:fixed;top:0;left:0;height:env(safe-area-inset-top,0px);pointer-events:none;visibility:hidden;";
+    document.body.appendChild(probe);
+  }
+  return probe.getBoundingClientRect().height;
 }
 
 /** Keeps the ZIP glass in the visual viewport when the iOS keyboard opens. */

@@ -22,25 +22,40 @@ export function pointDistance(a: Point, b: Point): number {
   return Math.hypot(a.x - b.x, a.y - b.y);
 }
 
-/** Next pan after a one-finger drag or a two-finger pinch, before clamping. */
+/**
+ * Next pan after a one-finger drag or a two-finger pinch, before clamping.
+ * When `frameCenter` is set, a pinch keeps the map point under the finger
+ * midpoint (the gesture focal point) under the fingers. The stage scales
+ * around its center, so the translation absorbs that focal shift.
+ */
 export function nextPan(
   start: Pan,
   startMid: Point,
   startDistance: number,
   points: readonly Point[],
+  frameCenter?: Point | null,
 ): Pan {
   const mid = midpoint(points);
-  const moved = { x: mid.x - startMid.x, y: mid.y - startMid.y };
+  let scale = start.scale;
   if (points.length >= 2 && startDistance > 0) {
     const [first, second] = points;
-    if (!first || !second) return start;
+    if (first && second) {
+      scale = start.scale * (pointDistance(first, second) / startDistance);
+    }
+  }
+  if (frameCenter && scale !== start.scale && start.scale !== 0) {
+    const ratio = scale / start.scale;
     return {
-      scale: start.scale * (pointDistance(first, second) / startDistance),
-      x: start.x + moved.x,
-      y: start.y + moved.y,
+      scale,
+      x: mid.x - frameCenter.x - (startMid.x - frameCenter.x - start.x) * ratio,
+      y: mid.y - frameCenter.y - (startMid.y - frameCenter.y - start.y) * ratio,
     };
   }
-  return { ...start, x: start.x + moved.x, y: start.y + moved.y };
+  return {
+    scale,
+    x: start.x + mid.x - startMid.x,
+    y: start.y + mid.y - startMid.y,
+  };
 }
 
 /** Keep the map on screen. At 1x a drag can still move it by about half the frame. */

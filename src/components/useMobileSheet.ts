@@ -25,6 +25,9 @@ export function useMobileSheet(dismiss: (() => void) | null, resetKey: string) {
   const dismissRef = useRef(dismiss);
   dismissRef.current = dismiss;
   const restRef = useRef<number | null>(null);
+  const pointerDroveRef = useRef(false);
+  const driveRef = useRef<(clientY: number) => void>(() => {});
+  const endRef = useRef<(pointerId: number) => void>(() => {});
 
   useEffect(() => {
     const shell = sheetRef.current?.closest(".state-shell");
@@ -36,10 +39,38 @@ export function useMobileSheet(dismiss: (() => void) | null, resetKey: string) {
   }, [resetKey]);
 
   useEffect(() => {
-    const move = (event: PointerEvent) => {
+    const sheet = sheetRef.current;
+    const blockTouch = (event: TouchEvent) => {
       const drag = dragRef.current;
-      if (!drag || event.pointerId !== drag.pointerId) return;
-      const dy = event.clientY - drag.startY;
+      if (!drag) return;
+      if (drag.fromChrome || drag.moved) event.preventDefault();
+      // iOS can deliver touchmove without pointermove. Drive from the finger
+      // until a pointermove proves the pointer stream is alive.
+      if (pointerDroveRef.current) return;
+      const touch = event.touches[0];
+      if (!touch) return;
+      driveRef.current(touch.clientY);
+    };
+    const endTouch = (event: TouchEvent) => {
+      const drag = dragRef.current;
+      if (!drag || event.touches.length > 0) return;
+      endRef.current(drag.pointerId);
+    };
+    sheet?.addEventListener("touchmove", blockTouch, { passive: false });
+    sheet?.addEventListener("touchend", endTouch);
+    sheet?.addEventListener("touchcancel", endTouch);
+    return () => {
+      sheet?.removeEventListener("touchmove", blockTouch);
+      sheet?.removeEventListener("touchend", endTouch);
+      sheet?.removeEventListener("touchcancel", endTouch);
+    };
+  }, [resetKey]);
+
+  useEffect(() => {
+    const applyDrag = (clientY: number) => {
+      const drag = dragRef.current;
+      if (!drag) return;
+      const dy = clientY - drag.startY;
       if (!drag.fromChrome) {
         const scrollTop = drag.body?.scrollTop ?? 0;
         if (dy > 0 && scrollTop > 2) return;
@@ -51,10 +82,18 @@ export function useMobileSheet(dismiss: (() => void) | null, resetKey: string) {
       const next = Math.min(drag.snaps.full, Math.max(drag.snaps.peek * 0.45, drag.startHeight - dy));
       drag.shell.style.setProperty("--sheet-height", `${Math.round(next)}px`);
     };
+    driveRef.current = applyDrag;
+    const move = (event: PointerEvent) => {
+      const drag = dragRef.current;
+      if (!drag || event.pointerId !== drag.pointerId) return;
+      pointerDroveRef.current = true;
+      applyDrag(event.clientY);
+    };
     const end = (event: PointerEvent) => {
       const drag = dragRef.current;
       if (!drag || event.pointerId !== drag.pointerId) return;
       dragRef.current = null;
+      pointerDroveRef.current = false;
       drag.shell.classList.remove("is-sheet-dragging");
       if (!drag.moved) return;
       const height = drag.sheet.getBoundingClientRect().height;
@@ -69,6 +108,9 @@ export function useMobileSheet(dismiss: (() => void) | null, resetKey: string) {
       if (grab instanceof HTMLElement) {
         grab.setAttribute("aria-valuenow", String(sheetLevel(snapped.height, drag.snaps)));
       }
+    };
+    endRef.current = (pointerId: number) => {
+      end({ pointerId } as PointerEvent);
     };
     window.addEventListener("pointermove", move);
     window.addEventListener("pointerup", end);
@@ -101,17 +143,37 @@ export function useMobileSheet(dismiss: (() => void) | null, resetKey: string) {
     const shell = sheet?.closest(".state-shell");
     if (!(sheet instanceof HTMLElement) || !(shell instanceof HTMLElement)) return;
     const body = sheet.querySelector(".state-sheet-body");
+    const fromChrome = Boolean(grab);
+    pointerDroveRef.current = false;
     dragRef.current = {
       pointerId: event.pointerId,
       startY: event.clientY,
       startHeight: sheet.getBoundingClientRect().height,
-      fromChrome: Boolean(grab),
+      fromChrome,
       shell,
       sheet,
       body: body instanceof HTMLElement ? body : null,
       snaps: snapsFor(sheet),
       moved: false,
     };
+    if (!fromChrome) return;
+    const host = event.currentTarget;
+    try {
+      host.setPointerCapture(event.pointerId);
+    } catch {
+      // A touch can end before capture is attached.
+    }
+  }
+
+  function onPointerMove(event: ReactPointerEvent<HTMLElement>) {
+    const drag = dragRef.current;
+    if (!drag || event.pointerId !== drag.pointerId) return;
+    pointerDroveRef.current = true;
+    driveRef.current(event.clientY);
+  }
+
+  function onPointerUp(event: ReactPointerEvent<HTMLElement>) {
+    endRef.current(event.pointerId);
   }
 
   function onKeyDown(event: ReactKeyboardEvent<HTMLElement>) {
@@ -139,5 +201,5 @@ export function useMobileSheet(dismiss: (() => void) | null, resetKey: string) {
     event.currentTarget.setAttribute("aria-valuenow", String(next));
   }
 
-  return { sheetRef, onPointerDown, onKeyDown };
+  return { sheetRef, onPointerDown, onPointerMove, onPointerUp, onKeyDown };
 }

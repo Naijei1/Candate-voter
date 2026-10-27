@@ -123,17 +123,49 @@ body {
 .us-map .us-label {
   fill: var(--color-map-label);
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   user-select: none;
+  paint-order: stroke fill;
+  stroke: var(--color-paper);
+  stroke-width: 4px;
+  stroke-linejoin: round;
 }
 
-.us-map .us-label-small {
-  font-size: 11px;
+.us-map .us-callout {
+  font-size: 13px;
+}
+
+.us-map .us-label-plate {
+  fill: var(--color-paper);
+  stroke: none;
+  pointer-events: none;
+}
+
+.us-map .us-label-small,
+.us-map .us-label-callout {
+  font-size: 13px;
+  font-weight: 700;
+  stroke: var(--color-paper);
+  stroke-width: 0.42em;
+  paint-order: stroke fill;
+  stroke-linejoin: round;
+  stroke-linecap: round;
 }
 
 .us-map .us-label.is-selected {
   fill: #ffffff;
+}
+
+.us-map .us-label-callout.is-selected {
+  fill: var(--color-accent);
+}
+
+.us-map .us-callout-line {
+  stroke: #64748b;
+  stroke-width: 1;
+  fill: none;
+  pointer-events: none;
 }
 
 .us-map .us-dc-callout {
@@ -315,6 +347,12 @@ html[data-map-view="state"] .map-chrome {
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.map-gesture,
+.map-gesture * {
+  touch-action: none;
 }
 
 .map-gesture-stage {
@@ -572,7 +610,7 @@ html[data-map-view="state"] .map-chrome {
 
 .candidate-line {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, max-content) auto;
+  grid-template-columns: minmax(7.5rem, 1fr) minmax(0, max-content) auto;
   align-items: center;
   column-gap: 0.75rem;
   width: 100%;
@@ -582,8 +620,9 @@ html[data-map-view="state"] .map-chrome {
 }
 
 .candidate-name {
-  min-width: 0;
-  overflow-wrap: anywhere;
+  min-width: 7.5rem;
+  overflow-wrap: break-word;
+  word-break: normal;
   font-weight: 500;
   color: var(--color-ink);
 }
@@ -701,7 +740,9 @@ html[data-map-view="state"] .map-chrome {
 }
 
 :root {
-  --chrome-block: calc(env(safe-area-inset-top, 0px) + 3.9rem);
+  --safe-top: env(safe-area-inset-top, 0px);
+  --chrome-block: calc(var(--safe-top) + 3.1rem);
+  --map-clearance: calc(var(--chrome-block) + 3.15rem);
 }
 
 .ask-sheet {
@@ -868,12 +909,39 @@ html[data-ask="open"] .map-chrome {
     overflow: hidden;
   }
 
+  /* viewBox units: 34px is about 12 CSS pixels on a 390px-wide phone. */
+  .us-map .us-label,
+  .us-map .us-callout {
+    font-size: 34px;
+  }
+
+  .us-map .us-label {
+    stroke-width: 8px;
+  }
+
+  .us-map .us-label-callout {
+    stroke-width: 0.42em;
+  }
+
+  .us-map .us-callout-line {
+    stroke-width: 3px;
+  }
+
+  .map-chrome {
+    padding-top: calc(env(safe-area-inset-top, 0px) + 0.15rem);
+    padding-bottom: 0.1rem;
+  }
+
+  html[data-map-view="state"] .map-chrome {
+    padding-bottom: 0.15rem;
+  }
+
   .map-chrome-row {
     pointer-events: auto;
-    min-height: 48px;
-    gap: 0.15rem;
+    min-height: 0;
+    gap: 0.25rem;
     border-radius: 999px;
-    padding: 0.12rem 0.3rem;
+    padding: 0.04rem 0.3rem;
     background: color-mix(in srgb, var(--color-card) 78%, transparent);
     border: 1px solid color-mix(in srgb, var(--color-ink) 16%, transparent);
     box-shadow: 0 8px 24px rgb(15 23 42 / 12%);
@@ -883,13 +951,24 @@ html[data-ask="open"] .map-chrome {
 
   .map-chrome .brand-link {
     position: relative;
-    min-height: 44px;
+    min-height: 40px;
     border-color: transparent;
     background: transparent;
     box-shadow: none;
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
-    padding-inline: 0.2rem;
+    padding-inline: 0.15rem;
+    gap: 0.3rem;
+  }
+
+  .map-chrome .brand-link > span:first-child {
+    width: 1.75rem;
+    height: 1.75rem;
+  }
+
+  .map-chrome .brand-name {
+    font-size: 1rem;
+    line-height: 1.15;
   }
 
   .map-chrome .nav-control,
@@ -966,12 +1045,12 @@ html[data-ask="open"] .map-chrome {
   }
 
   .glass-zip {
-    min-height: 48px;
-    padding-left: 0.9rem;
+    min-height: 40px;
+    padding-left: 0.75rem;
   }
 
   .glass-zip input {
-    min-height: 44px;
+    min-height: 36px;
   }
 
   .zip-go-icon {
@@ -1024,19 +1103,23 @@ html[data-ask="open"] .map-chrome {
   .state-shell .zip-slot {
     position: absolute;
     z-index: 28;
-    top: calc(var(--chrome-block, calc(env(safe-area-inset-top, 0px) + 4.15rem)) + 0.45rem);
+    top: calc(var(--chrome-block, calc(env(safe-area-inset-top, 0px) + 2.9rem)) + 0.3rem);
     left: 50%;
     width: min(36rem, calc(100% - 1.25rem));
     transform: translateX(-50%);
   }
 
+  .national-shell .zip-slot {
+    top: calc(var(--chrome-block, calc(env(safe-area-inset-top, 0px) + 2.9rem)) + 0.3rem);
+  }
+
   .state-map-pane {
     position: absolute;
-    top: 0;
+    top: var(--map-clearance, calc(var(--chrome-block, calc(env(safe-area-inset-top, 0px) + 2.9rem)) + 3.1rem));
     right: 0;
     left: 0;
     bottom: calc(var(--sheet-height, var(--state-sheet-max)) + env(safe-area-inset-bottom, 0px) + 0.35rem);
-    transition: bottom 180ms ease;
+    transition: bottom 180ms ease, top 180ms ease;
     min-height: 0;
     height: auto;
     gap: 0;
@@ -1052,7 +1135,7 @@ html[data-ask="open"] .map-chrome {
   .state-map-pane .you-are-here {
     position: absolute;
     z-index: 5;
-    top: calc(var(--chrome-block, calc(env(safe-area-inset-top, 0px) + 3.9rem)) + 4.85rem);
+    top: 0.55rem;
     left: max(0.7rem, env(safe-area-inset-left, 0px));
     max-width: min(16rem, 70%);
   }
@@ -1060,19 +1143,11 @@ html[data-ask="open"] .map-chrome {
   .state-map-pane .map-legend {
     position: absolute;
     z-index: 5;
-    top: calc(var(--chrome-block, calc(env(safe-area-inset-top, 0px) + 3.9rem)) + 6.95rem);
+    top: auto;
     right: auto;
-    bottom: auto;
+    bottom: 0.55rem;
     left: max(0.65rem, env(safe-area-inset-left, 0px));
     margin: 0;
-  }
-
-  .state-shell:has(.zip-slot .zip-status) .state-map-pane .you-are-here {
-    top: calc(var(--chrome-block, calc(env(safe-area-inset-top, 0px) + 3.9rem)) + 8.6rem);
-  }
-
-  .state-shell:has(.zip-slot .zip-status) .state-map-pane .map-legend {
-    top: calc(var(--chrome-block, calc(env(safe-area-inset-top, 0px) + 3.9rem)) + 10.8rem);
   }
 
   .state-sheet-notes {
@@ -1125,9 +1200,9 @@ html[data-ask="open"] .map-chrome {
     align-items: center;
     justify-content: center;
     width: 100%;
-    min-height: 44px;
+    min-height: 52px;
     margin: 0;
-    padding: 0.15rem 0 0;
+    padding: 0.55rem 1.5rem 0.2rem;
     border: 0;
     background: transparent;
     touch-action: none;
@@ -1177,11 +1252,11 @@ html[data-ask="open"] .map-chrome {
 
   .drawer-handle {
     display: block;
-    width: 2.25rem;
-    height: 0.22rem;
-    margin: 0.15rem auto 0.35rem;
+    width: 3.25rem;
+    height: 0.38rem;
+    margin: 0.1rem auto 0.15rem;
     border-radius: 999px;
-    background: color-mix(in srgb, var(--color-ink) 28%, transparent);
+    background: color-mix(in srgb, var(--color-ink) 38%, transparent);
   }
 
   .state-board {
@@ -1298,6 +1373,14 @@ html[data-ask="open"] .map-chrome {
 
 .brand-link:hover .brand-name {
   color: var(--color-accent);
+}
+
+.ask-entry,
+.nav-control {
+  box-sizing: border-box;
+  min-width: 44px;
+  min-height: 44px;
+  height: 44px;
 }
 
 .nav-control:hover {
