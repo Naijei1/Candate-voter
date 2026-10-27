@@ -1,6 +1,7 @@
 import { houseContestTitle } from "../data/at-large";
 import { leadSentences, presidentialContestNote } from "../data/calendar";
 import { stateName } from "../data/states";
+import { collapseRepeatedParty } from "../format";
 import type { ChatAnswer, ChatSource } from "./types";
 
 const RACE_SLUG_SOURCE =
@@ -149,7 +150,9 @@ const STORAGE_PHRASE = new RegExp(
  * parentheses or quotes. Provenance sentences open with public FEC records.
  */
 function humanizeAskProse(markdown: string): string {
-  return cleanup(stripDatabaseWord(replaceInternalStorage(stripPartyFieldEcho(markdown))));
+  return cleanup(
+    collapseRepeatedParty(stripDatabaseWord(replaceInternalStorage(stripPartyFieldEcho(markdown)))),
+  );
 }
 
 function stripPartyFieldEcho(markdown: string): string {

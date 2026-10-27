@@ -81,14 +81,27 @@ const WRITE_IN_LABEL = /^write[-\s]?in$/i;
  * Collapsed party labels for a row.
  * "Write-in" plus another affiliation reads as a write-in candidate, not two parties.
  */
+/**
+ * "Democratic Democratic (DEM)" is a doubled label plus the code.
+ * Keep a single name and the code.
+ */
+export function collapseRepeatedParty(text: string): string {
+  return text.replace(
+    /\b([A-Z][a-z]+(?:-[A-Z][a-z]+)*)(?:\s+\1)+\s+\(([A-Za-z][A-Za-z0-9/]{1,8})\)/g,
+    "$1 ($2)",
+  );
+}
+
 export function partyCue(labels: readonly string[]): string {
-  const cleaned = labels.map((label) => label.trim()).filter((label) => label.length > 0);
+  const cleaned = labels
+    .map((label) => collapseRepeatedParty(label.trim()))
+    .filter((label) => label.length > 0);
   const writeIn = cleaned.some((label) => WRITE_IN_LABEL.test(label));
   const rest = cleaned.filter((label) => !WRITE_IN_LABEL.test(label));
   if (writeIn && rest.length > 0) return `Write-in candidate (${rest.join(", ")})`;
   if (writeIn) return "Write-in candidate";
   if (cleaned.length === 0) return "Affiliation not reported";
-  return cleaned.join(" · ");
+  return collapseRepeatedParty(cleaned.join(" · "));
 }
 
 /**
@@ -102,6 +115,14 @@ export function partyTone(
   if (code === "DEM" || code === "DFL") return "democratic";
   if (code === "REP") return "republican";
   return "other";
+}
+
+/** Class for `--party-dem` / `--party-rep`. Teal `text-accent` is not a party color. */
+export function partyToneClass(party: string | null | undefined): string {
+  const tone = partyTone(party);
+  if (tone === "democratic") return "text-party-dem";
+  if (tone === "republican") return "text-party-rep";
+  return "text-muted";
 }
 
 export function fecCandidateLabel(id: string | null | undefined): string {

@@ -1,66 +1,7 @@
 // Classic JSX runtime for `node --import tsx --test`. Next compiles this with the automatic runtime.
 import React from "react";
 import { houseBoardLine, senateBoardLine } from "@/lib/copy";
-import { formatInstant, instantDateTime } from "@/lib/format";
 import type { StateScoreboard as Scoreboard } from "@/lib/landing";
-
-export function WhatAmILookingAt({
-  refreshedAt,
-  glass = false,
-  icon = false,
-}: {
-  refreshedAt?: string | null;
-  glass?: boolean;
-  /** Compact header control. The long label stays on the summary for assistive tech. */
-  icon?: boolean;
-}) {
-  const refreshed = formatInstant(refreshedAt);
-  const dateTime = instantDateTime(refreshedAt);
-  const body = (
-    <>
-      <p>
-        A statement of candidacy (Form 2) is an FEC filing that someone intends to run.
-      </p>
-      <p className="mt-1">These are candidates so far, not the final ballot. No endorsements.</p>
-      <p className="mt-1">
-        Sources are public FEC records.{" "}
-        {refreshed ? (
-          <>
-            Last refresh{" "}
-            {dateTime ? <time dateTime={dateTime}>{refreshed}</time> : refreshed}.
-          </>
-        ) : (
-          "A refresh time isn't stored yet."
-        )}
-      </p>
-    </>
-  );
-
-  if (icon) {
-    return (
-      <details data-testid="looking-at" className="looking-icon">
-        <summary className="looking-icon-btn" aria-label="What am I looking at?">
-          <span aria-hidden="true">i</span>
-        </summary>
-        <div className="glass-panel">{body}</div>
-      </details>
-    );
-  }
-
-  return (
-    <details
-      data-testid="looking-at"
-      className={glass ? "glass-details glass-details-drop looking-at" : "looking-at mt-3"}
-    >
-      <summary className={glass ? "glass-summary" : "looking-summary"}>
-        What am I looking at?
-      </summary>
-      <div className={glass ? "glass-panel" : "mt-2 rounded-lg border border-line bg-card p-3 text-sm leading-5 text-ink"}>
-        {body}
-      </div>
-    </details>
-  );
-}
 
 export function StateScoreboard({ board }: { board: Scoreboard }) {
   return (

@@ -1117,4 +1117,9 @@ test("ask polish strips partyLabel echoes and site-database provenance", () => {
     polished("Based on public FEC records, Ada Klein filed as Democratic (DEM)."),
     "Based on public FEC records, Ada Klein filed as Democratic (DEM).",
   );
+  assert.equal(
+    polished("Ada Klein is Democratic Democratic (DEM)."),
+    "Ada Klein is Democratic (DEM).",
+  );
+  assert.equal(polished("Republican Republican (REP) filed."), "Republican (REP) filed.");
 });

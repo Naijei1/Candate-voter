@@ -73,9 +73,6 @@ export function ChatComposer({
           {value.length.toLocaleString("en-US")} / {MAX_CHAT_MESSAGE.toLocaleString("en-US")}
         </p>
       ) : null}
-      <p className="mt-2 text-xs leading-5 text-muted">
-        Answers cite stored public filings. Candate does not rank candidates or give voting advice.
-      </p>
     </form>
   );
 }

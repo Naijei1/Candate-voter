@@ -4,7 +4,7 @@
 import React, { useId, useState } from "react";
 import Link from "next/link";
 import { FILING_MEANS } from "@/lib/copy";
-import { formatInstant, instantDateTime, partyTone } from "@/lib/format";
+import { formatInstant, instantDateTime, partyToneClass } from "@/lib/format";
 
 /**
  * Name and a short cue first. The short card stays free of FEC links.
@@ -30,9 +30,7 @@ export function CandidateDisclosure({
 }) {
   const [open, setOpen] = useState(false);
   const panelId = useId();
-  const tone = partyTone(partyAffiliation);
-  const toneClass =
-    tone === "democratic" ? "text-accent" : tone === "republican" ? "text-rose-800" : "text-muted";
+  const toneClass = partyToneClass(partyAffiliation);
   const updated = formatInstant(updatedAt);
   const updatedDate = instantDateTime(updatedAt);
 

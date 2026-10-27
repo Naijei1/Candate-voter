@@ -10,8 +10,7 @@ import type { ChatSource } from "./types";
 export const ALIGNMENT_DISCLAIMER =
   "Viewpoint similarity uses public records only. This is not a voting recommendation.";
 
-export const ASK_INTRO =
-  "Ask factual questions about federal races and filings. Answers cite sources. Candate does not rank candidates or give voting advice. Alignment is only when you ask whose views are similar.";
+export const ASK_INTRO = "Ask factual questions about federal races and filings.";
 
 const MAX_MESSAGE = 2000;
 

@@ -14,10 +14,11 @@ import {
   readFilingsForCandidate,
   readRace,
 } from "@/lib/data/read";
-import { FILING_MEANS, runningForLine } from "@/lib/copy";
+import { runningForLine } from "@/lib/copy";
 import { isPresidentialElectionYear } from "@/lib/data/calendar";
 import { displayedPartyLabels, type PublicCandidate } from "@/lib/data/view";
-import { httpsUrl, partyCue, partyLabel } from "@/lib/format";
+import { httpsUrl, partyCue, partyLabel, partyToneClass } from "@/lib/format";
+import { withPreservedQuery, type MapContext } from "@/lib/landing/state-query";
 import type { Candidate, Filing, Race } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -25,6 +26,7 @@ export const runtime = "nodejs";
 
 type CandidatePageProps = {
   params: Promise<{ candidateId: string }>;
+  searchParams: Promise<{ year?: string; state?: string; zip?: string }>;
 };
 
 export async function generateMetadata({
@@ -41,8 +43,9 @@ export async function generateMetadata({
   }
 }
 
-export default async function CandidatePage({ params }: CandidatePageProps) {
+export default async function CandidatePage({ params, searchParams }: CandidatePageProps) {
   const { candidateId } = await params;
+  const query = await searchParams;
   const loaded = await loadCandidate(candidateId);
   if (loaded.ok === false) {
     return (
@@ -62,6 +65,14 @@ export default async function CandidatePage({ params }: CandidatePageProps) {
   const filedName = nameAsFiled(candidate);
 
   const cycle = race.ok && race.race ? race.race.cycle : null;
+  const context: MapContext = {
+    year: cycle ?? query.year ?? null,
+    state: race.ok && race.race ? race.race.state : query.state ?? null,
+    zip: query.zip ?? null,
+  };
+  const labels = group
+    ? displayedPartyLabels(group)
+    : [partyLabel(candidate.partyAffiliation, candidate.partyLabel)];
 
   return (
     <article className="race-page">
@@ -72,24 +83,23 @@ export default async function CandidatePage({ params }: CandidatePageProps) {
         label={candidate.displayName}
       />
       <BackChrome
-        state={race.ok && race.race ? race.race.state : null}
-        year={race.ok && race.race ? race.race.cycle : null}
+        state={context.state ?? null}
+        year={context.year}
+        zip={context.zip}
         district={Boolean(race.ok && race.race?.office === "house")}
-        raceHref={race.ok && race.race ? `/races/${race.race.raceId}` : null}
+        raceHref={
+          race.ok && race.race ? withPreservedQuery(`/races/${race.race.raceId}`, context) : null
+        }
         raceLabel={race.ok && race.race ? race.race.title : null}
       />
       <RaceFallback race={race} />
       <header className="race-heading space-y-2">
         <h1 className="page-title">{candidate.displayName}</h1>
         <RunningFor race={race} />
-        <p className="text-base text-ink">
-          {partyCue(
-            group
-              ? displayedPartyLabels(group)
-              : [partyLabel(candidate.partyAffiliation, candidate.partyLabel)],
-          )}
+        <p className={`text-base ${labels.length === 1 ? partyToneClass(candidate.partyAffiliation) : "text-ink"}`}>
+          {partyCue(labels)}
         </p>
-        <FilingGroupNote candidateId={candidate.candidateId} group={group} />
+        <FilingGroupNote candidateId={candidate.candidateId} group={group} context={context} />
       </header>
       <section aria-labelledby="filings-heading" className="race-candidates space-y-2">
         <h2 id="filings-heading" className="text-lg font-semibold">
@@ -114,7 +124,6 @@ export default async function CandidatePage({ params }: CandidatePageProps) {
       <details className="page-details">
         <summary>Details</summary>
         <div className="page-details-body">
-          <p>{FILING_MEANS}</p>
           <RecordMeta sourceUrl={candidate.sourceUrl} updatedAt={candidate.updatedAt} />
           <CandidateTechnicalDetails
             fecCandidateId={candidate.fecCandidateId}
@@ -186,9 +195,11 @@ function FilingRow({ filing }: { filing: Filing }) {
 function FilingGroupNote({
   candidateId,
   group,
+  context,
 }: {
   candidateId: string;
   group: PublicCandidate | null;
+  context: MapContext;
 }) {
   if (!group?.multiFilingNote) return null;
   const onKeeper = group.candidateId === candidateId;
@@ -198,7 +209,7 @@ function FilingGroupNote({
         <p>
           This FEC id is one filing for this name. The race list keeps a single row on{" "}
           <Link
-            href={`/candidates/${group.candidateId}`}
+            href={withPreservedQuery(`/candidates/${group.candidateId}`, context)}
             className="text-accent underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
           >
             {group.candidateId}

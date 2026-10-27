@@ -1,29 +1,33 @@
 import Link from "next/link";
 import { stateName } from "@/lib/data/states";
+import { mapHomeHref, type MapContext } from "@/lib/landing/state-query";
 
 /**
  * Sticky way back from a race or candidate.
- * The state overview keeps its own in-page control so the map URL stays a pushState.
+ * Back to map keeps year, state, and zip when this page was opened with them,
+ * so a ZIP visit returns to that state view. The state sheet's own control
+ * still returns to the country map.
  */
 export function BackChrome({
   state,
   year,
+  zip = null,
   district = false,
   raceHref = null,
   raceLabel = null,
 }: {
   state: string | null;
-  year?: number | null;
+  year?: number | string | null;
+  /** ZIP from the page query. Kept only together with `state`. */
+  zip?: string | null;
   /** House contest: also link to the state overview where Your races lives. */
   district?: boolean;
   raceHref?: string | null;
   raceLabel?: string | null;
 }) {
-  const yearPart = year != null ? `year=${encodeURIComponent(String(year))}` : "";
-  const mapHref = yearPart ? `/?${yearPart}` : "/";
-  const stateHref = state
-    ? `/?${[yearPart, `state=${encodeURIComponent(state)}`].filter(Boolean).join("&")}`
-    : mapHref;
+  const context: MapContext = { year, state, zip };
+  const mapHref = mapHomeHref(context);
+  const stateHref = state ? mapHomeHref(context) : mapHref;
   const place = state ? stateName(state) : null;
 
   return (

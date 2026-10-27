@@ -4,8 +4,8 @@ import test from "node:test";
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { CandidateDisclosure } from "../src/components/CandidateDisclosure";
-import { StateScoreboard, WhatAmILookingAt } from "../src/components/StateScoreboard";
-import { emptyRaceSentence, jurisdictionRepeatsTitle, officeOneLiner, runningForLine } from "../src/lib/copy";
+import { StateScoreboard } from "../src/components/StateScoreboard";
+import { emptyHouseNext, emptyRaceSentence, jurisdictionRepeatsTitle, officeOneLiner, runningForLine } from "../src/lib/copy";
 import { partyCue } from "../src/lib/format";
 import { presentAskMarkdown } from "../src/lib/chat/polish";
 import { citationLabel } from "../src/lib/chat/ui";
@@ -164,23 +164,12 @@ test("scoreboard uses coverage counts and the explainer stays plain", () => {
   assert.equal(board.districtsWithFilings, 1);
   assert.equal(board.districtsTotal, 6);
   assert.equal(board.filingsSoFarOnly, true);
-  const html = renderToStaticMarkup(
-    React.createElement(
-      "div",
-      null,
-      React.createElement(StateScoreboard, { board }),
-      React.createElement(WhatAmILookingAt, { refreshedAt: "2026-10-26T18:48:47.307Z" }),
-    ),
-  );
+  const html = renderToStaticMarkup(React.createElement(StateScoreboard, { board }));
   assert.match(html, /Senate — 1 filing for the statewide seat/);
   assert.match(html, /House — 1 of 6 districts has a filing/);
   assert.equal(/districts so far/.test(html), false);
   assert.equal(/filed so far/.test(html), false);
-  assert.match(html, /What am I looking at\?/);
-  assert.match(html, /statement of candidacy \(Form 2\)/i);
-  assert.match(html, /not the final ballot/);
-  assert.match(html, /No endorsements/);
-  assert.match(html, /public FEC records/);
+  assert.equal(/What am I looking at/.test(html), false);
   assert.equal(/not a ranking/i.test(html), false);
 });
 
@@ -196,7 +185,8 @@ test("candidate rows start with a name and keep full records closed", () => {
     }),
   );
   assert.match(html, /Ada Lovelace/);
-  assert.match(html, /Democratic/);
+  assert.match(html, /text-party-dem">Democratic/);
+  assert.equal(html.includes("text-accent\">Democratic"), false);
   assert.match(html, /aria-expanded="false"/);
   assert.equal(html.includes("Full records"), false);
   assert.equal(html.includes("fec.gov"), false);
@@ -210,17 +200,23 @@ test("home and ask copy stay plain and the map does not lead with Popular", () =
   const looking = readFileSync(new URL("../src/components/StateScoreboard.tsx", import.meta.url), "utf8");
   const ask = readFileSync(new URL("../src/components/chat/ChatMessageList.tsx", import.meta.url), "utf8");
   const shell = readFileSync(new URL("../src/components/chat/ChatShell.tsx", import.meta.url), "utf8");
-  assert.match(landing, /<WhatAmILookingAt/);
+  const header = readFileSync(new URL("../src/components/SiteHeader.tsx", import.meta.url), "utf8");
+  const footer = readFileSync(new URL("../src/components/SiteFooter.tsx", import.meta.url), "utf8");
+  assert.equal(landing.includes("WhatAmILookingAt"), false);
+  assert.equal(landing.includes("ChromeInfo"), false);
+  assert.equal(landing.includes("homeValueLine"), false);
+  assert.equal(looking.includes("What am I looking at"), false);
+  assert.equal(header.includes("map-chrome-info"), false);
+  assert.equal(footer.includes("does not endorse"), false);
+  assert.equal(footer.includes("Form 2"), false);
+  assert.match(footer, /Agent API/);
   assert.match(landing, /<ZipLookup/);
   assert.match(landing, /searchWithoutState/);
   assert.match(landing, /Your races/);
   assert.match(landing, /See all/);
-  assert.match(looking, /statement of candidacy \(Form 2\)/i);
-  assert.match(looking, /not the final ballot/);
   assert.match(zip, /Enter ZIP to find your races/);
   assert.match(zip, /That ZIP didn't match/);
   assert.match(zip, /Tap a state on the map/);
-  assert.match(landing, /homeValueLine/);
   assert.match(landing, /officeOneLiner/);
   assert.match(landing, /Details/);
   assert.match(zip, /data-testid="zip-lookup"/);
@@ -327,6 +323,18 @@ test("empty district copy follows returned stubs and leaves coverage on filings"
     empty: true,
   };
   assert.equal(emptyRaceSentence(atLarge), "No one has filed for the at-large seat yet.");
+  assert.deepEqual(emptyHouseNext(emptyHouse[0]!, races), {
+    raceId: "2026-house-KY-04",
+    label: "See a nearby district",
+  });
+  assert.equal(
+    emptyHouseNext(
+      emptyHouse[0]!,
+      races.map((race) => (race.office === "senate" ? { ...race, empty: undefined } : race)),
+    )?.raceId,
+    "2026-senate-KY",
+  );
+  assert.equal(emptyHouseNext(listed[0]!, races), null);
   assert.equal(stateRaces([atLarge], "WY")[0]?.raceId, "2026-house-WY-00");
 
   const board = stateScoreboard(races, "KY", 2026);
@@ -365,11 +373,12 @@ test("empty district copy follows returned stubs and leaves coverage on filings"
   );
   assert.equal(citationLabel({ title: "partyLabel: Democratic", url: "https://example.com/a" }), "Democratic");
   const leaked = presentAskMarkdown(
-    "Ada Klein (DEM, partyLabel: Democratic). FEC Form 2 filings stored in this site's database.",
+    "Ada Klein (DEM, partyLabel: Democratic). Democratic Democratic (DEM). FEC Form 2 filings stored in this site's database.",
   );
   assert.equal(leaked.includes("partyLabel"), false);
   assert.doesNotMatch(leaked, /database/i);
-  assert.match(leaked, /Democratic/);
+  assert.match(leaked, /Democratic \(DEM\)/);
+  assert.equal(leaked.includes("Democratic Democratic"), false);
   assert.match(leaked, /public FEC records/i);
   assert.equal(
     officeOneLiner({ office: "senate", district: null }),
