@@ -59,17 +59,16 @@ export function ZipLookup({
     if (resultState) onState(resultState);
   }, [onState, resultState]);
 
-  useEffect(() => {
-    if (!result || result.ok || !onReject) return;
-    if (zipFailureClearsSelection(result.reason)) onReject();
-  }, [onReject, result]);
+  function finish(next: ZipLookupResult) {
+    setResult(next);
+    if (!next.ok && zipFailureClearsSelection(next.reason)) onReject?.();
+  }
 
   async function runLookup(zip: string) {
     setPending(true);
     setResult(null);
     try {
-      const next = await lookup(zip, year);
-      setResult(next);
+      finish(await lookup(zip, year));
     } catch {
       setResult({ ok: false, reason: "unavailable", message: null });
     } finally {
@@ -80,7 +79,7 @@ export function ZipLookup({
   function submit(zipInput: string) {
     const zip = normalizeZip(zipInput);
     if (!zip) {
-      setResult({ ok: false, reason: "bad_request", message: "Enter a 5-digit ZIP code." });
+      finish({ ok: false, reason: "bad_request", message: "Enter a 5-digit ZIP code." });
       return;
     }
     setValue(zip);

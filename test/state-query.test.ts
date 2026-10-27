@@ -2,10 +2,12 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   postalFromSearch,
+  readZipOwnedState,
   searchWithState,
   searchWithoutState,
   selectionFromLocation,
   selectionFromPop,
+  writeZipOwnedState,
   yearNavigationHref,
 } from "../src/lib/landing/state-query";
 
@@ -29,6 +31,27 @@ test("a deep link selects from the URL before the server prop catches up", () =>
   assert.equal(selectionFromPop("?state=KY"), "KY");
   assert.equal(selectionFromPop(""), null);
   assert.equal(selectionFromPop("?year=2026"), null);
+});
+
+test("zip ownership is a postal code and a manual clear removes it", () => {
+  const stored = new Map<string, string>();
+  const storage = {
+    getItem: (key: string) => stored.get(key) ?? null,
+    setItem: (key: string, value: string) => {
+      stored.set(key, value);
+    },
+    removeItem: (key: string) => {
+      stored.delete(key);
+    },
+  };
+  assert.equal(readZipOwnedState(storage), null);
+  writeZipOwnedState(storage, "ky");
+  assert.equal(readZipOwnedState(storage), "KY");
+  writeZipOwnedState(storage, "nope");
+  assert.equal(readZipOwnedState(storage), null);
+  writeZipOwnedState(storage, "KY");
+  writeZipOwnedState(storage, null);
+  assert.equal(readZipOwnedState(storage), null);
 });
 
 test("year navigation keeps the selected state on the home page", () => {

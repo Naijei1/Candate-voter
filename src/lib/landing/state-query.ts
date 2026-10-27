@@ -32,6 +32,32 @@ export function searchWithState(search: string, postal: string): string {
   return query ? `?${query}` : "";
 }
 
+/** Session key for a state the ZIP lookup applied. A manual pick clears it. */
+export const ZIP_OWNED_STATE_KEY = "candate-zip-state";
+
+type ZipOwnedStorage = Pick<Storage, "getItem" | "setItem" | "removeItem">;
+
+/** Postal a ZIP lookup applied, or null when the stored value is missing or not a state. */
+export function readZipOwnedState(storage: Pick<Storage, "getItem">): string | null {
+  try {
+    const value = storage.getItem(ZIP_OWNED_STATE_KEY)?.trim().toUpperCase() ?? "";
+    return isPostalState(value) ? value : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Remember or forget the ZIP-applied state. Storage failures leave the in-memory flag alone. */
+export function writeZipOwnedState(storage: ZipOwnedStorage, postal: string | null): void {
+  try {
+    const code = postal?.trim().toUpperCase() ?? "";
+    if (isPostalState(code)) storage.setItem(ZIP_OWNED_STATE_KEY, code);
+    else storage.removeItem(ZIP_OWNED_STATE_KEY);
+  } catch {
+    // Private mode and disabled storage still have the in-memory flag.
+  }
+}
+
 /** Query string with `state` removed. Other parameters, including `year`, stay. */
 export function searchWithoutState(search: string): string {
   const params = new URLSearchParams(search.startsWith("?") ? search.slice(1) : search);

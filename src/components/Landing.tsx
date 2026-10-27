@@ -18,10 +18,12 @@ import { isPresidentialElectionYear } from "@/lib/data/calendar";
 import { isPostalState, stateName, stateOptions } from "@/lib/data/states";
 import {
   postalFromSearch,
+  readZipOwnedState,
   searchWithoutState,
   searchWithState,
   selectionFromLocation,
   selectionFromPop,
+  writeZipOwnedState,
 } from "@/lib/landing/state-query";
 import { officeLabel, partyCue } from "@/lib/format";
 import {
@@ -87,6 +89,10 @@ export function Landing({
   );
   const zipOwned = useRef<string | null>(null);
   const { replacePageContext } = useAsk();
+  const rememberZipOwned = useCallback((postal: string | null) => {
+    zipOwned.current = postal;
+    writeZipOwnedState(window.sessionStorage, postal);
+  }, []);
 
   useEffect(() => {
     const scope = selected ? askScopeForState(year, selected, races) : askScopeForYear(year);
@@ -94,6 +100,10 @@ export function Landing({
   }, [replacePageContext, races, selected, year]);
 
   useLayoutEffect(() => {
+    const fromUrl = postalFromSearch(window.location.search);
+    const owned = readZipOwnedState(window.sessionStorage);
+    zipOwned.current = owned && owned === fromUrl ? owned : null;
+    if (owned && owned !== fromUrl) writeZipOwnedState(window.sessionStorage, null);
     setSelected(selectionFromLocation(window.location.search, initialState));
   }, [initialState]);
 
@@ -183,22 +193,22 @@ export function Landing({
   const selectState = useCallback((postal: string) => {
     const code = postal.trim().toUpperCase();
     if (!isPostalState(code)) return;
-    zipOwned.current = null;
+    rememberZipOwned(null);
     setSelected(code);
     writeStateUrl(code);
-  }, [writeStateUrl]);
+  }, [rememberZipOwned, writeStateUrl]);
 
   const selectFromZip = useCallback((postal: string) => {
     const code = postal.trim().toUpperCase();
     if (!isPostalState(code)) return;
-    zipOwned.current = code;
+    rememberZipOwned(code);
     setSelected(code);
     writeStateUrl(code);
-  }, [writeStateUrl]);
+  }, [rememberZipOwned, writeStateUrl]);
 
   const rejectZip = useCallback(() => {
-    const owned = zipOwned.current;
-    zipOwned.current = null;
+    const owned = zipOwned.current ?? readZipOwnedState(window.sessionStorage);
+    rememberZipOwned(null);
     if (!owned) return;
     setSelected((current) => (current === owned ? null : current));
     if (postalFromSearch(window.location.search) !== owned) return;
@@ -206,7 +216,7 @@ export function Landing({
     const next = `${window.location.pathname}${nextSearch}${window.location.hash}`;
     const current = `${window.location.pathname}${window.location.search}${window.location.hash}`;
     if (next !== current) window.history.replaceState(null, "", next);
-  }, []);
+  }, [rememberZipOwned]);
 
   useEffect(() => {
     if (!selected) return;
