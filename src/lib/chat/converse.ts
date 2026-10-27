@@ -2,6 +2,7 @@ import {
   BedrockRuntimeClient,
   ConverseCommand,
   type ContentBlock,
+  type InferenceConfiguration,
   type Message,
   type Tool,
 } from "@aws-sdk/client-bedrock-runtime";
@@ -36,7 +37,7 @@ export function createBedrockConverse(
         system: [{ text: input.system }],
         messages: input.messages.map(toSdkMessage),
         toolConfig: { tools: bedrockTools },
-        inferenceConfig: { maxTokens: input.maxTokens, temperature: 0 },
+        inferenceConfig: inferenceConfigFor(input.modelId, input.maxTokens),
       }),
     );
     const message = fromSdkMessage(response.output?.message);
@@ -55,6 +56,31 @@ export function createBedrockConverse(
       },
     };
   };
+}
+
+/**
+ * Claude 5.5 rejects `temperature` on Converse (`temperature` is deprecated
+ * for this model). Haiku 4.5 still accepts it. Omitting the field uses that
+ * model's default, which is not 0, so older ids keep temperature 0.
+ *
+ * Ids that omit it contain `haiku-5` or `sonnet-5`, or match `claude-*-5-5`
+ * (geo prefixes and inference-profile ARNs included). `haiku-4-5` does not.
+ */
+export function inferenceConfigFor(
+  modelId: string,
+  maxTokens: number,
+): InferenceConfiguration {
+  if (modelOmitsTemperature(modelId)) return { maxTokens };
+  return { maxTokens, temperature: 0 };
+}
+
+function modelOmitsTemperature(modelId: string): boolean {
+  const id = modelId.toLowerCase();
+  return (
+    id.includes("haiku-5") ||
+    id.includes("sonnet-5") ||
+    /claude-[a-z0-9]+-5-5/.test(id)
+  );
 }
 
 function toSdkMessage(message: ChatMessage): Message {

@@ -10,6 +10,7 @@ import {
   DEFAULT_SONNET_MODEL_ID,
   chatModelId,
 } from "../src/lib/chat/config";
+import { inferenceConfigFor } from "../src/lib/chat/converse";
 import { postChat, type ChatDeps } from "../src/lib/chat/handler";
 import { labelForRaceId, polishSources } from "../src/lib/chat/polish";
 import { CHAT_SYSTEM_PROMPT } from "../src/lib/chat/prompt";
@@ -474,6 +475,41 @@ test("Haiku 5.5 is the default Bedrock model and Sonnet is opt-in", () => {
   assert.match(CHAT_SYSTEM_PROMPT, /Never invent/i);
   assert.match(CHAT_SYSTEM_PROMPT, /midterm/i);
   assert.match(CHAT_SYSTEM_PROMPT, /out-of-cycle/i);
+});
+
+test("Converse omits temperature for Claude 5.5 and keeps it for Haiku 4.5", () => {
+  const omits = [
+    "us.anthropic.claude-haiku-5-5",
+    "eu.anthropic.claude-haiku-5-5",
+    "global.anthropic.claude-haiku-5-5",
+    "anthropic.claude-haiku-5-5",
+    "us.anthropic.claude-sonnet-5-5",
+    "anthropic.claude-sonnet-5",
+    "arn:aws:bedrock:us-east-1:402275401617:inference-profile/us.anthropic.claude-haiku-5-5",
+    "us.anthropic.claude-opus-5-5",
+  ];
+  for (const modelId of omits) {
+    const config = inferenceConfigFor(modelId, 1024);
+    assert.deepStrictEqual(config, { maxTokens: 1024 });
+    assert.equal("temperature" in config, false);
+  }
+
+  const keeps = [
+    "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+    "anthropic.claude-haiku-4-5-20251001-v1:0",
+    "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+    "anthropic.claude-3-5-haiku-20241022-v1:0",
+    "anthropic.claude-3-haiku-20240307-v1:0",
+    "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
+    "anthropic.claude-3-5-sonnet-20241022-v2:0",
+    "custom-haiku",
+  ];
+  for (const modelId of keeps) {
+    assert.deepStrictEqual(inferenceConfigFor(modelId, 1024), {
+      maxTokens: 1024,
+      temperature: 0,
+    });
+  }
 });
 
 test("Amplify env copy includes chat settings and not a public model key", () => {
