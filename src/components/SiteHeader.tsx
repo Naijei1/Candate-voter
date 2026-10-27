@@ -12,7 +12,7 @@ export function SiteHeader({
 }) {
   return (
     <header className={overlay ? "map-chrome" : "site-header sticky top-0 z-30 border-b border-line bg-card/95 backdrop-blur"}>
-      <div className={overlay ? "map-chrome-row" : "flex w-full items-center justify-between gap-4 px-4 py-3 sm:px-6"}>
+      <div className={overlay ? "map-chrome-row" : "site-header-row flex w-full items-center justify-between gap-4 px-4 py-3 sm:px-6"}>
         <Link
           href="/"
           className={
@@ -23,16 +23,15 @@ export function SiteHeader({
         >
           <BrandMark />
           <span className="min-w-0">
-            <span className="brand-name block text-lg leading-5 font-semibold tracking-tight">Candate</span>
+            <span className="brand-name block text-lg leading-5 font-semibold tracking-tight whitespace-nowrap">Candate</span>
             {overlay ? null : (
-              <span className="block truncate text-xs font-medium text-muted">
+              <span className="brand-tagline block truncate text-xs font-medium text-muted">
                 Nonpartisan federal races
               </span>
             )}
           </span>
         </Link>
-        {overlay ? <div id="map-chrome-info" className="map-chrome-info" /> : null}
-        <div className={overlay ? "map-chrome-actions flex items-center gap-2" : "flex items-center gap-2"}>
+        <div className={overlay ? "map-chrome-actions header-actions flex items-center gap-2" : "header-actions flex items-center gap-2"}>
           <Suspense fallback={<div className="h-10 w-28 rounded-lg border border-line bg-card" aria-hidden="true" />}>
             <YearSelect cycles={cycles} />
           </Suspense>

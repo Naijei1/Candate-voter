@@ -332,7 +332,7 @@ test("a settled answer or timeout replaces the loading row", () => {
 test("message states render sources only after a successful answer", () => {
   const empty = render(React.createElement(ChatMessageList, baseList({ turns: [] })));
   assert.match(empty, /Ask factual questions/);
-  assert.match(empty, /does not rank candidates or give voting advice/);
+  assert.doesNotMatch(empty, /voting advice/);
   assert.doesNotMatch(empty, /Who filed in Alaska Senate/);
   assert.doesNotMatch(empty, /Suggested prompts/);
   assert.doesNotMatch(empty, /<button/);

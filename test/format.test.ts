@@ -4,8 +4,10 @@ import {
   fecCandidateLabel,
   formatInstant,
   httpsUrl,
+  collapseRepeatedParty,
   partyCue,
   partyLabel,
+  partyToneClass,
 } from "../src/lib/format";
 
 test("formatInstant renders Eastern Time and keeps an unparseable value visible", () => {
@@ -47,6 +49,14 @@ test("party labels use a readable affiliation name and keep unknown codes", () =
   assert.equal(partyCue(["Republican", "Write-in"]), "Write-in candidate (Republican)");
   assert.equal(partyCue(["Write-in"]), "Write-in candidate");
   assert.equal(partyCue(["Democratic", "Republican"]), "Democratic · Republican");
+  assert.equal(partyCue(["Democratic Democratic (DEM)"]), "Democratic (DEM)");
+  assert.equal(collapseRepeatedParty("Republican Republican (REP)"), "Republican (REP)");
+  assert.equal(collapseRepeatedParty("Democratic (DEM)"), "Democratic (DEM)");
+  assert.equal(partyToneClass("DEM"), "text-party-dem");
+  assert.equal(partyToneClass("DFL"), "text-party-dem");
+  assert.equal(partyToneClass("REP"), "text-party-rep");
+  assert.equal(partyToneClass("IND"), "text-muted");
+  assert.equal(partyToneClass(null), "text-muted");
   assert.equal(fecCandidateLabel("P80011018"), "FEC P80011018");
   assert.equal(fecCandidateLabel(null), "FEC candidate id not reported");
 });

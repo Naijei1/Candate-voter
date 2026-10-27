@@ -6,6 +6,7 @@ import { MapLegend } from "@/components/UsMap";
 import { HOUSE_SEATS } from "@/lib/data/at-large";
 import { stateName } from "@/lib/data/states";
 import { withBasePath } from "@/lib/base-path";
+import { withPreservedQuery, type MapContext } from "@/lib/landing/state-query";
 import {
   districtHasCandidates,
   isCdFeatureCollection,
@@ -22,11 +23,14 @@ export function DistrictMap({
   postal,
   races,
   yourDistricts = [],
+  context = null,
 }: {
   postal: string;
   races: readonly Race[];
   /** Two-digit House codes from a ZIP match. Empty when the visitor did not arrive by ZIP. */
   yourDistricts?: readonly string[];
+  /** Year, state, and zip to keep on the race URL. */
+  context?: MapContext | null;
 }) {
   const router = useRouter();
   const [shapes, setShapes] = useState<ProjectedDistrict[] | null>(null);
@@ -36,7 +40,7 @@ export function DistrictMap({
   const here = youAreHere(yourDistricts);
 
   function openRace(raceId: string) {
-    router.push(`/races/${raceId}`);
+    router.push(context ? withPreservedQuery(`/races/${raceId}`, context) : `/races/${raceId}`);
   }
 
   useEffect(() => {

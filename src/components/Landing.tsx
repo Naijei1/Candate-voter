@@ -1,20 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
-import { createPortal } from "react-dom";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useAsk } from "@/components/chat/AskProvider";
 import { CandidateDisclosure } from "@/components/CandidateDisclosure";
+import { DataRefreshedBanner } from "@/components/DataRefreshedBanner";
 import { DistrictMap } from "@/components/DistrictMap";
 import { RecordMeta } from "@/components/RecordMeta";
-import { StateScoreboard, WhatAmILookingAt } from "@/components/StateScoreboard";
+import { StateScoreboard } from "@/components/StateScoreboard";
 import { StorageNotice } from "@/components/StorageNotice";
 import { MapLegend, UsMap } from "@/components/UsMap";
 import { ZipLookup } from "@/components/ZipLookup";
 import { askScopeForState, askScopeForYear, pageContextFromScope } from "@/lib/chat/scope";
 import {
+  emptyHouseNext,
   emptyRaceSentence,
-  homeValueLine,
   jurisdictionRepeatsTitle,
   officeOneLiner,
   runningForLine,
@@ -38,7 +38,9 @@ import {
   searchWithState,
   searchWithZip,
   postalFromSearch,
+  withPreservedQuery,
   zipFromSearch,
+  type MapContext,
 } from "@/lib/landing/state-query";
 import { findRacesByZip } from "@/lib/lookup/find-races";
 import { zipRaceSlots, zipSlotJurisdiction, zipSlotTitle, type ZipLookupPayload, type ZipLookupResult, type ZipRaceSlot } from "@/lib/lookup/zip-view";
@@ -254,6 +256,11 @@ export function Landing({
     writeUrl(searchWithoutState(window.location.search));
   }, [writeUrl]);
 
+  const preserve = useCallback(
+    (path: string) => withPreservedQuery(path, { year, state: selected, zip: zipCode }),
+    [selected, year, zipCode],
+  );
+
   const pickState = useCallback(() => {
     if (selected) {
       backToMap();
@@ -268,21 +275,12 @@ export function Landing({
       ? stateHoverLine(stateName(hot), hotBoard.senateFilings, hotBoard.districtsWithFilings, hotBoard.districtsTotal)
       : null;
 
+  const mapContext: MapContext = { year, state: selected, zip: zipCode };
+
   return (
     <div className={selected ? "state-shell" : "national-shell"}>
-      <ChromeInfo>
-        <WhatAmILookingAt refreshedAt={refreshedAt} icon />
-      </ChromeInfo>
       <div className="zip-slot">
         <ZipLookup year={year} onFound={openZip} onPickState={pickState} lookup={lookupZip} />
-        {!selected ? (
-          <div className="home-cue">
-            <p className="home-line" data-testid="home-value">
-              {homeValueLine(year)}
-            </p>
-            <WhatAmILookingAt refreshedAt={refreshedAt} glass />
-          </div>
-        ) : null}
         {!selected && !hasAnyRaces ? (
           <div className="mt-2">
             <StorageNotice>No races are stored for election years {cycleLabel}.</StorageNotice>
@@ -303,8 +301,10 @@ export function Landing({
           yours={yours}
           showAll={showAll}
           onShowAll={() => setShowAll(true)}
-          onBack={backToMap}
+          onBack={pinYours ? null : backToMap}
+          onLeave={backToMap}
           onRetryRace={retryRace}
+          preserve={preserve}
         />
       ) : null}
 
@@ -313,6 +313,7 @@ export function Landing({
           postal={selected}
           races={races}
           yourDistricts={pinYours ? houseCodes(yours) : []}
+          context={mapContext}
         />
       ) : (
         <div className="map-bleed" data-testid="national-map">
@@ -332,6 +333,9 @@ export function Landing({
               {hotCaption}
             </p>
           ) : null}
+          <div className="map-meta-dock">
+            <DataRefreshedBanner refreshedAt={refreshedAt} compact />
+          </div>
           <div className="map-legend-dock">
             <MapLegend />
           </div>
@@ -354,7 +358,9 @@ function StateOverview({
   showAll,
   onShowAll,
   onBack,
+  onLeave,
   onRetryRace,
+  preserve,
 }: {
   year: number;
   races: readonly Race[];
@@ -367,8 +373,11 @@ function StateOverview({
   yours: ReturnType<typeof zipRaceSlots>;
   showAll: boolean;
   onShowAll: () => void;
-  onBack: () => void;
+  /** Country map. Null while a ZIP is showing, so that control cannot clear state and zip. */
+  onBack: (() => void) | null;
+  onLeave: () => void;
   onRetryRace: (raceId: string) => void;
+  preserve: (path: string) => string;
 }) {
   const name = stateName(postal);
   const board = stateScoreboard(races, postal, year);
@@ -382,16 +391,18 @@ function StateOverview({
       <div className="back-chrome">
         <span className="drawer-handle" aria-hidden="true" />
         <div className="back-chrome-row">
-          <button type="button" onClick={onBack} data-testid="back-to-map" className="back-link">
-            <span aria-hidden="true">← </span>
-            Back to map
-          </button>
+          {onBack ? (
+            <button type="button" onClick={onBack} data-testid="back-to-map" className="back-link">
+              <span aria-hidden="true">← </span>
+              Back to map
+            </button>
+          ) : null}
           <h1 className="state-title">{name}</h1>
         </div>
       </div>
       <p className="state-year">{year}</p>
       <StateScoreboard board={board} />
-      <WhatAmILookingAt refreshedAt={refreshedAt} />
+      <DataRefreshedBanner refreshedAt={refreshedAt} compact />
       {pinYours ? (
         <section
           id="your-races"
@@ -426,16 +437,18 @@ function StateOverview({
                             race={slot.race}
                             candidates={cache.get(slot.race.raceId)}
                             onRetry={() => onRetryRace(slot.race!.raceId)}
+                            catalog={listed}
+                            preserve={preserve}
+                            racesAnchor={pinYours}
                           />
                         ) : (
                           <li key={slot.raceId} className="race-row">
                             <h4 className="font-semibold tracking-tight text-ink">
                               <Link
-                                href={`/races/${slot.raceId}`}
+                                href={preserve(`/races/${slot.raceId}`)}
                                 className="race-title text-ink underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
                               >
                                 <span>{zipSlotTitle(slot, postal)}</span>
-                                <DetailsCue />
                               </Link>
                             </h4>
                             <OfficeLine office={slot.office} district={slot.district} />
@@ -448,6 +461,21 @@ function StateOverview({
                                 district: slot.district,
                               })}
                             </p>
+                            {slot.office === "house" ? (
+                              <EmptyHouseLink
+                                race={{
+                                  raceId: slot.raceId,
+                                  office: slot.office,
+                                  state: postal,
+                                  cycle: year,
+                                  district: slot.district,
+                                  empty: true,
+                                }}
+                                catalog={listed}
+                                preserve={preserve}
+                                racesAnchor={pinYours}
+                              />
+                            ) : null}
                           </li>
                         ),
                       )}
@@ -473,7 +501,7 @@ function StateOverview({
       {zipFailed ? (
         <div className="zip-guidance" data-testid="zip-guidance">
           <p className="zip-status">That ZIP did not match this state.</p>
-          <button type="button" className="zip-pick" onClick={onBack}>
+          <button type="button" className="zip-pick" onClick={onLeave}>
             Tap a state on the map
           </button>
         </div>
@@ -482,9 +510,12 @@ function StateOverview({
         <RaceGroups
           postal={postal}
           races={showAll ? rest : listed}
+          catalog={listed}
           cache={cache}
           onRetryRace={onRetryRace}
           heading={showAll ? `All ${name} races` : null}
+          preserve={preserve}
+          racesAnchor={pinYours}
         />
       ) : null}
     </div>
@@ -494,15 +525,21 @@ function StateOverview({
 function RaceGroups({
   postal,
   races,
+  catalog,
   cache,
   onRetryRace,
   heading,
+  preserve,
+  racesAnchor,
 }: {
   postal: string;
   races: Race[];
+  catalog: readonly Race[];
   cache: Map<string, CandidateCacheEntry>;
   onRetryRace: (raceId: string) => void;
   heading: string | null;
+  preserve: (path: string) => string;
+  racesAnchor: boolean;
 }) {
   const groups = racesByStateOffice(races);
   if (groups.length === 0) {
@@ -530,6 +567,9 @@ function RaceGroups({
                 race={race}
                 candidates={cache.get(race.raceId)}
                 onRetry={() => onRetryRace(race.raceId)}
+                catalog={catalog}
+                preserve={preserve}
+                racesAnchor={racesAnchor}
               />
             ))}
           </ul>
@@ -555,20 +595,26 @@ function RaceCard({
   race,
   candidates,
   onRetry,
+  catalog,
+  preserve,
+  racesAnchor,
 }: {
   race: Race;
   candidates: CandidateCacheEntry | undefined;
   onRetry: () => void;
+  catalog: readonly Race[];
+  preserve: (path: string) => string;
+  racesAnchor: boolean;
 }) {
   return (
     <li className="race-row">
       <h4 className="font-semibold tracking-tight">
         <Link
-          href={`/races/${race.raceId}`}
+          href={preserve(`/races/${race.raceId}`)}
           className="race-title text-ink underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
         >
           <span>{race.title}</span>
-          <DetailsCue />
+          {race.empty === true ? null : <DetailsCue />}
         </Link>
       </h4>
       <OfficeLine office={race.office} district={race.district} />
@@ -582,7 +628,10 @@ function RaceCard({
             : `${candidates.candidates.length} candidates so far`}
         </p>
       ) : null}
-      <CandidateList race={race} entry={candidates} onRetry={onRetry} />
+      <CandidateList race={race} entry={candidates} onRetry={onRetry} preserve={preserve} />
+      {race.empty === true && race.office === "house" ? (
+        <EmptyHouseLink race={race} catalog={catalog} preserve={preserve} racesAnchor={racesAnchor} />
+      ) : null}
       {race.empty === true ? null : (
         <RecordMeta sourceUrl={race.sourceUrl} updatedAt={race.updatedAt} showUpdated={false} />
       )}
@@ -594,10 +643,12 @@ function CandidateList({
   race,
   entry,
   onRetry,
+  preserve,
 }: {
   race: Race;
   entry: CandidateCacheEntry | undefined;
   onRetry: () => void;
+  preserve: (path: string) => string;
 }) {
   if (race.empty === true) {
     return <p className="mt-2 text-sm text-ink">{emptyRaceSentence(race)}</p>;
@@ -639,7 +690,7 @@ function CandidateList({
               cue={partyCue(candidate.partyLabels)}
               runningFor={runningForLine(race)}
               partyAffiliation={candidate.partyAffiliation}
-              href={`/candidates/${candidate.candidateId}`}
+              href={preserve(`/candidates/${candidate.candidateId}`)}
               filingCount={candidate.alternateFilingCount + 1}
               updatedAt={candidate.updatedAt}
             />
@@ -649,7 +700,7 @@ function CandidateList({
       {hidden > 0 ? (
         <p className="mt-1 text-sm text-muted">
           <Link
-            href={`/races/${race.raceId}`}
+            href={preserve(`/races/${race.raceId}`)}
             className="text-accent underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
           >
             All {entry.candidates.length} candidates
@@ -687,6 +738,35 @@ function unwatchLocation(listener: () => void) {
   locationListeners.delete(listener);
 }
 
+function EmptyHouseLink({
+  race,
+  catalog,
+  preserve,
+  racesAnchor,
+}: {
+  race: Pick<Race, "office" | "state" | "cycle" | "district" | "raceId" | "empty">;
+  catalog: readonly Race[];
+  preserve: (path: string) => string;
+  racesAnchor: boolean;
+}) {
+  const step = emptyHouseNext(race, catalog);
+  const href = step
+    ? preserve(`/races/${step.raceId}`)
+    : racesAnchor
+      ? "#your-races"
+      : preserve("/#your-races");
+  return (
+    <p className="mt-2">
+      <Link
+        href={href}
+        className="text-sm font-semibold text-accent underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
+      >
+        {step ? step.label : "Back to Your races"}
+      </Link>
+    </p>
+  );
+}
+
 function DetailsCue() {
   return (
     <span className="row-cue">
@@ -710,19 +790,6 @@ function OfficeLine({
 function placeLine(title: string, jurisdiction: string | null): boolean {
   if (!jurisdiction) return false;
   return !jurisdictionRepeatsTitle(title, jurisdiction);
-}
-
-function ChromeInfo({ children }: { children: ReactNode }) {
-  const [slot, setSlot] = useState<HTMLElement | null>(null);
-  useEffect(() => {
-    setSlot(document.getElementById("map-chrome-info"));
-    document.documentElement.dataset.chromeInfo = "ready";
-    return () => {
-      delete document.documentElement.dataset.chromeInfo;
-    };
-  }, []);
-  if (!slot) return null;
-  return createPortal(children, slot);
 }
 
 function houseCodes(slots: readonly ZipRaceSlot[]): string[] {

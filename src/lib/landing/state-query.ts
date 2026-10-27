@@ -41,6 +41,37 @@ export function searchWithZip(search: string, postal: string, zip: string): stri
   return query ? `?${query}` : "";
 }
 
+export type MapContext = {
+  year?: number | string | null;
+  state?: string | null;
+  zip?: string | null;
+};
+
+/**
+ * Keep year, state, and zip on a path. Zip is kept only with a real state,
+ * because a ZIP view is the state map for that code.
+ * A hash on `path` stays after the query.
+ */
+export function withPreservedQuery(path: string, query: MapContext): string {
+  const params = new URLSearchParams();
+  const year = query.year == null ? "" : String(query.year).trim();
+  if (/^\d{4}$/.test(year)) params.set("year", year);
+  const state = query.state?.trim().toUpperCase() ?? "";
+  if (isPostalState(state)) params.set("state", state);
+  const zip = normalizeZip(query.zip ?? "");
+  if (zip && isPostalState(state)) params.set("zip", zip);
+  const hashAt = path.indexOf("#");
+  const hash = hashAt >= 0 ? path.slice(hashAt) : "";
+  const base = hashAt >= 0 ? path.slice(0, hashAt) : path;
+  const serialized = params.toString();
+  return serialized ? `${base}?${serialized}${hash}` : `${base}${hash}`;
+}
+
+/** Home URL for Back to map, including state and zip when they are present. */
+export function mapHomeHref(query: MapContext): string {
+  return withPreservedQuery("/", query);
+}
+
 /** Query string with `state` removed. Other parameters, including `year`, stay. */
 export function searchWithoutState(search: string): string {
   const params = new URLSearchParams(search.startsWith("?") ? search.slice(1) : search);

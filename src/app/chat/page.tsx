@@ -4,8 +4,7 @@ import { ChatPage } from "@/components/chat/ChatPage";
 
 export const metadata: Metadata = {
   title: "Ask",
-  description:
-    "Ask factual questions about federal races and filings. Answers cite stored public records. Candate does not rank candidates or give voting advice.",
+  description: "Ask factual questions about federal races and filings.",
 };
 
 export default function ChatRoute() {

@@ -16,11 +16,6 @@ export function senateScoreSentence(count: number): string {
   return `${count} Senate races have a filing`;
 }
 
-/** One line under the ZIP bar on the national map. */
-export function homeValueLine(year: number): string {
-  return `Find who's running in your area for ${year}. Type your ZIP or tap your state.`;
-}
-
 /** State overview: a plain Senate line plus the filing count. */
 export function senateBoardLine(count: number): string {
   if (count <= 0) return "Senate — no filing yet for the statewide seat.";
@@ -125,6 +120,34 @@ export function emptyRaceSentence(
   if (race.office === "house") return emptyDistrictSentence(race.district);
   if (race.office === "senate") return emptySenateSentence();
   return "No one has filed yet.";
+}
+
+type EmptyHouseCandidate = Pick<Race, "office" | "state" | "cycle" | "district" | "raceId" | "empty">;
+
+/**
+ * One way forward from an empty House contest.
+ * A filed Senate race wins; otherwise the nearest House district with a filing.
+ * Null means the page should link back to Your races instead.
+ */
+export function emptyHouseNext(
+  race: EmptyHouseCandidate,
+  races: readonly EmptyHouseCandidate[],
+): { raceId: string; label: string } | null {
+  if (race.office !== "house" || race.empty !== true || !race.state) return null;
+  const same = races.filter(
+    (item) => item.raceId !== race.raceId && item.cycle === race.cycle && item.state === race.state,
+  );
+  const senate = same.find((item) => item.office === "senate" && item.empty !== true);
+  if (senate) return { raceId: senate.raceId, label: "See the Senate race" };
+  const origin = Number(race.district);
+  const filed = same.filter((item) => item.office === "house" && item.empty !== true);
+  if (filed.length === 0 || !Number.isFinite(origin)) return null;
+  const nearest = [...filed].sort((a, b) => {
+    const distance = Math.abs(Number(a.district) - origin) - Math.abs(Number(b.district) - origin);
+    if (distance !== 0) return distance;
+    return (a.district ?? "").localeCompare(b.district ?? "");
+  })[0];
+  return nearest ? { raceId: nearest.raceId, label: "See a nearby district" } : null;
 }
 
 function placeName(

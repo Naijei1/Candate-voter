@@ -42,8 +42,18 @@ test("race and candidate pages keep a labeled way back to the map", () => {
   assert.match(candidate, /<summary>Details<\/summary>/);
   assert.match(chrome, /Back to map/);
   assert.match(chrome, /Your races/);
+  assert.match(chrome, /mapHomeHref/);
+  assert.match(chrome, /zip/);
   assert.match(landing, /data-testid="back-to-map"/);
   assert.match(landing, /id="your-races"/);
-  assert.match(landing, /homeValueLine/);
-  assert.match(landing, /<WhatAmILookingAt/);
+  assert.match(landing, /withPreservedQuery/);
+  assert.equal(landing.includes("homeValueLine"), false);
+  assert.equal(landing.includes("WhatAmILookingAt"), false);
+  assert.equal(/onBack=\{pinYours \? null : backToMap\}/.test(landing), true);
+
+  const css = readFileSync(new URL("../src/app/globals.css", import.meta.url), "utf8");
+  const narrow = css.slice(css.indexOf("@media (max-width: 420px)"));
+  assert.equal(/clip:\s*rect\(0,\s*0,\s*0,\s*0\)/.test(narrow), false);
+  assert.match(narrow, /\.map-chrome \.brand-name[\s\S]*?white-space:\s*nowrap/);
+  assert.match(narrow, /\.site-header \.brand-name/);
 });

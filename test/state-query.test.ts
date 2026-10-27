@@ -1,10 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  mapHomeHref,
   postalFromSearch,
   searchWithState,
   searchWithoutState,
   searchWithZip,
+  withPreservedQuery,
   yearNavigationHref,
   zipFromSearch,
 } from "../src/lib/landing/state-query";
@@ -31,4 +33,19 @@ test("year navigation keeps the selected state on the home page", () => {
   assert.equal(yearNavigationHref("/", "?state=KY&zip=40502", 2028), "/?state=KY&zip=40502&year=2028");
   assert.equal(yearNavigationHref("/", "?year=2026&state=VA", 2026), "/?year=2026&state=VA");
   assert.equal(yearNavigationHref("/races/2026-senate-VA", "?state=VA", 2028), "/?year=2028");
+  assert.equal(
+    mapHomeHref({ year: 2026, state: "ky", zip: "40502" }),
+    "/?year=2026&state=KY&zip=40502",
+  );
+  assert.equal(mapHomeHref({ year: 2026, state: "KY" }), "/?year=2026&state=KY");
+  assert.equal(mapHomeHref({ year: 2026 }), "/?year=2026");
+  assert.equal(mapHomeHref({ year: 2026, zip: "40502" }), "/?year=2026");
+  assert.equal(
+    withPreservedQuery("/races/2026-house-KY-06", { year: 2026, state: "KY", zip: "40502" }),
+    "/races/2026-house-KY-06?year=2026&state=KY&zip=40502",
+  );
+  assert.equal(
+    withPreservedQuery("/#your-races", { year: 2026, state: "KY", zip: "40502" }),
+    "/?year=2026&state=KY&zip=40502#your-races",
+  );
 });
