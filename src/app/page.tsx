@@ -5,13 +5,14 @@ import { logReadError, readRaceIndex } from "@/lib/data/read";
 import { isPostalState } from "@/lib/data/states";
 import { stateRaces } from "@/lib/landing";
 import { loadCandidatesForRaces } from "@/lib/landing/candidates";
+import { normalizeZip } from "@/lib/lookup/zip-view";
 import type { Race } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 type HomePageProps = {
-  searchParams: Promise<{ year?: string; state?: string }>;
+  searchParams: Promise<{ year?: string; state?: string; zip?: string }>;
 };
 
 export default async function HomePage({ searchParams }: HomePageProps) {
@@ -34,6 +35,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   const races = loaded.groups.find((group) => group.cycle === year)?.races ?? [];
   const requestedState = params.state?.trim().toUpperCase() ?? "";
   const initialState = isPostalState(requestedState) ? requestedState : null;
+  const initialZip = initialState ? normalizeZip(params.zip ?? "") : null;
   const seededCandidates = await seedState(races, initialState);
 
   return (
@@ -42,6 +44,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       year={year}
       races={races}
       initialState={initialState}
+      initialZip={initialZip}
       hasAnyRaces={loaded.groups.length > 0}
       cycleLabel={formatCycleList(loaded.cycles)}
       seededCandidates={seededCandidates}

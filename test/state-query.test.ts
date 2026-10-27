@@ -2,13 +2,11 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   postalFromSearch,
-  readZipOwnedState,
   searchWithState,
   searchWithoutState,
-  selectionFromLocation,
-  selectionFromPop,
-  writeZipOwnedState,
+  searchWithZip,
   yearNavigationHref,
+  zipFromSearch,
 } from "../src/lib/landing/state-query";
 
 test("state query keeps the year and replaces a previous state", () => {
@@ -18,44 +16,19 @@ test("state query keeps the year and replaces a previous state", () => {
   assert.equal(postalFromSearch("?year=2026&state=ca"), "CA");
   assert.equal(postalFromSearch("?state=California"), null);
   assert.equal(postalFromSearch(""), null);
+  assert.equal(searchWithState("?year=2026&zip=40502", "KY"), "?year=2026&state=KY");
   assert.equal(searchWithoutState("?year=2026&state=KY"), "?year=2026");
+  assert.equal(searchWithoutState("?year=2026&state=KY&zip=40502"), "?year=2026");
   assert.equal(searchWithoutState("?state=KY"), "");
   assert.equal(searchWithoutState(""), "");
-});
-
-test("a deep link selects from the URL before the server prop catches up", () => {
-  assert.equal(selectionFromLocation("?state=NV", null), "NV");
-  assert.equal(selectionFromLocation("?state=ky", "CA"), "KY");
-  assert.equal(selectionFromLocation("", "NV"), "NV");
-  assert.equal(selectionFromLocation("?state=nope", "KY"), "KY");
-  assert.equal(selectionFromPop("?state=KY"), "KY");
-  assert.equal(selectionFromPop(""), null);
-  assert.equal(selectionFromPop("?year=2026"), null);
-});
-
-test("zip ownership is a postal code and a manual clear removes it", () => {
-  const stored = new Map<string, string>();
-  const storage = {
-    getItem: (key: string) => stored.get(key) ?? null,
-    setItem: (key: string, value: string) => {
-      stored.set(key, value);
-    },
-    removeItem: (key: string) => {
-      stored.delete(key);
-    },
-  };
-  assert.equal(readZipOwnedState(storage), null);
-  writeZipOwnedState(storage, "ky");
-  assert.equal(readZipOwnedState(storage), "KY");
-  writeZipOwnedState(storage, "nope");
-  assert.equal(readZipOwnedState(storage), null);
-  writeZipOwnedState(storage, "KY");
-  writeZipOwnedState(storage, null);
-  assert.equal(readZipOwnedState(storage), null);
+  assert.equal(searchWithZip("?year=2026", "ky", "40502"), "?year=2026&state=KY&zip=40502");
+  assert.equal(zipFromSearch("?state=KY&zip=40502-1234"), "40502");
+  assert.equal(zipFromSearch("?state=KY"), null);
 });
 
 test("year navigation keeps the selected state on the home page", () => {
   assert.equal(yearNavigationHref("/", "?state=KY", 2028), "/?state=KY&year=2028");
+  assert.equal(yearNavigationHref("/", "?state=KY&zip=40502", 2028), "/?state=KY&zip=40502&year=2028");
   assert.equal(yearNavigationHref("/", "?year=2026&state=VA", 2026), "/?year=2026&state=VA");
   assert.equal(yearNavigationHref("/races/2026-senate-VA", "?state=VA", 2028), "/?year=2028");
 });
