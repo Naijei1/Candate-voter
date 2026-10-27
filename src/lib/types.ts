@@ -28,6 +28,13 @@ export type Race = {
   sourceUrl: string | null;
   /** ISO-8601 time our system last wrote this record. */
   updatedAt: string | null;
+  /**
+   * True when this contest is on the cycle ballot and no Form 2 race is
+   * stored. Omitted on stored races. List responses merge these stubs into
+   * `races`; they are not a separate field. Coverage does not count them
+   * as districts with filings.
+   */
+  empty?: boolean;
 };
 
 /** A person on a race, keyed by FEC candidate id when the filing has one. */

@@ -19,6 +19,8 @@ export type HouseCoverageRow = {
  * House districts that have at least one stored Form 2 race.
  * `districtsTotal` is the 2020 census apportionment (435), including
  * single-seat states as one district. Territories are not in that total.
+ * Ballot stubs (`empty: true`) are not filings, so a full district list
+ * does not raise `districtsWithFilings`.
  */
 export function houseCoverageForRaces(
   races: readonly Race[],
@@ -35,13 +37,16 @@ export function houseCoverageForRaces(
       rows.push({
         cycle,
         state,
-        districtsWithFilings: house.filter((race) => race.state === state).length,
+        districtsWithFilings: house.filter(
+          (race) => race.state === state && race.empty !== true,
+        ).length,
         districtsTotal: HOUSE_SEATS[state] ?? 0,
       });
       continue;
     }
     const byState = new Map<string, number>();
     for (const race of house) {
+      if (race.empty === true) continue;
       if (!race.state || HOUSE_SEATS[race.state] == null) continue;
       byState.set(race.state, (byState.get(race.state) ?? 0) + 1);
     }

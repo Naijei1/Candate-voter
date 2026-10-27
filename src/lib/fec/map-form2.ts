@@ -82,7 +82,7 @@ export function mapForm2Filing(
     district: office === "house" ? district : null,
     title: raceTitle({ office, state, district }),
     jurisdiction: raceJurisdiction({ office, state, district }),
-    sourceUrl: raceSourceUrl({ office, cycle, state, district }),
+    sourceUrl: fecContestSearchUrl({ office, cycle, state, district }),
     updatedAt: input.retrievedAt,
   };
 
@@ -222,7 +222,8 @@ function raceJurisdiction(input: {
   return `${stateName(input.state ?? "")} District ${Number(input.district)}`;
 }
 
-function raceSourceUrl(input: {
+/** FEC candidate search for one contest. Shared by stored rows and ballot stubs. */
+export function fecContestSearchUrl(input: {
   office: FederalOffice;
   cycle: number;
   state: string | null;

@@ -36,9 +36,17 @@ function candidate(partial: Pick<Candidate, "candidateId" | "displayName" | "par
   };
 }
 
-test("listRacesForCycles omits years with no rows", async () => {
+test("listRacesForCycles fills even-year ballots and omits empty odd years", async () => {
   const repo = new MemoryVoterRepository();
-  assert.deepEqual(await listRacesForCycles(repo, [2026, 2027, 2028]), []);
+  const bare = await listRacesForCycles(repo, [2026, 2027, 2028]);
+  assert.deepEqual(
+    bare.map((group) => group.cycle),
+    [2026, 2028],
+  );
+  assert.equal(
+    bare[0]?.races.some((item) => item.raceId === "2026-senate-NY"),
+    false,
+  );
 
   await repo.upsertRace(
     race({
@@ -66,7 +74,13 @@ test("listRacesForCycles omits years with no rows", async () => {
   );
   assert.deepEqual(
     racesByOffice(groups[0]?.races ?? []).map((group) => group.office),
-    ["senate"],
+    ["senate", "house"],
+  );
+  const storedSenate = groups[0]?.races.find((item) => item.raceId === "2026-senate-CA");
+  assert.equal(storedSenate?.empty, undefined);
+  assert.equal(
+    groups[1]?.races.some((item) => item.raceId === "2028-president" && item.empty !== true),
+    true,
   );
 });
 

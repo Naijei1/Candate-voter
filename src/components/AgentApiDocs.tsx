@@ -55,11 +55,18 @@ export function AgentApiDocs({ origin, basePath, freshness }: AgentApiDocsProps)
             <code>GET /api/v1/races</code> — federal contests. Optional filters:{" "}
             <code>cycle</code>, <code>state</code>, <code>office</code>. Omit{" "}
             <code>cycle</code> to use the same year window as the public index.
-            Pages of up to 100 races, ordered by <code>raceId</code>.
+            Pages of up to 100 races, ordered by <code>raceId</code>. The
+            default page size is 100. An even year includes every apportioned
+            House district, including districts with no filing (
+            <code>empty: true</code>), and a Senate race when that class is
+            up. At-large is district <code>00</code>. Off-cycle Senate seats
+            are not added.
           </li>
           <li>
             <code>GET /api/v1/races/{"{raceId}"}</code> — one race and its
-            candidates, alphabetical by display name. The same normalized name
+            candidates, alphabetical by display name. A ballot stub with no
+            stored row returns the race and an empty candidate list. The same
+            normalized name
             is one row. <code>multiFilingNote</code> names each party once and
             lists the other FEC ids. <code>alternateFilings</code> keeps those
             source links.
@@ -100,7 +107,9 @@ export function AgentApiDocs({ origin, basePath, freshness }: AgentApiDocsProps)
           <code>districtsTotal</code>. That object is the plain scoreboard.
           Filter with <code>state</code> for one state row, including a
           zero. The unfiltered list adds a row per state that already has a
-          House filing. There is no per-race candidate count.{" "}
+          House filing. Empty district stubs stay in <code>races</code> and
+          are not counted in <code>districtsWithFilings</code>. There is no
+          per-race candidate count.{" "}
           <code>GET /api/v1/freshness</code> repeats
           that scope and the ingest watermark. Chat asks which state or race
           when “who is running” has no contest. It soft-refuses voting advice.

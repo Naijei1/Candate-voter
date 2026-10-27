@@ -13,17 +13,18 @@ const MAX_RACE_IDS = 80;
  * the same newest-update order. This is a reading order, not a ranking.
  */
 export function spotlightRaces(races: readonly Race[]): Race[] {
+  const stored = races.filter((race) => race.empty !== true);
   const picks: Race[] = [];
-  const president = freshest(races.filter((race) => race.office === "president"));
-  const senate = freshest(races.filter((race) => race.office === "senate"));
-  const house = freshest(races.filter((race) => race.office === "house"));
+  const president = freshest(stored.filter((race) => race.office === "president"));
+  const senate = freshest(stored.filter((race) => race.office === "senate"));
+  const house = freshest(stored.filter((race) => race.office === "house"));
   if (president) picks.push(president);
   if (senate) picks.push(senate);
   if (house) picks.push(house);
   if (picks.length >= 3) return picks.slice(0, 3);
 
   const used = new Set(picks.map((race) => race.raceId));
-  const rest = [...races].filter((race) => !used.has(race.raceId)).sort(byFreshest);
+  const rest = stored.filter((race) => !used.has(race.raceId)).sort(byFreshest);
   for (const race of rest) {
     if (picks.length >= 3) break;
     picks.push(race);
@@ -32,7 +33,7 @@ export function spotlightRaces(races: readonly Race[]): Race[] {
 }
 
 /**
- * Senate and House races stored for one state.
+ * Senate and House contests for one state, including ballot stubs.
  * The presidential contest is national and is not part of this list.
  */
 export function stateRaces(races: readonly Race[], postal: string): Race[] {
@@ -80,7 +81,7 @@ export function stateScoreboard(
   cycle?: number,
 ): StateScoreboard {
   const local = stateRaces(races, postal);
-  const senateFilings = local.filter((race) => race.office === "senate").length;
+  const senateFilings = local.filter((race) => race.office === "senate" && race.empty !== true).length;
   const cycles =
     cycle != null
       ? [cycle]
@@ -152,6 +153,7 @@ export function statesWithRaces(races: readonly Race[]): string[] {
   return [
     ...new Set(
       races
+        .filter((race) => race.empty !== true)
         .map((race) => race.state)
         .filter((state): state is string => state != null && state.length > 0),
     ),

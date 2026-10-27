@@ -2,7 +2,7 @@ import { cyclesFromEnv, parseCycle } from "../data/cycles";
 import { isPostalState } from "../data/states";
 import type { FederalOffice } from "../types";
 
-const DEFAULT_LIMIT = 50;
+const DEFAULT_LIMIT = 100;
 const MAX_LIMIT = 100;
 const CURSOR = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/;
 

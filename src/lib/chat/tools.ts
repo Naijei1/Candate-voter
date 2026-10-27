@@ -1,6 +1,7 @@
 import type { ApiRepository } from "../api/deps";
 import { contestAnnotation, cycleCalendar, upcomingRaceRank } from "../data/calendar";
 import { FORM2_SCOPE, FORM2_SCOPE_NOTE, houseCoverageForRaces } from "../data/coverage";
+import { appendExpectedRaces } from "../data/expected-races";
 import { cyclesFromEnv, parseCycle } from "../data/cycles";
 import { isPostalState } from "../data/states";
 import { logReadError, sortFilings } from "../data/read";
@@ -17,7 +18,9 @@ import { canonicalUrl, humanRaceTitle } from "./polish";
 import type { ChatSource } from "./types";
 
 const LIST_DEFAULT = 20;
-const LIST_MAX = 40;
+/** One state is at most 52 House seats plus one Senate race. */
+const LIST_STATE_DEFAULT = 80;
+const LIST_MAX = 80;
 const SEARCH_DEFAULT = 10;
 const SEARCH_MAX = 15;
 const MAX_RACES_SCANNED = 40;
@@ -57,14 +60,17 @@ const tools: readonly ToolSpec[] = [
   {
     name: "list_races",
     description:
-      "List stored federal races. Pass a state, or office president. Do not call this without a state to list every Senate or House race. This is not a ranking. Omit cycle to use the public index year window. The result includes house coverage (districts with Form 2 filings out of apportioned districts) and cycleCalendar. A presidential race in a year that is not divisible by 4 has ballotRole out-of-cycle-presidential-filing. That is an early or out-of-cycle Form 2 filing, not a general election. Midterm onBallot is senate and house.",
+      "List federal races. Pass a state, or office president. Do not call this without a state to list every Senate or House race. An even-year state list includes every apportioned House district, including districts with no Form 2 filing (empty: true, candidates none), and a Senate race when that state's class is up. At-large is district 00. Off-cycle Senate seats and odd years are not invented. This is not a ranking. Omit cycle to use the public index year window. A state list defaults to 80 so the full slate fits. The result includes house coverage (districts with Form 2 filings out of apportioned districts; empty stubs are not counted) and cycleCalendar. A presidential race in a year that is not divisible by 4 has ballotRole out-of-cycle-presidential-filing. That is an early or out-of-cycle Form 2 filing, not a general election. Midterm onBallot is senate and house.",
     inputSchema: {
       type: "object",
       properties: {
         cycle: { type: "integer", description: "Election year on the filing." },
         state: { type: "string", description: "Two-letter postal code." },
         office: officeSchema,
-        limit: { type: "integer", description: "Max races to return. Default 20, max 40." },
+        limit: {
+          type: "integer",
+          description: "Max races to return. Default 20, or 80 when a state is set. Max 80.",
+        },
       },
     },
     run: listRaces,
@@ -72,7 +78,7 @@ const tools: readonly ToolSpec[] = [
   {
     name: "get_race",
     description:
-      "Get one stored race and its candidates by raceId, for example 2026-senate-CA or 2028-president. Candidates are alphabetical by display name. The same normalized name on this race is one row; multiFilingNote lists the other FEC ids and parties. Read ballotRole before calling a presidential race a general election.",
+      "Get one race and its candidates by raceId, for example 2026-senate-CA or 2028-president. An even-year House district, or a Senate race whose class is up, returns an empty stub and candidates [] when nothing is stored. Other unknown ids return no race. Candidates are alphabetical by display name. The same normalized name on this race is one row; multiFilingNote lists the other FEC ids and parties. Read ballotRole before calling a presidential race a general election.",
     inputSchema: {
       type: "object",
       properties: {
@@ -181,7 +187,11 @@ async function listRaces(
   if (!state.ok) return toolError(state.message);
   const office = readOffice(input.office);
   if (!office.ok) return toolError(office.message);
-  const limit = readLimit(input.limit, LIST_DEFAULT, LIST_MAX);
+  const limit = readLimit(
+    input.limit,
+    state.value ? LIST_STATE_DEFAULT : LIST_DEFAULT,
+    LIST_MAX,
+  );
   if (!limit.ok) return toolError(limit.message);
 
   if (!state.value && office.value !== "president") {
@@ -194,8 +204,12 @@ async function listRaces(
     const groups = await Promise.all(
       cycles.map((year) => ctx.repo.listRacesByCycle(year)),
     );
-    const visible = visibleRaces(groups.flat());
-    const races = visible
+    const stored = visibleRaces(groups.flat());
+    const listed = appendExpectedRaces(stored, cycles, {
+      state: state.value,
+      office: office.value,
+    });
+    const races = listed
       .filter((race) => {
         if (state.value && race.state !== state.value) return false;
         if (office.value && race.office !== office.value) return false;
@@ -213,7 +227,7 @@ async function listRaces(
         scope: FORM2_SCOPE,
         filingsSoFarOnly: true,
         scopeNote: FORM2_SCOPE_NOTE,
-        house: houseCoverageForRaces(visible, cycles, state.value),
+        house: houseCoverageForRaces(listed, cycles, state.value),
       },
       sources: sources.slice(0, MAX_SOURCES),
     });
