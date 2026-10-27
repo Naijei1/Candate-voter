@@ -795,3 +795,46 @@ test("the amplify env script writes .env.production without copying FEC_API_KEY"
   assert.equal(text.includes("keep"), false);
   assert.equal(/^PATH=/m.test(text), false);
 });
+
+test("Texas does not expose a stored at-large House race", async () => {
+  const repo = new MemoryVoterRepository();
+  await repo.upsertRace(
+    race({
+      raceId: "2026-house-TX-00",
+      office: "house",
+      cycle: 2026,
+      state: "TX",
+      district: "00",
+      title: "U.S. House, Texas at-large",
+      jurisdiction: "Texas at-large",
+    }),
+  );
+  await repo.upsertRace(
+    race({
+      raceId: "2026-house-TX-07",
+      office: "house",
+      cycle: 2026,
+      state: "TX",
+      district: "07",
+      title: "U.S. House, Texas District 7",
+      jurisdiction: "Texas District 7",
+    }),
+  );
+  const list = await getRaces(
+    authed("https://voter.example/api/v1/races?cycle=2026&state=TX&office=house&limit=100"),
+    deps(repo),
+  );
+  assert.equal(list.status, 200);
+  const body = await list.json();
+  const ids = body.races.map((item: Race) => item.raceId);
+  assert.equal(ids.includes("2026-house-TX-00"), false);
+  assert.equal(ids.includes("2026-house-TX-07"), true);
+  assert.equal(ids.filter((id: string) => id.startsWith("2026-house-TX-")).length, 38);
+  const detail = await getRace(
+    authed("https://voter.example/api/v1/races/2026-house-TX-00"),
+    "2026-house-TX-00",
+    deps(repo),
+  );
+  assert.equal(detail.status, 404);
+  assert.deepEqual(await detail.json(), { error: "not_found" });
+});

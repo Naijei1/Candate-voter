@@ -3,6 +3,7 @@ import { basePathFromEnv } from "../base-path";
 import { createDynamoRepository } from "../data/repository";
 import { json } from "../api/http";
 import { originFromRequest } from "../api/public-origin";
+import { censusZipDistricts, type ZipDistrictHit } from "../geo/zip-districts";
 import {
   ALIGNMENT_DISABLED_MARKDOWN,
   answerAlignment,
@@ -19,18 +20,21 @@ import { CHAT_TIMEOUT_MESSAGE, ChatUnavailableError, unavailableBody } from "./e
 import { createBedrockConverse } from "./converse";
 import {
   CLARIFY_RACE_MARKDOWN,
+  hasPlaceContext,
   isAlignmentRequest,
   isUpcomingElectionsQuestion,
+  isVagueRunningQuestion,
   needsRaceClarification,
+  stateFromRaceId,
 } from "./intent";
 import { polishChatAnswer } from "./polish";
 import { answerUpcoming } from "./upcoming";
 import { isVotingAdvice, VOTING_ADVICE_MARKDOWN } from "./prompt";
 import { clientAddress, createRateLimiter, type RateLimiter } from "./rate-limit";
 import { parseChatRequest } from "./request";
-import { isStateRosterQuestion, answerStateRoster } from "./roster";
+import { isStateRosterQuestion, answerKnownPlace, answerStateRoster } from "./roster";
 import { runGroundedChat } from "./run";
-import type { ChatAnswer, ConverseFn } from "./types";
+import type { ChatAnswer, ChatRequest, ConverseFn } from "./types";
 import type { ApiRepository } from "../api/deps";
 
 export type ChatDeps = {
@@ -43,6 +47,8 @@ export type ChatDeps = {
   siteRoot?: string;
   /** Test override. Production uses `chatBudgetMs` (default 20s). */
   budgetMs?: number;
+  /** ZIP on the Ask page. Tests stub this. Production uses Census. */
+  lookupZip?: (zip: string) => Promise<ZipDistrictHit | null>;
 };
 
 export function liveChatDeps(
@@ -52,6 +58,7 @@ export function liveChatDeps(
     env,
     repository: () => createDynamoRepository(),
     converse: createBedrockConverse(env),
+    lookupZip: censusZipDistricts,
   };
 }
 
@@ -111,7 +118,9 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
     );
   }
 
-  if (isAlignmentRequest(parsed.value.message)) {
+  const asked = await withZipState(parsed.value, deps);
+
+  if (isAlignmentRequest(asked.message)) {
     if (!alignmentEnabled(deps.env)) {
       logOutcome({ refused: true, tools: [], latencyMs: Date.now() - started, mode: "factual" });
       return json(
@@ -123,7 +132,7 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
             mode: "factual",
           },
           threadId,
-          parsed.value.message,
+          asked.message,
         ),
       );
     }
@@ -131,8 +140,8 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
       deps.siteRoot ?? `${originFromRequest(request)}${basePathFromEnv(deps.env)}`;
     try {
       const answer = await answerAlignment({
-        request: parsed.value,
-        ctx: chatCtx(deps, now, siteRoot, parsed.value.cycle),
+        request: asked,
+        ctx: chatCtx(deps, now, siteRoot, asked),
       });
       if ("unavailable" in answer) {
         return json({ error: "unavailable", message: answer.message }, 503);
@@ -143,7 +152,7 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
         latencyMs: Date.now() - started,
         mode: "alignment",
       });
-      return json(chatBody(answer, threadId, parsed.value.message));
+      return json(chatBody(answer, threadId, asked.message));
     } catch (error) {
       const name = error instanceof Error ? error.name : "Error";
       console.error(`Alignment lookup failed: ${name}`);
@@ -151,14 +160,14 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
     }
   }
 
-  if (isStateRosterQuestion(parsed.value.message)) {
+  if (isStateRosterQuestion(asked.message, asked.state)) {
     const siteRoot =
       deps.siteRoot ?? `${originFromRequest(request)}${basePathFromEnv(deps.env)}`;
     try {
       const answer = await withBudget(
         answerStateRoster({
-          request: parsed.value,
-          ctx: chatCtx(deps, now, siteRoot, parsed.value.cycle),
+          request: asked,
+          ctx: chatCtx(deps, now, siteRoot, asked),
         }),
         budgetMs(deps),
       );
@@ -171,25 +180,31 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
         latencyMs: Date.now() - started,
         mode: "factual",
       });
-      return json(chatBody(answer, threadId, parsed.value.message));
+      return json(chatBody(answer, threadId, asked.message));
     } catch (error) {
       return json(unavailableBody(error), 503);
     }
   }
 
-  const defined = definitionAnswer(parsed.value.message);
+  const defined = definitionAnswer(asked.message);
   if (defined) {
+    if (hasPlaceContext(asked)) {
+      defined.answer_markdown = defined.answer_markdown.replace(
+        "Name a state or race and I can look up the FEC Form 2 filings stored for it.",
+        "I can look up the FEC Form 2 filings for this page.",
+      );
+    }
     logOutcome({ refused: false, tools: [], latencyMs: Date.now() - started, mode: "factual" });
-    return json(chatBody(defined, threadId, parsed.value.message));
+    return json(chatBody(defined, threadId, asked.message));
   }
 
-  if (isUpcomingElectionsQuestion(parsed.value.message)) {
+  if (isUpcomingElectionsQuestion(asked.message)) {
     const siteRoot =
       deps.siteRoot ?? `${originFromRequest(request)}${basePathFromEnv(deps.env)}`;
     try {
       const answer = await answerUpcoming({
-        request: parsed.value,
-        ctx: chatCtx(deps, now, siteRoot, parsed.value.cycle),
+        request: asked,
+        ctx: chatCtx(deps, now, siteRoot, asked),
       });
       if ("unavailable" in answer) {
         return json({ error: "unavailable", message: answer.message }, 503);
@@ -200,7 +215,7 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
         latencyMs: Date.now() - started,
         mode: "factual",
       });
-      return json(chatBody(answer, threadId, parsed.value.message));
+      return json(chatBody(answer, threadId, asked.message));
     } catch (error) {
       const name = error instanceof Error ? error.name : "Error";
       console.error(`Upcoming lookup failed: ${name}`);
@@ -208,7 +223,38 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
     }
   }
 
-  if (needsRaceClarification(parsed.value)) {
+  if (
+    isVagueRunningQuestion(asked.message) &&
+    !asked.raceId &&
+    !asked.candidateId &&
+    (asked.state || asked.zip)
+  ) {
+    const siteRoot =
+      deps.siteRoot ?? `${originFromRequest(request)}${basePathFromEnv(deps.env)}`;
+    try {
+      const answer = await withBudget(
+        answerKnownPlace({
+          request: asked,
+          ctx: chatCtx(deps, now, siteRoot, asked),
+        }),
+        budgetMs(deps),
+      );
+      if ("unavailable" in answer) {
+        return json({ error: "unavailable", message: answer.message }, 503);
+      }
+      logOutcome({
+        refused: answer.refused,
+        tools: ["place"],
+        latencyMs: Date.now() - started,
+        mode: "factual",
+      });
+      return json(chatBody(answer, threadId, asked.message));
+    } catch (error) {
+      return json(unavailableBody(error), 503);
+    }
+  }
+
+  if (needsRaceClarification(asked)) {
     logOutcome({ refused: false, tools: [], latencyMs: Date.now() - started, mode: "factual" });
     return json(
       chatBody(
@@ -219,7 +265,7 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
           mode: "factual",
         },
         threadId,
-        parsed.value.message,
+        asked.message,
       ),
     );
   }
@@ -229,16 +275,23 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
     `${originFromRequest(request)}${basePathFromEnv(deps.env)}`;
   const budget = budgetMs(deps);
   try {
-    const answer = await withBudget(
+    let answer = await withBudget(
       runGroundedChat({
-        request: parsed.value,
+        request: asked,
         env: deps.env,
         converse: deps.converse ?? createBedrockConverse(deps.env),
         deadlineMs: Date.now() + budget,
-        ctx: chatCtx(deps, now, siteRoot, parsed.value.cycle),
+        ctx: chatCtx(deps, now, siteRoot, asked),
       }),
       budget,
     );
+    if (/which state/i.test(answer.answer_markdown) && hasPlaceContext(asked)) {
+      const replaced = await answerKnownPlace({
+        request: asked,
+        ctx: chatCtx(deps, now, siteRoot, asked),
+      });
+      if (!("unavailable" in replaced)) answer = { ...answer, ...replaced };
+    }
     logOutcome({
       refused: answer.refused,
       tools: answer.tools,
@@ -247,7 +300,7 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
       inputTokens: answer.usage.inputTokens,
       outputTokens: answer.usage.outputTokens,
     });
-    return json(chatBody(answer, threadId, parsed.value.message));
+    return json(chatBody(answer, threadId, asked.message));
   } catch (error) {
     return json(unavailableBody(error), 503);
   }
@@ -269,20 +322,34 @@ function budgetMs(deps: ChatDeps): number {
   return deps.budgetMs ?? chatBudgetMs(deps.env);
 }
 
-function chatCtx(
-  deps: ChatDeps,
-  now: Date,
-  siteRoot: string,
-  cycle: number | undefined,
-) {
+function chatCtx(deps: ChatDeps, now: Date, siteRoot: string, asked: ChatRequest) {
   const root = (deps.siteRoot ?? siteRoot).replace(/\/+$/, "");
+  const state = asked.state ?? stateFromRaceId(asked.raceId) ?? undefined;
   return {
     repo: deps.repository(),
     env: deps.env,
     now,
     root,
-    ...(cycle != null ? { cycle } : {}),
+    ...(asked.cycle != null ? { cycle: asked.cycle } : {}),
+    ...(state ? { state } : {}),
+    ...(asked.zip ? { zip: asked.zip } : {}),
   };
+}
+
+/** Fill `state` from a page ZIP when the client did not send a postal code. */
+async function withZipState(asked: ChatRequest, deps: ChatDeps): Promise<ChatRequest> {
+  if (asked.state || !asked.zip) return asked;
+  if (stateFromRaceId(asked.raceId)) return asked;
+  const lookup = deps.lookupZip ?? censusZipDistricts;
+  try {
+    const hit = await lookup(asked.zip);
+    if (!hit?.state) return asked;
+    return { ...asked, state: hit.state };
+  } catch (error) {
+    const name = error instanceof Error ? error.name : "Error";
+    console.error(`ZIP context lookup failed: ${name}`);
+    return asked;
+  }
 }
 
 function withBudget<T>(work: Promise<T>, budget: number): Promise<T> {

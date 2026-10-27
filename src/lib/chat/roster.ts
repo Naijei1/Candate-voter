@@ -3,10 +3,10 @@ import { logReadError } from "../data/read";
 import { personMatchKey } from "../data/dedupe";
 import { linkPersonFilings } from "../data/person-filings";
 import { stateName } from "../data/states";
-import { loadPublicCandidates, visibleRaces, type PublicCandidate } from "../data/view";
+import { loadPublicCandidates, loadVisibleRace, visibleRaces, type PublicCandidate } from "../data/view";
 import { partyLabel } from "../format";
 import type { Race } from "../types";
-import { cycleMentionedIn, stateMentionedIn } from "./intent";
+import { cycleMentionedIn, stateFromRaceId, stateMentionedIn } from "./intent";
 import { humanRaceTitle } from "./polish";
 import type { ToolContext } from "./tools";
 import type { ChatAnswer, ChatRequest, ChatSource } from "./types";
@@ -20,8 +20,8 @@ const ROSTER = /\b(?:compare|all|every|list|who|candidates|running|filed)\b/i;
  * One state, both chambers. Answer from stored rows instead of a tool loop
  * that calls get_race once per district.
  */
-export function isStateRosterQuestion(message: string): boolean {
-  if (!stateMentionedIn(message)) return false;
+export function isStateRosterQuestion(message: string, state?: string | null): boolean {
+  if (!state && !stateMentionedIn(message)) return false;
   if (!/\bhouse\b/i.test(message) || !/\bsenate\b/i.test(message)) return false;
   return ROSTER.test(message);
 }
@@ -30,7 +30,7 @@ export async function answerStateRoster(input: {
   request: ChatRequest;
   ctx: ToolContext;
 }): Promise<ChatAnswer | { unavailable: true; message: string }> {
-  const state = stateMentionedIn(input.request.message);
+  const state = input.request.state ?? stateMentionedIn(input.request.message);
   if (!state) {
     return {
       answer_markdown: "Name a state and I can list the Senate and House filings stored for it.",
@@ -64,18 +64,19 @@ export async function answerStateRoster(input: {
     } catch (error) {
       logReadError("getWatermark", error);
     }
-    return {
-      ...renderRoster({
-        cycle,
-        state,
-        groups: presented.map((group) => ({
-          race: group.race,
-          candidates: group.candidates.map((row) => byId.get(row.candidateId) ?? row),
-        })),
-        root: input.ctx.root,
-      }),
-      refreshedAt,
-    };
+    const rendered = renderRoster({
+      cycle,
+      state,
+      groups: presented.map((group) => ({
+        race: group.race,
+        candidates: group.candidates.map((row) => byId.get(row.candidateId) ?? row),
+      })),
+      root: input.ctx.root,
+    });
+    if (input.request.zip) {
+      rendered.answer_markdown = `ZIP ${input.request.zip} is in ${stateName(state)}.\n\n${rendered.answer_markdown}`;
+    }
+    return { ...rendered, refreshedAt };
   } catch (error) {
     logReadError("listRacesByCycle", error);
     return { unavailable: true, message: "Stored records are unavailable." };
@@ -190,6 +191,44 @@ function rosterSources(races: readonly Race[], root: string): ChatSource[] {
     if (sources.length >= SOURCE_CAP) break;
   }
   return sources;
+}
+
+/**
+ * Who-is-running when the page already sent a state, ZIP, race, or candidate.
+ * Never asks which state.
+ */
+export async function answerKnownPlace(input: {
+  request: ChatRequest;
+  ctx: ToolContext;
+}): Promise<ChatAnswer | { unavailable: true; message: string }> {
+  let state = input.request.state ?? stateFromRaceId(input.request.raceId);
+  if (!state && input.request.candidateId) {
+    try {
+      const candidate = await input.ctx.repo.getCandidate(input.request.candidateId);
+      if (candidate) {
+        const race = await loadVisibleRace(input.ctx.repo, candidate.raceId);
+        state = race?.state ?? stateFromRaceId(candidate.raceId);
+      }
+    } catch (error) {
+      logReadError("getCandidate", error);
+      return { unavailable: true, message: "Stored records are unavailable." };
+    }
+  }
+  if (!state) {
+    const zip = input.request.zip;
+    return {
+      answer_markdown: zip
+        ? `ZIP ${zip} didn't match a House district, so I can't list filings for a state.`
+        : "I already have this page. Name a race if you want the filings for one contest.",
+      sources: [],
+      refused: false,
+      mode: "factual",
+    };
+  }
+  return answerStateRoster({
+    request: { ...input.request, state },
+    ctx: input.ctx,
+  });
 }
 
 function resolveCycle(request: ChatRequest, now: Date): number {

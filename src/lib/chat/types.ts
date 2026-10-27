@@ -30,6 +30,13 @@ export type ChatRequest = {
   /** Alias of `cycle`. Present only when it equals `cycle`. */
   year?: number;
   threadId?: string;
+  /**
+   * Two-letter postal code from the page (`/?state=KY`).
+   * Optional. Absent on older clients.
+   */
+  state?: string;
+  /** Five-digit ZIP from the page (`/?zip=40202`). Optional. */
+  zip?: string;
 };
 
 export type ChatContentBlock =

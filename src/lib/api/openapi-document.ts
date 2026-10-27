@@ -246,9 +246,13 @@ paths:
         null where there is no Senate seat. \`raceIds\` lists those ids even
         when DynamoDB has no row yet. \`races\` contains only stored rows,
         the same objects as \`GET /api/v1/races\`, in \`raceIds\` order.
-        An unknown ZIP is 404. The route does not invent a district.
-        Census calls share a 7 second deadline. Repeat lookups for the
-        same ZIP are cached in memory on the server process.
+        An unknown ZIP is 404 \`{ error: not_found, code: zip_not_found, message }\`.
+        A ZIP that is not five digits is 400
+        \`{ error: bad_request, code: invalid_zip, message }\`.
+        Other query mistakes stay \`bad_request\` without \`code\`.
+        The route does not invent a district.
+        Census calls share a hard 7 second deadline and cannot hang past it.
+        Repeat lookups for the same ZIP are cached in memory on the server process.
       parameters:
         - $ref: "#/components/parameters/zip"
         - $ref: "#/components/parameters/year"
@@ -281,7 +285,21 @@ paths:
                   - "2026-house-KY-06"
                 races: []
         "400":
-          $ref: "#/components/responses/BadRequest"
+          description: ZIP is not five digits, or year or cycle is invalid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+              examples:
+                invalidZip:
+                  value:
+                    error: bad_request
+                    code: invalid_zip
+                    message: zip must be a 5-digit ZIP code
+                badYear:
+                  value:
+                    error: bad_request
+                    message: year must be an integer from 1980 to 2100
         "401":
           $ref: "#/components/responses/Unauthorized"
         "404":
@@ -292,6 +310,7 @@ paths:
                 $ref: "#/components/schemas/ErrorMessage"
               example:
                 error: not_found
+                code: zip_not_found
                 message: No congressional district is published for that ZIP
         "503":
           $ref: "#/components/responses/Unavailable"
@@ -306,9 +325,14 @@ paths:
         Amazon Bedrock with tools that read the same DynamoDB rows as
         \`/api/v1\`. The response is buffered JSON, not a stream.
         \`refused: true\` is still HTTP 200: voting advice, rankings,
-        endorsements, or no matching stored record. A vague "who is running"
-        question with no race, candidate, or state asks which contest to
-        open instead of listing every state. \`mode\` is \`factual\` or
+        endorsements, or no matching stored record.
+        Optional \`state\` (two-letter postal, for example \`KY\`) and
+        \`zip\` (five digits, for example \`40202\`) are page context from
+        ZIP and state pages. When \`state\`, \`zip\`, \`raceId\`, or
+        \`candidateId\` is present, the answer uses that place and does not
+        ask which state. A vague "who is running"
+        question with none of those, and no state named in the message,
+        asks which contest to open instead of listing every state. \`mode\` is \`factual\` or
         \`alignment\`. Alignment is only for an explicit viewpoint question.
         The stored rows are Form 2 filings, so alignment says when votes and
         position statements are not in the table. \`threadId\` is echoed or
@@ -992,6 +1016,22 @@ components:
         threadId:
           type: string
           description: Client correlation id. The server does not store turns.
+        state:
+          type: string
+          description: |
+            Optional two-letter USPS postal code from the page, such as \`KY\`.
+            Omit the field when the page has no state. When set, Ask uses it
+            and does not ask which state.
+          pattern: "^[A-Za-z]{2}$"
+          example: KY
+        zip:
+          type: string
+          description: |
+            Optional five-digit ZIP from the page, such as \`40202\`.
+            ZIP+4 is accepted and stored as the first five digits.
+            When set without \`state\`, the server resolves the ZIP and does
+            not ask which state.
+          example: "40202"
     ChatSource:
       type: object
       required: [title, url, as_of]

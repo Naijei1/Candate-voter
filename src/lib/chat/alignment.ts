@@ -1,4 +1,5 @@
 import { logReadError } from "../data/read";
+import { stateName } from "../data/states";
 import { humanRaceTitle } from "./polish";
 import { executeChatTool, type ToolContext } from "./tools";
 import type { ChatAnswer, ChatRequest } from "./types";
@@ -45,6 +46,18 @@ export async function answerAlignment(input: {
       ),
       refreshedAt,
     );
+  }
+  if (input.request.state || input.request.zip) {
+    const where = input.request.state
+      ? stateName(input.request.state)
+      : `ZIP ${input.request.zip}`;
+    return {
+      answer_markdown: `${INSUFFICIENT}\n\nThis page is ${where}. Name a race there if you want a citation.`,
+      sources: [],
+      refused: false,
+      mode: "alignment",
+      refreshedAt,
+    };
   }
   return {
     answer_markdown: ALIGNMENT_NEEDS_RACE_MARKDOWN,

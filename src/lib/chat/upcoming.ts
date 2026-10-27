@@ -25,7 +25,7 @@ export async function answerUpcoming(input: {
   ctx: ToolContext;
 }): Promise<ChatAnswer | { unavailable: true; message: string }> {
   const cycle = resolveCycle(input.request, input.ctx.now);
-  const state = stateMentionedIn(input.request.message);
+  const state = input.request.state ?? stateMentionedIn(input.request.message);
   try {
     const stored = visibleRaces(await input.ctx.repo.listRacesByCycle(cycle));
     let refreshedAt: string | null = null;

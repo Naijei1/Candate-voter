@@ -13,7 +13,7 @@ import {
 import { inferenceConfigFor } from "../src/lib/chat/converse";
 import { postChat, type ChatDeps } from "../src/lib/chat/handler";
 import { labelForRaceId, polishChatAnswer, polishSources } from "../src/lib/chat/polish";
-import { CHAT_SYSTEM_PROMPT } from "../src/lib/chat/prompt";
+import { CHAT_SYSTEM_PROMPT, userPrompt } from "../src/lib/chat/prompt";
 import { createRateLimiter } from "../src/lib/chat/rate-limit";
 import { executeChatTool, modelToolContent } from "../src/lib/chat/tools";
 import type { ConverseFn, ConverseResponse } from "../src/lib/chat/types";
@@ -149,6 +149,8 @@ test("chat request validation rejects a bad body", async () => {
     { body: { message: "hello", raceId: "bad id" }, message: "raceId is invalid" },
     { body: { message: "hello", candidateId: "" }, message: "candidateId is invalid" },
     { body: { message: "hello", threadId: "has space" }, message: "threadId is invalid" },
+    { body: { message: "hello", state: "Kentucky" }, message: "state must be a two-letter postal code" },
+    { body: { message: "hello", zip: "4020" }, message: "zip must be a 5-digit ZIP code" },
   ];
 
   for (const item of cases) {
@@ -592,6 +594,122 @@ test("a vague who-is-running question asks for a race and does not call the mode
     assert.deepEqual(payload.sources, []);
   }
   assert.equal(called, false);
+});
+
+test("who is running with a state or ZIP does not ask which state", async () => {
+  const repo = new MemoryVoterRepository();
+  await repo.upsertRace(
+    race({
+      raceId: "2026-senate-KY",
+      office: "senate",
+      cycle: 2026,
+      state: "KY",
+      title: "U.S. Senate, Kentucky",
+      jurisdiction: "Kentucky",
+    }),
+  );
+  await repo.upsertCandidate(
+    candidate({
+      candidateId: "S0KY00123",
+      raceId: "2026-senate-KY",
+      displayName: "Ada Lovelace",
+      partyAffiliation: "DEM",
+    }),
+  );
+  let called = false;
+  const byState = await postChat(
+    post({ message: "Who's running", state: "ky", cycle: 2026, year: 2026 }),
+    chatDeps(repo, async () => {
+      called = true;
+      throw new Error("model should not be called");
+    }),
+  );
+  assert.equal(byState.status, 200);
+  const stateBody = (await byState.json()) as { answer_markdown: string; mode: string };
+  assert.equal(stateBody.mode, "factual");
+  assert.match(stateBody.answer_markdown, /Kentucky/);
+  assert.match(stateBody.answer_markdown, /Ada Lovelace/);
+  assert.doesNotMatch(stateBody.answer_markdown, /which state/i);
+  assert.equal(called, false);
+
+  const byZip = await postChat(
+    post({ message: "Who is running?", zip: "40202-1234", cycle: 2026 }),
+    chatDeps(
+      repo,
+      async () => {
+        called = true;
+        throw new Error("model should not be called");
+      },
+      {
+        lookupZip: async () => ({ state: "KY", districts: ["03"] }),
+      },
+    ),
+  );
+  assert.equal(byZip.status, 200);
+  const zipBody = (await byZip.json()) as { answer_markdown: string };
+  assert.match(zipBody.answer_markdown, /40202/);
+  assert.match(zipBody.answer_markdown, /Kentucky/);
+  assert.doesNotMatch(zipBody.answer_markdown, /which state/i);
+
+  const missed = await postChat(
+    post({ message: "Who's running", zip: "99999" }),
+    chatDeps(
+      repo,
+      async () => {
+        throw new Error("model should not be called");
+      },
+      { lookupZip: async () => null },
+    ),
+  );
+  const missedBody = (await missed.json()) as { answer_markdown: string };
+  assert.match(missedBody.answer_markdown, /99999/);
+  assert.match(missedBody.answer_markdown, /didn't match/i);
+  assert.doesNotMatch(missedBody.answer_markdown, /which state/i);
+
+  const prompt = userPrompt({
+    message: "Who's running",
+    state: "KY",
+    zip: "40202",
+    raceId: "2026-senate-KY",
+    cycle: 2026,
+  });
+  assert.match(prompt, /state: KY \(Kentucky\)/);
+  assert.match(prompt, /zip: 40202/);
+  assert.match(prompt, /Do not ask which state/);
+  assert.equal(called, false);
+});
+
+test("a model that asks which state is replaced when the page sent a race", async () => {
+  const repo = new MemoryVoterRepository();
+  await repo.upsertRace(
+    race({
+      raceId: "2026-house-TX-07",
+      office: "house",
+      cycle: 2026,
+      state: "TX",
+      district: "07",
+      title: "U.S. House, Texas District 7",
+      jurisdiction: "Texas District 7",
+    }),
+  );
+  const response = await postChat(
+    post({ message: "Who's running", raceId: "2026-house-TX-07", cycle: 2026 }),
+    chatDeps(
+      repo,
+      scripted([
+        modelJson({
+          answer_markdown: "Which state should I look at?",
+          sources: [],
+          refused: false,
+          mode: "factual",
+        }),
+      ]),
+    ),
+  );
+  assert.equal(response.status, 200);
+  const payload = (await response.json()) as { answer_markdown: string };
+  assert.doesNotMatch(payload.answer_markdown, /which state/i);
+  assert.match(payload.answer_markdown, /Texas/);
 });
 
 test("who is running with a raceId stays on that race", async () => {

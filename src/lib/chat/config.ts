@@ -9,7 +9,7 @@ export const DEFAULT_HAIKU_MODEL_ID = "us.anthropic.claude-haiku-5-5";
 /** Optional quality model. Same profile rule as Haiku. */
 export const DEFAULT_SONNET_MODEL_ID = "us.anthropic.claude-sonnet-5-5";
 
-export const CHAT_PROMPT_VERSION = "2026-10-27.2";
+export const CHAT_PROMPT_VERSION = "2026-10-27.3";
 
 /**
  * Wall clock for one Ask request, including Bedrock calls and tool reads.
