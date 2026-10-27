@@ -224,7 +224,7 @@ const StatePath = memo(function StatePath({
       className={classes.join(" ")}
       role="button"
       tabIndex={tabbable ? 0 : -1}
-      aria-label={hasRaces ? `${name}, has candidates` : `${name}, no candidates yet`}
+      aria-label={hasRaces ? `${name}, has candidates` : `${name}, no one has filed yet`}
       aria-pressed={isSelected ? "true" : "false"}
       onKeyDown={onKeyDown}
       onFocus={onFocusPostal ? () => onFocusPostal(shape.postal) : undefined}
@@ -340,7 +340,7 @@ export function MapLegend() {
       </li>
       <li className="inline-flex items-center gap-1.5">
         <span className="map-swatch" aria-hidden="true" />
-        No candidates yet
+        No one has filed yet
       </li>
     </ul>
   );

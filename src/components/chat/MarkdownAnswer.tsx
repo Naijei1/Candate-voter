@@ -4,11 +4,12 @@
 import React, { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { basePathFromEnv } from "@/lib/base-path";
+import { presentAskMarkdown } from "@/lib/chat/polish";
 import { parseMarkdown, type InlineNode } from "@/lib/chat/ui";
 
 export function MarkdownAnswer({ markdown }: { markdown: string }) {
   const origin = useClientOrigin();
-  const blocks = parseMarkdown(markdown, { origin, basePath: basePathFromEnv() });
+  const blocks = parseMarkdown(presentAskMarkdown(markdown), { origin, basePath: basePathFromEnv() });
   if (blocks.length === 0) return null;
 
   return (

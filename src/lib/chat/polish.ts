@@ -136,8 +136,25 @@ function humanizeAskProse(markdown: string): string {
     .replace(/\bpartyLabel\s*:\s*"?([A-Za-z][^,.;\n"]*)"?/g, (_match, label: string) =>
       label.trim(),
     )
+    .replace(/\bparty(?:Code|Affiliation)\s*:\s*"?[^",;\n)]*"?/g, "")
     .replace(/\bpartyLabel\b:?/g, "");
-  return cleanup(replaceInternalStorage(withoutParty));
+  return cleanup(stripDatabaseWord(replaceInternalStorage(withoutParty)));
+}
+
+/**
+ * Last pass before Ask text is shown. Server answers are already cleaned;
+ * this still runs so a regression cannot show field names or "database".
+ */
+export function presentAskMarkdown(markdown: string): string {
+  return cleanup(replaceRaceSlugs(humanizeAskProse(markdown)));
+}
+
+function stripDatabaseWord(markdown: string): string {
+  return markdown.replace(/\bdatabase\b/gi, (_match, offset: number, whole: string) => {
+    const before = whole.slice(0, offset);
+    if (before.trim().length === 0 || /[.!?]\s*$/.test(before)) return "Records";
+    return "records";
+  });
 }
 
 function replaceInternalStorage(markdown: string): string {

@@ -5,30 +5,37 @@ import React, { useState } from "react";
 import { findRacesByZip } from "@/lib/lookup/find-races";
 import {
   normalizeZip,
+  type ZipLookupFailureReason,
   type ZipLookupPayload,
   type ZipLookupResult,
 } from "@/lib/lookup/zip-view";
 
 export const ZIP_PROMPT = "Enter ZIP to find your races";
-export const ZIP_FAIL = "Check ZIP or tap a state.";
+export const ZIP_FAIL = "That ZIP didn't match.";
+export const ZIP_PICK = "Tap a state on the map.";
 
 export function ZipLookup({
   year,
   onFound,
+  onPickState,
   lookup = findRacesByZip,
 }: {
   year: number;
   onFound: (payload: ZipLookupPayload) => void;
+  /** Moves the visitor to the national map so they can tap a state. */
+  onPickState?: () => void;
   /** Defaults to the live `GET /api/v1/lookup/zip` action. */
   lookup?: (zip: string, year: number) => Promise<ZipLookupResult>;
 }) {
   const [value, setValue] = useState("");
   const [pending, setPending] = useState(false);
   const [failed, setFailed] = useState(false);
+  const [failLead, setFailLead] = useState(ZIP_FAIL);
 
   async function submit(raw: string) {
     const zip = normalizeZip(raw);
     if (!zip) {
+      setFailLead("Enter a 5-digit ZIP.");
       setFailed(true);
       return;
     }
@@ -38,11 +45,13 @@ export function ZipLookup({
     try {
       const result = await lookup(zip, year);
       if (!result.ok || !result.payload.state) {
+        setFailLead(result.ok ? ZIP_FAIL : failLeadFor(result.reason));
         setFailed(true);
         return;
       }
       onFound(result.payload);
     } catch {
+      setFailLead("ZIP lookup isn't available right now.");
       setFailed(true);
     } finally {
       setPending(false);
@@ -90,11 +99,22 @@ export function ZipLookup({
           </p>
         ) : null}
         {failed && !pending ? (
-          <p id="zip-error" data-testid="zip-error" className="zip-status">
-            {ZIP_FAIL}
-          </p>
+          <div id="zip-error" data-testid="zip-error" className="zip-guidance" role="status">
+            <p className="zip-status">{failLead}</p>
+            <button type="button" data-testid="zip-pick-state" className="zip-pick" onClick={onPickState}>
+              {ZIP_PICK}
+            </button>
+          </div>
         ) : null}
       </div>
     </div>
   );
+}
+
+function failLeadFor(reason: ZipLookupFailureReason): string {
+  if (reason === "not_found") return ZIP_FAIL;
+  if (reason === "bad_request") return "Enter a 5-digit ZIP.";
+  if (reason === "timeout") return "That lookup took too long.";
+  if (reason === "bad_response") return "The lookup didn't return races we can show.";
+  return "ZIP lookup isn't available right now.";
 }

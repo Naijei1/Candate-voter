@@ -7,7 +7,7 @@ import { CoverageNote } from "@/components/CoverageNote";
 import { DataRefreshedBanner } from "@/components/DataRefreshedBanner";
 import { RecordMeta } from "@/components/RecordMeta";
 import { StorageNotice } from "@/components/StorageNotice";
-import { emptyRaceSentence, FILING_MEANS, runningForLine } from "@/lib/copy";
+import { emptyRaceSentence, FILING_MEANS, jurisdictionRepeatsTitle, officeOneLiner, runningForLine } from "@/lib/copy";
 import { isPresidentialElectionYear } from "@/lib/data/calendar";
 import {
   logReadError,
@@ -76,17 +76,7 @@ export default async function RacePage({ params }: RacePageProps) {
       <DataRefreshedBanner refreshedAt={coverage.refreshedAt} />
       <header className="space-y-2">
         <h1 className="text-3xl font-semibold tracking-tight">{race.title}</h1>
-        <p className="text-base text-muted">
-          {race.jurisdiction}
-          {race.cycle != null ? (
-            <>
-              <span className="mx-2" aria-hidden="true">
-                ·
-              </span>
-              {race.cycle}
-            </>
-          ) : null}
-        </p>
+        <RacePlace race={race} />
         {race.office === "president" &&
         race.cycle != null &&
         !isPresidentialElectionYear(race.cycle) ? (
@@ -134,6 +124,27 @@ export default async function RacePage({ params }: RacePageProps) {
         </p>
       </section>
     </article>
+  );
+}
+
+function RacePlace({ race }: { race: Race }) {
+  const line = officeOneLiner(race);
+  const place = jurisdictionRepeatsTitle(race.title, race.jurisdiction) ? "" : race.jurisdiction;
+  return (
+    <>
+      {line ? <p className="text-base text-ink">{line}</p> : null}
+      {place || race.cycle != null ? (
+        <p className="text-base text-muted">
+          {place}
+          {place && race.cycle != null ? (
+            <span className="mx-2" aria-hidden="true">
+              ·
+            </span>
+          ) : null}
+          {race.cycle}
+        </p>
+      ) : null}
+    </>
   );
 }
 

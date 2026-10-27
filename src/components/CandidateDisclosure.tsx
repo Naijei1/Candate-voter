@@ -43,9 +43,13 @@ export function CandidateDisclosure({
         aria-expanded={open}
         aria-controls={panelId}
         onClick={() => setOpen((value) => !value)}
-        className="flex w-full items-baseline justify-between gap-3 rounded-md py-0.5 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        className="flex w-full items-center gap-2 rounded-md py-0.5 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
       >
         <span className="font-medium text-ink">{name}</span>
+        <span className="row-cue">
+          Details <span aria-hidden="true">{open ? "▾" : "›"}</span>
+        </span>
+        <span className="flex-1" />
         <span className={`shrink-0 text-sm ${toneClass}`}>{cue}</span>
       </button>
       {open ? (

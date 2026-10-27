@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useAsk } from "@/components/chat/AskProvider";
 import { CandidateDisclosure } from "@/components/CandidateDisclosure";
-import { DataRefreshedBanner } from "@/components/DataRefreshedBanner";
 import { DistrictMap } from "@/components/DistrictMap";
 import { RecordMeta } from "@/components/RecordMeta";
 import { StateScoreboard, WhatAmILookingAt } from "@/components/StateScoreboard";
@@ -12,7 +11,14 @@ import { StorageNotice } from "@/components/StorageNotice";
 import { MapLegend, UsMap } from "@/components/UsMap";
 import { ZipLookup } from "@/components/ZipLookup";
 import { askScopeForState, askScopeForYear, pageContextFromScope } from "@/lib/chat/scope";
-import { emptyRaceSentence, runningForLine, stateHoverLine } from "@/lib/copy";
+import {
+  emptyRaceSentence,
+  homeValueLine,
+  jurisdictionRepeatsTitle,
+  officeOneLiner,
+  runningForLine,
+  stateHoverLine,
+} from "@/lib/copy";
 import { stateName } from "@/lib/data/states";
 import { officeLabel, partyCue } from "@/lib/format";
 import { stateRaces, stateScoreboard, statesWithRaces } from "@/lib/landing";
@@ -34,7 +40,7 @@ import {
   zipFromSearch,
 } from "@/lib/landing/state-query";
 import { findRacesByZip } from "@/lib/lookup/find-races";
-import { zipRaceSlots, zipSlotJurisdiction, zipSlotTitle, type ZipLookupPayload, type ZipLookupResult } from "@/lib/lookup/zip-view";
+import { zipRaceSlots, zipSlotJurisdiction, zipSlotTitle, type ZipLookupPayload, type ZipLookupResult, type ZipRaceSlot } from "@/lib/lookup/zip-view";
 import { racesByStateOffice } from "@/lib/races";
 import type { Race } from "@/lib/types";
 
@@ -247,6 +253,14 @@ export function Landing({
     writeUrl(searchWithoutState(window.location.search));
   }, [writeUrl]);
 
+  const pickState = useCallback(() => {
+    if (selected) {
+      backToMap();
+      return;
+    }
+    document.getElementById("hero-map-KS")?.focus();
+  }, [backToMap, selected]);
+
   const hotBoard = hot ? stateScoreboard(races, hot, year) : null;
   const hotCaption =
     hot && hotBoard
@@ -256,7 +270,15 @@ export function Landing({
   return (
     <div className={selected ? "state-shell" : "national-shell"}>
       <div className="zip-slot">
-        <ZipLookup year={year} onFound={openZip} lookup={lookupZip} />
+        <ZipLookup year={year} onFound={openZip} onPickState={pickState} lookup={lookupZip} />
+        {!selected ? (
+          <div className="home-cue">
+            <p className="home-line" data-testid="home-value">
+              {homeValueLine(year)}
+            </p>
+            <WhatAmILookingAt refreshedAt={refreshedAt} glass />
+          </div>
+        ) : null}
         {!selected && !hasAnyRaces ? (
           <div className="mt-2">
             <StorageNotice>No races are stored for election years {cycleLabel}.</StorageNotice>
@@ -283,7 +305,11 @@ export function Landing({
       ) : null}
 
       {selected ? (
-        <DistrictMap postal={selected} races={races} />
+        <DistrictMap
+          postal={selected}
+          races={races}
+          yourDistricts={pinYours ? houseCodes(yours) : []}
+        />
       ) : (
         <div className="map-bleed" data-testid="national-map">
           <h1 className="sr-only">Find races on the map</h1>
@@ -304,10 +330,6 @@ export function Landing({
           ) : null}
           <div className="map-legend-dock">
             <MapLegend />
-          </div>
-          <div className="map-meta-dock">
-            <DataRefreshedBanner refreshedAt={refreshedAt} compact />
-            <WhatAmILookingAt refreshedAt={refreshedAt} glass />
           </div>
         </div>
       )}
@@ -354,13 +376,11 @@ function StateOverview({
   return (
     <div className="state-overview" data-testid="state-page">
       <button type="button" onClick={onBack} data-testid="back-to-map" className="back-link">
+        <span aria-hidden="true">← </span>
         Back to the map
       </button>
-      <h1 className="mt-3 text-3xl font-semibold tracking-tight text-ink">{name}</h1>
+      <h1 className="mt-4 text-3xl font-semibold tracking-tight text-ink">{name}</h1>
       <p className="mt-1 text-sm text-muted">{year}</p>
-      <div className="mt-3">
-        <DataRefreshedBanner refreshedAt={refreshedAt} compact />
-      </div>
       <StateScoreboard board={board} />
       <WhatAmILookingAt refreshedAt={refreshedAt} />
       {pinYours ? (
@@ -398,12 +418,14 @@ function StateOverview({
                             <h4 className="font-semibold tracking-tight text-ink">
                               <Link
                                 href={`/races/${slot.raceId}`}
-                                className="text-ink underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
+                                className="race-title text-ink underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
                               >
-                                {zipSlotTitle(slot, postal)}
+                                <span>{zipSlotTitle(slot, postal)}</span>
+                                <DetailsCue />
                               </Link>
                             </h4>
-                            {zipSlotJurisdiction(slot, postal) ? (
+                            <OfficeLine office={slot.office} district={slot.district} />
+                            {placeLine(zipSlotTitle(slot, postal), zipSlotJurisdiction(slot, postal)) ? (
                               <p className="text-sm text-muted">{zipSlotJurisdiction(slot, postal)}</p>
                             ) : null}
                             <p className="mt-1 text-sm text-ink">
@@ -434,7 +456,14 @@ function StateOverview({
           ) : null}
         </section>
       ) : null}
-      {zipFailed ? <p className="zip-status">Check ZIP or tap a state.</p> : null}
+      {zipFailed ? (
+        <div className="zip-guidance" data-testid="zip-guidance">
+          <p className="zip-status">That ZIP did not match this state.</p>
+          <button type="button" className="zip-pick" onClick={onBack}>
+            Tap a state on the map
+          </button>
+        </div>
+      ) : null}
       {showFull ? (
         <RaceGroups
           postal={postal}
@@ -522,12 +551,16 @@ function RaceCard({
       <h4 className="font-semibold tracking-tight">
         <Link
           href={`/races/${race.raceId}`}
-          className="text-ink underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
+          className="race-title text-ink underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
         >
-          {race.title}
+          <span>{race.title}</span>
+          <DetailsCue />
         </Link>
       </h4>
-      <p className="text-sm text-muted">{race.jurisdiction}</p>
+      <OfficeLine office={race.office} district={race.district} />
+      {placeLine(race.title, race.jurisdiction) ? (
+        <p className="text-sm text-muted">{race.jurisdiction}</p>
+      ) : null}
       {candidates?.ok && candidates.candidates.length > 0 ? (
         <p className="mt-1 text-sm font-semibold tabular-nums text-ink">
           {candidates.candidates.length === 1
@@ -537,7 +570,7 @@ function RaceCard({
       ) : null}
       <CandidateList race={race} entry={candidates} onRetry={onRetry} />
       {race.empty === true ? null : (
-        <RecordMeta sourceUrl={race.sourceUrl} updatedAt={race.updatedAt} />
+        <RecordMeta sourceUrl={race.sourceUrl} updatedAt={race.updatedAt} showUpdated={false} />
       )}
     </li>
   );
@@ -638,4 +671,40 @@ function watchLocation(listener: () => void) {
 
 function unwatchLocation(listener: () => void) {
   locationListeners.delete(listener);
+}
+
+function DetailsCue() {
+  return (
+    <span className="row-cue">
+      Details <span aria-hidden="true">›</span>
+    </span>
+  );
+}
+
+function OfficeLine({
+  office,
+  district,
+}: {
+  office: Race["office"];
+  district: string | null;
+}) {
+  const line = officeOneLiner({ office, district });
+  if (!line) return null;
+  return <p className="office-line">{line}</p>;
+}
+
+function placeLine(title: string, jurisdiction: string | null): boolean {
+  if (!jurisdiction) return false;
+  return !jurisdictionRepeatsTitle(title, jurisdiction);
+}
+
+function houseCodes(slots: readonly ZipRaceSlot[]): string[] {
+  const codes: string[] = [];
+  for (const slot of slots) {
+    if (slot.office !== "house" || !slot.district) continue;
+    const code = slot.district.trim().padStart(2, "0");
+    if (!/^\d{2}$/.test(code) || codes.includes(code)) continue;
+    codes.push(code);
+  }
+  return codes;
 }
