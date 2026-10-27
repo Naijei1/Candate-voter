@@ -26,7 +26,7 @@ export type Race = {
   jurisdiction: string;
   /** Public page that lists candidates for this contest. */
   sourceUrl: string | null;
-  /** ISO-8601 time our system last wrote this record. */
+  /** ISO-8601 time our system last wrote this record. Null on an empty stub. */
   updatedAt: string | null;
   /**
    * True when this contest is on the cycle ballot and no Form 2 race is

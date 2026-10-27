@@ -117,6 +117,7 @@ export function pageContextFromScope(scope: AskScope): {
     ...(scope.candidateId ? { candidateId: scope.candidateId } : {}),
     ...(scope.cycle != null ? { cycle: scope.cycle } : {}),
     ...(prefix ? { messagePrefix: prefix } : {}),
+    ...(scope.kind === "year" ? {} : { label: scope.label }),
   };
 }
 

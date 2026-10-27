@@ -3,6 +3,7 @@ import test from "node:test";
 import { HOUSE_SEATS, HOUSE_SEATS_TOTAL, canonicalRaceId } from "../src/lib/data/at-large";
 import { consolidatePresidentialDuplicates } from "../src/lib/data/consolidate";
 import { houseCoverageForRaces } from "../src/lib/data/coverage";
+import { fromRaceItem } from "../src/lib/data/items";
 import { planPresidentialDuplicates } from "../src/lib/data/dedupe";
 import { MemoryVoterRepository } from "../src/lib/data/memory-repository";
 import { normalizePersonName } from "../src/lib/data/names";
@@ -56,6 +57,73 @@ test("house seat totals and Wyoming aliases", () => {
   assert.equal(canonicalRaceId("2026-house-WY-01"), "2026-house-WY-00");
   assert.equal(canonicalRaceId("2026-house-MT-01"), "2026-house-MT-01");
   assert.equal(canonicalRaceId("2026-senate-WY"), "2026-senate-WY");
+});
+
+test("fromRaceItem keeps empty stubs and ignores a false flag", () => {
+  const stub = fromRaceItem({
+    entityType: "race",
+    raceId: "2026-house-KY-01",
+    office: "house",
+    cycle: 2026,
+    state: "KY",
+    district: "01",
+    title: "U.S. House, Kentucky District 1",
+    jurisdiction: "Kentucky District 1",
+    sourceUrl: null,
+    updatedAt: null,
+    empty: true,
+  });
+  assert.equal(stub?.empty, true);
+  assert.equal(stub?.updatedAt, null);
+  assert.equal(stub?.raceId, "2026-house-KY-01");
+
+  const filed = fromRaceItem({
+    entityType: "race",
+    raceId: "2026-house-KY-06",
+    office: "house",
+    cycle: 2026,
+    state: "KY",
+    district: "06",
+    title: "U.S. House, Kentucky District 6",
+    jurisdiction: "Kentucky District 6",
+    sourceUrl: "https://www.fec.gov/data/elections/",
+    updatedAt: updatedAt,
+    empty: false,
+  });
+  assert.equal(filed?.empty, undefined);
+  assert.equal(Object.prototype.hasOwnProperty.call(filed, "empty"), false);
+});
+
+test("a filing wins over an empty stub for the same at-large seat", () => {
+  const races = visibleRaces([
+    race({
+      raceId: "2026-house-WY-00",
+      office: "house",
+      cycle: 2026,
+      state: "WY",
+      district: "00",
+      title: "U.S. House, Wyoming at-large",
+      jurisdiction: "Wyoming at-large",
+      updatedAt: null,
+      empty: true,
+    }),
+    race({
+      raceId: "2026-house-WY-01",
+      office: "house",
+      cycle: 2026,
+      state: "WY",
+      district: "01",
+      title: "U.S. House, Wyoming District 1",
+      jurisdiction: "Wyoming District 1",
+    }),
+  ]);
+  assert.equal(races.length, 1);
+  assert.equal(races[0]?.raceId, "2026-house-WY-00");
+  assert.equal(races[0]?.empty, undefined);
+  assert.equal(
+    houseCoverageForRaces(races, [2026], "WY")[0]?.districtsWithFilings,
+    1,
+  );
 });
 
 test("visible races fold Wyoming district 1 into at-large and count it once", async () => {

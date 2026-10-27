@@ -15,6 +15,11 @@ export type HouseCoverageRow = {
   districtsTotal: number;
 };
 
+/** A contest stub with no stored filing. List rows carry this instead of candidates. */
+export function isEmptyRace(race: Pick<Race, "empty">): boolean {
+  return race.empty === true;
+}
+
 /**
  * House districts that have at least one stored Form 2 race.
  * `districtsTotal` is the 2020 census apportionment (435), including
@@ -31,7 +36,11 @@ export function houseCoverageForRaces(
   const rows: HouseCoverageRow[] = [];
   for (const cycle of cycles) {
     const house = visible.filter(
-      (race) => race.office === "house" && race.cycle === cycle && race.state,
+      (race) =>
+        race.office === "house" &&
+        race.cycle === cycle &&
+        race.state &&
+        !isEmptyRace(race),
     );
     if (state) {
       rows.push({

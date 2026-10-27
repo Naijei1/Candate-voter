@@ -7,7 +7,8 @@ import { CoverageNote } from "@/components/CoverageNote";
 import { DataRefreshedBanner } from "@/components/DataRefreshedBanner";
 import { RecordMeta } from "@/components/RecordMeta";
 import { StorageNotice } from "@/components/StorageNotice";
-import { FORM2_SCOPE_NOTE } from "@/lib/data/coverage";
+import { emptyRaceSentence, FILING_MEANS, runningForLine } from "@/lib/copy";
+import { isPresidentialElectionYear } from "@/lib/data/calendar";
 import {
   logReadError,
   readCandidatesForRace,
@@ -16,6 +17,7 @@ import {
   readWatermark,
 } from "@/lib/data/read";
 import { displayedPartyLabels, type PublicCandidate } from "@/lib/data/view";
+import { partyCue } from "@/lib/format";
 import { houseCoverageLine } from "@/lib/landing";
 import type { Race } from "@/lib/types";
 
@@ -58,7 +60,11 @@ export default async function RacePage({ params }: RacePageProps) {
 
   return (
     <article className="space-y-8">
-      <AskPageContext raceId={race.raceId} cycle={race.cycle ?? undefined} />
+      <AskPageContext
+        raceId={race.raceId}
+        cycle={race.cycle ?? undefined}
+        label={race.cycle != null ? `${race.title} · ${race.cycle}` : race.title}
+      />
       <p className="text-sm">
         <Link
           href="/"
@@ -81,27 +87,38 @@ export default async function RacePage({ params }: RacePageProps) {
             </>
           ) : null}
         </p>
+        {race.office === "president" &&
+        race.cycle != null &&
+        !isPresidentialElectionYear(race.cycle) ? (
+          <p className="max-w-2xl text-sm leading-6 text-ink">
+            There is no presidential race on the {race.cycle} ballot. This page lists
+            national statements of candidacy (Form 2) only.
+          </p>
+        ) : (
+          <p className="max-w-2xl text-sm leading-6 text-muted">{FILING_MEANS}</p>
+        )}
         <RecordMeta sourceUrl={race.sourceUrl} updatedAt={race.updatedAt} />
-        <CoverageNote lines={coverage.lines} scopeNote={FORM2_SCOPE_NOTE} />
+        <CoverageNote
+          lines={coverage.lines}
+          scopeNote="Counts are statements of candidacy (Form 2) stored so far, not the final ballot or a certified candidate list."
+        />
       </header>
       <section aria-labelledby="candidates-heading">
         <h2 id="candidates-heading" className="text-lg font-semibold">
           Candidates
         </h2>
-        {candidates.ok === false ? (
+        {candidates.ok === false && race.empty !== true ? (
           <div className="mt-3">
             <StorageNotice tone="error">
               Candidates could not be loaded from the table.
             </StorageNotice>
           </div>
-        ) : candidates.list.length === 0 ? (
-          <p className="mt-3 text-sm leading-6 text-muted">
-            No candidates are stored for this race.
-          </p>
+        ) : !candidates.ok || candidates.list.length === 0 ? (
+          <p className="mt-3 text-sm leading-6 text-ink">{emptyRaceSentence(race)}</p>
         ) : (
           <ul className="mt-3 divide-y divide-line rounded-lg border border-line bg-card">
             {candidates.list.map((candidate) => (
-              <CandidateRow key={candidate.candidateId} candidate={candidate} />
+              <CandidateRow key={candidate.candidateId} candidate={candidate} race={race} />
             ))}
           </ul>
         )}
@@ -112,25 +129,32 @@ export default async function RacePage({ params }: RacePageProps) {
         </h2>
         <RecordMeta sourceUrl={race.sourceUrl} updatedAt={race.updatedAt} />
         <p className="text-sm leading-6 text-muted">
-          Each candidate page lists stored Form 2 filings with a source link,
-          the time the filing was retrieved, and the time the row was written.
+          Each candidate page lists stored statements of candidacy (Form 2) with a
+          source link, the time the filing was retrieved, and the time the row was written.
         </p>
       </section>
     </article>
   );
 }
 
-function CandidateRow({ candidate }: { candidate: PublicCandidate }) {
+function CandidateRow({
+  candidate,
+  race,
+}: {
+  candidate: PublicCandidate;
+  race: Race;
+}) {
   const parties = displayedPartyLabels(candidate);
   return (
     <li className="px-4 py-3">
       <CandidateDisclosure
         name={candidate.displayName}
-        cue={parties.join(" · ")}
+        cue={partyCue(parties)}
         partyAffiliation={candidate.partyAffiliation}
         href={`/candidates/${candidate.candidateId}`}
         filingCount={candidate.alternateFilings.length + 1}
         updatedAt={candidate.updatedAt}
+        runningFor={runningForLine(race)}
       />
     </li>
   );

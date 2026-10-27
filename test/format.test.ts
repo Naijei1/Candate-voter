@@ -4,6 +4,7 @@ import {
   fecCandidateLabel,
   formatInstant,
   httpsUrl,
+  partyCue,
   partyLabel,
 } from "../src/lib/format";
 
@@ -42,6 +43,10 @@ test("party labels use a readable affiliation name and keep unknown codes", () =
   assert.equal(partyLabel("XYZ", "   "), "XYZ");
   assert.equal(partyLabel(null), "Affiliation not reported");
   assert.equal(partyLabel("  "), "Affiliation not reported");
+  assert.equal(partyCue(["Write-in", "Republican"]), "Write-in candidate (Republican)");
+  assert.equal(partyCue(["Republican", "Write-in"]), "Write-in candidate (Republican)");
+  assert.equal(partyCue(["Write-in"]), "Write-in candidate");
+  assert.equal(partyCue(["Democratic", "Republican"]), "Democratic · Republican");
   assert.equal(fecCandidateLabel("P80011018"), "FEC P80011018");
   assert.equal(fecCandidateLabel(null), "FEC candidate id not reported");
 });

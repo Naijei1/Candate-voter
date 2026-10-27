@@ -3,6 +3,7 @@
 // Classic JSX runtime for `node --import tsx --test`. Next compiles this with the automatic runtime.
 import React, { useId, useState } from "react";
 import Link from "next/link";
+import { FILING_MEANS } from "@/lib/copy";
 import { formatInstant, instantDateTime, partyTone } from "@/lib/format";
 
 /**
@@ -16,6 +17,7 @@ export function CandidateDisclosure({
   href,
   filingCount,
   updatedAt,
+  runningFor = null,
 }: {
   name: string;
   cue: string;
@@ -23,6 +25,8 @@ export function CandidateDisclosure({
   href: string;
   filingCount: number;
   updatedAt: string | null;
+  /** Plain office, such as "U.S. Senate — Kentucky". Shown after the row opens. */
+  runningFor?: string | null;
 }) {
   const [open, setOpen] = useState(false);
   const panelId = useId();
@@ -46,7 +50,10 @@ export function CandidateDisclosure({
       </button>
       {open ? (
         <div id={panelId} className="mt-2 rounded-md border border-line bg-paper px-3 py-2">
-          <p className="text-sm leading-6 text-muted">Filed so far, not the final ballot.</p>
+          {runningFor ? (
+            <p className="text-sm font-medium leading-6 text-ink">Running for: {runningFor}</p>
+          ) : null}
+          <p className={`${runningFor ? "mt-1" : ""} text-sm leading-6 text-muted`}>{FILING_MEANS}</p>
           {filingCount > 1 ? (
             <p className="mt-1 text-sm text-ink">{filingCount} filings under this name.</p>
           ) : null}

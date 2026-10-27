@@ -124,14 +124,27 @@ test("state view lists Senate and House only, with president kept national", () 
   assert.equal(stateRaces(races, "WY").length, 0);
   assert.equal(
     filingCoverageLabel(races, "WY"),
-    "0 of 1 House districts have filings. Counts are FEC Form 2 electronic filings stored so far, not a full ballot or a certified candidate list.",
+    "0 of 1 districts have a filing. Counts are FEC Form 2 electronic filings stored so far, not a full ballot or a certified candidate list.",
   );
   assert.equal(
     filingCoverageLabel(races, "VA"),
-    "1 Senate race with filings. 2 of 11 House districts have filings. Counts are FEC Form 2 electronic filings stored so far, not a full ballot or a certified candidate list.",
+    "Someone has filed for Senate. 2 of 11 districts have a filing. Counts are FEC Form 2 electronic filings stored so far, not a full ballot or a certified candidate list.",
   );
-  assert.match(filingCoverageLabel(races, "VA"), /2 of 11 House districts have filings/);
+  assert.match(filingCoverageLabel(races, "VA"), /2 of 11 districts have a filing/);
   assert.deepEqual(statesWithRaces(races), ["MD", "VA"]);
+  const onlyStub = race({
+    raceId: "2026-house-WY-00",
+    office: "house",
+    title: "U.S. House, Wyoming at-large",
+    state: "WY",
+    district: "00",
+    updatedAt: null,
+    empty: true,
+  });
+  assert.deepEqual(spotlightRaces([onlyStub, races[3]!]).map((item) => item.raceId), [
+    "2026-house-VA-01",
+  ]);
+  assert.deepEqual(statesWithRaces([onlyStub, ...races]), ["MD", "VA"]);
 });
 
 test("parseRaceIds accepts stored id shapes and rejects a long or malformed list", () => {
@@ -210,8 +223,8 @@ test("coverage and the map ignore empty ballot stubs", () => {
       updatedAt: null,
     }),
   ];
-  assert.match(filingCoverageLabel(races, "KY", 2026), /1 of 6 House districts have filings/);
-  assert.doesNotMatch(filingCoverageLabel(races, "KY", 2026), /Senate race with filings/);
+  assert.match(filingCoverageLabel(races, "KY", 2026), /1 of 6 districts has a filing/);
+  assert.doesNotMatch(filingCoverageLabel(races, "KY", 2026), /Someone has filed for Senate/);
   assert.deepEqual(statesWithRaces(races), ["KY"]);
   assert.deepEqual(
     spotlightRaces(races).map((item) => item.raceId),

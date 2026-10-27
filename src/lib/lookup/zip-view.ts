@@ -50,14 +50,24 @@ export function normalizeZip(input: string): string | null {
 
 export function zipLookupErrorCopy(result: Extract<ZipLookupResult, { ok: false }>): string {
   if (result.reason === "not_found") {
-    return result.message ?? "No House district is published for that ZIP.";
+    return withZipNextStep(result.message ?? "No House district is published for that ZIP.");
   }
   if (result.reason === "bad_request") {
-    return result.message ?? "Enter a 5-digit ZIP code.";
+    return withZipNextStep(result.message ?? "Enter a 5-digit ZIP code.");
   }
   if (result.reason === "timeout") return "That lookup took too long.";
   if (result.reason === "bad_response") return "The lookup didn't return races we can show.";
   return "ZIP lookup isn't available right now.";
+}
+
+/** A bad ZIP should say what to do next, without dropping the reason. */
+export function withZipNextStep(message: string): string {
+  const text = message.trim().replace(/[.]+$/, "");
+  return `${text}. Check the ZIP or pick a state below.`;
+}
+
+export function zipFailureClearsSelection(reason: ZipLookupFailureReason): boolean {
+  return reason === "bad_request" || reason === "not_found";
 }
 
 /** Accept a lookup body. Invalid districts are dropped, never filled in. */
@@ -201,6 +211,7 @@ function parseRace(value: unknown): Race | null {
     jurisdiction: typeof row.jurisdiction === "string" ? row.jurisdiction : "",
     sourceUrl: typeof row.sourceUrl === "string" ? row.sourceUrl : null,
     updatedAt: typeof row.updatedAt === "string" ? row.updatedAt : null,
+    ...(row.empty === true ? { empty: true as const } : {}),
   };
 }
 

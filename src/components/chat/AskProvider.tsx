@@ -66,15 +66,16 @@ export function AskProvider({ cycles, children }: { cycles: number[]; children: 
 /** Race, candidate, and state pages publish ids the Ask request should send. */
 export function AskPageContext(context: ChatContextInput) {
   const { replacePageContext } = useAsk();
-  const { raceId, candidateId, cycle, messagePrefix } = context;
+  const { raceId, candidateId, cycle, messagePrefix, label } = context;
   useEffect(() => {
     return replacePageContext({
       ...(raceId ? { raceId } : {}),
       ...(candidateId ? { candidateId } : {}),
       ...(cycle != null ? { cycle } : {}),
       ...(messagePrefix ? { messagePrefix } : {}),
+      ...(label ? { label } : {}),
     });
-  }, [replacePageContext, raceId, candidateId, cycle, messagePrefix]);
+  }, [replacePageContext, raceId, candidateId, cycle, messagePrefix, label]);
   return null;
 }
 
@@ -131,6 +132,7 @@ function mergePageContext(
     ...(page.messagePrefix || located.messagePrefix
       ? { messagePrefix: page.messagePrefix ?? located.messagePrefix }
       : {}),
+    ...(page.label || located.label ? { label: page.label ?? located.label } : {}),
   };
 }
 
