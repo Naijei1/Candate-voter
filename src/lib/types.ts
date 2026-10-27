@@ -35,6 +35,12 @@ export type Race = {
    * as districts with filings.
    */
   empty?: boolean;
+  /**
+   * False for an empty stub and for a race whose joined candidate list is
+   * empty. True for a stored Form 2 race row. Map fill uses the same rule
+   * as `districtsWithFilings`. Omitted only before the read-time signal.
+   */
+  hasCandidates?: boolean;
 };
 
 /** A person on a race, keyed by FEC candidate id when the filing has one. */

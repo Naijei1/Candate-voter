@@ -1,4 +1,5 @@
 import { houseDistrictCodes } from "../data/at-large";
+import { raceHasCandidates } from "../data/candidate-signal";
 import type { Race } from "../types";
 
 /**
@@ -66,12 +67,15 @@ export function raceForDistrict(
     return id?.[2] === postal && id[3] === code;
   });
   if (matches.length === 0) return null;
-  return matches.find((race) => race.empty !== true) ?? matches[0] ?? null;
+  return matches.find((race) => raceHasCandidates(race)) ?? matches[0] ?? null;
 }
 
-/** Soft fill when a stored filing exists. Missing rows and `empty: true` stay quiet. */
+/**
+ * Soft fill when a stored filing exists.
+ * Empty stubs, `hasCandidates: false`, and a joined `candidates: []` stay quiet.
+ */
 export function districtHasCandidates(race: Race | null): boolean {
-  return race != null && race.empty !== true;
+  return raceHasCandidates(race);
 }
 
 export function isCdFeatureCollection(value: unknown): value is CdFeatureCollection {

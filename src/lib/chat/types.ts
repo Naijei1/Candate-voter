@@ -57,4 +57,6 @@ export type ConverseFn = (input: {
   system: string;
   messages: ChatMessage[];
   maxTokens: number;
+  /** Remaining request budget. The live client aborts Bedrock when it fires. */
+  signal?: AbortSignal;
 }) => Promise<ConverseResponse>;

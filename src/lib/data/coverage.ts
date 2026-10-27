@@ -1,6 +1,10 @@
 import type { Race } from "../types";
 import { HOUSE_SEATS, HOUSE_SEATS_TOTAL } from "./at-large";
+import { isEmptyRace, raceHasCandidates, signalRace } from "./candidate-signal";
+import { raceMatchesCycle } from "./cycle-match";
 import { visibleRaces } from "./view";
+
+export { isEmptyRace, raceHasCandidates, signalRace };
 
 export const FORM2_SCOPE = "fec-efile-form2" as const;
 
@@ -14,11 +18,6 @@ export type HouseCoverageRow = {
   districtsWithFilings: number;
   districtsTotal: number;
 };
-
-/** A contest stub with no stored filing. List rows carry this instead of candidates. */
-export function isEmptyRace(race: Pick<Race, "empty">): boolean {
-  return race.empty === true;
-}
 
 /**
  * House districts that have at least one stored Form 2 race.
@@ -38,24 +37,21 @@ export function houseCoverageForRaces(
     const house = visible.filter(
       (race) =>
         race.office === "house" &&
-        race.cycle === cycle &&
+        raceMatchesCycle(race, cycle) &&
         race.state &&
-        !isEmptyRace(race),
+        raceHasCandidates(race),
     );
     if (state) {
       rows.push({
         cycle,
         state,
-        districtsWithFilings: house.filter(
-          (race) => race.state === state && race.empty !== true,
-        ).length,
+        districtsWithFilings: house.filter((race) => race.state === state).length,
         districtsTotal: HOUSE_SEATS[state] ?? 0,
       });
       continue;
     }
     const byState = new Map<string, number>();
     for (const race of house) {
-      if (race.empty === true) continue;
       if (!race.state || HOUSE_SEATS[race.state] == null) continue;
       byState.set(race.state, (byState.get(race.state) ?? 0) + 1);
     }

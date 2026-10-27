@@ -139,6 +139,11 @@ function pickKeeper(group: readonly Candidate[]): Candidate {
   })[0] as Candidate;
 }
 
+/** Normalized given name plus surname, or null for a single token such as Cher. */
+export function personMatchKey(displayName: string): string | null {
+  return personTokens(displayName);
+}
+
 function personTokens(displayName: string): string | null {
   const name = normalizePersonName(displayName);
   if (!name) return null;

@@ -2,9 +2,11 @@ import type { ApiRepository } from "../api/deps";
 import { contestAnnotation, cycleCalendar, upcomingRaceRank } from "../data/calendar";
 import { FORM2_SCOPE, FORM2_SCOPE_NOTE, houseCoverageForRaces } from "../data/coverage";
 import { appendExpectedRaces } from "../data/expected-races";
+import { withCrossContestFilings } from "../data/cross-filings";
+import { collapseIdenticalFilings } from "../data/filings";
 import { cyclesFromEnv, parseCycle } from "../data/cycles";
 import { isPostalState } from "../data/states";
-import { logReadError, sortFilings } from "../data/read";
+import { logReadError } from "../data/read";
 import {
   loadPublicCandidates,
   loadVisibleRace,
@@ -32,6 +34,11 @@ export type ToolContext = {
   now: Date;
   /** Origin plus base path, no trailing slash. */
   root: string;
+  /**
+   * Page or request year. Tool calls that omit `cycle` stay on this year
+   * instead of the whole public index window.
+   */
+  cycle?: number;
 };
 
 export type ToolOutput =
@@ -181,7 +188,7 @@ async function listRaces(
   input: Record<string, unknown>,
   ctx: ToolContext,
 ): Promise<ToolOutput> {
-  const cycle = readCycle(input.cycle);
+  const cycle = resolveCycles(input, ctx);
   if (!cycle.ok) return toolError(cycle.message);
   const state = readState(input.state);
   if (!state.ok) return toolError(state.message);
@@ -199,7 +206,7 @@ async function listRaces(
       "Pass a state, or set office to president. Do not list Senate or House races for every state.",
     );
   }
-  const cycles = cycle.value != null ? [cycle.value] : cyclesFromEnv(ctx.env, ctx.now);
+  const cycles = cycle.cycles;
   try {
     const groups = await Promise.all(
       cycles.map((year) => ctx.repo.listRacesByCycle(year)),
@@ -247,7 +254,11 @@ async function getRace(
     if (!race) {
       return ok(0, [], [], { race: null, candidates: [], sources: [] });
     }
-    const candidates = await loadPublicCandidates(ctx.repo, race.raceId);
+    const candidates = await withCrossContestFilings(
+      ctx.repo,
+      await loadPublicCandidates(ctx.repo, race.raceId),
+      race,
+    );
     const annotated = chatRace(race);
     const sources = [
       ...sourcesForRace(annotated, ctx.root),
@@ -272,7 +283,7 @@ async function searchCandidates(
   if (query.length < 2 || query.length > 80) {
     return toolError("query must be a string from 2 to 80 characters");
   }
-  const cycle = readCycle(input.cycle);
+  const cycle = resolveCycles(input, ctx);
   if (!cycle.ok) return toolError(cycle.message);
   const state = readState(input.state);
   if (!state.ok) return toolError(state.message);
@@ -298,7 +309,7 @@ async function searchCandidates(
       }
     }
 
-    const cycles = cycle.value != null ? [cycle.value] : cyclesFromEnv(ctx.env, ctx.now);
+    const cycles = cycle.cycles;
     const matches: Array<{ candidate: PublicCandidate; race: Race | null }> = [];
     let scanned = 0;
     let truncated = false;
@@ -380,7 +391,7 @@ async function listFilings(
     if (!candidate) {
       return ok(0, [], [], { candidate: null, filings: [], sources: [] });
     }
-    const filings = sortFilings(
+    const filings = collapseIdenticalFilings(
       await ctx.repo.listFilingsForCandidate(candidateId.value),
     );
     const sources = [
@@ -471,11 +482,11 @@ async function getCoverage(
   input: Record<string, unknown>,
   ctx: ToolContext,
 ): Promise<ToolOutput> {
-  const cycle = readCycle(input.cycle);
+  const cycle = resolveCycles(input, ctx);
   if (!cycle.ok) return toolError(cycle.message);
   const state = readState(input.state);
   if (!state.ok) return toolError(state.message);
-  const cycles = cycle.value != null ? [cycle.value] : cyclesFromEnv(ctx.env, ctx.now);
+  const cycles = cycle.cycles;
   try {
     const groups = await Promise.all(
       cycles.map((year) => ctx.repo.listRacesByCycle(year)),
@@ -689,6 +700,20 @@ function readId(
     return { ok: false, message: `${key} is invalid` };
   }
   return { ok: true, value };
+}
+
+function resolveCycles(
+  input: Record<string, unknown>,
+  ctx: ToolContext,
+): { ok: true; cycles: number[] } | { ok: false; message: string } {
+  if (input.cycle != null && input.year != null && input.cycle !== input.year) {
+    return { ok: false, message: "year and cycle must match" };
+  }
+  const cycle = readCycle(input.cycle ?? input.year);
+  if (!cycle.ok) return cycle;
+  if (cycle.value != null) return { ok: true, cycles: [cycle.value] };
+  if (ctx.cycle != null) return { ok: true, cycles: [ctx.cycle] };
+  return { ok: true, cycles: cyclesFromEnv(ctx.env, ctx.now) };
 }
 
 function readCycle(

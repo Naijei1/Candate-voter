@@ -60,7 +60,10 @@ paths:
         Class I in 2030). Seats that are not up are not invented. A stored
         race, including a special in an off year, is kept and \`empty\` is
         omitted. Odd years include only stored races. Stubs are not written
-        to DynamoDB. \`districtsWithFilings\` still counts stored House
+        to DynamoDB. Empty stubs and a joined candidate list of length 0
+        set \`hasCandidates\` to false and do not count as filings. A stored
+        race whose id year disagrees with the requested year is omitted.
+        \`districtsWithFilings\` still counts stored House
         filings only. \`districtsTotal\` is the apportionment, which matches
         the House rows for that state (filled plus empty). The default page
         size is 100 so one state (at most 52 House seats plus Senate) fits.
@@ -83,6 +86,7 @@ paths:
         stub on this list.
       parameters:
         - $ref: "#/components/parameters/cycle"
+        - $ref: "#/components/parameters/year"
         - $ref: "#/components/parameters/state"
         - $ref: "#/components/parameters/office"
         - $ref: "#/components/parameters/limit"
@@ -351,14 +355,21 @@ paths:
         "429":
           $ref: "#/components/responses/RateLimited"
         "503":
-          description: Chat is disabled or the model or table is unavailable
+          description: |
+            Chat is disabled, the answer exceeded the server budget
+            (default 20 seconds), the model did not finish, or stored
+            records could not be read. \`error\` is \`unavailable\`.
+            \`code\` is \`timeout\`, \`model_unavailable\`, or
+            \`incomplete\` when the model path failed. A disabled chat
+            route and a storage failure omit \`code\`.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorMessage"
               example:
                 error: unavailable
-                message: Chat is disabled
+                code: timeout
+                message: The answer took too long. Try a narrower question.
 components:
   securitySchemes:
     bearerAuth:
@@ -378,7 +389,9 @@ components:
       name: cycle
       in: query
       required: false
-      description: Election year on the filing. Omit to use the public index window.
+      description: |
+        Election year on the filing. \`year\` is an alias. When both are
+        set they must be equal. Omit both to use the public index window.
       schema:
         type: integer
         minimum: 1980
@@ -433,8 +446,8 @@ components:
       in: query
       required: false
       description: |
-        Election year used in race ids. Same meaning as \`cycle\` on the
-        race routes. Send \`year\` or \`cycle\`. When both are set they
+        Election year. Alias of \`cycle\` on race lists and ZIP lookup.
+        The race id prefix must be this year. When both are set they
         must be equal.
       schema:
         type: integer
@@ -532,6 +545,12 @@ components:
           enum: [bad_request]
         message:
           type: string
+        code:
+          type: string
+          enum: [timeout, model_unavailable, incomplete]
+          description: |
+            Optional on Ask 503. \`timeout\`, \`model_unavailable\`, or
+            \`incomplete\`. Omitted when chat is disabled or records cannot be read.
     FederalOffice:
       type: string
       enum: [president, senate, house]
@@ -588,6 +607,12 @@ components:
             is stored. Omitted on stored races. The candidate list for that
             \`raceId\` is empty. Coverage does not count the row in
             \`districtsWithFilings\`.
+        hasCandidates:
+          type: boolean
+          description: |
+            False for an empty stub or a joined candidate list of length 0.
+            True for a stored Form 2 race row. Map fill uses the same rule
+            as \`districtsWithFilings\`. Not written to DynamoDB.
     Candidate:
       type: object
       required:
@@ -604,6 +629,9 @@ components:
         - sourceLoadedAt
         - updatedAt
         - alternateFilings
+        - filings
+        - writeIn
+        - multiFiling
         - multiFilingNote
       properties:
         candidateId:
@@ -672,6 +700,39 @@ components:
                 type: string
                 nullable: true
                 format: uri
+        filings:
+          type: array
+          description: |
+            Every FEC filing for this person in the state and year, including
+            this row and other offices. The row stays in the response when
+            this list covers more than one contest.
+          items:
+            type: object
+            required: [fecId, office, state, raceId, writeIn, candidateId]
+            properties:
+              fecId:
+                type: string
+              office:
+                type: string
+                enum: [senate, house, president]
+              state:
+                type: string
+                nullable: true
+              district:
+                type: string
+                nullable: true
+              raceId:
+                type: string
+              writeIn:
+                type: boolean
+              candidateId:
+                type: string
+        writeIn:
+          type: boolean
+          description: True when any filing in \`filings\` is a write-in (W or WRI).
+        multiFiling:
+          type: boolean
+          description: True when \`filings\` lists more than one FEC id or contest.
         multiFilingNote:
           type: string
           nullable: true
@@ -921,6 +982,13 @@ components:
           type: integer
           minimum: 1980
           maximum: 2100
+        year:
+          type: integer
+          minimum: 1980
+          maximum: 2100
+          description: |
+            Alias of \`cycle\`. The page URL uses \`year\`. When both are
+            set they must be equal. A \`raceId\` year prefix must match.
         threadId:
           type: string
           description: Client correlation id. The server does not store turns.

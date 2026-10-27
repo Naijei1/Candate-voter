@@ -34,16 +34,24 @@ export function parseChatRequest(body: unknown): ParseChatResult {
   const candidateId = optionalId(record, "candidateId");
   if (!candidateId.ok) return candidateId;
 
-  let cycle: number | undefined;
-  if ("cycle" in record && record.cycle != null) {
-    if (typeof record.cycle !== "number" || !Number.isInteger(record.cycle)) {
-      return { ok: false, message: "cycle must be an integer from 1980 to 2100" };
+  const cycleField = readYearField(record, "cycle");
+  if (!cycleField.ok) return cycleField;
+  const yearField = readYearField(record, "year");
+  if (!yearField.ok) return yearField;
+  if (
+    cycleField.value != null &&
+    yearField.value != null &&
+    cycleField.value !== yearField.value
+  ) {
+    return { ok: false, message: "year and cycle must match" };
+  }
+  const cycle = yearField.value ?? cycleField.value;
+
+  if (cycle != null && raceId.value) {
+    const raceYear = /^(\d{4})-/.exec(raceId.value);
+    if (raceYear?.[1] && Number(raceYear[1]) !== cycle) {
+      return { ok: false, message: "raceId year must match year" };
     }
-    const parsed = parseCycle(String(record.cycle));
-    if (parsed == null) {
-      return { ok: false, message: "cycle must be an integer from 1980 to 2100" };
-    }
-    cycle = parsed;
   }
 
   let threadId: string | undefined;
@@ -64,6 +72,22 @@ export function parseChatRequest(body: unknown): ParseChatResult {
       ...(threadId ? { threadId } : {}),
     },
   };
+}
+
+function readYearField(
+  record: Record<string, unknown>,
+  key: "year" | "cycle",
+): { ok: true; value?: number } | { ok: false; message: string } {
+  if (!(key in record) || record[key] == null) return { ok: true };
+  const value = record[key];
+  if (typeof value !== "number" || !Number.isInteger(value)) {
+    return { ok: false, message: `${key} must be an integer from 1980 to 2100` };
+  }
+  const parsed = parseCycle(String(value));
+  if (parsed == null) {
+    return { ok: false, message: `${key} must be an integer from 1980 to 2100` };
+  }
+  return { ok: true, value: parsed };
 }
 
 function optionalId(

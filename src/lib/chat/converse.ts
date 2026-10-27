@@ -30,7 +30,7 @@ export function createBedrockConverse(
   let client: BedrockRuntimeClient | null = null;
 
   return async (input) => {
-    client ??= new BedrockRuntimeClient({ region, maxAttempts: 3 });
+    client ??= new BedrockRuntimeClient({ region, maxAttempts: 1 });
     const response = await client.send(
       new ConverseCommand({
         modelId: input.modelId,
@@ -39,6 +39,7 @@ export function createBedrockConverse(
         toolConfig: { tools: bedrockTools },
         inferenceConfig: inferenceConfigFor(input.modelId, input.maxTokens),
       }),
+      input.signal ? { abortSignal: input.signal } : {},
     );
     const message = fromSdkMessage(response.output?.message);
     const stopReason = response.stopReason;

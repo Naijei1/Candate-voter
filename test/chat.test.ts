@@ -80,7 +80,7 @@ function scripted(steps: ConverseResponse[]): ConverseFn & { calls: number } {
     calls += 1;
     if (!step) throw new Error("unexpected converse call");
     return step;
-  }) as ConverseFn & { calls: number };
+  }) as unknown as ConverseFn & { calls: number };
   Object.defineProperty(fn, "calls", { get: () => calls });
   return fn;
 }
@@ -339,12 +339,13 @@ test("a table failure is 503 and a model failure does not leak secrets", async (
     chatDeps(repo, scripted([toolUse("get_race", { raceId: "2026-senate-CA" })])),
   );
   assert.equal(storage.status, 503);
-  const storageBody = (await storage.json()) as { error: string; message: string };
+  const storageBody = (await storage.json()) as { error: string; message: string; code?: string };
   assert.equal(storageBody.error, "unavailable");
   assert.match(storageBody.message, /unavailable/i);
+  assert.equal(storageBody.code, undefined);
 
   const model = await postChat(
-    post({ message: "What is a Form 2 filing?" }),
+    post({ message: "Summarize the California Senate race." }),
     chatDeps(new MemoryVoterRepository(), async () => {
       throw new Error("AccessDenied CANDATE_API_KEY=server-only-key");
     }),
@@ -352,6 +353,7 @@ test("a table failure is 503 and a model failure does not leak secrets", async (
   assert.equal(model.status, 503);
   const text = await model.text();
   assert.match(text, /The model is unavailable/);
+  assert.equal(JSON.parse(text).code, "model_unavailable");
   assert.equal(text.includes("CANDATE_API_KEY"), false);
   assert.equal(text.includes("server-only-key"), false);
 });
