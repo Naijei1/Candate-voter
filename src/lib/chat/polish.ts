@@ -117,28 +117,73 @@ export function polishChatAnswer(answer: ChatAnswer, priorText = ""): ChatAnswer
   };
 }
 
+const PARTY_CODE = String.raw`([A-Za-z][A-Za-z0-9/]{0,8})`;
+const PARTY_LABEL = String.raw`(?:"([^"\n]+)"|“([^”\n]+)”|'([^'\n]+)'|([A-Za-z][^,.;\n"“”()]*))`;
+const PAREN_PARTY_ECHO = new RegExp(
+  String.raw`\(\s*${PARTY_CODE}\s*,\s*partyLabel\s*:\s*${PARTY_LABEL}\s*\)`,
+  "gi",
+);
+const BARE_PARTY_ECHO = new RegExp(
+  String.raw`\b${PARTY_CODE}\s*,\s*partyLabel\s*:\s*${PARTY_LABEL}`,
+  "gi",
+);
+const PARTY_LABEL_KEY = new RegExp(String.raw`\bpartyLabel\s*:\s*${PARTY_LABEL}`, "gi");
+
+const PROVENANCE_SENTENCE =
+  /\b(?:(?:These|Those|The|Our)\s+)?records\s+come\s+from\s+[^.\n]*?\bdatabase\b\.?/gi;
+
+const STORAGE_PHRASE = new RegExp(
+  [
+    String.raw`\bFEC\s+Form\s+2\s+filings\s+stored\s+in\s+(?:(?:(?:this|the)\s+)?site['’]s|our|an\s+internal|the)\s+database\b`,
+    String.raw`\bstored\s+in\s+(?:(?:(?:this|the)\s+)?site['’]s|our|an\s+internal|the)\s+database\b`,
+    String.raw`\bin\s+(?:(?:(?:this|the)\s+)?site['’]s|our|an\s+internal)\s+database\b`,
+    String.raw`\b(?:(?:this|the)\s+)?site['’]s\s+database\b`,
+  ].join("|"),
+  "gi",
+);
+
 /**
  * Last pass for visitor copy. Tool JSON and the system prompt already use
- * a readable party and public-FEC wording; this only catches an echo.
+ * a readable party and public-FEC wording; this catches an echo anyway.
+ * Party echoes include `DEM, partyLabel: Democratic` with or without
+ * parentheses or quotes. Provenance sentences open with public FEC records.
  */
 function humanizeAskProse(markdown: string): string {
-  const withoutParty = markdown
-    .replace(
-      /\(\s*([A-Za-z][A-Za-z0-9/]{0,8})\s*,\s*partyLabel\s*:\s*"?([^"()\n]+?)"?\s*\)/g,
-      (_match, code: string, label: string) => {
-        const name = label.trim();
-        const trimmed = code.trim();
-        if (!name) return trimmed;
-        if (name.toUpperCase() === trimmed.toUpperCase()) return name;
-        return `${name} (${trimmed})`;
-      },
-    )
-    .replace(/\bpartyLabel\s*:\s*"?([A-Za-z][^,.;\n"]*)"?/g, (_match, label: string) =>
-      label.trim(),
+  return cleanup(stripDatabaseWord(replaceInternalStorage(stripPartyFieldEcho(markdown))));
+}
+
+function stripPartyFieldEcho(markdown: string): string {
+  return markdown
+    .replace(PAREN_PARTY_ECHO, replacePartyEcho)
+    .replace(BARE_PARTY_ECHO, replacePartyEcho)
+    .replace(PARTY_LABEL_KEY, (_match, quoted?: string, curly?: string, single?: string, bare?: string) =>
+      partyLabelText(quoted, curly, single, bare),
     )
     .replace(/\bparty(?:Code|Affiliation)\s*:\s*"?[^",;\n)]*"?/g, "")
-    .replace(/\bpartyLabel\b:?/g, "");
-  return cleanup(stripDatabaseWord(replaceInternalStorage(withoutParty)));
+    .replace(/\bpartyLabel\b:?/gi, "");
+}
+
+function replacePartyEcho(
+  _match: string,
+  code: string,
+  quoted?: string,
+  curly?: string,
+  single?: string,
+  bare?: string,
+): string {
+  return readableParty(code, partyLabelText(quoted, curly, single, bare));
+}
+
+function partyLabelText(quoted?: string, curly?: string, single?: string, bare?: string): string {
+  return (quoted ?? curly ?? single ?? bare ?? "").trim().replace(/\s+/g, " ");
+}
+
+function readableParty(code: string, label: string): string {
+  const name = label.trim();
+  const trimmed = code.trim();
+  if (!name) return trimmed;
+  if (name.toUpperCase() === trimmed.toUpperCase()) return name;
+  return `${name} (${trimmed})`;
 }
 
 /**
@@ -158,19 +203,37 @@ function stripDatabaseWord(markdown: string): string {
 }
 
 function replaceInternalStorage(markdown: string): string {
-  return markdown.replace(
-    /FEC Form 2 filings stored in this site['’]s database|stored in (?:this site['’]s|our|an internal|the) database|\bin (?:this site['’]s|our|an internal) database\b|this site['’]s database/gi,
-    (match, offset: number, whole: string) => {
-      let next = "based on public FEC records";
-      if (/^in\b/i.test(match)) next = "in public FEC records";
-      else if (/^FEC\b/i.test(match) || /^this site/i.test(match)) next = "public FEC records";
-      const before = whole.slice(0, offset);
-      if (before.trim().length === 0 || /[.!?]\s*$/.test(before)) {
-        next = next.charAt(0).toUpperCase() + next.slice(1);
-      }
-      return next;
+  const grounded = markdown.replace(
+    PROVENANCE_SENTENCE,
+    (match: string, offset: number, whole: string) => {
+      if (!isSentenceStart(whole, offset)) return match;
+      if (match.endsWith(".")) return "Based on public FEC records.";
+      const after = whole.slice(offset + match.length);
+      if (after.trim().length === 0) return "Based on public FEC records.";
+      return "Based on public FEC records";
     },
   );
+  return grounded.replace(STORAGE_PHRASE, (match: string, offset: number, whole: string) =>
+    storageReplacement(match, offset, whole),
+  );
+}
+
+function storageReplacement(match: string, offset: number, whole: string): string {
+  const atStart = isSentenceStart(whole, offset);
+  if (/^in\b/i.test(match)) return atStart ? "In public FEC records" : "in public FEC records";
+  const after = whole.slice(offset + match.length).replace(/^[*_\s]+/, "");
+  const sourceClause = /^(?:stored|fec)\b/i.test(match);
+  const opensSentence = atStart && (after.length === 0 || /^[.!?]/.test(after) || sourceClause);
+  if (opensSentence) return "Based on public FEC records";
+  if (/^stored\b/i.test(match)) return "based on public FEC records";
+  return atStart ? "Public FEC records" : "public FEC records";
+}
+
+function isSentenceStart(whole: string, offset: number): boolean {
+  const before = whole.slice(0, offset).replace(/[*_]+/g, "");
+  if (before.trim().length === 0) return true;
+  if (/[.!?:]\s*$/.test(before) || /\n\s*$/.test(before)) return true;
+  return /(?:^|\n)\s*(?:[-*+]|\d+[.)])\s+$/.test(before);
 }
 
 export function polishSources(sources: readonly ChatSource[]): ChatSource[] {
