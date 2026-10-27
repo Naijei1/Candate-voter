@@ -277,6 +277,10 @@ html[data-map-view="state"] .map-chrome {
   min-width: 0;
 }
 
+.state-sheet-body {
+  display: contents;
+}
+
 .state-map-pane {
   display: flex;
   min-height: 22rem;
@@ -484,12 +488,15 @@ html[data-map-view="state"] .map-chrome {
 }
 
 .race-row {
+  min-width: 0;
+  max-width: 100%;
   border: 1px solid var(--color-line);
   border-left: 4px solid var(--color-accent);
   border-radius: 0.7rem;
   background: color-mix(in srgb, var(--color-card) 92%, transparent);
   padding: 0.9rem 1rem;
   color: var(--color-ink);
+  overflow-wrap: anywhere;
 }
 
 .race-title {
@@ -497,6 +504,8 @@ html[data-map-view="state"] .map-chrome {
   align-items: baseline;
   justify-content: space-between;
   gap: 0.75rem;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .row-cue {
@@ -505,6 +514,20 @@ html[data-map-view="state"] .map-chrome {
   font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: 0.01em;
+}
+
+.party-cue {
+  min-width: 0;
+  max-width: 100%;
+  margin-left: auto;
+  overflow-wrap: anywhere;
+  white-space: normal;
+  text-align: end;
+}
+
+.race-title > span:first-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .office-line {
@@ -874,6 +897,7 @@ html[data-map-view="state"] .map-chrome {
   }
 
   .state-shell {
+    --state-sheet-max: min(40dvh, calc(100dvh - 14rem));
     position: relative;
     display: block;
     height: 100dvh;
@@ -881,6 +905,7 @@ html[data-map-view="state"] .map-chrome {
     gap: 0;
     padding: 0;
     overflow: hidden;
+    background: color-mix(in srgb, var(--color-paper) 88%, var(--color-card));
   }
 
   .state-shell .zip-slot {
@@ -894,9 +919,12 @@ html[data-map-view="state"] .map-chrome {
 
   .state-map-pane {
     position: absolute;
-    inset: 0;
+    top: 0;
+    right: 0;
+    left: 0;
+    bottom: calc(var(--state-sheet-max) + env(safe-area-inset-bottom, 0px) + 0.35rem);
     min-height: 0;
-    height: 100%;
+    height: auto;
     gap: 0;
   }
 
@@ -932,13 +960,12 @@ html[data-map-view="state"] .map-chrome {
     right: 0.4rem;
     bottom: calc(env(safe-area-inset-bottom, 0px) + 0.35rem);
     display: flex;
-    max-height: min(52dvh, calc(100dvh - 9rem));
+    max-height: var(--state-sheet-max);
+    min-height: 0;
     flex-direction: column;
-    overflow: auto;
-    overscroll-behavior: contain;
-    -webkit-overflow-scrolling: touch;
+    overflow: hidden;
     border-radius: 1.15rem;
-    padding: 0.35rem 0.85rem 0.9rem;
+    padding: 0;
     background: color-mix(in srgb, var(--color-card) 80%, transparent);
     border: 1px solid color-mix(in srgb, var(--color-ink) 14%, transparent);
     box-shadow: 0 12px 32px rgb(15 23 42 / 18%);
@@ -946,19 +973,33 @@ html[data-map-view="state"] .map-chrome {
     -webkit-backdrop-filter: blur(18px);
   }
 
+  .state-sheet-body {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    padding: 0.15rem 0.85rem 0.9rem;
+  }
+
   .state-overview .back-chrome {
-    position: sticky;
-    top: 0;
+    position: static;
+    flex: none;
     z-index: 2;
     display: flex;
     flex-direction: column;
     align-items: stretch;
     gap: 0.15rem;
-    margin: 0 -0.85rem 0.45rem;
+    margin: 0;
     padding: 0.35rem 0.85rem 0.45rem;
     border: 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--color-ink) 12%, transparent);
     border-radius: 1.15rem 1.15rem 0 0;
-    background: color-mix(in srgb, var(--color-card) 92%, transparent);
+    background: color-mix(in srgb, var(--color-card) 96%, transparent);
     box-shadow: none;
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
@@ -1032,8 +1073,8 @@ html[data-map-view="state"] .map-chrome {
     z-index: 70;
   }
 
-  html.keyboard-open .state-overview {
-    max-height: min(38dvh, calc(var(--vv-height, 50dvh) - 5rem));
+  html.keyboard-open .state-shell {
+    --state-sheet-max: min(32dvh, calc(var(--vv-height, 50dvh) - 5rem));
   }
 
   @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {

@@ -18,12 +18,15 @@ export function ZipLookup({
   year,
   onFound,
   onPickState,
+  onReject,
   lookup = findRacesByZip,
 }: {
   year: number;
   onFound: (payload: ZipLookupPayload) => void;
   /** Moves the visitor to the national map so they can tap a state. */
   onPickState?: () => void;
+  /** A failed lookup should drop a country-map highlight left by an earlier visit. */
+  onReject?: () => void;
   /** Defaults to the live `GET /api/v1/lookup/zip` action. */
   lookup?: (zip: string, year: number) => Promise<ZipLookupResult>;
 }) {
@@ -37,6 +40,7 @@ export function ZipLookup({
     if (!zip) {
       setFailLead("Enter a 5-digit ZIP.");
       setFailed(true);
+      onReject?.();
       return;
     }
     setPending(true);
@@ -47,12 +51,14 @@ export function ZipLookup({
       if (!result.ok || !result.payload.state) {
         setFailLead(result.ok ? ZIP_FAIL : failLeadFor(result.reason));
         setFailed(true);
+        onReject?.();
         return;
       }
       onFound(result.payload);
     } catch {
       setFailLead("ZIP lookup isn't available right now.");
       setFailed(true);
+      onReject?.();
     } finally {
       setPending(false);
     }

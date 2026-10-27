@@ -36,6 +36,7 @@ import {
 } from "@/lib/landing/load-candidates";
 import {
   highlightedPostal,
+  nextRememberedPostal,
   searchWithoutState,
   searchWithState,
   searchWithZip,
@@ -78,7 +79,9 @@ export function Landing({
   lookupZip,
 }: LandingProps) {
   const [selected, setSelected] = useState<string | null>(initialState);
-  const [rememberedPostal, setRememberedPostal] = useState<string | null>(initialState);
+  const [rememberedPostal, setRememberedPostal] = useState<string | null>(() =>
+    nextRememberedPostal(initialState, initialZip, null),
+  );
   const [zipCode, setZipCode] = useState<string | null>(initialZip);
   const [zipPayload, setZipPayload] = useState<ZipLookupPayload | null>(null);
   const [zipLoading, setZipLoading] = useState(Boolean(initialZip));
@@ -102,9 +105,11 @@ export function Landing({
 
   const syncFromLocation = useCallback(() => {
     const postal = postalFromSearch(window.location.search);
+    const zip = zipFromSearch(window.location.search);
     setSelected(postal);
-    setZipCode(zipFromSearch(window.location.search));
-    if (postal) setRememberedPostal(postal);
+    setZipCode(zip);
+    setRememberedPostal((current) => nextRememberedPostal(postal, zip, current));
+    setHot(null);
   }, []);
 
   useLayoutEffect(() => {
@@ -153,6 +158,8 @@ export function Landing({
         if (!result.ok || result.payload.state !== selected) {
           setZipPayload(null);
           setZipFailed(true);
+          setRememberedPostal(null);
+          setHot(null);
           return;
         }
         heldZip.current = result.payload;
@@ -258,8 +265,14 @@ export function Landing({
   const backToMap = useCallback(() => {
     heldZip.current = null;
     setHot(null);
+    setRememberedPostal(null);
     writeUrl(searchWithoutState(window.location.search));
   }, [writeUrl]);
+
+  const rejectZip = useCallback(() => {
+    setHot(null);
+    setRememberedPostal(null);
+  }, []);
 
   const preserve = useCallback(
     (path: string) => withPreservedQuery(path, { year, state: selected, zip: zipCode }),
@@ -286,7 +299,13 @@ export function Landing({
   return (
     <div className={selected ? "state-shell" : "national-shell"}>
       <div className="zip-slot">
-        <ZipLookup year={year} onFound={openZip} onPickState={pickState} lookup={lookupZip} />
+        <ZipLookup
+          year={year}
+          onFound={openZip}
+          onPickState={pickState}
+          onReject={rejectZip}
+          lookup={lookupZip}
+        />
         {!selected && !hasAnyRaces ? (
           <div className="mt-2">
             <StorageNotice>No races are stored for election years {cycleLabel}.</StorageNotice>
@@ -413,6 +432,7 @@ function StateOverview({
           <h1 className="state-title">{name}</h1>
         </div>
       </div>
+      <div className="state-sheet-body">
       <p className="state-year">{year}</p>
       <StateScoreboard board={board} senatePeople={senatePeople} />
       <DataRefreshedBanner refreshedAt={refreshedAt} compact />
@@ -531,6 +551,7 @@ function StateOverview({
           racesAnchor={pinYours}
         />
       ) : null}
+      </div>
     </div>
   );
 }

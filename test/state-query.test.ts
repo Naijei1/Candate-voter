@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   highlightedPostal,
+  nextRememberedPostal,
   mapHomeHref,
   postalFromSearch,
   searchWithState,
@@ -34,6 +35,14 @@ test("country map keeps the last state when Back drops state from the URL", () =
   assert.equal(highlightedPostal(null, "KY"), "KY");
   assert.equal(highlightedPostal("OH", "KY"), "OH");
   assert.equal(highlightedPostal(null, null), null);
+});
+
+test("ZIP back keeps the highlight and a manual state tap forgets it", () => {
+  assert.equal(nextRememberedPostal("KY", "40202", null), "KY");
+  assert.equal(nextRememberedPostal("TX", null, "KY"), null);
+  assert.equal(nextRememberedPostal(null, null, "KY"), "KY");
+  assert.equal(nextRememberedPostal(null, null, null), null);
+  assert.equal(nextRememberedPostal("TX", null, null), null);
 });
 
 test("year navigation keeps the selected state on the home page", () => {
