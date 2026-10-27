@@ -35,23 +35,26 @@ test("map shapes drop the browser focus rectangle and keep a fill for the select
   assert.equal(/stroke:\s*var\(--color-ink\)/.test(focusBlock), false);
 });
 
-test("home section is titled Popular with no ranking disclaimer", () => {
+test("landing is a map shell without a Popular list or ranking copy", () => {
   const source = readFileSync(new URL("../src/components/Landing.tsx", import.meta.url), "utf8");
-  const popular = source.slice(source.indexOf('id="popular-heading"'));
-  assert.match(source, /id="popular-heading"/);
-  assert.match(source, />\s*Popular\s*</);
-  assert.equal(popular.includes("Recently updated filings"), false);
-  assert.equal(/not a ranking/i.test(popular), false);
-  assert.equal(/not a rating/i.test(popular), false);
+  assert.equal(source.includes("popular-heading"), false);
+  assert.equal(source.includes("Recently updated filings"), false);
+  assert.equal(/not a ranking/i.test(source), false);
+  assert.equal(/not a rating/i.test(source), false);
   assert.equal(source.includes("newest stored update"), false);
-  assert.equal(source.includes("Popular "), false);
   assert.equal(/<ol\b/.test(source), false);
+  assert.match(source, /data-testid="national-map"/);
+  assert.match(source, /data-testid="your-races"/);
 });
 
-test("desktop map grid keeps a fixed height so the filings panel cannot stretch it", () => {
+test("national map fills the viewport and the state page uses one scroll", () => {
   const css = readFileSync(new URL("../src/app/globals.css", import.meta.url), "utf8");
+  assert.match(css, /\.national-shell\s*\{[^}]*height:\s*100dvh/);
+  assert.match(css, /\.map-main\s*\{[^}]*overflow:\s*auto/);
+  assert.match(css, /\.state-shell\s*\{[^}]*flex-direction:\s*column/);
   const block = css.slice(css.indexOf("@media (min-width: 1024px)"));
-  assert.match(block, /\.map-hero-grid\s*\{[^}]*height:\s*calc\(100svh - 4\.5rem\)/);
-  assert.match(block, /\.map-hero-grid\s*\{[^}]*max-height:\s*calc\(100svh - 4\.5rem\)/);
-  assert.match(block, /\.map-panel\s*\{[^}]*overflow:\s*hidden/);
+  assert.match(block, /\.state-shell\s*\{[^}]*display:\s*grid/);
+  assert.match(block, /\.state-map-pane\s*\{[^}]*position:\s*sticky/);
+  assert.equal(/\.state-overview\s*\{[^}]*overflow:\s*auto/.test(block), false);
+  assert.equal(/max-height:\s*100dvh/.test(block), false);
 });

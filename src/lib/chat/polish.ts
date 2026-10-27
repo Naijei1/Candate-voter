@@ -149,7 +149,7 @@ const STORAGE_PHRASE = new RegExp(
  * parentheses or quotes. Provenance sentences open with public FEC records.
  */
 function humanizeAskProse(markdown: string): string {
-  return cleanup(replaceInternalStorage(stripPartyFieldEcho(markdown)));
+  return cleanup(stripDatabaseWord(replaceInternalStorage(stripPartyFieldEcho(markdown))));
 }
 
 function stripPartyFieldEcho(markdown: string): string {
@@ -159,6 +159,7 @@ function stripPartyFieldEcho(markdown: string): string {
     .replace(PARTY_LABEL_KEY, (_match, quoted?: string, curly?: string, single?: string, bare?: string) =>
       partyLabelText(quoted, curly, single, bare),
     )
+    .replace(/\bparty(?:Code|Affiliation)\s*:\s*"?[^",;\n)]*"?/g, "")
     .replace(/\bpartyLabel\b:?/gi, "");
 }
 
@@ -183,6 +184,22 @@ function readableParty(code: string, label: string): string {
   if (!name) return trimmed;
   if (name.toUpperCase() === trimmed.toUpperCase()) return name;
   return `${name} (${trimmed})`;
+}
+
+/**
+ * Last pass before Ask text is shown. Server answers are already cleaned;
+ * this still runs so a regression cannot show field names or "database".
+ */
+export function presentAskMarkdown(markdown: string): string {
+  return cleanup(replaceRaceSlugs(humanizeAskProse(markdown)));
+}
+
+function stripDatabaseWord(markdown: string): string {
+  return markdown.replace(/\bdatabase\b/gi, (_match, offset: number, whole: string) => {
+    const before = whole.slice(0, offset);
+    if (before.trim().length === 0 || /[.!?]\s*$/.test(before)) return "Records";
+    return "records";
+  });
 }
 
 function replaceInternalStorage(markdown: string): string {

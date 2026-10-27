@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
+import { AppFrame } from "@/components/AppFrame";
 import { AskProvider } from "@/components/chat/AskProvider";
-import { SiteFooter } from "@/components/SiteFooter";
-import { SiteHeader } from "@/components/SiteHeader";
 import { cyclesFromEnv } from "@/lib/data/cycles";
 import "./globals.css";
 
@@ -30,13 +29,7 @@ export default function RootLayout({
           Skip to content
         </a>
         <AskProvider cycles={cycles}>
-          <SiteHeader cycles={cycles} />
-          <div className="mx-auto flex min-h-[calc(100vh-4.5rem)] w-full max-w-6xl flex-col px-4 sm:px-6">
-            <main id="main" className="flex-1 py-8">
-              {children}
-            </main>
-            <SiteFooter />
-          </div>
+          <AppFrame cycles={cycles}>{children}</AppFrame>
         </AskProvider>
       </body>
     </html>

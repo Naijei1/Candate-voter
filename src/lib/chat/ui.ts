@@ -1,5 +1,6 @@
 import { isResourceId } from "../api/ids";
 import { resolveCycle } from "../data/cycles";
+import { isRaceSlug, labelForRaceId, presentAskMarkdown } from "./polish";
 import type { ChatMode, ChatRequest, ChatSource } from "./types";
 
 export const MAX_CHAT_MESSAGE = 2000;
@@ -91,24 +92,26 @@ export function isAskPanelPath(pathname: string): boolean {
   );
 }
 
-/** Short factual chip. A page label wins. Otherwise a race or candidate id. */
+/** Short factual chip. A page label wins. Raw ids stay off the chip. */
 export function contextLabel(context: ChatContextInput): string | null {
-  const custom = context.label?.trim();
+  const custom = friendlyChip(context.label);
   if (custom) return custom;
   const parts: string[] = [];
   if (context.raceId) parts.push(raceChipLabel(context.raceId));
-  if (context.candidateId) parts.push(`Candidate ${context.candidateId}`);
+  if (context.candidateId) parts.push("This candidate");
   if (parts.length === 0) return null;
   if (context.cycle != null) parts.push(String(context.cycle));
   return parts.join(" · ");
 }
 
-/** Link text for a source. A raw URL is never the label. */
+/** Link text for a source. A raw URL or race id is never the label. */
 export function citationLabel(source: { title: string; url: string }): string {
-  const title = source.title.trim();
   const url = source.url.trim();
-  if (!title || title === url || looksLikeUrl(title)) return "Source";
-  return title.replace(/\bFEC Form 2\b/g, "Statement of candidacy (Form 2)");
+  const title = presentAskMarkdown(source.title).trim();
+  if (title && title !== url && !looksLikeUrl(title) && !isRaceSlug(title) && !isRawVisitorKey(title)) {
+    return title.replace(/\bFEC Form 2\b/g, "Statement of candidacy (Form 2)");
+  }
+  return friendlyFromUrl(url) ?? "Source";
 }
 
 export function chatPageHref(context: ChatContextInput, draft?: string): string {
@@ -394,11 +397,14 @@ function parseInlines(text: string, options: CitationOptions, inBold: boolean): 
           const link = label.trim() ? citationLink(rawHref, options) : null;
           if (link) {
             flush();
+            const safe = linkText(label, rawHref);
             nodes.push({
               type: "link",
               href: link.href,
               external: link.external,
-              children: parseInlines(label, options, inBold),
+              children: safe
+                ? [{ type: "text", text: safe }]
+                : parseInlines(label, options, inBold),
             });
             index = endParen + 1;
             continue;
@@ -429,6 +435,37 @@ function looksLikeUrl(value: string): boolean {
   return /^https?:\/\//i.test(value) || value.startsWith("/");
 }
 
+function isRawVisitorKey(value: string): boolean {
+  const cleaned = value.trim();
+  if (isRaceSlug(cleaned)) return true;
+  if (/^[HSP]\d[A-Z]{2}\d{5}$/.test(cleaned)) return true;
+  if (/^\d{4,}$/.test(cleaned)) return true;
+  if (/\bpartyLabel\b/i.test(cleaned) || /\bdatabase\b/i.test(cleaned)) return true;
+  return false;
+}
+
+function friendlyFromUrl(url: string): string | null {
+  const match = /((?:19|20)\d{2}-(?:president|senate-[A-Z]{2}|house-[A-Z]{2}-\d{2}))/.exec(url);
+  return match?.[1] ? labelForRaceId(match[1]) : null;
+}
+
+function friendlyChip(label: string | undefined): string | null {
+  const custom = label?.trim() ?? "";
+  if (!custom) return null;
+  const cleaned = presentAskMarkdown(custom);
+  if (cleaned && !looksLikeUrl(cleaned) && !isRaceSlug(cleaned) && !isRawVisitorKey(cleaned)) {
+    return cleaned;
+  }
+  if (isRaceSlug(custom)) return labelForRaceId(custom);
+  return null;
+}
+
+function linkText(label: string, href: string): string | null {
+  const trimmed = label.trim();
+  if (!looksLikeUrl(trimmed) && trimmed !== href.trim() && !isRaceSlug(trimmed)) return null;
+  return citationLabel({ title: trimmed, url: href });
+}
+
 function raceChipLabel(raceId: string): string {
   const senate = /^(\d{4})-senate-([A-Z]{2})$/.exec(raceId);
   if (senate) return `${senate[2]} Senate`;
@@ -438,7 +475,7 @@ function raceChipLabel(raceId: string): string {
     return `${house[2]} House ${district}`;
   }
   if (/^\d{4}-president$/.test(raceId)) return "President";
-  return raceId;
+  return labelForRaceId(raceId) ?? "This race";
 }
 
 function pageNote(value: string | null): string | undefined {

@@ -8,6 +8,8 @@ type RecordMetaProps = {
   retrievedAt?: string | null;
   /** Shown only when a source stored a submission time. */
   filedAt?: string | null;
+  /** List cards omit this when the page already shows one refresh time. */
+  showUpdated?: boolean;
 };
 
 export function RecordMeta({
@@ -16,9 +18,11 @@ export function RecordMeta({
   showRetrieved = false,
   retrievedAt = null,
   filedAt = null,
+  showUpdated = true,
 }: RecordMetaProps) {
   const source = httpsUrl(sourceUrl);
   const filed = formatInstant(filedAt);
+  if (!source && !showUpdated && !showRetrieved && !filed) return null;
 
   return (
     <p className="text-sm leading-6 text-muted">
@@ -32,10 +36,14 @@ export function RecordMeta({
       ) : (
         <span>Source not stored</span>
       )}
-      <span className="mx-2" aria-hidden="true">
-        ·
-      </span>
-      <Timestamp label="Updated" value={updatedAt} />
+      {showUpdated ? (
+        <>
+          <span className="mx-2" aria-hidden="true">
+            ·
+          </span>
+          <Timestamp label="Updated" value={updatedAt} />
+        </>
+      ) : null}
       {showRetrieved ? (
         <>
           <span className="mx-2" aria-hidden="true">
