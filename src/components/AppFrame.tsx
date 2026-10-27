@@ -4,22 +4,19 @@ import { usePathname } from "next/navigation";
 import { useEffect, type ReactNode } from "react";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
+import { YearNavigation } from "@/components/YearNavigation";
 
 export function AppFrame({ cycles, children }: { cycles: number[]; children: ReactNode }) {
   useVisualViewport();
   const pathname = usePathname();
-  if (pathname === "/") {
-    return (
+  const frame = pathname === "/" ? (
       <>
         <SiteHeader cycles={cycles} overlay />
         <main id="main" className="map-main">
           {children}
         </main>
       </>
-    );
-  }
-
-  return (
+    ) : (
     <>
       <SiteHeader cycles={cycles} />
       <div className="page-frame mx-auto flex w-full max-w-6xl flex-col px-4 sm:px-6">
@@ -30,6 +27,7 @@ export function AppFrame({ cycles, children }: { cycles: number[]; children: Rea
       </div>
     </>
   );
+  return <YearNavigation>{frame}</YearNavigation>;
 }
 
 /** Keeps the ZIP glass in the visual viewport when the iOS keyboard opens. */

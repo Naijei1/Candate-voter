@@ -1,4 +1,5 @@
 import {
+  chatFailureCode,
   classifyChatStatus,
   parseChatSuccess,
   parseRetryAfterSeconds,
@@ -6,8 +7,12 @@ import {
 } from "./ui";
 import type { ChatMode, ChatRequest, ChatSource } from "./types";
 
-/** Client wait for one answer. Healthy replies are a few seconds; Cancel can stop sooner. */
-export const CHAT_TIMEOUT_MS = 30_000;
+/**
+ * Client wait for one answer. The chat contract aborts at 25 seconds so a
+ * novice is not left on “Looking up public records…” for half a minute.
+ * Cancel can stop sooner.
+ */
+export const CHAT_TIMEOUT_MS = 25_000;
 
 export class ChatCancelled extends Error {
   constructor() {
@@ -32,6 +37,7 @@ export type ChatCallResult =
     };
 
 const NETWORK_ERROR: ChatCallResult = { ok: false, kind: "network", retryAfterSeconds: null };
+const TIMEOUT_ERROR: ChatCallResult = { ok: false, kind: "timeout", retryAfterSeconds: null };
 
 /**
  * One buffered `POST /api/chat`. No streaming and no client credentials.
@@ -70,7 +76,7 @@ export async function postChatMessage(input: {
 
     clock.id = setTimeout(() => {
       controller.abort();
-      finish(() => resolve(NETWORK_ERROR));
+      finish(() => resolve(TIMEOUT_ERROR));
     }, timeoutMs);
 
     onUserAbort = () => {
@@ -127,7 +133,14 @@ async function requestChat(
     };
   }
 
-  const kind = classifyChatStatus(response.status);
+  let errorBody: unknown = null;
+  try {
+    errorBody = await response.json();
+  } catch {
+    errorBody = null;
+  }
+  const coded = chatFailureCode(errorBody);
+  const kind: ChatErrorKind = coded ?? classifyChatStatus(response.status);
   const retryAfterSeconds =
     kind === "rate_limit"
       ? parseRetryAfterSeconds(response.headers.get("Retry-After"), nowMs())

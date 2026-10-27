@@ -6,6 +6,51 @@ import type { Race } from "./types";
 export const FILING_MEANS =
   "A statement of candidacy (Form 2) tells the FEC someone intends to run — it is not the final ballot and not an endorsement.";
 
+const MONTHS = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+
+/**
+ * Day of the federal general election: the Tuesday after the first Monday
+ * in November. Primaries are not included; those dates differ by state.
+ */
+export function generalElectionDay(year: number): number {
+  const weekday = new Date(Date.UTC(year, 10, 1)).getUTCDay();
+  const firstMonday = 1 + ((8 - weekday) % 7);
+  return firstMonday + 1;
+}
+
+/** "November 3, 2026". */
+export function generalElectionLabel(year: number): string {
+  return `${MONTHS[10]} ${generalElectionDay(year)}, ${year}`;
+}
+
+/** Homepage and race pages. Federal offices only. */
+export function federalScopeLine(): string {
+  return "Federal races only: President, Senate, and House.";
+}
+
+/** Primary versus general, plus the federal general-election date. */
+export function ballotVersusFilingLine(year: number): string {
+  return `A Form 2 is not the ballot. Primaries vary by state. The federal general election is ${generalElectionLabel(year)}.`;
+}
+
+/** Shown when a ZIP lookup returns more than one House district. */
+export function splitZipLine(): string {
+  return "One ZIP can fall in two House districts. Both are listed when the map says the ZIP touches each one.";
+}
+
 /**
  * Senate coverage is a count of stored Senate race rows, usually 0 or 1.
  * It is not a headcount of people.

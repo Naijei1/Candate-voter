@@ -318,6 +318,12 @@ html[data-map-view="state"] .map-chrome {
 
 .cd-map .cd-district:hover,
 .cd-map .cd-district:focus-visible {
+  fill: var(--color-map);
+  stroke-width: 2.4;
+}
+
+.cd-map .cd-district.has-data:hover,
+.cd-map .cd-district.has-data:focus-visible {
   fill: var(--color-map-hover);
 }
 
@@ -514,6 +520,18 @@ html[data-map-view="state"] .map-chrome {
   font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: 0.01em;
+}
+
+.year-loading {
+  display: grid;
+  min-height: 50vh;
+  place-items: center;
+  padding: 2rem 1rem;
+  color: var(--color-ink);
+}
+
+.year-menu {
+  max-width: calc(100vw - 1rem);
 }
 
 .party-cue {
@@ -1060,7 +1078,18 @@ html[data-map-view="state"] .map-chrome {
 
   [data-testid="candidate-disclosure"] > button,
   .race-title {
+    align-items: center;
     min-height: 44px;
+  }
+
+  .row-cue {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0.35rem 0.65rem;
   }
 
   html.keyboard-open .map-chrome {

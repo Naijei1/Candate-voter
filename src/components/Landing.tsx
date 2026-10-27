@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useAsk } from "@/components/chat/AskProvider";
+import { useYearNavigation } from "@/components/YearNavigation";
 import { CandidateDisclosure } from "@/components/CandidateDisclosure";
 import { DataRefreshedBanner } from "@/components/DataRefreshedBanner";
 import { DistrictMap } from "@/components/DistrictMap";
@@ -13,14 +14,18 @@ import { MapLegend, UsMap } from "@/components/UsMap";
 import { ZipLookup } from "@/components/ZipLookup";
 import { askScopeForState, askScopeForYear, pageContextFromScope } from "@/lib/chat/scope";
 import {
+  ballotVersusFilingLine,
   candidatesSoFarLine,
   emptyHouseNext,
   emptyRaceSentence,
+  federalScopeLine,
   jurisdictionRepeatsTitle,
   officeOneLiner,
   runningForLine,
+  splitZipLine,
   stateHoverLine,
 } from "@/lib/copy";
+import { personFilingNote } from "@/lib/data/filing-note";
 import { stateName } from "@/lib/data/states";
 import { officeLabel, partyCue } from "@/lib/format";
 import { senateCandidateCount, stateRaces, stateScoreboard, statesWithRaces } from "@/lib/landing";
@@ -97,6 +102,11 @@ export function Landing({
   const heldZip = useRef<ZipLookupPayload | null>(null);
   const marked = statesWithRaces(races);
   const { replacePageContext } = useAsk();
+  const { pendingYear, clearPendingYear } = useYearNavigation();
+
+  useEffect(() => {
+    if (pendingYear != null && pendingYear === year) clearPendingYear();
+  }, [clearPendingYear, pendingYear, year]);
 
   useEffect(() => {
     const scope = selected ? askScopeForState(year, selected, races) : askScopeForYear(year);
@@ -226,7 +236,7 @@ export function Landing({
       active = false;
       controller.abort();
     };
-  }, [candidateRaceKey, emptyIdsKey, reloadKey]);
+  }, [candidateRaceKey, emptyIdsKey, reloadKey, year]);
 
   const retryRace = useCallback((raceId: string) => {
     setEntries((prev) => {
@@ -295,6 +305,15 @@ export function Landing({
 
   const mapContext: MapContext = { year, state: selected, zip: zipCode };
   const mapPostal = highlightedPostal(selected, rememberedPostal);
+  const yearLoading = pendingYear != null && pendingYear !== year;
+
+  if (yearLoading) {
+    return (
+      <div className="year-loading" data-testid="year-loading" role="status">
+        <p>Loading {pendingYear}…</p>
+      </div>
+    );
+  }
 
   return (
     <div className={selected ? "state-shell" : "national-shell"}>
@@ -337,6 +356,7 @@ export function Landing({
         <DistrictMap
           postal={selected}
           races={races}
+          year={year}
           yourDistricts={pinYours ? houseCodes(yours) : []}
           context={mapContext}
         />
@@ -435,6 +455,8 @@ function StateOverview({
       <div className="state-sheet-body">
       <p className="state-year">{year}</p>
       <StateScoreboard board={board} senatePeople={senatePeople} />
+      <p className="mt-3 text-sm leading-6 text-ink">{federalScopeLine()}</p>
+      <p className="text-sm leading-6 text-muted">{ballotVersusFilingLine(year)}</p>
       <DataRefreshedBanner refreshedAt={refreshedAt} compact />
       {pinYours ? (
         <section
@@ -446,6 +468,11 @@ function StateOverview({
           <h2 id="your-races-heading" className="text-lg font-semibold tracking-tight text-ink">
             Your races
           </h2>
+          {yours.filter((slot) => slot.office === "house").length >= 2 ? (
+            <p className="mt-2 text-sm leading-6 text-ink" data-testid="split-zip">
+              {splitZipLine()}
+            </p>
+          ) : null}
           {zipLoading ? (
             <p className="mt-2 text-sm text-muted" aria-busy="true">
               Finding your races…
@@ -725,6 +752,7 @@ function CandidateList({
               href={preserve(`/candidates/${candidate.candidateId}`)}
               filingCount={candidate.alternateFilingCount + 1}
               updatedAt={candidate.updatedAt}
+              filingNote={personFilingNote(candidate.filings)}
             />
           </li>
         ))}

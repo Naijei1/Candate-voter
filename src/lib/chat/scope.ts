@@ -29,6 +29,8 @@ export type ChatPostBody = {
   raceId?: string;
   candidateId?: string;
   cycle?: number;
+  /** Same integer as `cycle`. The server rejects the pair when they differ. */
+  year?: number;
   threadId?: string;
 };
 
@@ -129,13 +131,21 @@ export function buildChatPayload(input: {
   const scope = input.scope;
   const prefix = scope ? stateContextPrefix(scope) : null;
   const message = fitMessage(prefix, text);
+  const cycle = scope?.raceId ? cycleForRace(scope.cycle, scope.raceId) : scope?.cycle;
   return {
     message,
     ...(scope?.raceId ? { raceId: scope.raceId } : {}),
     ...(scope?.candidateId ? { candidateId: scope.candidateId } : {}),
-    ...(scope?.cycle != null ? { cycle: scope.cycle } : {}),
+    ...(cycle != null ? { cycle, year: cycle } : {}),
     ...(input.threadId ? { threadId: input.threadId } : {}),
   };
+}
+
+function cycleForRace(cycle: number | null | undefined, raceId: string): number | undefined {
+  const prefix = /^(\d{4})-/.exec(raceId);
+  const raceYear = prefix?.[1] ? Number(prefix[1]) : null;
+  if (raceYear != null && cycle != null && cycle !== raceYear) return raceYear;
+  return cycle ?? raceYear ?? undefined;
 }
 
 export function parseChatResponse(body: unknown): ParsedChat | null {

@@ -14,7 +14,10 @@ import {
   readFilingsForCandidate,
   readRace,
 } from "@/lib/data/read";
-import { runningForLine } from "@/lib/copy";
+import { FILING_MEANS, runningForLine } from "@/lib/copy";
+import { withCrossContestFilings } from "@/lib/data/cross-filings";
+import { personFilingNote } from "@/lib/data/filing-note";
+import { createDynamoRepository } from "@/lib/data/repository";
 import { isPresidentialElectionYear } from "@/lib/data/calendar";
 import { displayedPartyLabels, type PublicCandidate } from "@/lib/data/view";
 import { httpsUrl, partyCue, partyLabel, partyToneClass } from "@/lib/format";
@@ -73,6 +76,7 @@ export default async function CandidatePage({ params, searchParams }: CandidateP
   const labels = group
     ? displayedPartyLabels(group)
     : [partyLabel(candidate.partyAffiliation, candidate.partyLabel)];
+  const filingNote = group ? personFilingNote(group.filings) : null;
 
   return (
     <article className="race-page">
@@ -100,11 +104,17 @@ export default async function CandidatePage({ params, searchParams }: CandidateP
           {partyCue(labels)}
         </p>
         <FilingGroupNote candidateId={candidate.candidateId} group={group} context={context} />
+        {filingNote ? (
+          <p data-testid="person-filing-note" className="person-filing-note text-sm leading-6 text-ink">
+            {filingNote}
+          </p>
+        ) : null}
       </header>
       <section aria-labelledby="filings-heading" className="race-candidates space-y-2">
         <h2 id="filings-heading" className="text-lg font-semibold">
           Filings
         </h2>
+        <p className="text-sm leading-6 text-muted">{FILING_MEANS}</p>
         {filings.ok === false ? (
           <StorageNotice tone="error">
             Filings could not be loaded from the table.
@@ -242,11 +252,16 @@ async function loadGroup(
 ): Promise<PublicCandidate | null> {
   try {
     const listed = await readCandidatesForRace(raceId);
+    const race = await readRace(raceId);
+    const linked = race
+      ? await withCrossContestFilings(createDynamoRepository(), listed, race)
+      : listed;
     return (
-      listed.find(
+      linked.find(
         (row) =>
           row.candidateId === candidateId ||
-          row.alternateFilings.some((alternate) => alternate.candidateId === candidateId),
+          row.alternateFilings.some((alternate) => alternate.candidateId === candidateId) ||
+          row.filings.some((filing) => filing.candidateId === candidateId),
       ) ?? null
     );
   } catch (error) {

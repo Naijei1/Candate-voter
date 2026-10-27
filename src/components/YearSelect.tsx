@@ -1,34 +1,47 @@
 "use client";
 
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useId, useRef, useState, useTransition, type KeyboardEvent } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
+import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
+import { createPortal } from "react-dom";
+import { useYearNavigation } from "@/components/YearNavigation";
 import { resolveCycle } from "@/lib/data/cycles";
-import { yearNavigationHref } from "@/lib/landing/state-query";
+
+type MenuBox = { top: number; right: number; maxHeight: number };
 
 export function YearSelect({ cycles }: { cycles: number[] }) {
-  const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { pendingYear, chooseYear } = useYearNavigation();
   const listId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
   const [open, setOpen] = useState(false);
-  const [shown, setShown] = useState<number | null>(null);
   const [highlight, setHighlight] = useState<number | null>(null);
-  const [, startTransition] = useTransition();
+  const [box, setBox] = useState<MenuBox | null>(null);
   const urlYear = resolveCycle(cycles, searchParams.get("year") ?? undefined);
-  const selected = shown ?? urlYear;
+  const selected = pendingYear ?? urlYear;
   const highlighted = highlight ?? selected;
 
-  useEffect(() => {
-    setShown(null);
-  }, [urlYear]);
+  function place() {
+    const button = rootRef.current?.querySelector("button");
+    if (!button) return;
+    const rect = button.getBoundingClientRect();
+    const margin = 8;
+    setBox({
+      top: rect.bottom + 4,
+      right: Math.max(margin, window.innerWidth - rect.right),
+      maxHeight: Math.max(160, window.innerHeight - rect.bottom - margin * 2),
+    });
+  }
 
   useEffect(() => {
     if (!open) return;
+    place();
     listRef.current?.focus();
     function onPointerDown(event: PointerEvent) {
-      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
+      const target = event.target as Node;
+      if (rootRef.current?.contains(target) || listRef.current?.contains(target)) return;
+      setOpen(false);
     }
     function onKey(event: globalThis.KeyboardEvent) {
       if (event.key === "Escape") {
@@ -37,9 +50,13 @@ export function YearSelect({ cycles }: { cycles: number[] }) {
       }
     }
     document.addEventListener("pointerdown", onPointerDown);
+    window.addEventListener("resize", place);
+    window.addEventListener("scroll", place, true);
     document.addEventListener("keydown", onKey);
     return () => {
       document.removeEventListener("pointerdown", onPointerDown);
+      window.removeEventListener("resize", place);
+      window.removeEventListener("scroll", place, true);
       document.removeEventListener("keydown", onKey);
     };
   }, [open]);
@@ -50,16 +67,13 @@ export function YearSelect({ cycles }: { cycles: number[] }) {
     setHighlight(null);
     setOpen(false);
     if (year === selected) return;
-    setShown(year);
-    const href = yearNavigationHref(pathname, window.location.search, year);
-    startTransition(() => {
-      router.push(href, { scroll: false });
-    });
+    chooseYear(year, pathname);
   }
 
   function onButtonKeyDown(event: KeyboardEvent<HTMLButtonElement>) {
     if (event.key === "ArrowDown" || event.key === "Enter" || event.key === " ") {
       event.preventDefault();
+      place();
       setHighlight(selected);
       setOpen(true);
     }
@@ -86,6 +100,54 @@ export function YearSelect({ cycles }: { cycles: number[] }) {
     if (next != null) setHighlight(next);
   }
 
+  const menu =
+    open && box && typeof document !== "undefined" ? (
+      <ul
+        ref={listRef}
+        id={listId}
+        role="listbox"
+        aria-label="Election year"
+        aria-activedescendant={highlighted == null ? undefined : `${listId}-${highlighted}`}
+        tabIndex={-1}
+        onKeyDown={onListKeyDown}
+        className="year-menu max-h-64 min-w-36 overflow-x-hidden overflow-y-auto rounded-lg border border-line bg-card py-1 shadow-md"
+        style={{ position: "fixed", top: box.top, right: box.right, maxHeight: box.maxHeight, zIndex: 80 }}
+      >
+        {cycles.map((year) => {
+          const isHighlighted = year === highlighted;
+          const isChosen = year === selected;
+          return (
+            <li key={year} role="presentation">
+              <button
+                type="button"
+                id={`${listId}-${year}`}
+                role="option"
+                aria-selected={isChosen}
+                className={
+                  isHighlighted
+                    ? "flex min-h-11 w-full items-center justify-between gap-3 bg-paper px-3 py-2 text-left text-sm font-semibold text-accent"
+                    : "flex min-h-11 w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm font-semibold text-ink hover:bg-paper hover:text-accent"
+                }
+                onMouseDown={(event) => {
+                  event.preventDefault();
+                }}
+                onClick={() => choose(year)}
+              >
+                <span className="tabular-nums">{year}</span>
+                {isChosen ? (
+                  <span aria-hidden="true" className="text-xs">
+                    ✓
+                  </span>
+                ) : (
+                  <span className="w-3" aria-hidden="true" />
+                )}
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    ) : null;
+
   return (
     <div ref={rootRef} className="relative" data-testid="year-select">
       <button
@@ -96,7 +158,15 @@ export function YearSelect({ cycles }: { cycles: number[] }) {
         aria-expanded={open}
         aria-controls={listId}
         aria-label="Election year"
-        onClick={() => setOpen((value) => !value)}
+        onClick={() => {
+          if (open) {
+            setOpen(false);
+            return;
+          }
+          place();
+          setHighlight(selected);
+          setOpen(true);
+        }}
         onKeyDown={onButtonKeyDown}
       >
         <svg
@@ -115,52 +185,7 @@ export function YearSelect({ cycles }: { cycles: number[] }) {
           <path d="M5.5 7.5 10 12l4.5-4.5" />
         </svg>
       </button>
-      {open ? (
-        <ul
-          ref={listRef}
-          id={listId}
-          role="listbox"
-          aria-label="Election year"
-          aria-activedescendant={highlighted == null ? undefined : `${listId}-${highlighted}`}
-          tabIndex={-1}
-          onKeyDown={onListKeyDown}
-          className="absolute right-0 z-40 mt-1 max-h-64 min-w-full overflow-auto rounded-lg border border-line bg-card py-1 shadow-md"
-        >
-          {cycles.map((year) => {
-            const isHighlighted = year === highlighted;
-            const isChosen = year === selected;
-            return (
-              <li key={year} role="presentation">
-                <button
-                  type="button"
-                  id={`${listId}-${year}`}
-                  role="option"
-                  aria-selected={isChosen}
-                  className={
-                    isHighlighted
-                      ? "flex w-full items-center justify-between gap-3 bg-paper px-3 py-1.5 text-left text-sm font-semibold text-accent"
-                      : "flex w-full items-center justify-between gap-3 px-3 py-1.5 text-left text-sm font-semibold text-ink hover:bg-paper hover:text-accent"
-                  }
-                  onPointerDown={(event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                  }}
-                  onClick={() => choose(year)}
-                >
-                  <span className="tabular-nums">{year}</span>
-                  {isChosen ? (
-                    <span aria-hidden="true" className="text-xs">
-                      ✓
-                    </span>
-                  ) : (
-                    <span className="w-3" aria-hidden="true" />
-                  )}
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      ) : null}
+      {menu ? createPortal(menu, document.body) : null}
     </div>
   );
 }

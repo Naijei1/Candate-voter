@@ -81,7 +81,7 @@ test("ask payload carries real ids and cycle, and does not send mode or state", 
     message: "What is stored?",
     scope: askScopeForYear(2026),
   });
-  assert.deepEqual(year, { message: "What is stored?", cycle: 2026 });
+  assert.deepEqual(year, { message: "What is stored?", cycle: 2026, year: 2026 });
 
   const contest = race({
     raceId: "2026-senate-VA",
@@ -99,6 +99,7 @@ test("ask payload carries real ids and cycle, and does not send mode or state", 
     message: "List candidates",
     raceId: "2026-senate-VA",
     cycle: 2026,
+    year: 2026,
     threadId: "thread-1",
   });
 

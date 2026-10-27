@@ -1,5 +1,10 @@
 import { isResourceId } from "../api/ids";
 import { resolveCycle } from "../data/cycles";
+import {
+  CHAT_INCOMPLETE_MESSAGE,
+  CHAT_MODEL_UNAVAILABLE_MESSAGE,
+  CHAT_TIMEOUT_MESSAGE,
+} from "./errors";
 import { isRaceSlug, labelForRaceId, presentAskMarkdown } from "./polish";
 import type { ChatMode, ChatRequest, ChatSource } from "./types";
 
@@ -19,7 +24,17 @@ const AS_OF_FORMAT = new Intl.DateTimeFormat("en-US", {
   timeZoneName: "short",
 });
 
-export type ChatErrorKind = "bad_request" | "rate_limit" | "unavailable" | "network";
+export type ChatErrorKind =
+  | "bad_request"
+  | "rate_limit"
+  | "unavailable"
+  | "network"
+  | "timeout"
+  | "model_unavailable"
+  | "incomplete";
+
+/** Optional 503 `code` from the chat contract. Absent codes stay on HTTP status. */
+export type ChatFailureCode = "timeout" | "model_unavailable" | "incomplete";
 
 export type ChatContextInput = {
   raceId?: string;
@@ -171,16 +186,25 @@ export function buildChatRequestBody(input: {
   if (message.length > MAX_CHAT_MESSAGE) return { ok: false, reason: "too_long" };
   const threadId =
     input.threadId && THREAD_ID.test(input.threadId) ? input.threadId : undefined;
+  const cycle = alignedCycle(input.cycle, input.raceId);
   return {
     ok: true,
     body: {
       message,
       ...(input.raceId ? { raceId: input.raceId } : {}),
       ...(input.candidateId ? { candidateId: input.candidateId } : {}),
-      ...(input.cycle != null ? { cycle: input.cycle } : {}),
+      ...(cycle != null ? { cycle, year: cycle } : {}),
       ...(threadId ? { threadId } : {}),
     },
   };
+}
+
+/** `year` is an alias of `cycle`. A race id prefix wins when the two years differ. */
+function alignedCycle(cycle: number | undefined, raceId: string | undefined): number | undefined {
+  const prefix = raceId ? /^(\d{4})-/.exec(raceId) : null;
+  const raceYear = prefix?.[1] ? Number(prefix[1]) : null;
+  if (raceYear != null && cycle != null && cycle !== raceYear) return raceYear;
+  return cycle ?? raceYear ?? undefined;
 }
 
 export function parseChatSuccess(data: unknown):
@@ -228,6 +252,18 @@ export function classifyChatStatus(status: number): ChatErrorKind {
   return "unavailable";
 }
 
+/**
+ * Upcoming chat errors may send `code` beside `{ error, message }`.
+ * A known code picks the visitor sentence. Anything else stays unset so
+ * the HTTP status keeps today's classification.
+ */
+export function chatFailureCode(data: unknown): ChatFailureCode | null {
+  if (!data || typeof data !== "object" || Array.isArray(data)) return null;
+  const code = (data as { code?: unknown }).code;
+  if (code === "timeout" || code === "model_unavailable" || code === "incomplete") return code;
+  return null;
+}
+
 export function errorCopy(kind: ChatErrorKind, remainingSeconds: number | null): string {
   if (kind === "bad_request") {
     return "Please shorten or rephrase your question (max 2,000 characters).";
@@ -240,6 +276,9 @@ export function errorCopy(kind: ChatErrorKind, remainingSeconds: number | null):
     return "Too many questions right now — wait a minute and retry.";
   }
   if (kind === "network") return "Check your connection and try again.";
+  if (kind === "timeout") return CHAT_TIMEOUT_MESSAGE;
+  if (kind === "incomplete") return CHAT_INCOMPLETE_MESSAGE;
+  if (kind === "model_unavailable") return CHAT_MODEL_UNAVAILABLE_MESSAGE;
   return "Answers are temporarily unavailable. Try again shortly.";
 }
 
