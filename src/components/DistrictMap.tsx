@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type KeyboardEvent } from "react";
+import { MapGesture } from "@/components/MapGesture";
 import { MapLegend } from "@/components/UsMap";
 import { HOUSE_SEATS, isSingleSeat } from "@/lib/data/at-large";
 import { stateName } from "@/lib/data/states";
@@ -85,6 +86,7 @@ export function DistrictMap({
             Loading districts…
           </p>
         ) : (
+          <MapGesture resetKey={postal} className="cd-gesture">
           <svg
             viewBox={`0 0 ${VIEW.width} ${VIEW.height}`}
             className="cd-map"
@@ -133,6 +135,7 @@ export function DistrictMap({
               );
             })}
           </svg>
+          </MapGesture>
         )}
       </div>
       {here ? (

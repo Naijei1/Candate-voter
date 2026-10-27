@@ -11,6 +11,7 @@ import { RecordMeta } from "@/components/RecordMeta";
 import { StateScoreboard } from "@/components/StateScoreboard";
 import { StorageNotice } from "@/components/StorageNotice";
 import { MapLegend, UsMap } from "@/components/UsMap";
+import { useMobileSheet } from "@/components/useMobileSheet";
 import { ZipLookup } from "@/components/ZipLookup";
 import { askScopeForState, askScopeForYear, pageContextFromScope } from "@/lib/chat/scope";
 import {
@@ -451,11 +452,29 @@ function StateOverview({
   const yourIds = new Set(yours.map((slot) => slot.raceId));
   const rest = listed.filter((race) => !yourIds.has(race.raceId));
   const showFull = !pinYours || showAll;
+  const sheet = useMobileSheet(onBack, postal);
 
   return (
-    <div className="state-overview" data-testid="state-page">
+    <div
+      ref={sheet.sheetRef}
+      className="state-overview"
+      data-testid="state-page"
+      onPointerDown={sheet.onPointerDown}
+    >
       <div className="back-chrome">
-        <span className="drawer-handle" aria-hidden="true" />
+        <div
+          className="sheet-grab"
+          role="slider"
+          tabIndex={0}
+          aria-orientation="vertical"
+          aria-label="Drag down to shrink the sheet and see the map"
+          aria-valuemin={0}
+          aria-valuemax={2}
+          aria-valuenow={1}
+          onKeyDown={sheet.onKeyDown}
+        >
+          <span className="drawer-handle" aria-hidden="true" />
+        </div>
         <div className="back-chrome-row">
           {onBack ? (
             <button type="button" onClick={onBack} data-testid="back-to-map" className="back-link">

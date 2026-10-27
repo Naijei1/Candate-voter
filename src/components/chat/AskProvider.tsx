@@ -94,6 +94,13 @@ function AskPanel({ cycles }: { cycles: number[] }) {
   useFocusTrap(open && located.panel, panelRef, close, triggerRef);
   useScrollLock(open && located.panel);
   useKeyboardInset(open && located.panel, setKeyboardInset);
+  useEffect(() => {
+    if (!open) return;
+    document.documentElement.dataset.ask = "open";
+    return () => {
+      delete document.documentElement.dataset.ask;
+    };
+  }, [open]);
 
   if (!open || !located.panel) return null;
 
