@@ -1,5 +1,6 @@
 // Classic JSX runtime for `node --import tsx --test`. Next compiles this with the automatic runtime.
 import React from "react";
+import { houseScoreSentence, senateScoreSentence } from "@/lib/copy";
 import { formatInstant, instantDateTime } from "@/lib/format";
 import type { StateScoreboard as Scoreboard } from "@/lib/landing";
 
@@ -12,8 +13,10 @@ export function WhatAmILookingAt({ refreshedAt }: { refreshedAt?: string | null 
         What am I looking at?
       </summary>
       <div className="mt-2 rounded-lg border border-line bg-card p-3 text-sm leading-5 text-ink">
-        <p>Form 2 filings are not the ballot.</p>
-        <p className="mt-1">These are candidates so far, not the final list.</p>
+        <p>
+          A statement of candidacy (Form 2) is an FEC filing that someone intends to run.
+        </p>
+        <p className="mt-1">These are candidates so far, not the final ballot. No endorsements.</p>
         <p className="mt-1">
           Sources are public FEC records.{" "}
           {refreshed ? (
@@ -31,23 +34,19 @@ export function WhatAmILookingAt({ refreshedAt }: { refreshedAt?: string | null 
 }
 
 export function StateScoreboard({ board }: { board: Scoreboard }) {
-  const house =
-    board.districtsTotal > 0
-      ? `${board.districtsWithFilings} of ${board.districtsTotal}`
-      : String(board.districtsWithFilings);
   return (
-    <dl data-testid="state-scoreboard" className="mt-3 grid grid-cols-2 gap-2">
+    <dl data-testid="state-scoreboard" className="mt-3 grid gap-2 sm:grid-cols-2">
       <div className="rounded-lg border border-line bg-card px-3 py-2">
         <dt className="text-xs font-semibold tracking-wide text-muted uppercase">Senate</dt>
-        <dd className="text-2xl font-semibold tabular-nums text-ink">{board.senateFilings}</dd>
-        <p className="text-xs text-muted">{board.filingsSoFarOnly ? "filed so far" : "with filings"}</p>
+        <dd className="mt-1 text-sm font-medium leading-5 text-ink">
+          {senateScoreSentence(board.senateFilings)}
+        </dd>
       </div>
       <div className="rounded-lg border border-line bg-card px-3 py-2">
         <dt className="text-xs font-semibold tracking-wide text-muted uppercase">House</dt>
-        <dd className="text-2xl font-semibold tabular-nums text-ink">{house}</dd>
-        <p className="text-xs text-muted">
-          {board.filingsSoFarOnly ? "districts so far" : "districts with filings"}
-        </p>
+        <dd className="mt-1 text-sm font-medium leading-5 text-ink">
+          {houseScoreSentence(board.districtsWithFilings, board.districtsTotal)}
+        </dd>
       </div>
     </dl>
   );

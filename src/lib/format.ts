@@ -75,6 +75,22 @@ export function partyLabel(
   return PARTY_LABELS[code] ?? code;
 }
 
+const WRITE_IN_LABEL = /^write[-\s]?in$/i;
+
+/**
+ * Collapsed party labels for a row.
+ * "Write-in" plus another affiliation reads as a write-in candidate, not two parties.
+ */
+export function partyCue(labels: readonly string[]): string {
+  const cleaned = labels.map((label) => label.trim()).filter((label) => label.length > 0);
+  const writeIn = cleaned.some((label) => WRITE_IN_LABEL.test(label));
+  const rest = cleaned.filter((label) => !WRITE_IN_LABEL.test(label));
+  if (writeIn && rest.length > 0) return `Write-in candidate (${rest.join(", ")})`;
+  if (writeIn) return "Write-in candidate";
+  if (cleaned.length === 0) return "Affiliation not reported";
+  return cleaned.join(" · ");
+}
+
 /**
  * Visual tone for an affiliation label. Color is a second cue next to the
  * name. It is not a rating.

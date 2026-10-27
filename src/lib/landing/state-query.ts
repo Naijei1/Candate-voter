@@ -32,6 +32,14 @@ export function searchWithState(search: string, postal: string): string {
   return query ? `?${query}` : "";
 }
 
+/** Query string with `state` removed. Other parameters, including `year`, stay. */
+export function searchWithoutState(search: string): string {
+  const params = new URLSearchParams(search.startsWith("?") ? search.slice(1) : search);
+  params.delete("state");
+  const query = params.toString();
+  return query ? `?${query}` : "";
+}
+
 /**
  * Home year change. On `/`, the current query (including `state`) is kept.
  * Other paths return to the home index for that year.

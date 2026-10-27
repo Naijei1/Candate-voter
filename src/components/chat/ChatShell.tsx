@@ -69,11 +69,11 @@ export function ChatShell({
       <header className="flex items-center gap-2 border-b border-line px-4 py-3">
         {mode === "page" ? (
           <h1 id={titleId} className="text-lg font-semibold tracking-tight">
-            Ask Candate
+            Ask a question
           </h1>
         ) : (
           <strong id={titleId} className="text-base font-semibold">
-            Ask Candate
+            Ask a question
           </strong>
         )}
         <span className="flex-1" />
@@ -98,15 +98,21 @@ export function ChatShell({
       </header>
       {label ? (
         <div className="px-4 pt-3">
-          <p className="inline-flex items-center gap-2 rounded-full bg-accent/10 px-3 py-1 text-sm text-accent">
-            <span>Context: {label}</span>
+          <p
+            data-testid="ask-context"
+            className="inline-flex max-w-full items-center gap-2 rounded-full border border-accent/20 bg-accent/10 px-3 py-1 text-sm text-accent"
+          >
+            <span className="min-w-0">
+              <span className="font-semibold">Asking about </span>
+              <span>{label}</span>
+            </span>
             <button
               type="button"
               onClick={() => setDismissed(true)}
               aria-label="Clear context"
-              className="rounded px-1 text-base leading-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+              className="shrink-0 rounded-full border border-accent/30 bg-card px-2 py-0.5 text-xs font-semibold text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
             >
-              ×
+              Clear
             </button>
           </p>
         </div>

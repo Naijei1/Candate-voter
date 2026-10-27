@@ -104,25 +104,50 @@ body {
 .map-hero {
   width: 100vw;
   margin-left: calc(50% - 50vw);
-  margin-top: -2rem;
 }
 
 .map-hero-grid {
-  display: grid;
-  align-items: stretch;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 0 1rem 1.25rem;
+}
+
+.browse-column {
+  display: contents;
+}
+
+.flow-hero,
+.zip-results,
+.map-panel {
+  padding-inline: 0.25rem;
 }
 
 .map-stage {
   display: flex;
   flex-direction: column;
-  min-height: clamp(32rem, 78vh, 52rem);
-  background: var(--color-paper);
+  order: 3;
+  min-height: 0;
+  background: var(--color-card);
+  border: 1px solid var(--color-line);
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+
+.map-stage-label {
+  padding: 0.75rem 0.9rem 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--color-ink);
 }
 
 .map-canvas {
   position: relative;
   flex: 1 1 auto;
-  min-height: 24rem;
+  min-height: 16rem;
+  height: 52vw;
+  max-height: 20rem;
 }
 
 .map-canvas .us-map {
@@ -134,21 +159,21 @@ body {
   touch-action: manipulation;
 }
 
-.map-overlay {
-  position: relative;
-  z-index: 2;
-  margin: 0.75rem 0.75rem 0;
-  width: min(22rem, calc(100% - 1.5rem));
-  border: 1px solid var(--color-line);
-  border-radius: 0.75rem;
-  background: var(--color-card);
-  padding: 0.85rem 0.95rem 0.75rem;
-  box-shadow: 0 1px 2px rgb(15 23 42 / 6%);
+.map-key {
+  padding: 0.35rem 0.9rem 0.85rem;
 }
 
 .map-panel {
   min-height: 0;
-  padding: 0 1rem 1rem;
+  order: 4;
+}
+
+.flow-hero {
+  order: 1;
+}
+
+.zip-results {
+  order: 2;
 }
 
 .brand-link:hover {
@@ -173,34 +198,52 @@ body {
   margin-top: 0;
 }
 
-.map-hero.map-hero-secondary {
-  margin-top: 1.5rem;
-}
-
 @media (min-width: 1024px) {
   .map-hero-grid {
-    grid-template-columns: minmax(0, 1fr) 23.5rem;
-    /* Fixed box. A taller filings panel used to stretch this row and
-       scale the map downward. The panel scrolls inside the column. */
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(18rem, 0.78fr);
+    align-items: stretch;
+    gap: 0;
+    /* Fixed box. The filings list scrolls in the browse column and
+       does not stretch the map. */
     height: calc(100svh - 4.5rem);
     min-height: calc(100svh - 4.5rem);
     max-height: calc(100svh - 4.5rem);
     overflow: hidden;
+    padding: 0 1.5rem 0 1.25rem;
+  }
+
+  .browse-column {
+    display: block;
+    min-height: 0;
+    overflow: auto;
+    padding: 0.25rem 1.25rem 1.5rem 0.25rem;
+  }
+
+  .flow-hero,
+  .zip-results,
+  .map-panel {
+    order: 0;
+    padding-inline: 0;
   }
 
   .map-stage {
+    order: 0;
     height: 100%;
     min-height: 0;
     overflow: hidden;
+    border-radius: 0;
+    border-width: 0 0 0 1px;
   }
 
   .map-canvas {
     min-height: 0;
+    height: auto;
+    max-height: none;
   }
 
   .map-panel {
-    height: 100%;
-    min-height: 0;
+    height: auto;
     overflow: hidden;
     padding: 0;
   }

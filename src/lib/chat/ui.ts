@@ -29,6 +29,8 @@ export type ChatContextInput = {
    * Only a "Page context:" note from the state panel is forwarded.
    */
   messagePrefix?: string;
+  /** Visitor-facing chip. A name or race title, not a raw id. */
+  label?: string;
 };
 
 export type CitationView = {
@@ -89,14 +91,24 @@ export function isAskPanelPath(pathname: string): boolean {
   );
 }
 
-/** Short factual chip. Omits a label when there is no race or candidate. */
+/** Short factual chip. A page label wins. Otherwise a race or candidate id. */
 export function contextLabel(context: ChatContextInput): string | null {
+  const custom = context.label?.trim();
+  if (custom) return custom;
   const parts: string[] = [];
   if (context.raceId) parts.push(raceChipLabel(context.raceId));
   if (context.candidateId) parts.push(`Candidate ${context.candidateId}`);
   if (parts.length === 0) return null;
   if (context.cycle != null) parts.push(String(context.cycle));
   return parts.join(" · ");
+}
+
+/** Link text for a source. A raw URL is never the label. */
+export function citationLabel(source: { title: string; url: string }): string {
+  const title = source.title.trim();
+  const url = source.url.trim();
+  if (!title || title === url || looksLikeUrl(title)) return "Source";
+  return title.replace(/\bFEC Form 2\b/g, "Statement of candidacy (Form 2)");
 }
 
 export function chatPageHref(context: ChatContextInput, draft?: string): string {
@@ -411,6 +423,10 @@ function inAppPath(pathname: string, basePath: string): string | null {
   if (path === "/") return "/";
   if (/^\/(races|candidates|agent|chat)(\/|$)/.test(path)) return path;
   return null;
+}
+
+function looksLikeUrl(value: string): boolean {
+  return /^https?:\/\//i.test(value) || value.startsWith("/");
 }
 
 function raceChipLabel(raceId: string): string {

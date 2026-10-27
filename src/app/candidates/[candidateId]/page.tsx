@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { CandidateTechnicalDetails } from "@/components/CandidateTechnicalDetails";
 import { AskPageContext } from "@/components/chat/AskProvider";
 import { MultiFilingDetails } from "@/components/MultiFilingDetails";
 import { RecordMeta } from "@/components/RecordMeta";
@@ -12,8 +13,10 @@ import {
   readFilingsForCandidate,
   readRace,
 } from "@/lib/data/read";
-import type { PublicCandidate } from "@/lib/data/view";
-import { fecCandidateLabel, httpsUrl, partyLabel } from "@/lib/format";
+import { FILING_MEANS, runningForLine } from "@/lib/copy";
+import { isPresidentialElectionYear } from "@/lib/data/calendar";
+import { displayedPartyLabels, type PublicCandidate } from "@/lib/data/view";
+import { httpsUrl, partyCue, partyLabel } from "@/lib/format";
 import type { Candidate, Filing, Race } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -65,6 +68,7 @@ export default async function CandidatePage({ params }: CandidatePageProps) {
         candidateId={candidate.candidateId}
         raceId={candidate.raceId}
         cycle={cycle ?? undefined}
+        label={candidate.displayName}
       />
       <div className="space-y-2 text-sm">
         <RaceCrumb race={race} />
@@ -73,18 +77,22 @@ export default async function CandidatePage({ params }: CandidatePageProps) {
         <h1 className="text-3xl font-semibold tracking-tight">
           {candidate.displayName}
         </h1>
+        <RunningFor race={race} />
         <p className="text-base text-muted">
-          {partyLabel(candidate.partyAffiliation, candidate.partyLabel)}
-          <span className="mx-2" aria-hidden="true">
-            ·
-          </span>
-          {fecCandidateLabel(candidate.fecCandidateId)}
+          {partyCue(
+            group
+              ? displayedPartyLabels(group)
+              : [partyLabel(candidate.partyAffiliation, candidate.partyLabel)],
+          )}
         </p>
-        {filedName ? (
-          <p className="text-sm text-muted">Name as filed: {filedName}</p>
-        ) : null}
+        <p className="max-w-2xl text-sm leading-6 text-ink">{FILING_MEANS}</p>
         <FilingGroupNote candidateId={candidate.candidateId} group={group} />
         <RecordMeta sourceUrl={candidate.sourceUrl} updatedAt={candidate.updatedAt} />
+        <CandidateTechnicalDetails
+          fecCandidateId={candidate.fecCandidateId}
+          filedName={filedName}
+          filings={filings}
+        />
       </header>
       <section aria-labelledby="filings-heading" className="space-y-2">
         <h2 id="filings-heading" className="text-lg font-semibold">
@@ -96,7 +104,7 @@ export default async function CandidatePage({ params }: CandidatePageProps) {
           </StorageNotice>
         ) : filings.list.length === 0 ? (
           <p className="text-sm leading-6 text-muted">
-            No Form 2 filings are stored for this candidate.
+            No statement of candidacy (Form 2) is stored for this candidate.
           </p>
         ) : (
           <ul className="divide-y divide-line rounded-lg border border-line bg-card">
@@ -146,11 +154,34 @@ function RaceCrumb({
   );
 }
 
+function RunningFor({
+  race,
+}: {
+  race: { ok: true; race: Race | null } | { ok: false };
+}) {
+  if (!race.ok || !race.race) return null;
+  const line = runningForLine(race.race);
+  const midtermPresident =
+    race.race.office === "president" &&
+    race.race.cycle != null &&
+    !isPresidentialElectionYear(race.race.cycle);
+  return (
+    <div className="space-y-1">
+      <p className="text-base text-ink">Running for: {line}</p>
+      {midtermPresident ? (
+        <p className="max-w-2xl text-sm leading-6 text-muted">
+          There is no presidential race on the {race.race.cycle} ballot. This is a
+          national statement of candidacy (Form 2) only.
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
 function FilingRow({ filing }: { filing: Filing }) {
   return (
     <li className="px-4 py-3 text-sm">
-      <p className="font-medium text-ink">Form {filing.formType}</p>
-      <p className="text-muted">Filing {filing.filingId}</p>
+      <p className="font-medium text-ink">Statement of candidacy (Form 2)</p>
       <RecordMeta
         sourceUrl={filing.sourceUrl}
         updatedAt={filing.updatedAt}

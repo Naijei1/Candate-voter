@@ -335,6 +335,65 @@ test("default race years follow the public index window", async () => {
   assert.equal(filed.empty, undefined);
 });
 
+test("empty house stubs stay on the state list and out of coverage", async () => {
+  const repo = new MemoryVoterRepository();
+  const house = (district: string, empty: boolean) =>
+    race({
+      raceId: `2026-house-KY-${district}`,
+      office: "house",
+      cycle: 2026,
+      state: "KY",
+      district,
+      title: `U.S. House, Kentucky District ${Number(district)}`,
+      jurisdiction: `Kentucky District ${Number(district)}`,
+      sourceUrl: null,
+      updatedAt: empty ? null : updatedAt,
+      ...(empty ? { empty: true } : {}),
+    });
+  for (const district of ["01", "02", "03"]) await repo.upsertRace(house(district, true));
+  for (const district of ["04", "05", "06"]) await repo.upsertRace(house(district, false));
+
+  const list = await getRaces(
+    authed("https://voter.example/api/v1/races?cycle=2026&state=KY"),
+    deps(repo),
+  );
+  assert.equal(list.status, 200);
+  const body = await list.json();
+  assert.deepEqual(
+    body.races.map((item: Race) => item.raceId),
+    [
+      "2026-house-KY-01",
+      "2026-house-KY-02",
+      "2026-house-KY-03",
+      "2026-house-KY-04",
+      "2026-house-KY-05",
+      "2026-house-KY-06",
+      "2026-senate-KY",
+    ],
+  );
+  assert.equal(body.races[6].empty, true);
+  assert.equal(body.races[0].empty, true);
+  assert.equal(body.races[0].updatedAt, null);
+  assert.equal(Object.hasOwn(body.races[0], "candidates"), false);
+  assert.equal(body.races[5].empty, undefined);
+  assert.deepEqual(body.coverage.house, [
+    { cycle: 2026, state: "KY", districtsWithFilings: 3, districtsTotal: 6 },
+  ]);
+
+  const detail = await getRace(
+    authed("https://voter.example/api/v1/races/2026-house-KY-01"),
+    "2026-house-KY-01",
+    deps(repo),
+  );
+  assert.equal(detail.status, 200);
+  const detailBody = await detail.json();
+  assert.equal(detailBody.race.empty, true);
+  assert.equal(detailBody.race.updatedAt, null);
+  assert.deepEqual(detailBody.candidates, []);
+  assert.equal(detailBody.coverage.house[0].districtsWithFilings, 3);
+  assert.equal(detailBody.coverage.house[0].districtsTotal, 6);
+});
+
 test("race, candidate, and filing routes return stored shapes", async () => {
   const repo = new MemoryVoterRepository();
   await seed(repo);

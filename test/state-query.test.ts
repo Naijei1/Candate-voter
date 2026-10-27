@@ -3,6 +3,7 @@ import test from "node:test";
 import {
   postalFromSearch,
   searchWithState,
+  searchWithoutState,
   selectionFromLocation,
   selectionFromPop,
   yearNavigationHref,
@@ -15,6 +16,9 @@ test("state query keeps the year and replaces a previous state", () => {
   assert.equal(postalFromSearch("?year=2026&state=ca"), "CA");
   assert.equal(postalFromSearch("?state=California"), null);
   assert.equal(postalFromSearch(""), null);
+  assert.equal(searchWithoutState("?year=2026&state=KY"), "?year=2026");
+  assert.equal(searchWithoutState("?state=KY"), "");
+  assert.equal(searchWithoutState(""), "");
 });
 
 test("a deep link selects from the URL before the server prop catches up", () => {

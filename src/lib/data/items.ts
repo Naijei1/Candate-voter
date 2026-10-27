@@ -155,6 +155,7 @@ export function fromRaceItem(item: Record<string, unknown>): Race | null {
     jurisdiction,
     sourceUrl: asString(item.sourceUrl),
     updatedAt: asString(item.updatedAt),
+    ...(item.empty === true ? { empty: true as const } : {}),
   };
 }
 

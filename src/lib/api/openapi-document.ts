@@ -854,12 +854,13 @@ components:
         house:
           type: array
           description: |
-            House districts with at least one stored Form 2 race.
-            districtsTotal uses the 2020 census apportionment (435 seats).
-            A single-seat state counts as one district. state null is the
-            50-state rollup. On the unfiltered race list, state rows are
-            only those with at least one stored House race. A \`state\`
-            filter returns that state's row even when
+            House districts with at least one stored Form 2 filing.
+            An empty stub (\`empty: true\`) is not counted in
+            districtsWithFilings. districtsTotal uses the 2020 census
+            apportionment (435 seats). A single-seat state counts as one
+            district. state null is the 50-state rollup. On the unfiltered
+            race list, state rows are only those with at least one House
+            filing. A \`state\` filter returns that state's row even when
             districtsWithFilings is 0. That filtered response is the
             per-state scoreboard. Empty ballot stubs in \`races\` are not
             counted in districtsWithFilings. districtsTotal matches the

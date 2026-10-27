@@ -183,6 +183,9 @@ export async function loadPublicCandidates(
 }
 
 function preferRace(next: Race, current: Race): boolean {
+  const nextFiled = next.empty !== true;
+  const currentFiled = current.empty !== true;
+  if (nextFiled !== currentFiled) return nextFiled;
   const nextAtLarge = next.district === "00";
   const currentAtLarge = current.district === "00";
   if (nextAtLarge !== currentAtLarge) return nextAtLarge;

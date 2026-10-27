@@ -35,7 +35,7 @@ export function AgentApiDocs({ origin, basePath, freshness }: AgentApiDocsProps)
       <header className="space-y-3">
         <h1 className="text-3xl font-semibold tracking-tight">Agent API</h1>
         <p className="max-w-2xl text-base leading-7 text-muted">
-          Read-only JSON for the races, candidates, and FEC Form 2 filings
+          Read-only JSON for the races, candidates, and statements of candidacy (Form 2)
           already stored for the public pages. Each record includes its source
           link and write time. Party is the affiliation code on the filing.
         </p>
@@ -98,7 +98,7 @@ export function AgentApiDocs({ origin, basePath, freshness }: AgentApiDocsProps)
           </li>
         </ul>
         <p className="max-w-2xl text-base leading-7 text-muted">
-          Records are FEC Form 2 electronic filings only, not a full ballot.
+          Records are statements of candidacy (Form 2) only, not a full ballot.
           Race list (the index, and a state filter) and race detail include
           top-level <code>refreshedAt</code> for the page-level data-refreshed
           banner. It is the ISO-8601 ingest cursor time, or null, and{" "}

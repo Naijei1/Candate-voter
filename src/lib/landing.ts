@@ -1,3 +1,4 @@
+import { houseScoreSentence, senateScoreSentence } from "./copy";
 import { FORM2_SCOPE_NOTE, houseCoverageForRaces } from "./data/coverage";
 import { OFFICE_ORDER } from "./races";
 import type { Race } from "./types";
@@ -107,13 +108,9 @@ export function stateScoreboard(
 export function stateCoverage(races: readonly Race[], postal: string, cycle?: number): StateCoverage {
   const board = stateScoreboard(races, postal, cycle);
   const lines: string[] = [];
-  if (board.senateFilings > 0) lines.push(`${countPhrase(board.senateFilings, "Senate")}.`);
-  if (board.districtsTotal > 0) {
-    lines.push(
-      `${board.districtsWithFilings} of ${board.districtsTotal} House districts have filings.`,
-    );
-  } else if (board.districtsWithFilings > 0) {
-    lines.push(`${countPhrase(board.districtsWithFilings, "House")}.`);
+  if (board.senateFilings > 0) lines.push(`${senateScoreSentence(board.senateFilings)}.`);
+  if (board.districtsTotal > 0 || board.districtsWithFilings > 0) {
+    lines.push(`${houseScoreSentence(board.districtsWithFilings, board.districtsTotal)}.`);
   }
   return {
     empty: board.senateFilings === 0 && board.districtsWithFilings === 0,
@@ -141,10 +138,9 @@ export function houseCoverageLine(
   const rows = houseCoverageForRaces(races, [cycle], state);
   const row = state ? rows.find((item) => item.state === state) : rows.find((item) => item.state === null);
   if (!row) return null;
-  if (row.districtsTotal > 0) {
-    return `${row.districtsWithFilings} of ${row.districtsTotal} House districts have filings.`;
+  if (row.districtsTotal > 0 || row.districtsWithFilings > 0) {
+    return `${houseScoreSentence(row.districtsWithFilings, row.districtsTotal)}.`;
   }
-  if (row.districtsWithFilings > 0) return `${countPhrase(row.districtsWithFilings, "House")}.`;
   return null;
 }
 
@@ -182,11 +178,6 @@ export function parseRaceIds(
     }
   }
   return { ok: true, ids };
-}
-
-function countPhrase(count: number, office: string): string {
-  const noun = count === 1 ? "race" : "races";
-  return `${count} ${office} ${noun} with filings`;
 }
 
 function freshest(races: readonly Race[]): Race | null {

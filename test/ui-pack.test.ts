@@ -73,5 +73,7 @@ test("Ask citations render a human title and ignore an optional refreshedAt", ()
   assert.equal(parsed.sources[0]?.title, "U.S. Senate, Kentucky");
   const html = renderToStaticMarkup(React.createElement(CitationCard, { source: parsed.sources[0]! }));
   assert.match(html, /U\.S\. Senate, Kentucky/);
+  assert.match(html, /As of /);
+  assert.equal(html.includes(">https://www.fec.gov"), false);
   assert.equal(html.includes("2026-senate-KY"), false);
 });

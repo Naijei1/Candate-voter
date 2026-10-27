@@ -6,7 +6,7 @@ import { useAsk } from "@/components/chat/AskProvider";
 import { isAskPanelPath } from "@/lib/chat/ui";
 
 const askClass =
-  "ask-entry inline-flex items-center gap-1.5 rounded-lg border border-transparent bg-accent px-3 py-2 text-sm font-semibold text-white shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white";
+  "ask-entry inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg border border-transparent bg-accent px-2.5 py-2 text-sm font-semibold text-white shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:px-3";
 
 export function AskNav() {
   const pathname = usePathname();
@@ -17,7 +17,7 @@ export function AskNav() {
     return (
       <Link href="/chat" aria-current={onChat ? "page" : undefined} className={askClass}>
         <AskMark />
-        Ask
+        Ask a question
       </Link>
     );
   }
@@ -33,7 +33,7 @@ export function AskNav() {
       onClick={() => ask.setOpen(!ask.open)}
     >
       <AskMark />
-      Ask
+      Ask a question
     </button>
   );
 }
