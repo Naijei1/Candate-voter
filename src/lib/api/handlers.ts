@@ -3,6 +3,7 @@ import {
   FORM2_SCOPE_NOTE,
   houseCoverageForRaces,
 } from "../data/coverage";
+import { appendExpectedRaces } from "../data/expected-races";
 import { logReadError, sortFilings } from "../data/read";
 import {
   loadPublicCandidates,
@@ -67,8 +68,12 @@ export async function getRaces(request: Request, deps: ApiDeps): Promise<Respons
     const groups = await Promise.all(
       parsed.query.cycles.map((cycle) => repo.listRacesByCycle(cycle)),
     );
-    const visible = visibleRaces(groups.flat());
-    const page = pageRaces(visible, parsed.query);
+    const stored = visibleRaces(groups.flat());
+    const listed = appendExpectedRaces(stored, parsed.query.cycles, {
+      state: parsed.query.state,
+      office: parsed.query.office,
+    });
+    const page = pageRaces(listed, parsed.query);
     const refreshedAt = await refreshedAtFrom(repo);
     return json({
       cycles: parsed.query.cycles,
@@ -81,7 +86,7 @@ export async function getRaces(request: Request, deps: ApiDeps): Promise<Respons
         scopeNote: FORM2_SCOPE_NOTE,
         refreshedAt,
         house: houseCoverageForRaces(
-          visible,
+          listed,
           parsed.query.cycles,
           parsed.query.state,
         ),

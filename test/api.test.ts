@@ -284,26 +284,28 @@ test("race list filters, paginates, and keeps domain fields", async () => {
   ]);
 
   const page = await getRaces(
-    authed("https://voter.example/api/v1/races?cycle=2026&limit=1"),
+    authed("https://voter.example/api/v1/races?cycle=2026&state=KY&limit=1"),
     deps(repo),
   );
   const first = await page.json();
   assert.deepEqual(
     first.races.map((item: Race) => item.raceId),
-    ["2026-house-CA-07"],
+    ["2026-house-KY-01"],
   );
-  assert.equal(first.nextCursor, "2026-house-CA-07");
+  assert.equal(first.races[0].empty, true);
+  assert.equal(first.races[0].district, "01");
+  assert.equal(first.nextCursor, "2026-house-KY-01");
 
   const next = await getRaces(
-    authed(`https://voter.example/api/v1/races?cycle=2026&limit=1&cursor=${first.nextCursor}`),
+    authed(`https://voter.example/api/v1/races?cycle=2026&state=KY&limit=1&cursor=${first.nextCursor}`),
     deps(repo),
   );
   const second = await next.json();
   assert.deepEqual(
     second.races.map((item: Race) => item.raceId),
-    ["2026-senate-CA"],
+    ["2026-house-KY-02"],
   );
-  assert.equal(second.nextCursor, null);
+  assert.equal(second.nextCursor, "2026-house-KY-02");
 
   const bad = await getRaces(
     authed("https://voter.example/api/v1/races?office=mayor"),
@@ -322,10 +324,15 @@ test("default race years follow the public index window", async () => {
   const response = await getRaces(authed("https://voter.example/api/v1/races"), deps(repo));
   const body = await response.json();
   assert.deepEqual(body.cycles, [2025, 2026, 2027, 2028, 2029, 2030, 2031, 2032]);
-  assert.deepEqual(
-    body.races.map((item: Race) => item.raceId),
-    ["2026-house-CA-07", "2026-senate-CA", "2028-president"],
-  );
+  assert.equal(body.races.length, 100);
+  assert.equal(body.races[0].raceId, "2026-house-AK-00");
+  assert.equal(body.races[0].district, "00");
+  assert.match(body.races[0].title, /at-large/);
+  assert.equal(body.races[0].empty, true);
+  assert.equal(body.nextCursor, body.races[99].raceId);
+  const filed = body.races.find((item: Race) => item.raceId === "2026-house-CA-07");
+  assert.ok(filed);
+  assert.equal(filed.empty, undefined);
 });
 
 test("race, candidate, and filing routes return stored shapes", async () => {
@@ -365,11 +372,33 @@ test("race, candidate, and filing routes return stored shapes", async () => {
   assert.deepEqual(raceBody.candidates[0].alternateFilings, []);
 
   const missingRace = await getRace(
+    authed("https://voter.example/api/v1/races/2026-senate-NY"),
+    "2026-senate-NY",
+    deps(repo),
+  );
+  assert.equal(missingRace.status, 404);
+
+  const senateStub = await getRace(
     authed("https://voter.example/api/v1/races/2026-senate-WY"),
     "2026-senate-WY",
     deps(repo),
   );
-  assert.equal(missingRace.status, 404);
+  assert.equal(senateStub.status, 200);
+  const senateBody = await senateStub.json();
+  assert.equal(senateBody.race.raceId, "2026-senate-WY");
+  assert.equal(senateBody.race.empty, true);
+  assert.deepEqual(senateBody.candidates, []);
+
+  const houseStub = await getRace(
+    authed("https://voter.example/api/v1/races/2026-house-WY-00"),
+    "2026-house-WY-00",
+    deps(repo),
+  );
+  assert.equal(houseStub.status, 200);
+  const houseBody = await houseStub.json();
+  assert.equal(houseBody.race.district, "00");
+  assert.match(houseBody.race.title, /at-large/);
+  assert.deepEqual(houseBody.candidates, []);
 
   const candidateResponse = await getCandidate(
     authed("https://voter.example/api/v1/candidates/S0CA00123"),
@@ -493,10 +522,21 @@ test("race index, state filter, and race detail share top-level refreshedAt", as
   const stateBody = await state.json();
   assert.equal(stateBody.refreshedAt, updatedAt);
   assert.equal(stateBody.coverage.refreshedAt, updatedAt);
-  assert.deepEqual(
-    stateBody.races.map((item: Race) => item.raceId),
-    ["2026-house-CA-07", "2026-senate-CA"],
+  assert.equal(stateBody.races.filter((item: Race) => item.office === "house").length, 52);
+  assert.equal(
+    stateBody.races.find((item: Race) => item.raceId === "2026-house-CA-07")?.empty,
+    undefined,
   );
+  assert.equal(
+    stateBody.races.find((item: Race) => item.raceId === "2026-house-CA-01")?.empty,
+    true,
+  );
+  assert.equal(
+    stateBody.races.filter((item: Race) => item.office === "senate").map((item: Race) => item.raceId).join(),
+    "2026-senate-CA",
+  );
+  assert.equal(stateBody.coverage.house[0].districtsWithFilings, 1);
+  assert.equal(stateBody.coverage.house[0].districtsTotal, 52);
 
   const raceResponse = await getRace(
     authed("https://voter.example/api/v1/races/2026-senate-CA"),
@@ -524,6 +564,8 @@ test("openapi and llms.txt describe the public read surface", () => {
   }
   assert.match(spec, /YOUR_API_KEY/);
   assert.match(spec, /page-level data-refreshed/);
+  assert.match(spec, /empty: true/);
+  assert.match(spec, /Default 100/);
   assert.match(spec, /required: \[cycles, races, nextCursor, refreshedAt\]/);
   assert.match(spec, /required: \[race, candidates, refreshedAt\]/);
   assert.equal(spec.includes("FEC_API_KEY"), false);

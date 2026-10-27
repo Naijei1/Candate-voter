@@ -6,7 +6,7 @@
 export const OPENAPI_DOCUMENT = `openapi: 3.0.3
 info:
   title: Candate read API
-  version: "1.3.0"
+  version: "1.4.0"
   description: |
     Read-only JSON for federal races, candidates, Form 2 filings, ZIP to
     House district and Senate race lookup, and the FEC electronic Form 2
@@ -51,6 +51,19 @@ paths:
         is stored. \`coverage.refreshedAt\` is the same timestamp.
         The plain scoreboard reads \`coverage\` on this response. There is
         no separate scoreboard route and no per-race \`candidateCount\`.
+        Even-year responses include every apportioned House district for
+        the cycle, including districts with no stored filing, as race
+        stubs in \`races\` (\`empty: true\`, \`updatedAt\` null). There is
+        no separate empty-district field. At-large states use district
+        \`00\` (one House seat). A Senate stub is included when that
+        state's regular class is up (Class II in 2026, Class III in 2028,
+        Class I in 2030). Seats that are not up are not invented. A stored
+        race, including a special in an off year, is kept and \`empty\` is
+        omitted. Odd years include only stored races. Stubs are not written
+        to DynamoDB. \`districtsWithFilings\` still counts stored House
+        filings only. \`districtsTotal\` is the apportionment, which matches
+        the House rows for that state (filled plus empty). The default page
+        size is 100 so one state (at most 52 House seats plus Senate) fits.
       parameters:
         - $ref: "#/components/parameters/cycle"
         - $ref: "#/components/parameters/state"
@@ -93,6 +106,9 @@ paths:
         Top-level \`refreshedAt\` is the ISO-8601 ingest cursor write time
         for the page-level data-refreshed banner on this race. It is null
         when no cursor is stored. \`coverage.refreshedAt\` is the same timestamp.
+        A well-formed even-year House district, or a Senate id whose class
+        is up, returns the same stub as the list when DynamoDB has no row.
+        \`candidates\` is then empty. An id that is not on the ballot is 404.
       parameters:
         - $ref: "#/components/parameters/raceId"
       responses:
@@ -369,12 +385,12 @@ components:
       name: limit
       in: query
       required: false
-      description: Page size. Default 50. Maximum 100.
+      description: Page size. Default 100. Maximum 100.
       schema:
         type: integer
         minimum: 1
         maximum: 100
-        default: 50
+        default: 100
     cursor:
       name: cursor
       in: query
@@ -537,7 +553,14 @@ components:
         updatedAt:
           type: string
           nullable: true
-          description: ISO-8601 time this system last wrote the row.
+          description: ISO-8601 time this system last wrote the row. Null on a ballot stub.
+        empty:
+          type: boolean
+          description: |
+            True when this contest is on the cycle ballot and no Form 2 race
+            is stored. Omitted on stored races. The candidate list for that
+            \`raceId\` is empty. Coverage does not count the row in
+            \`districtsWithFilings\`.
     Candidate:
       type: object
       required:
@@ -838,7 +861,9 @@ components:
             only those with at least one stored House race. A \`state\`
             filter returns that state's row even when
             districtsWithFilings is 0. That filtered response is the
-            per-state scoreboard.
+            per-state scoreboard. Empty ballot stubs in \`races\` are not
+            counted in districtsWithFilings. districtsTotal matches the
+            apportioned House rows for that state, filled plus empty.
           items:
             type: object
             required: [cycle, state, districtsWithFilings, districtsTotal]

@@ -8,6 +8,7 @@ import {
   raceIdAliases,
 } from "./at-large";
 import { collapseSamePerson, multiFilingNote, type CollapsedCandidate } from "./dedupe";
+import { expectedRaceById } from "./expected-races";
 import { normalizeFiledName, normalizePersonName } from "./names";
 
 /** Another FEC id for the same person on this race. Party is the code that filing reported. */
@@ -149,7 +150,7 @@ export async function loadVisibleRace(
     const row = await repo.getRace(id);
     if (row) rows.push(row);
   }
-  if (rows.length === 0) return null;
+  if (rows.length === 0) return expectedRaceById(raceId);
   const preferred =
     rows.find((row) => row.district === "00") ??
     rows.find((row) => row.raceId === canonicalRaceId(row.raceId)) ??

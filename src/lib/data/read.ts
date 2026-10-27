@@ -1,5 +1,6 @@
 import { cache } from "react";
 import { cyclesFromEnv } from "./cycles";
+import { appendExpectedRaces } from "./expected-races";
 import { createDynamoRepository, type VoterRepository } from "./repository";
 import {
   cleanCandidate,
@@ -30,7 +31,7 @@ export async function listRacesForCycles(
   const groups = await Promise.all(
     cycles.map(async (cycle) => ({
       cycle,
-      races: visibleRaces(await repo.listRacesByCycle(cycle)),
+      races: appendExpectedRaces(visibleRaces(await repo.listRacesByCycle(cycle)), [cycle]),
     })),
   );
   return groups.filter((group) => group.races.length > 0);
@@ -51,7 +52,8 @@ export async function readRaceIndex(
 }
 
 export const readRacesForCycle = cache(async (cycle: number): Promise<Race[]> => {
-  return visibleRaces(await createDynamoRepository().listRacesByCycle(cycle));
+  const stored = visibleRaces(await createDynamoRepository().listRacesByCycle(cycle));
+  return appendExpectedRaces(stored, [cycle]);
 });
 
 export const readRace = cache(async (raceId: string): Promise<Race | null> => {

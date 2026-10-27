@@ -302,11 +302,11 @@ test("model sources are kept only when the tool returned that url", async () => 
 
 test("an empty tool result refuses instead of keeping an invented candidate", async () => {
   const response = await postChat(
-    post({ message: "Who filed in 2026-senate-WY?" }),
+    post({ message: "Who filed in 2026-senate-NY?" }),
     chatDeps(
       new MemoryVoterRepository(),
       scripted([
-        toolUse("get_race", { raceId: "2026-senate-WY" }),
+        toolUse("get_race", { raceId: "2026-senate-NY" }),
         modelJson({
           answer_markdown: "S0WY00999 filed for that race. See https://evil.example/x",
           sources: [{ title: "Nope", url: "https://evil.example/x", as_of: "2020" }],

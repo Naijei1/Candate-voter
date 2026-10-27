@@ -78,6 +78,22 @@ export const HOUSE_SEATS: Record<string, number> = {
 
 export const HOUSE_SEATS_TOTAL = 435;
 
+/**
+ * District codes for one state's House seats under `HOUSE_SEATS`.
+ * A one-seat state is at-large (`00`). Unknown postals, including
+ * territories, return no codes.
+ */
+export function houseDistrictCodes(state: string): string[] {
+  const seats = HOUSE_SEATS[state];
+  if (seats == null || seats < 1) return [];
+  if (seats === 1) return ["00"];
+  const codes: string[] = [];
+  for (let district = 1; district <= seats; district += 1) {
+    codes.push(String(district).padStart(2, "0"));
+  }
+  return codes;
+}
+
 const HOUSE_RACE_ID = /^(\d{4})-house-([A-Z]{2})-(\d{2})$/;
 
 export function isSingleSeat(state: string | null | undefined): boolean {

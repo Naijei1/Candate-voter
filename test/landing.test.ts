@@ -174,6 +174,52 @@ test("the state map is one geographic outline per state and DC", () => {
   assert.ok(DC_CALLOUT.labelY > maxY);
 });
 
+test("coverage and the map ignore empty ballot stubs", () => {
+  const races = [
+    race({
+      raceId: "2026-house-KY-04",
+      office: "house",
+      title: "House 4",
+      state: "KY",
+      district: "04",
+    }),
+    race({
+      raceId: "2026-house-KY-01",
+      office: "house",
+      title: "U.S. House, Kentucky District 1",
+      state: "KY",
+      district: "01",
+      empty: true,
+      updatedAt: null,
+    }),
+    race({
+      raceId: "2026-senate-KY",
+      office: "senate",
+      title: "U.S. Senate, Kentucky",
+      state: "KY",
+      empty: true,
+      updatedAt: null,
+    }),
+    race({
+      raceId: "2026-house-WY-00",
+      office: "house",
+      title: "U.S. House, Wyoming at-large",
+      state: "WY",
+      district: "00",
+      empty: true,
+      updatedAt: null,
+    }),
+  ];
+  assert.match(filingCoverageLabel(races, "KY", 2026), /1 of 6 House districts have filings/);
+  assert.doesNotMatch(filingCoverageLabel(races, "KY", 2026), /Senate race with filings/);
+  assert.deepEqual(statesWithRaces(races), ["KY"]);
+  assert.deepEqual(
+    spotlightRaces(races).map((item) => item.raceId),
+    ["2026-house-KY-04"],
+  );
+  assert.equal(stateRaces(races, "KY").length, 3);
+});
+
 test("KY panel loads Senate and House race ids for that state", () => {
   const races = [
     race({ raceId: "2026-president", office: "president", title: "President" }),
