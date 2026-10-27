@@ -22,11 +22,28 @@ export function searchWithState(search: string, postal: string): string {
 
 /**
  * Postal to paint on the country map.
- * A `state` query wins. Back that drops `state` keeps the last selection,
- * so the ZIP field and the highlight still refer to the same state.
+ * A `state` query wins while that sheet is open. `remembered` is only a
+ * ZIP visit, so browser Back from that visit can keep the highlight after
+ * `state` leaves the query. A manual state tap is not remembered.
  */
 export function highlightedPostal(urlPostal: string | null, remembered: string | null): string | null {
   return urlPostal ?? remembered;
+}
+
+/**
+ * Next ZIP highlight to keep after a URL sync.
+ * State and ZIP together remember that state. A state with no ZIP is a
+ * manual tap, so the country map must forget it. A URL with no state leaves
+ * the memory alone — browser Back from a ZIP visit lands there.
+ */
+export function nextRememberedPostal(
+  urlPostal: string | null,
+  urlZip: string | null,
+  remembered: string | null,
+): string | null {
+  if (urlPostal && urlZip) return urlPostal;
+  if (urlPostal) return null;
+  return remembered;
 }
 
 /** Five-digit ZIP in `?zip=`, or null when the query has none. */

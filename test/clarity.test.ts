@@ -204,6 +204,9 @@ test("candidate rows start with a name and keep full records closed", () => {
     }),
   );
   assert.match(html, /Ada Lovelace/);
+  assert.match(html, /party-cue/);
+  assert.match(html, /flex-wrap/);
+  assert.equal(html.includes("shrink-0"), false);
   assert.match(html, /text-party-dem">Democratic/);
   assert.equal(html.includes("text-accent\">Democratic"), false);
   assert.match(html, /aria-expanded="false"/);
@@ -228,6 +231,13 @@ test("home and ask copy stay plain and the map does not lead with Popular", () =
   assert.match(landing, /senateCandidateCount/);
   assert.match(landing, /highlightedPostal/);
   assert.match(landing, /selected=\{mapPostal\}/);
+  assert.match(
+    landing,
+    /setRememberedPostal\(\(current\) => nextRememberedPostal\(postal, zip, current\)\);\s*setHot\(null\);/,
+  );
+  assert.match(landing, /onReject=\{rejectZip\}/);
+  assert.match(landing, /setRememberedPostal\(null\)/);
+  assert.match(zip, /onReject\?\.\(\)/);
   assert.equal(landing.includes("1 candidate so far"), false);
   assert.equal(landing.includes("candidates so far"), false);
   assert.equal(looking.includes("What am I looking at"), false);
