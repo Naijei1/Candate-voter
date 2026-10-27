@@ -609,16 +609,55 @@ function chatRace(race: Race): Race & ReturnType<typeof contestAnnotation> {
   return { ...race, ...contestAnnotation(race) };
 }
 
+/**
+ * Model-facing copy of a tool payload.
+ * Candidates keep one readable `party` string. Raw `partyLabel` keys are omitted.
+ * `empty: true` race stubs are left as returned.
+ */
+export function modelToolContent(content: Record<string, unknown>): Record<string, unknown> {
+  return shapeModelValue(content) as Record<string, unknown>;
+}
+
+function shapeModelValue(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(shapeModelValue);
+  if (!value || typeof value !== "object") return value;
+  const record = value as Record<string, unknown>;
+  const hasPartyLabel = typeof record.partyLabel === "string";
+  const shaped: Record<string, unknown> = {};
+  for (const [key, child] of Object.entries(record)) {
+    if (
+      hasPartyLabel &&
+      (key === "partyLabel" || key === "partyCode" || key === "partyAffiliation")
+    ) {
+      continue;
+    }
+    if (key === "scopeNote" && typeof child === "string") {
+      shaped.scopeNote = "Based on public FEC records. Filings so far are not a full ballot.";
+      continue;
+    }
+    shaped[key] = shapeModelValue(child);
+  }
+  if (hasPartyLabel) shaped.party = partyPhrase(record);
+  return shaped;
+}
+
+function partyPhrase(record: Record<string, unknown>): string {
+  const label = typeof record.partyLabel === "string" ? record.partyLabel.trim() : "";
+  const fromCode = typeof record.partyCode === "string" ? record.partyCode.trim() : "";
+  const fromAffiliation =
+    typeof record.partyAffiliation === "string" ? record.partyAffiliation.trim() : "";
+  const code = fromCode || fromAffiliation;
+  if (label && code && label.toUpperCase() !== code.toUpperCase()) return `${label} (${code})`;
+  return label || code || "Affiliation not reported";
+}
+
 function raceSnippet(race: Race): string {
   return humanRaceTitle(race);
 }
 
 function candidateSnippet(candidate: PublicCandidate): string {
-  const party = candidate.partyCode
-    ? `${candidate.partyLabel} (${candidate.partyCode})`
-    : candidate.partyLabel;
   const note = candidate.multiFilingNote ? ` ${candidate.multiFilingNote}` : "";
-  return `${candidate.displayName} — ${party} (\`${candidate.candidateId}\`).${note}`;
+  return `${candidate.displayName} — ${partyPhrase(candidate)} (\`${candidate.candidateId}\`).${note}`;
 }
 
 function filingSnippet(_filing: Filing, displayName: string): string {

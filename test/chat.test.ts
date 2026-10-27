@@ -12,10 +12,10 @@ import {
 } from "../src/lib/chat/config";
 import { inferenceConfigFor } from "../src/lib/chat/converse";
 import { postChat, type ChatDeps } from "../src/lib/chat/handler";
-import { labelForRaceId, polishSources } from "../src/lib/chat/polish";
+import { labelForRaceId, polishChatAnswer, polishSources } from "../src/lib/chat/polish";
 import { CHAT_SYSTEM_PROMPT } from "../src/lib/chat/prompt";
 import { createRateLimiter } from "../src/lib/chat/rate-limit";
-import { executeChatTool } from "../src/lib/chat/tools";
+import { executeChatTool, modelToolContent } from "../src/lib/chat/tools";
 import type { ConverseFn, ConverseResponse } from "../src/lib/chat/types";
 import { MemoryVoterRepository } from "../src/lib/data/memory-repository";
 import { amplifyServerEnvLines } from "../scripts/write-amplify-server-env.mjs";
@@ -948,4 +948,125 @@ test("source titles are human and equivalent urls collapse", async () => {
   assert.equal(titles.includes("FEC Form 2 — Ada Klein"), true);
   assert.equal(titles.some((title) => RACE_SLUG.test(title) || /^Form 2 \d/.test(title)), false);
   assert.equal(new Set(listed.sources.map((source) => source.url)).size, listed.sources.length);
+});
+
+test("ask answers use a party label and public FEC wording", async () => {
+  assert.doesNotMatch(CHAT_SYSTEM_PROMPT, /partyLabel/);
+  assert.doesNotMatch(CHAT_SYSTEM_PROMPT, /this site's database/i);
+  assert.match(CHAT_SYSTEM_PROMPT, /Based on public FEC records/);
+  assert.match(CHAT_SYSTEM_PROMPT, /Democratic \(DEM\)/);
+
+  const shaped = modelToolContent({
+    scopeNote:
+      "Counts are FEC Form 2 electronic filings stored so far, not a full ballot or a certified candidate list.",
+    races: [{ raceId: "2026-house-KY-05", empty: true, candidates: [] }],
+    candidates: [
+      {
+        displayName: "Ada Klein",
+        candidateId: "S0CA00123",
+        partyAffiliation: "DEM",
+        partyCode: "DEM",
+        partyLabel: "Democratic",
+        alternateFilings: [
+          { candidateId: "S0CA00999", partyCode: "IND", partyLabel: "Independent" },
+        ],
+      },
+    ],
+  });
+  const shapedJson = JSON.stringify(shaped);
+  assert.equal(shapedJson.includes("partyLabel"), false);
+  assert.equal(shapedJson.includes("partyCode"), false);
+  assert.equal(shapedJson.includes("partyAffiliation"), false);
+  assert.match(shapedJson, /Democratic \(DEM\)/);
+  assert.match(shapedJson, /Independent \(IND\)/);
+  assert.equal(
+    shaped.scopeNote,
+    "Based on public FEC records. Filings so far are not a full ballot.",
+  );
+  const races = shaped.races as Array<{ empty?: boolean; candidates?: unknown[] }>;
+  assert.equal(races[0]?.empty, true);
+  assert.deepEqual(races[0]?.candidates, []);
+
+  const repo = new MemoryVoterRepository();
+  await repo.upsertRace(
+    race({
+      raceId: "2026-senate-KY",
+      office: "senate",
+      cycle: 2026,
+      state: "KY",
+      title: "U.S. Senate, Kentucky",
+      jurisdiction: "Kentucky",
+    }),
+  );
+  const listed = await executeChatTool(
+    "list_races",
+    { state: "KY", cycle: 2026 },
+    { repo, env: {}, now, root: ROOT },
+  );
+  assert.equal(listed.ok, true);
+  if (!listed.ok) return;
+  const forModel = modelToolContent(listed.content);
+  const modelJsonText = JSON.stringify(forModel);
+  assert.equal(modelJsonText.includes("partyLabel"), false);
+  assert.match(modelJsonText, /"empty":true/);
+  const coverage = forModel.coverage as { scopeNote?: string };
+  assert.match(coverage.scopeNote ?? "", /Based on public FEC records/);
+
+  await repo.upsertCandidate(
+    candidate({ candidateId: "S0CA00123", displayName: "Ada Klein", partyAffiliation: "DEM" }),
+  );
+  const response = await postChat(
+    post({ message: "Which party did Ada Klein file under?" }),
+    chatDeps(repo, async (input) => {
+      const prior = input.messages.some((message) =>
+        message.content.some((block) => "toolResult" in block),
+      );
+      if (!prior) return toolUse("get_candidate", { candidateId: "S0CA00123" });
+      const toolJson = JSON.stringify(input.messages);
+      assert.equal(toolJson.includes("partyLabel"), false);
+      assert.equal(toolJson.includes("this site's database"), false);
+      assert.match(toolJson, /Democratic \(DEM\)/);
+      return modelJson({
+        answer_markdown:
+          '**Ada Klein** (DEM, partyLabel: Democratic). FEC Form 2 filings stored in this site\'s database. Also partyLabel: "Republican" and records stored in our database.',
+        sources: [
+          {
+            title: "Ada Klein",
+            url: "https://voter.example/candidates/S0CA00123",
+            as_of: updatedAt,
+          },
+        ],
+        refused: false,
+        mode: "factual",
+      });
+    }),
+  );
+  assert.equal(response.status, 200);
+  const payload = (await response.json()) as {
+    answer_markdown: string;
+    sources: Array<{ title: string; url: string; as_of: string }>;
+  };
+  assert.equal(payload.answer_markdown.includes("partyLabel"), false);
+  assert.doesNotMatch(payload.answer_markdown, /database/i);
+  assert.match(payload.answer_markdown, /Democratic \(DEM\)/);
+  assert.match(payload.answer_markdown, /Republican/);
+  assert.match(payload.answer_markdown, /public FEC records/i);
+  assert.deepEqual(payload.sources, [
+    {
+      title: "Ada Klein",
+      url: "https://voter.example/candidates/S0CA00123",
+      as_of: updatedAt,
+    },
+  ]);
+
+  const kept = polishChatAnswer({
+    answer_markdown: "Stored records are FEC Form 2 filings so far, not a full ballot.",
+    sources: [{ title: "U.S. Senate, Kentucky", url: "https://voter.example/races/2026-senate-KY", as_of: updatedAt }],
+    refused: false,
+  });
+  assert.equal(
+    kept.answer_markdown,
+    "Stored records are FEC Form 2 filings so far, not a full ballot.",
+  );
+  assert.deepEqual(Object.keys(kept.sources[0] ?? {}).sort(), ["as_of", "title", "url"]);
 });

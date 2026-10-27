@@ -5,14 +5,14 @@ import type { ChatAnswer, ChatRequest } from "./types";
 import type { PublicCandidate } from "../data/view";
 
 const INSUFFICIENT =
-  "Candate-voter currently stores **FEC Form 2 filing records** (name, party, race, and dates). Those filings do not include votes or position statements, so I can't compare viewpoints. This is not an endorsement.";
+  "Based on public FEC records, these **FEC Form 2 filings** include name, party, race, and dates. Those filings do not include votes or position statements, so I can't compare viewpoints. This is not an endorsement.";
 
 export const ALIGNMENT_NEEDS_RACE_MARKDOWN = `${INSUFFICIENT}
 
 Which state or race should I cite? For example, U.S. Senate, California.`;
 
 export const ALIGNMENT_DISABLED_MARKDOWN =
-  "I can't compare viewpoints or tell you who to support. Candate-voter is a nonpartisan record of FEC Form 2 filings. Ask about a stored race, candidate, or filing and I will cite that record.";
+  "I can't compare viewpoints or tell you who to support. Based on public FEC records, Candate-voter lists FEC Form 2 filings. Ask about a race, candidate, or filing and I will cite that record.";
 
 /**
  * Viewpoint alignment is explicit-only. The table has no vote or position
@@ -89,7 +89,7 @@ function fromTool(
   const title = readTitle(result.content);
   if (result.records === 0 || (kind === "race" && !title && candidates.length === 0)) {
     return {
-      answer_markdown: `Nothing in the stored records matched that, so I can't compare viewpoints.\n\n${INSUFFICIENT}`,
+      answer_markdown: `Nothing in the public FEC records matched that, so I can't compare viewpoints.\n\n${INSUFFICIENT}`,
       sources: [],
       refused: true,
       mode: "alignment",
@@ -110,7 +110,7 @@ function fromTool(
       : "";
   const list = lines.length > 0 ? `\n\n${heading}\n\n${lines.join("\n")}${more}` : "";
   return {
-    answer_markdown: `I can't compare viewpoints from the records stored so far.\n\n${INSUFFICIENT}${list}`,
+    answer_markdown: `I can't compare viewpoints from public FEC records.\n\n${INSUFFICIENT}${list}`,
     sources: result.sources,
     refused: false,
     mode: "alignment",

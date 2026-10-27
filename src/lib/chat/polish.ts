@@ -109,9 +109,51 @@ export function collapseBoilerplate(markdown: string, priorText = ""): string {
 export function polishChatAnswer(answer: ChatAnswer, priorText = ""): ChatAnswer {
   return {
     ...answer,
-    answer_markdown: collapseBoilerplate(replaceRaceSlugs(answer.answer_markdown), priorText),
+    answer_markdown: collapseBoilerplate(
+      replaceRaceSlugs(humanizeAskProse(answer.answer_markdown)),
+      priorText,
+    ),
     sources: polishSources(answer.sources),
   };
+}
+
+/**
+ * Last pass for visitor copy. Tool JSON and the system prompt already use
+ * a readable party and public-FEC wording; this only catches an echo.
+ */
+function humanizeAskProse(markdown: string): string {
+  const withoutParty = markdown
+    .replace(
+      /\(\s*([A-Za-z][A-Za-z0-9/]{0,8})\s*,\s*partyLabel\s*:\s*"?([^"()\n]+?)"?\s*\)/g,
+      (_match, code: string, label: string) => {
+        const name = label.trim();
+        const trimmed = code.trim();
+        if (!name) return trimmed;
+        if (name.toUpperCase() === trimmed.toUpperCase()) return name;
+        return `${name} (${trimmed})`;
+      },
+    )
+    .replace(/\bpartyLabel\s*:\s*"?([A-Za-z][^,.;\n"]*)"?/g, (_match, label: string) =>
+      label.trim(),
+    )
+    .replace(/\bpartyLabel\b:?/g, "");
+  return cleanup(replaceInternalStorage(withoutParty));
+}
+
+function replaceInternalStorage(markdown: string): string {
+  return markdown.replace(
+    /FEC Form 2 filings stored in this site['’]s database|stored in (?:this site['’]s|our|an internal|the) database|\bin (?:this site['’]s|our|an internal) database\b|this site['’]s database/gi,
+    (match, offset: number, whole: string) => {
+      let next = "based on public FEC records";
+      if (/^in\b/i.test(match)) next = "in public FEC records";
+      else if (/^FEC\b/i.test(match) || /^this site/i.test(match)) next = "public FEC records";
+      const before = whole.slice(0, offset);
+      if (before.trim().length === 0 || /[.!?]\s*$/.test(before)) {
+        next = next.charAt(0).toUpperCase() + next.slice(1);
+      }
+      return next;
+    },
+  );
 }
 
 export function polishSources(sources: readonly ChatSource[]): ChatSource[] {
