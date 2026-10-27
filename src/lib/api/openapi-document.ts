@@ -6,7 +6,7 @@
 export const OPENAPI_DOCUMENT = `openapi: 3.0.3
 info:
   title: Candate read API
-  version: "1.4.0"
+  version: "1.4.1"
   description: |
     Read-only JSON for federal races, candidates, Form 2 filings, ZIP to
     House district and Senate race lookup, and the FEC electronic Form 2
@@ -64,6 +64,23 @@ paths:
         filings only. \`districtsTotal\` is the apportionment, which matches
         the House rows for that state (filled plus empty). The default page
         size is 100 so one state (at most 52 House seats plus Senate) fits.
+
+        Frontend map join (cycle 2026): in-state House district maps join
+        Frontend static Census CB/TIGER (119th / post-2020) GeoJSON to these
+        race ids. This API does not expose district geometry and has no
+        \`GET /api/v1/geo\` route. \`raceId\` is \`{cycle}-house-{ST}-{DD}\`
+        (for example \`2026-house-KY-01\`). District codes are zero-padded
+        \`01\` through \`NN\`, matching \`HOUSE_SEATS\` and the empty stubs
+        in \`races\`. A single-seat state uses district \`00\` (for example
+        \`2026-house-WY-00\`), not district \`AL\` and not \`01\`. State
+        \`AL\` is Alabama and still uses \`01\` through \`07\`. Scope is the
+        50 states and 435 House seats. The race list has no DC, Puerto Rico,
+        or territory House stubs. Filings and empty contests come from the
+        race (\`empty: true\`, candidates). The GeoJSON is geometry only.
+        Senate races and a state outline are not part of this Phase A join.
+        ZIP lookup district codes already use the same \`00\` and zero-pad
+        convention. A territory ZIP can still resolve; it is not a House
+        stub on this list.
       parameters:
         - $ref: "#/components/parameters/cycle"
         - $ref: "#/components/parameters/state"
@@ -216,7 +233,10 @@ paths:
         No API key beyond the \`/api/v1\` key is required. A ZCTA that
         overlaps more than one district returns every district in that
         state. Single-seat states and delegate districts use district
-        \`00\`. The District of Columbia, Puerto Rico, and the other
+        \`00\`. District codes are zero-padded, the same \`00\` / \`01\`
+        through \`NN\` convention as the Frontend map join on the race
+        list (not district \`AL\`, and not \`01\` for a single-seat state).
+        The District of Columbia, Puerto Rico, and the other
         territories are included when Census publishes a ZCTA.
         \`senateRaceId\` is \`{year}-senate-{state}\` for the 50 states and
         null where there is no Senate seat. \`raceIds\` lists those ids even
@@ -426,8 +446,10 @@ components:
       in: path
       required: true
       description: |
-        \`2028-president\`, \`2026-senate-CA\`, or \`2026-house-CA-07\`
-        (\`00\` is at-large).
+        \`2028-president\`, \`2026-senate-CA\`, or \`2026-house-CA-07\`.
+        House district codes are zero-padded. \`00\` is at-large
+        (\`2026-house-WY-00\`), not district \`AL\` and not \`01\`.
+        See Frontend map join on \`GET /api/v1/races\`.
       schema:
         type: string
         example: "2026-senate-CA"
@@ -541,7 +563,12 @@ components:
         district:
           type: string
           nullable: true
-          description: House district, two digits. Null for President and Senate.
+          description: |
+            House district, two digits, zero-padded (\`01\` through \`NN\`).
+            \`00\` is at-large for a single-seat state (not \`AL\`, not \`01\`).
+            Null for President and Senate. The race list uses these codes for
+            the 50 states (435 seats). See Frontend map join on
+            \`GET /api/v1/races\`.
         title:
           type: string
         jurisdiction:
@@ -963,6 +990,8 @@ components:
           description: |
             Every House district the ZCTA overlaps in that state, district
             code ascending. \`00\` is at-large, including delegate districts.
+            Codes are zero-padded, the same convention as the Frontend map
+            join on the race list.
           items:
             type: object
             required: [district, raceId]

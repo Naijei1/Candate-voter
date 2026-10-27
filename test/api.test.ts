@@ -624,6 +624,11 @@ test("openapi and llms.txt describe the public read surface", () => {
   assert.match(spec, /YOUR_API_KEY/);
   assert.match(spec, /page-level data-refreshed/);
   assert.match(spec, /empty: true/);
+  assert.match(spec, /Frontend map join/);
+  assert.match(spec, /2026-house-KY-01/);
+  assert.match(spec, /2026-house-WY-00/);
+  assert.match(spec, /does not expose district geometry/);
+  assert.equal(spec.includes("/api/v1/geo:"), false);
   assert.match(spec, /Default 100/);
   assert.match(spec, /required: \[cycles, races, nextCursor, refreshedAt\]/);
   assert.match(spec, /required: \[race, candidates, refreshedAt\]/);
@@ -635,6 +640,10 @@ test("openapi and llms.txt describe the public read surface", () => {
   assert.match(text, /https:\/\/voter\.example\/openapi\.yaml/);
   assert.match(text, /https:\/\/voter\.example\/api\/v1\/freshness/);
   assert.match(text, /YOUR_API_KEY/);
+  assert.match(text, /House district map join/);
+  assert.match(text, /2026-house-KY-01/);
+  assert.match(text, /2026-house-WY-00/);
+  assert.match(text, /does not expose district geometry/);
 });
 
 test("agent docs render the watermark and keep the key out of the page", () => {
@@ -670,6 +679,10 @@ test("agent docs render the watermark and keep the key out of the page", () => {
   assert.match(html, /YOUR_API_KEY/);
   assert.equal(html.includes(KEY), false);
   assert.match(html, /href="\/openapi\.yaml"/);
+  assert.match(html, /Frontend map join/);
+  assert.match(html, /2026-house-KY-01/);
+  assert.match(html, /2026-house-WY-00/);
+  assert.match(html, /does not expose district geometry/);
 
   const page = readFileSync(new URL("../src/app/agent/page.tsx", import.meta.url), "utf8");
   assert.match(page, /readWatermark/);

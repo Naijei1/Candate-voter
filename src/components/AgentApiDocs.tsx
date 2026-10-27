@@ -131,6 +131,32 @@ export function AgentApiDocs({ origin, basePath, freshness }: AgentApiDocsProps)
         </p>
       </section>
 
+      <section className="space-y-3" aria-labelledby="map-join-heading">
+        <h2 id="map-join-heading" className="text-xl font-semibold tracking-tight">
+          Frontend map join
+        </h2>
+        <p className="max-w-2xl text-base leading-7 text-muted">
+          Cycle 2026 in-state House district maps join Frontend static Census
+          CB/TIGER (119th / post-2020) GeoJSON to race ids from{" "}
+          <code>GET /api/v1/races</code>. This API does not expose district
+          geometry and has no <code>GET /api/v1/geo</code> route. The id is{" "}
+          <code>{"{cycle}"}-house-{"{ST}"}-{"{DD}"}</code>, for example{" "}
+          <code>2026-house-KY-01</code>. District codes are zero-padded{" "}
+          <code>01</code> through <code>NN</code>, matching <code>HOUSE_SEATS</code>{" "}
+          and empty stubs. A single-seat state uses district <code>00</code>{" "}
+          (<code>2026-house-WY-00</code>), not district <code>AL</code> and not{" "}
+          <code>01</code>. State <code>AL</code> is Alabama and still uses{" "}
+          <code>01</code> through <code>07</code>. Scope is the 50 states and
+          435 House seats. The race list has no DC, Puerto Rico, or territory
+          House stubs. Filings and empty contests come from the race (
+          <code>empty: true</code>, candidates). The GeoJSON is geometry only.
+          Senate races and a state outline are not part of this Phase A join.
+          ZIP lookup district codes already use the same <code>00</code> and
+          zero-pad convention. A territory ZIP can still resolve; it is not a
+          House stub on the race list.
+        </p>
+      </section>
+
       <section className="space-y-3" aria-labelledby="auth-heading">
         <h2 id="auth-heading" className="text-xl font-semibold tracking-tight">
           Authentication
