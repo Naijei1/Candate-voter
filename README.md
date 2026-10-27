@@ -77,6 +77,10 @@ Filers with the same normalized name on the same race collapse to one display ro
 
 Wyoming and the other single-seat House states (AK, DE, ND, SD, VT, WY, plus delegate districts) use race id district `00` (at-large). A Form 2 that says district `1` is stored and read as `00`. A legacy `2026-house-WY-01` row is folded into `2026-house-WY-00` on read. Montana has two districts and is unchanged.
 
+### Frontend map join
+
+Cycle 2026 in-state House district maps join Frontend static Census CB/TIGER (119th / post-2020) GeoJSON to race ids from `GET /api/v1/races`. This API does not expose district geometry and has no `GET /api/v1/geo` route. `raceId` is `{cycle}-house-{ST}-{DD}` (for example `2026-house-KY-01`). District codes are zero-padded `01` through `NN`, matching `HOUSE_SEATS` and empty stubs. A single-seat state uses district `00` (for example `2026-house-WY-00`), not district `AL` and not `01`. State `AL` is Alabama and still uses `01` through `07`. Scope is the 50 states and 435 House seats. The race list has no DC, Puerto Rico, or territory House stubs. Filings and empty contests come from the race (`empty: true`, candidates). The GeoJSON is geometry only. Senate races and a state outline are not part of this Phase A join. ZIP lookup district codes already use the same `00` and zero-pad convention. A territory ZIP can still resolve; it is not a House stub on the race list.
+
 Every stored race, candidate, and filing has `sourceUrl` and a write timestamp (`updatedAt`). Filings also have `retrievedAt`. The electronic Form 2 feed does not include a submission time, so `filedAt` stays null and `fecLoadTimestamp` holds FEC's load time (`YYYY-MM-DD HH:MM:SS`). Street address, city, and ZIP from the filing are not stored.
 
 ## FEC ingest

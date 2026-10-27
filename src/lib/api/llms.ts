@@ -21,5 +21,9 @@ Send the key as \`Authorization: Bearer YOUR_API_KEY\` or \`X-Api-Key: YOUR_API_
 - GET ${root}/api/v1/freshness
 - GET ${root}/api/v1/lookup/zip?zip=40502&year=2026 (cycle is an alias of year; unknown ZIP is 404)
 - POST ${root}/api/chat (browser JSON, no API key, buffered response)
+
+## House district map join
+
+Cycle 2026 in-state House district maps join Frontend static Census CB/TIGER (119th / post-2020) GeoJSON to race ids from \`GET /api/v1/races\`. This API does not expose district geometry and has no \`GET /api/v1/geo\` route. \`raceId\` is \`{cycle}-house-{ST}-{DD}\` (for example \`2026-house-KY-01\`). District codes are zero-padded \`01\` through \`NN\`, matching \`HOUSE_SEATS\` and empty stubs. A single-seat state uses district \`00\` (for example \`2026-house-WY-00\`), not district \`AL\` and not \`01\`. State \`AL\` is Alabama and still uses \`01\` through \`07\`. Scope is the 50 states and 435 House seats. The race list has no DC, Puerto Rico, or territory House stubs. Filings and empty contests come from the race (\`empty: true\`, candidates). The GeoJSON is geometry only. Senate races and a state outline are not part of this Phase A join. ZIP lookup district codes already use the same \`00\` and zero-pad convention. A territory ZIP can still resolve; it is not a House stub on the race list.
 `;
 }
