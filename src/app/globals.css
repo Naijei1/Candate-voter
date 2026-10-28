@@ -919,16 +919,20 @@ html[data-ask="open"] .map-chrome {
     overflow: hidden;
   }
 
-  /* viewBox units. 36px is about 12 CSS pixels on a 390px-wide phone and clears neighboring abbreviations. */
+  /*
+   * Real phones paint this px size as CSS pixels, so 36px abbreviations
+   * covered Mississippi, Alabama, Georgia, Ohio, and West Virginia.
+   * 12px stays readable and fits the gaps between those states.
+   */
   .us-map .us-label,
   .us-map .us-callout,
   .us-map .us-label-callout,
   .us-map .us-label-small {
-    font-size: 36px;
+    font-size: 12px;
   }
 
   .us-map .us-label {
-    stroke-width: 8px;
+    stroke-width: 2px;
   }
 
   .us-map .us-label-callout {

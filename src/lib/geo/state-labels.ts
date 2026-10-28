@@ -55,15 +55,17 @@ const LABEL_NUDGE: Readonly<Record<string, { dx: number; dy: number }>> = {
   KY: { dx: -13, dy: 2 },
   TN: { dx: -7, dy: 17 },
   VA: { dx: 10, dy: 1 },
-  WV: { dx: -6, dy: 7 },
   NC: { dx: 16, dy: 13 },
   SC: { dx: -6, dy: 6 },
   MD: { dx: 9, dy: -11 },
   PA: { dx: -16, dy: 5 },
-  AL: { dx: -3, dy: 10 },
-  MS: { dx: 2, dy: -16 },
-  GA: { dx: -16, dy: -15 },
-  FL: { dx: -11, dy: -18 },
+  FL: { dx: 8, dy: 14 },
+  /* Southeast stack and Ohio/West Virginia were sitting on each other at phone size. */
+  MS: { dx: -15, dy: 1 },
+  AL: { dx: 22, dy: 4 },
+  GA: { dx: 38, dy: 20 },
+  OH: { dx: 2, dy: -40 },
+  WV: { dx: -17, dy: 15 },
 };
 
 export function labelPoint(postal: string, x: number, y: number): { x: number; y: number } {

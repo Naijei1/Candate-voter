@@ -74,7 +74,7 @@ test("phone maps and the state sheet expose pan and drag targets", () => {
   assert.match(national, /preserveAspectRatio="xMidYMid meet"/);
   assert.match(css, /\.national-shell \.map-bleed\s*\{[^}]*top:\s*var\(--map-clearance\)/);
   const mobile = css.slice(css.indexOf("@media (max-width: 1023px)"), css.indexOf("@media (max-width: 420px)"));
-  assert.match(mobile, /\.us-map \.us-label-callout[\s\S]*?font-size:\s*36px/);
+  assert.match(mobile, /\.us-map \.us-label-callout[\s\S]*?font-size:\s*12px/);
   assert.match(mobile, /\.national-shell\s*\{[^}]*display:\s*flex/);
   assert.match(mobile, /\.national-shell\s*\{[^}]*flex-direction:\s*column/);
   assert.match(mobile, /\.national-shell \.map-stage\s*\{[^}]*flex:\s*1 1 auto/);

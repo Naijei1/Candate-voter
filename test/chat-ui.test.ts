@@ -7,6 +7,7 @@ import { ChatMessageList, loadingStatus } from "../src/components/chat/ChatMessa
 import { MarkdownAnswer } from "../src/components/chat/MarkdownAnswer";
 import { applyAskBinding, prepareRetry, settleAssistantTurn, type ChatTurn } from "../src/components/chat/useChat";
 import { CHAT_TIMEOUT_MS, ChatCancelled, postChatMessage } from "../src/lib/chat/browser";
+import { formatInstant } from "../src/lib/format";
 import {
   buildChatRequestBody,
   chatPageHref,
@@ -222,6 +223,10 @@ test("citations stay in-app for Candate paths and open FEC in a new tab", () => 
   assert.doesNotMatch(citationAsOf("2026-10-26T17:00:00Z", "2026-10-26T18:48:47.307Z"), /2:48/);
   assert.match(citationAsOf("unknown", "2026-10-26T18:48:47.307Z"), /2:48\sPM ET/);
   assert.equal(citationAsOf("unknown", null), "As of unknown");
+  assert.equal(
+    citationAsOf("2026-10-26 08:49:00", "2026-10-28T00:48:47.136Z"),
+    `As of ${formatInstant("2026-10-28T00:48:47.136Z")}`,
+  );
 });
 
 test("POST /api/chat maps 200, refused, 400, 429, 503, and network", async () => {

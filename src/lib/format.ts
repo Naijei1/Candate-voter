@@ -11,6 +11,22 @@ const INSTANT_FORMAT = new Intl.DateTimeFormat("en-US", {
   timeZoneName: "shortGeneric",
 });
 
+/**
+ * A timezone-qualified instant (`Z` or a numeric offset).
+ * A FEC-style `2026-10-26 08:49:00` has no zone. `new Date` would read it as
+ * local time and the Eastern formatter would print "8:49 AM ET".
+ */
+const ZONED_INSTANT =
+  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:?\d{2})$/;
+
+export function zonedInstant(value: string | null | undefined): string | null {
+  const text = value?.trim() ?? "";
+  if (!ZONED_INSTANT.test(text)) return null;
+  const date = new Date(text);
+  if (Number.isNaN(date.getTime())) return null;
+  return text;
+}
+
 /** Display string for an ISO-8601 timestamp, in Eastern Time. Unparseable values stay visible. */
 export function formatInstant(value: string | null | undefined): string | null {
   const text = value?.trim() ?? "";

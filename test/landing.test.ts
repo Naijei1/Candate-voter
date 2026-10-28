@@ -213,6 +213,19 @@ test("phone map labels keep a gap between crowded states and callouts", () => {
     }
   }
   assert.ok(closest >= 44, `${pair} are ${closest.toFixed(1)} apart`);
+  const at = (postal: string) => points.find((row) => row.postal === postal);
+  for (const [left, right] of [
+    ["MS", "AL"],
+    ["AL", "GA"],
+    ["MS", "GA"],
+    ["OH", "WV"],
+  ] as const) {
+    const a = at(left);
+    const b = at(right);
+    assert.ok(a && b);
+    const distance = Math.hypot(a.x - b.x, a.y - b.y);
+    assert.ok(distance >= 70, `${left} and ${right} are ${distance.toFixed(1)} apart`);
+  }
 });
 
 test("coverage and the map ignore empty ballot stubs", () => {

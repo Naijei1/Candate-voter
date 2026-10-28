@@ -5,7 +5,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { basePathFromEnv } from "@/lib/base-path";
 import { instantDateTime } from "@/lib/format";
-import { citationAsOf, citationLabel, citationLink } from "@/lib/chat/ui";
+import { citationAsOf, citationInstant, citationLabel, citationLink } from "@/lib/chat/ui";
 import type { ChatSource } from "@/lib/chat/types";
 
 export function CitationCard({
@@ -18,9 +18,9 @@ export function CitationCard({
 }) {
   const origin = useClientOrigin();
   const link = citationLink(source.url, { origin, basePath: basePathFromEnv() });
+  const instant = citationInstant(source.as_of, refreshedAt);
   const freshness = citationAsOf(source.as_of, refreshedAt);
-  const shown = source.as_of.trim().toLowerCase() === "unknown" ? (refreshedAt ?? source.as_of) : source.as_of;
-  const dateTime = instantDateTime(shown);
+  const dateTime = instantDateTime(instant);
   const label = citationLabel(source);
 
   const text = (

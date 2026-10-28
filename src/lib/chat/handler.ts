@@ -39,6 +39,7 @@ import { isVotingAdvice, VOTING_ADVICE_MARKDOWN } from "./prompt";
 import { clientAddress, createRateLimiter, type RateLimiter } from "./rate-limit";
 import { parseChatRequest } from "./request";
 import { isStateRosterQuestion, answerKnownPlace, answerScopedRace, answerStateRoster } from "./roster";
+import { sourcesAtPageRefresh } from "./ui";
 import { limitAnswerToRaceScope } from "./scope";
 import { runGroundedChat } from "./run";
 import type { ChatAnswer, ChatRequest, ConverseFn } from "./types";
@@ -358,13 +359,14 @@ function chatBody(
     polishChatAnswer(answer, priorMessage, asked ? answerScope(asked) : undefined),
     asked ?? { message: priorMessage },
   );
+  const refreshedAt = polished.refreshedAt;
   return {
     answer_markdown: polished.answer_markdown,
-    sources: polished.sources,
+    sources: sourcesAtPageRefresh(polished.sources, refreshedAt),
     refused: polished.refused,
     mode: polished.mode ?? "factual",
     threadId,
-    ...(polished.refreshedAt !== undefined ? { refreshedAt: polished.refreshedAt } : {}),
+    ...(refreshedAt !== undefined ? { refreshedAt } : {}),
   };
 }
 

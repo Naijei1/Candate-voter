@@ -6,7 +6,8 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { CitationCard } from "../src/components/chat/CitationCard";
 import { DataRefreshedBanner } from "../src/components/DataRefreshedBanner";
 import { MultiFilingDetails } from "../src/components/MultiFilingDetails";
-import { parseChatSuccess } from "../src/lib/chat/ui";
+import { citationAsOf, parseChatSuccess, sourcesAtPageRefresh } from "../src/lib/chat/ui";
+import { formatInstant } from "../src/lib/format";
 
 test("data refreshed banner uses the index timestamp and stays quiet when it is missing", () => {
   const shown = renderToStaticMarkup(
@@ -91,4 +92,39 @@ test("Ask citations prefer source as_of and fall back to refreshedAt", () => {
     }),
   );
   assert.match(unknown, /As of Oct 26, 2026, 2:48\sPM ET/);
+});
+
+test("Ask as-of and Data refreshed format the same zoned instant", () => {
+  const iso = "2026-10-28T00:48:47.136Z";
+  const page = formatInstant(iso);
+  assert.match(page ?? "", /^Oct 27, 2026, 8:48\sPM ET$/);
+  assert.equal(citationAsOf(iso, iso), `As of ${page}`);
+  assert.equal(citationAsOf("unknown", iso), `As of ${page}`);
+  assert.equal(citationAsOf("2026-10-26 08:49:00", iso), `As of ${page}`);
+  assert.match(citationAsOf("2026-10-26T12:49:00.000Z", null), /^As of Oct 26, 2026, 8:49\sAM ET$/);
+
+  const banner = renderToStaticMarkup(
+    React.createElement(DataRefreshedBanner, { refreshedAt: iso }),
+  );
+  const card = renderToStaticMarkup(
+    React.createElement(CitationCard, {
+      source: {
+        title: "U.S. Senate, Texas",
+        url: "/races/2026-senate-TX",
+        as_of: "2026-10-26 08:49:00",
+      },
+      refreshedAt: iso,
+    }),
+  );
+  assert.ok(banner.includes(page ?? ""));
+  assert.ok(card.includes(`As of ${page}`));
+  assert.equal(card.includes("8:49"), false);
+  assert.equal(card.includes("Oct 26"), false);
+  assert.deepEqual(
+    sourcesAtPageRefresh(
+      [{ title: "U.S. Senate, Texas", url: "/races/2026-senate-TX", as_of: "2026-10-26T12:49:00Z" }],
+      iso,
+    ),
+    [{ title: "U.S. Senate, Texas", url: "/races/2026-senate-TX", as_of: iso }],
+  );
 });

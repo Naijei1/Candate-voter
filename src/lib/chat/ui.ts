@@ -1,7 +1,7 @@
 import { isResourceId } from "../api/ids";
 import { resolveCycle } from "../data/cycles";
 import { isPostalState, stateName } from "../data/states";
-import { formatInstant } from "../format";
+import { formatInstant, zonedInstant } from "../format";
 import { normalizeZip } from "../lookup/zip-view";
 import { CHAT_INCOMPLETE_MESSAGE, CHAT_MODEL_UNAVAILABLE_MESSAGE } from "./errors";
 import { isRaceSlug, labelForRaceId, presentAskMarkdown } from "./polish";
@@ -10,8 +10,6 @@ import type { ChatMode, ChatRequest, ChatSource } from "./types";
 export const MAX_CHAT_MESSAGE = 2000;
 
 const THREAD_ID = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,80}$/;
-const ISO_INSTANT =
-  /^\d{4}-\d{2}-\d{2}(?:[T\s]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:?\d{2})?)?$/;
 
 export type ChatErrorKind =
   | "bad_request"
@@ -352,30 +350,41 @@ export function rateLimitRemainingSeconds(retryAtMs: number | null, nowMs: numbe
 }
 
 /**
- * Citation clock. An ISO instant uses the same Eastern format as
- * "Data refreshed". Any other API string stays verbatim. This does not
- * read the client clock.
+ * Instant the citation may show. `sources[].as_of` wins when it is a zoned
+ * ISO instant. `refreshedAt` fills in when as_of is missing, `unknown`, or a
+ * zoneless record clock. Nothing here reads the client clock.
  */
-export function formatAsOf(value: string): string {
-  const text = value.trim();
-  if (!text || text.toLowerCase() === "unknown") return "As of unknown";
-  if (!ISO_INSTANT.test(text)) return `As of ${text}`;
-  const formatted = formatInstant(text);
-  if (!formatted || formatted === text) return `As of ${text}`;
-  return `As of ${formatted}`;
+export function citationInstant(asOf: string, refreshedAt?: string | null): string | null {
+  return zonedInstant(asOf) ?? zonedInstant(refreshedAt);
 }
 
 /**
- * Ask watermark. `sources[].as_of` wins. `refreshedAt` fills in only when
- * that field is missing or `unknown`, so a citation is not a client date
- * and is not "As of unknown" beside a real page refresh time.
+ * Citation clock. Same `formatInstant` string as the page "Data refreshed"
+ * line, with an "As of" prefix. A non-instant API string stays verbatim.
  */
+export function formatAsOf(value: string): string {
+  return citationAsOf(value, null);
+}
+
 export function citationAsOf(asOf: string, refreshedAt?: string | null): string {
-  const raw = asOf.trim();
-  if (raw && raw.toLowerCase() !== "unknown") return formatAsOf(raw);
-  const refresh = refreshedAt?.trim() ?? "";
-  if (refresh && refresh.toLowerCase() !== "unknown") return formatAsOf(refresh);
-  return "As of unknown";
+  const chosen = citationInstant(asOf, refreshedAt);
+  if (!chosen) {
+    const raw = asOf.trim();
+    if (!raw || raw.toLowerCase() === "unknown") return "As of unknown";
+    return `As of ${raw}`;
+  }
+  const formatted = formatInstant(chosen);
+  return formatted ? `As of ${formatted}` : "As of unknown";
+}
+
+/** Visitor response sources use the page refresh instant when the answer has one. */
+export function sourcesAtPageRefresh<T extends { as_of: string }>(
+  sources: readonly T[],
+  refreshedAt: string | null | undefined,
+): T[] {
+  const clock = zonedInstant(refreshedAt);
+  if (!clock) return sources.map((source) => ({ ...source }));
+  return sources.map((source) => ({ ...source, as_of: clock }));
 }
 
 /**

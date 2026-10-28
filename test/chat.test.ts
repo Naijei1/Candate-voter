@@ -258,6 +258,55 @@ test("a grounded answer repairs sources when the model omits them", async () => 
   assert.equal(converse.calls, 2);
 });
 
+test("a chat answer stamps sources with the page refresh instant", async () => {
+  const repo = new MemoryVoterRepository();
+  const refresh = "2026-10-28T00:48:47.136Z";
+  await repo.upsertRace(
+    race({
+      raceId: "2026-senate-TX",
+      office: "senate",
+      cycle: 2026,
+      title: "U.S. Senate, Texas",
+      state: "TX",
+      jurisdiction: "Texas",
+      updatedAt: "2026-10-26T12:49:00.000Z",
+    }),
+  );
+  await repo.upsertCandidate(
+    candidate({
+      candidateId: "S0TX00123",
+      displayName: "Ada Lovelace",
+      raceId: "2026-senate-TX",
+      updatedAt: "2026-10-26T12:49:00.000Z",
+    }),
+  );
+  await repo.saveWatermark({
+    source: "fec-efile-form2",
+    lastLoadTimestamp: "2026-10-26 08:49:00",
+    lastRunAt: refresh,
+    lastStatus: "success",
+    lastError: null,
+    pagesFetched: 1,
+    filingsUpserted: 1,
+    skipped: 0,
+    updatedAt: refresh,
+  });
+  const response = await postChat(
+    post({ message: "Who is running for Senate?", state: "TX", cycle: 2026 }),
+    chatDeps(repo, async () => {
+      throw new Error("model should not be called");
+    }),
+  );
+  assert.equal(response.status, 200);
+  const payload = (await response.json()) as {
+    refreshedAt: string;
+    sources: Array<{ as_of: string }>;
+  };
+  assert.equal(payload.refreshedAt, refresh);
+  assert.ok(payload.sources.length > 0);
+  for (const source of payload.sources) assert.equal(source.as_of, refresh);
+});
+
 test("model sources are kept only when the tool returned that url", async () => {
   const repo = new MemoryVoterRepository();
   await repo.upsertRace(
