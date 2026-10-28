@@ -122,7 +122,7 @@ body {
 
 .us-map .us-label {
   fill: var(--color-map-label);
-  font-size: 13px;
+  font-size: 16px;
   font-weight: 700;
   cursor: pointer;
   user-select: none;
@@ -133,7 +133,7 @@ body {
 }
 
 .us-map .us-callout {
-  font-size: 13px;
+  font-size: 16px;
 }
 
 .us-map .us-label-plate {
@@ -144,7 +144,7 @@ body {
 
 .us-map .us-label-small,
 .us-map .us-label-callout {
-  font-size: 13px;
+  font-size: 16px;
   font-weight: 700;
   stroke: var(--color-paper);
   stroke-width: 0.42em;
@@ -208,6 +208,10 @@ body {
   inset: 0;
 }
 
+.national-shell .map-bleed {
+  top: var(--map-clearance);
+}
+
 .map-bleed .us-map {
   display: block;
   width: 100%;
@@ -259,7 +263,7 @@ html[data-map-view="state"] .map-chrome {
 .map-hover-card {
   position: absolute;
   z-index: 24;
-  top: 12.5rem;
+  top: 0.55rem;
   left: 50%;
   transform: translateX(-50%);
   max-width: min(28rem, calc(100% - 1.5rem));
@@ -909,10 +913,12 @@ html[data-ask="open"] .map-chrome {
     overflow: hidden;
   }
 
-  /* viewBox units: 34px is about 12 CSS pixels on a 390px-wide phone. */
+  /* viewBox units: 44px is about 15 CSS pixels on a 390px-wide phone. */
   .us-map .us-label,
-  .us-map .us-callout {
-    font-size: 34px;
+  .us-map .us-callout,
+  .us-map .us-label-callout,
+  .us-map .us-label-small {
+    font-size: 44px;
   }
 
   .us-map .us-label {

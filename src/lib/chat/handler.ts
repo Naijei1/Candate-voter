@@ -20,6 +20,7 @@ import { CHAT_TIMEOUT_MESSAGE, ChatUnavailableError, unavailableBody } from "./e
 import { createBedrockConverse } from "./converse";
 import {
   CLARIFY_RACE_MARKDOWN,
+  askedChamber,
   hasPlaceContext,
   isAlignmentRequest,
   isUpcomingElectionsQuestion,
@@ -33,6 +34,7 @@ import { isVotingAdvice, VOTING_ADVICE_MARKDOWN } from "./prompt";
 import { clientAddress, createRateLimiter, type RateLimiter } from "./rate-limit";
 import { parseChatRequest } from "./request";
 import { isStateRosterQuestion, answerKnownPlace, answerStateRoster } from "./roster";
+import { limitAnswerToRaceScope } from "./scope";
 import { runGroundedChat } from "./run";
 import type { ChatAnswer, ChatRequest, ConverseFn } from "./types";
 import type { ApiRepository } from "../api/deps";
@@ -114,6 +116,7 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
         },
         threadId,
         parsed.value.message,
+        parsed.value,
       ),
     );
   }
@@ -133,6 +136,7 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
           },
           threadId,
           asked.message,
+          asked,
         ),
       );
     }
@@ -152,7 +156,7 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
         latencyMs: Date.now() - started,
         mode: "alignment",
       });
-      return json(chatBody(answer, threadId, asked.message));
+      return json(chatBody(answer, threadId, asked.message, asked));
     } catch (error) {
       const name = error instanceof Error ? error.name : "Error";
       console.error(`Alignment lookup failed: ${name}`);
@@ -180,7 +184,7 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
         latencyMs: Date.now() - started,
         mode: "factual",
       });
-      return json(chatBody(answer, threadId, asked.message));
+      return json(chatBody(answer, threadId, asked.message, asked));
     } catch (error) {
       return json(unavailableBody(error), 503);
     }
@@ -195,7 +199,7 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
       );
     }
     logOutcome({ refused: false, tools: [], latencyMs: Date.now() - started, mode: "factual" });
-    return json(chatBody(defined, threadId, asked.message));
+    return json(chatBody(defined, threadId, asked.message, asked));
   }
 
   if (isUpcomingElectionsQuestion(asked.message)) {
@@ -215,7 +219,7 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
         latencyMs: Date.now() - started,
         mode: "factual",
       });
-      return json(chatBody(answer, threadId, asked.message));
+      return json(chatBody(answer, threadId, asked.message, asked));
     } catch (error) {
       const name = error instanceof Error ? error.name : "Error";
       console.error(`Upcoming lookup failed: ${name}`);
@@ -223,11 +227,12 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
     }
   }
 
+  const chamber = askedChamber(asked.message);
   if (
     isVagueRunningQuestion(asked.message) &&
-    !asked.raceId &&
     !asked.candidateId &&
-    (asked.state || asked.zip)
+    (asked.state || asked.zip || asked.raceId) &&
+    (!asked.raceId || chamber === "senate" || chamber === "house")
   ) {
     const siteRoot =
       deps.siteRoot ?? `${originFromRequest(request)}${basePathFromEnv(deps.env)}`;
@@ -248,7 +253,7 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
         latencyMs: Date.now() - started,
         mode: "factual",
       });
-      return json(chatBody(answer, threadId, asked.message));
+      return json(chatBody(answer, threadId, asked.message, asked));
     } catch (error) {
       return json(unavailableBody(error), 503);
     }
@@ -266,6 +271,7 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
         },
         threadId,
         asked.message,
+        asked,
       ),
     );
   }
@@ -300,14 +306,21 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
       inputTokens: answer.usage.inputTokens,
       outputTokens: answer.usage.outputTokens,
     });
-    return json(chatBody(answer, threadId, asked.message));
+    return json(chatBody(answer, threadId, asked.message, asked));
   } catch (error) {
     return json(unavailableBody(error), 503);
   }
 }
 
-function chatBody(answer: ChatAnswer, threadId: string, priorMessage: string) {
-  const polished = polishChatAnswer(answer, priorMessage);
+function chatBody(
+  answer: ChatAnswer,
+  threadId: string,
+  priorMessage: string,
+  request?: ChatRequest,
+) {
+  const polished = limitAnswerToRaceScope(polishChatAnswer(answer, priorMessage), request ?? {
+    message: priorMessage,
+  });
   return {
     answer_markdown: polished.answer_markdown,
     sources: polished.sources,

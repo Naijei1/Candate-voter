@@ -73,9 +73,45 @@ export function stateFromRaceId(raceId: string | null | undefined): string | nul
   return null;
 }
 
+/**
+ * The visitor's question, without a leading "Page context:" note.
+ * That note names both chambers and real race ids, so chamber checks
+ * have to ignore it.
+ */
+export function visitorQuestion(message: string): string {
+  if (!message.startsWith("Page context:")) return message;
+  const split = message.indexOf("\n\n");
+  if (split < 0) return message;
+  return message.slice(split + 2);
+}
+
+export type AskedChamber = "senate" | "house" | "president";
+
+/** Senate, House, or president when the question names exactly one of them. */
+export function askedChamber(message: string): AskedChamber | null {
+  const question = visitorQuestion(message);
+  const senate = /\bsenate\b/i.test(question);
+  const house = /\bhouse\b/i.test(question);
+  const president = /\bpresidents?\b/i.test(question);
+  const count = Number(senate) + Number(house) + Number(president);
+  if (count !== 1) return null;
+  if (senate) return "senate";
+  if (house) return "house";
+  return "president";
+}
+
+/** Chamber implied by a race id. Unknown ids have none. */
+export function chamberFromRaceId(raceId: string | null | undefined): AskedChamber | null {
+  if (!raceId) return null;
+  if (/^(?:19|20)\d{2}-senate-[A-Z]{2}$/.test(raceId)) return "senate";
+  if (/^(?:19|20)\d{2}-house-[A-Z]{2}-\d{2}$/.test(raceId)) return "house";
+  if (/^(?:19|20)\d{2}-president$/.test(raceId)) return "president";
+  return null;
+}
+
 /** Who-is-running wording that used to become a national list. */
 export function isVagueRunningQuestion(message: string): boolean {
-  const text = message.trim();
+  const text = visitorQuestion(message).trim();
   if (RACE_ID.test(text)) return false;
   if (/\bpresidents?\b/i.test(text)) return false;
   return VAGUE_RUNNING.some((pattern) => pattern.test(text));

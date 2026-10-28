@@ -12,6 +12,8 @@ import {
   askScopeForState,
   askScopeForYear,
   buildChatPayload,
+  limitAnswerToRaceScope,
+  narrowAskContext,
   pageContextFromScope,
   parseChatResponse,
   retryAfterSeconds,
@@ -116,6 +118,47 @@ test("ask payload carries real ids, cycle, and the page state", () => {
   assert.equal(candidateBody.candidateId, "S0CA00123");
   assert.equal(candidateBody.raceId, "2026-senate-CA");
   assert.equal(candidateBody.message, "Show filings");
+});
+
+test("a Senate question keeps that race and drops other House districts", () => {
+  const ca = pageContextFromScope(askScopeForState(2026, "CA", races));
+  const scoped = narrowAskContext("Who is running for Senate?", { ...ca, zip: "94107" });
+  assert.equal(scoped.raceId, "2026-senate-CA");
+  assert.equal(scoped.state, "CA");
+  assert.equal(scoped.zip, "94107");
+  assert.match(scoped.messagePrefix ?? "", /2026-senate-CA/);
+  assert.equal((scoped.messagePrefix ?? "").includes("2026-house-CA-02"), false);
+  assert.equal((scoped.messagePrefix ?? "").includes("2026-house-CA-11"), false);
+
+  const general = narrowAskContext("Who is running?", ca);
+  assert.match(general.messagePrefix ?? "", /2026-house-CA-02/);
+
+  const answer = limitAnswerToRaceScope(
+    {
+      answer_markdown:
+        "**U.S. Senate**\n\n- **Ada** — Democratic\n\n**U.S. House**\n\n- **Grace** — Democratic — District 2",
+      sources: [
+        {
+          title: "U.S. Senate, California",
+          url: "https://voter.example/races/2026-senate-CA",
+          as_of: "unknown",
+        },
+        {
+          title: "U.S. House, California District 2",
+          url: "https://voter.example/races/2026-house-CA-02",
+          as_of: "unknown",
+        },
+      ],
+      refused: false,
+      mode: "factual",
+    },
+    { message: "Who is running for Senate?", raceId: "2026-senate-CA" },
+  );
+  assert.match(answer.answer_markdown, /Ada/);
+  assert.equal(answer.answer_markdown.includes("Grace"), false);
+  assert.equal(answer.answer_markdown.includes("District 2"), false);
+  assert.equal(answer.sources.length, 1);
+  assert.match(answer.sources[0]?.url ?? "", /senate-CA/);
 });
 
 test("chat responses keep API markdown and only flag alignment mode", () => {

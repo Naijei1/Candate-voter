@@ -676,7 +676,85 @@ test("who is running with a state or ZIP does not ask which state", async () => 
   assert.match(prompt, /state: KY \(Kentucky\)/);
   assert.match(prompt, /zip: 40202/);
   assert.match(prompt, /Do not ask which state/);
+  assert.match(prompt, /Senate contest only/);
+  assert.match(prompt, /Do not list House candidates from other districts/);
   assert.equal(called, false);
+});
+
+test("a Senate question does not list House candidates from other districts", async () => {
+  const repo = new MemoryVoterRepository();
+  await repo.upsertRace(
+    race({
+      raceId: "2026-senate-KY",
+      office: "senate",
+      cycle: 2026,
+      state: "KY",
+      title: "U.S. Senate, Kentucky",
+      jurisdiction: "Kentucky",
+    }),
+  );
+  await repo.upsertCandidate(
+    candidate({
+      candidateId: "S0KY00123",
+      raceId: "2026-senate-KY",
+      displayName: "Ada Lovelace",
+      partyAffiliation: "DEM",
+      office: "senate",
+    }),
+  );
+  await repo.upsertRace(
+    race({
+      raceId: "2026-house-KY-03",
+      office: "house",
+      cycle: 2026,
+      state: "KY",
+      district: "03",
+      title: "U.S. House, Kentucky District 3",
+      jurisdiction: "Kentucky District 3",
+    }),
+  );
+  await repo.upsertCandidate(
+    candidate({
+      candidateId: "H0KY03001",
+      raceId: "2026-house-KY-03",
+      displayName: "Grace Hopper",
+      partyAffiliation: "DEM",
+      office: "house",
+    }),
+  );
+  const prefix =
+    "Page context: browsing Kentucky · 2026. Stored Senate and House race ids: 2026-senate-KY, 2026-house-KY-03, 2026-house-KY-06.";
+  const senate = await postChat(
+    post({
+      message: `${prefix}\n\nWho's running for Senate?`,
+      state: "KY",
+      raceId: "2026-senate-KY",
+      cycle: 2026,
+      year: 2026,
+    }),
+    chatDeps(repo, async () => {
+      throw new Error("model should not be called");
+    }),
+  );
+  assert.equal(senate.status, 200);
+  const senateBody = (await senate.json()) as { answer_markdown: string; sources: { url: string }[] };
+  assert.match(senateBody.answer_markdown, /Ada Lovelace/);
+  assert.equal(senateBody.answer_markdown.includes("Grace Hopper"), false);
+  assert.equal(/District\s+3/.test(senateBody.answer_markdown), false);
+  assert.equal(
+    senateBody.sources.some((source) => source.url.includes("house-KY")),
+    false,
+  );
+
+  const both = await postChat(
+    post({ message: "Who's running", state: "KY", cycle: 2026, year: 2026 }),
+    chatDeps(repo, async () => {
+      throw new Error("model should not be called");
+    }),
+  );
+  const bothBody = (await both.json()) as { answer_markdown: string };
+  assert.match(bothBody.answer_markdown, /Ada Lovelace/);
+  assert.match(bothBody.answer_markdown, /Grace Hopper/);
 });
 
 test("a model that asks which state is replaced when the page sent a race", async () => {

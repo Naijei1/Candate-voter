@@ -52,7 +52,7 @@ import {
   type MapContext,
 } from "@/lib/landing/state-query";
 import { findRacesByZip } from "@/lib/lookup/find-races";
-import { settleZipLookup, zipRaceSlots, zipSlotJurisdiction, zipSlotTitle, type ZipLookupPayload, type ZipLookupResult, type ZipRaceSlot } from "@/lib/lookup/zip-view";
+import { settleZipLookup, zipFailureClearsSelection, zipRaceSlots, zipSlotJurisdiction, zipSlotTitle, type ZipLookupPayload, type ZipLookupResult, type ZipRaceSlot } from "@/lib/lookup/zip-view";
 import { racesByStateOffice } from "@/lib/races";
 import type { Race } from "@/lib/types";
 
@@ -110,14 +110,22 @@ export function Landing({
     if (pendingYear != null && pendingYear === year) clearPendingYear();
   }, [clearPendingYear, pendingYear, year]);
 
+  const listed = selected ? stateRaces(races, selected) : [];
+  const yours = zipPayload && zipPayload.state === selected ? zipRaceSlots(races, zipPayload) : [];
+  const yourIds = new Set(yours.map((slot) => slot.raceId));
+  const pinYours = Boolean(zipCode && selected && !zipFailed);
+  const zipRaceKey = pinYours ? yours.map((slot) => slot.raceId).join("\n") : "";
+
   useEffect(() => {
-    const scope = selected ? askScopeForState(year, selected, races) : askScopeForYear(year);
+    const focused = zipRaceKey ? new Set(zipRaceKey.split("\n")) : null;
+    const scopedRaces = focused ? races.filter((race) => focused.has(race.raceId)) : races;
+    const scope = selected ? askScopeForState(year, selected, scopedRaces) : askScopeForYear(year);
     const page = pageContextFromScope(scope);
     return replacePageContext({
       ...page,
       ...(zipCode ? { zip: zipCode } : {}),
     });
-  }, [replacePageContext, races, selected, year, zipCode]);
+  }, [replacePageContext, races, selected, year, zipCode, zipRaceKey]);
 
   const syncFromLocation = useCallback(() => {
     const postal = postalFromSearch(window.location.search);
@@ -149,13 +157,19 @@ export function Landing({
     };
   }, [selected]);
 
+  const writeUrl = useCallback((search: string) => {
+    const next = `${window.location.pathname}${search}${window.location.hash}`;
+    const current = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+    if (next === current) return;
+    window.history.pushState(null, "", next);
+  }, []);
+
   useEffect(() => {
     if (!zipCode || !selected) {
       heldZip.current = null;
       setZipPayload(null);
       setZipLoading(false);
       setZipFailed(false);
-      setZipNotice(null);
       return;
     }
     const held = heldZip.current;
@@ -175,11 +189,14 @@ export function Landing({
         const result = await settleZipLookup((lookupZip ?? findRacesByZip)(zipCode, year));
         if (!active) return;
         if (!result.ok || result.payload.state !== selected) {
+          const clearMap = result.ok || zipFailureClearsSelection(result.reason);
+          heldZip.current = null;
           setZipPayload(null);
           setZipFailed(true);
           setZipNotice(zipFailureNotice(result));
           setRememberedPostal(null);
           setHot(null);
+          if (clearMap) writeUrl(searchWithoutState(window.location.search));
           return;
         }
         heldZip.current = result.payload;
@@ -187,9 +204,13 @@ export function Landing({
         setZipNotice(null);
       } catch {
         if (!active) return;
+        heldZip.current = null;
         setZipPayload(null);
         setZipFailed(true);
         setZipNotice("That ZIP didn't match.");
+        setRememberedPostal(null);
+        setHot(null);
+        writeUrl(searchWithoutState(window.location.search));
       } finally {
         if (active) setZipLoading(false);
       }
@@ -197,12 +218,7 @@ export function Landing({
     return () => {
       active = false;
     };
-  }, [lookupZip, selected, year, zipCode]);
-
-  const listed = selected ? stateRaces(races, selected) : [];
-  const yours = zipPayload && zipPayload.state === selected ? zipRaceSlots(races, zipPayload) : [];
-  const yourIds = new Set(yours.map((slot) => slot.raceId));
-  const pinYours = Boolean(zipCode && selected && !zipFailed);
+  }, [lookupZip, selected, writeUrl, year, zipCode]);
   const visibleIds = (
     pinYours && !showAll ? listed.filter((race) => yourIds.has(race.raceId)) : listed
   ).map((race) => race.raceId);
@@ -260,16 +276,10 @@ export function Landing({
     setReloadKey((key) => key + 1);
   }, []);
 
-  const writeUrl = useCallback((search: string) => {
-    const next = `${window.location.pathname}${search}${window.location.hash}`;
-    const current = `${window.location.pathname}${window.location.search}${window.location.hash}`;
-    if (next === current) return;
-    window.history.pushState(null, "", next);
-  }, []);
-
   const selectState = useCallback(
     (postal: string) => {
       heldZip.current = null;
+      setZipNotice(null);
       writeUrl(searchWithState(window.location.search, postal));
     },
     [writeUrl],
@@ -279,6 +289,7 @@ export function Landing({
     (payload: ZipLookupPayload) => {
       if (!payload.state) return;
       heldZip.current = payload;
+      setZipNotice(null);
       writeUrl(searchWithZip(window.location.search, payload.state, payload.zip));
     },
     [writeUrl],
@@ -292,9 +303,15 @@ export function Landing({
   }, [writeUrl]);
 
   const rejectZip = useCallback(() => {
+    heldZip.current = null;
+    setZipPayload(null);
+    setZipLoading(false);
+    setZipFailed(false);
+    setZipNotice(null);
     setHot(null);
     setRememberedPostal(null);
-  }, []);
+    writeUrl(searchWithoutState(window.location.search));
+  }, [writeUrl]);
 
   const preserve = useCallback(
     (path: string) => withPreservedQuery(path, { year, state: selected, zip: zipCode }),
@@ -337,6 +354,11 @@ export function Landing({
           onReject={rejectZip}
           lookup={lookupZip}
         />
+        {!selected && zipNotice ? (
+          <p className="zip-status" role="status">
+            {zipNotice}
+          </p>
+        ) : null}
         {!selected && !hasAnyRaces ? (
           <div className="mt-2">
             <StorageNotice>No races are stored for election years {cycleLabel}.</StorageNotice>

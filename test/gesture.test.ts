@@ -55,4 +55,12 @@ test("phone maps and the state sheet expose pan and drag targets", () => {
   assert.match(css, /--sheet-height,\s*var\(--state-sheet-max\)/);
   assert.match(css, /\.ask-sheet\s*\{[^}]*top:\s*var\(--chrome-block\)/);
   assert.match(css, /env\(safe-area-inset-top/);
+  assert.match(national, /onPanActive/);
+  assert.match(national, /preserveAspectRatio="xMidYMin meet"/);
+  assert.match(css, /\.national-shell \.map-bleed\s*\{[^}]*top:\s*var\(--map-clearance\)/);
+  const mobile = css.slice(css.indexOf("@media (max-width: 1023px)"), css.indexOf("@media (max-width: 420px)"));
+  assert.match(mobile, /\.us-map \.us-label-callout[\s\S]*?font-size:\s*44px/);
+  assert.match(landing, /zipFailureClearsSelection/);
+  assert.match(landing, /heldZip\.current = null/);
+  assert.match(landing, /onReject=\{rejectZip\}/);
 });

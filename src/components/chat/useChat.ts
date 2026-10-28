@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ChatCancelled, postChatMessage, type ChatCallResult } from "@/lib/chat/browser";
-import { applyPagePrefix } from "@/lib/chat/scope";
+import { applyPagePrefix, narrowAskContext } from "@/lib/chat/scope";
 import {
   buildChatRequestBody,
   rateLimitRemainingSeconds,
@@ -102,13 +102,14 @@ export function useChat() {
       const controller = new AbortController();
       abortRef.current = controller;
       try {
+        const scoped = narrowAskContext(message, context);
         const built = buildChatRequestBody({
-          message: applyPagePrefix(context.messagePrefix, message),
-          raceId: context.raceId,
-          candidateId: context.candidateId,
-          cycle: context.cycle,
-          state: context.state,
-          zip: context.zip,
+          message: applyPagePrefix(scoped.messagePrefix, message),
+          raceId: scoped.raceId,
+          candidateId: scoped.candidateId,
+          cycle: scoped.cycle,
+          state: scoped.state,
+          zip: scoped.zip,
           threadId: threadRef.current,
         });
         if (!built.ok) {
