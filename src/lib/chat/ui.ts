@@ -87,25 +87,71 @@ export function contextFromLocation(input: {
   const cycle = resolveCycle(input.cycles, requested, input.now) ?? undefined;
   const geo = pageGeo(input.searchParams.get("state"), input.searchParams.get("zip"));
   if (input.pathname === "/chat") {
-    return {
+    return withoutMismatchedRace({
       raceId: validId(input.searchParams.get("raceId")),
       candidateId: validId(input.searchParams.get("candidateId")),
       cycle,
       messagePrefix: pageNote(input.searchParams.get("note")),
       panel: false,
       ...geo,
-    };
+    });
   }
 
   const raceMatch = /^\/races\/([^/]+)$/.exec(input.pathname);
   const candidateMatch = /^\/candidates\/([^/]+)$/.exec(input.pathname);
-  return {
+  return withoutMismatchedRace({
     raceId: raceMatch ? validId(decodeURIComponent(raceMatch[1])) : undefined,
     candidateId: candidateMatch ? validId(decodeURIComponent(candidateMatch[1])) : undefined,
     cycle,
     panel: input.pathname === "/" || raceMatch != null || candidateMatch != null,
     ...geo,
-  };
+  });
+}
+
+/**
+ * Ask shows the year in the header control. A race from another year is not
+ * that context: the chip and the request stay on the selected year.
+ */
+export function presentedAskContext<T extends ChatContextInput>(
+  located: T,
+  page: ChatContextInput | null,
+): T {
+  if (!page) return withoutMismatchedRace(located);
+  const cycle = located.cycle ?? page.cycle;
+  return withoutMismatchedRace({
+    ...located,
+    cycle,
+    ...(page.raceId || located.raceId ? { raceId: page.raceId ?? located.raceId } : {}),
+    ...(page.candidateId || located.candidateId
+      ? { candidateId: page.candidateId ?? located.candidateId }
+      : {}),
+    ...(page.messagePrefix || located.messagePrefix
+      ? { messagePrefix: page.messagePrefix ?? located.messagePrefix }
+      : {}),
+    ...(page.label || located.label ? { label: page.label ?? located.label } : {}),
+    ...(page.state || located.state ? { state: page.state ?? located.state } : {}),
+    ...(page.zip || located.zip ? { zip: page.zip ?? located.zip } : {}),
+  });
+}
+
+/** Drop a race whose id year is not the selected year. State and ZIP stay. */
+export function withoutMismatchedRace<T extends ChatContextInput>(context: T): T {
+  const raceYear = raceYearOf(context.raceId);
+  if (context.cycle == null || raceYear == null || raceYear === context.cycle) return context;
+  const next = { ...context };
+  delete next.raceId;
+  delete next.candidateId;
+  delete next.messagePrefix;
+  delete next.label;
+  return next;
+}
+
+function raceYearOf(raceId: string | undefined): number | null {
+  if (!raceId) return null;
+  const match = /^((?:19|20)\d{2})-/.exec(raceId);
+  if (!match?.[1]) return null;
+  const year = Number(match[1]);
+  return Number.isInteger(year) ? year : null;
 }
 
 export function isAskPanelPath(pathname: string): boolean {

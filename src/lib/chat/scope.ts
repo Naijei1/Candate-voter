@@ -215,6 +215,66 @@ function optionalId(raceId: string | undefined): { raceId: string } | Record<str
 }
 
 const RACE_ID_IN_TEXT = /\b(?:19|20)\d{2}-(?:president|senate-[A-Z]{2}|house-[A-Z]{2}-\d{2})\b/g;
+
+export type AskHistoryScope = "senate" | "house" | "president" | "mixed" | "open";
+
+/**
+ * Scope the visible thread belongs to. A state panel that names Senate and
+ * House together is mixed, so it cannot be shown on a Senate page.
+ */
+export function askHistoryScope(context: ChatContextInput): AskHistoryScope {
+  const ids = new Set<string>();
+  if (context.raceId) ids.add(context.raceId);
+  for (const id of raceIdsIn(context.messagePrefix ?? "")) ids.add(id);
+  const chambers = new Set<AskedChamber>();
+  for (const id of ids) {
+    const chamber = chamberFromRaceId(id);
+    if (chamber) chambers.add(chamber);
+  }
+  if (chambers.size > 1) return "mixed";
+  const only = chambers.values().next().value;
+  return only ?? "open";
+}
+
+/** Session key for the Ask thread. Year, place, race, and scope each change it. */
+export function askHistoryKey(context: ChatContextInput): string {
+  return [
+    context.cycle ?? "",
+    context.state ?? "",
+    context.raceId ?? "",
+    context.candidateId ?? "",
+    askHistoryScope(context),
+  ].join("|");
+}
+
+export function scopeFromHistoryKey(key: string): AskHistoryScope {
+  const scope = key.split("|").at(-1);
+  if (
+    scope === "senate" ||
+    scope === "house" ||
+    scope === "president" ||
+    scope === "mixed" ||
+    scope === "open"
+  ) {
+    return scope;
+  }
+  return "open";
+}
+
+/**
+ * A Senate question must not sit under a House-mixed thread.
+ * Follow-up Senate questions keep a thread that is already Senate-only.
+ */
+export function shouldDropHistoryForSend(
+  historyScope: AskHistoryScope | null,
+  message: string,
+  context: ChatContextInput,
+): boolean {
+  const scoped = narrowAskContext(message, context);
+  if (askHistoryScope(scoped) !== "senate") return false;
+  if (historyScope === "senate") return false;
+  return historyScope === "mixed" || askHistoryScope(context) === "mixed";
+}
 const HOUSE_RACE_ID = /\b((?:19|20)\d{2}-house-[A-Z]{2}-\d{2})\b/;
 
 /**

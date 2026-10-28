@@ -7,10 +7,13 @@ import {
   ALIGNMENT_DISCLAIMER,
   ASK_INTRO,
   applyPagePrefix,
+  askHistoryKey,
+  askHistoryScope,
   askScopeForCandidate,
   askScopeForRace,
   askScopeForState,
   askScopeForYear,
+  shouldDropHistoryForSend,
   buildChatPayload,
   limitAnswerToRaceScope,
   narrowAskContext,
@@ -159,6 +162,33 @@ test("a Senate question keeps that race and drops other House districts", () => 
   assert.equal(answer.answer_markdown.includes("District 2"), false);
   assert.equal(answer.sources.length, 1);
   assert.match(answer.sources[0]?.url ?? "", /senate-CA/);
+});
+
+test("Ask history drops when the year, state, race, or Senate scope changes", () => {
+  const state = pageContextFromScope(askScopeForState(2026, "CA", races));
+  const senate = pageContextFromScope(
+    askScopeForRace(
+      race({
+        raceId: "2026-senate-CA",
+        office: "senate",
+        title: "U.S. Senate, California",
+        state: "CA",
+      }),
+    ),
+  );
+  assert.equal(askHistoryScope(state), "mixed");
+  assert.equal(askHistoryScope(senate), "senate");
+  assert.notEqual(askHistoryKey(state), askHistoryKey(senate));
+  assert.notEqual(askHistoryKey({ cycle: 2026, state: "CA" }), askHistoryKey({ cycle: 2028, state: "CA" }));
+  assert.notEqual(askHistoryKey({ cycle: 2026, state: "CA" }), askHistoryKey({ cycle: 2026, state: "TX" }));
+  assert.notEqual(
+    askHistoryKey({ cycle: 2026, state: "CA", raceId: "2026-senate-CA" }),
+    askHistoryKey({ cycle: 2026, state: "CA" }),
+  );
+  assert.equal(shouldDropHistoryForSend("mixed", "Who is running for Senate?", state), true);
+  assert.equal(shouldDropHistoryForSend("senate", "Who else filed for Senate?", state), false);
+  assert.equal(shouldDropHistoryForSend("mixed", "Who is running?", state), false);
+  assert.equal(shouldDropHistoryForSend("senate", "Who filed?", senate), false);
 });
 
 test("chat responses keep API markdown and only flag alignment mode", () => {

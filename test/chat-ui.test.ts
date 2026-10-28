@@ -3,9 +3,9 @@ import test from "node:test";
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { ChatComposer } from "../src/components/chat/ChatComposer";
-import { ChatMessageList } from "../src/components/chat/ChatMessageList";
+import { ChatMessageList, loadingStatus } from "../src/components/chat/ChatMessageList";
 import { MarkdownAnswer } from "../src/components/chat/MarkdownAnswer";
-import { settleAssistantTurn, type ChatTurn } from "../src/components/chat/useChat";
+import { applyAskBinding, settleAssistantTurn, type ChatTurn } from "../src/components/chat/useChat";
 import { CHAT_TIMEOUT_MS, ChatCancelled, postChatMessage } from "../src/lib/chat/browser";
 import {
   buildChatRequestBody,
@@ -14,6 +14,7 @@ import {
   classifyChatStatus,
   contextFromLocation,
   contextLabel,
+  presentedAskContext,
   errorCopy,
   formatAsOf,
   parseChatSuccess,
@@ -547,6 +548,85 @@ test("message states render sources only after a successful answer", () => {
   );
   assert.match(composer, /aria-label="Ask about races or candidates"/);
   assert.match(composer, /disabled=""/);
+});
+
+test("Ask context year follows the year control and stale threads stay stored", () => {
+  const located = contextFromLocation({
+    pathname: "/races/2026-senate-CA",
+    searchParams: new URLSearchParams("year=2028&state=CA"),
+    cycles: [2026, 2028],
+  });
+  assert.equal(located.cycle, 2028);
+  assert.equal(located.raceId, undefined);
+  const shown = presentedAskContext(located, {
+    cycle: 2026,
+    raceId: "2026-senate-CA",
+    state: "CA",
+    label: "U.S. Senate, California · 2026",
+    messagePrefix: "Page context: browsing California · 2026. Stored Senate and House race ids: 2026-senate-CA, 2026-house-CA-11.",
+  });
+  assert.equal(shown.cycle, 2028);
+  assert.equal(shown.raceId, undefined);
+  assert.equal(shown.label, undefined);
+  assert.equal(shown.messagePrefix, undefined);
+  assert.equal(contextLabel(shown), "California · 2028");
+
+  const matched = presentedAskContext(
+    contextFromLocation({
+      pathname: "/races/2026-senate-CA",
+      searchParams: new URLSearchParams("year=2026&state=CA"),
+      cycles: [2026, 2028],
+    }),
+    {
+      cycle: 2026,
+      raceId: "2026-senate-CA",
+      state: "CA",
+      label: "U.S. Senate, California · 2026",
+    },
+  );
+  assert.equal(matched.raceId, "2026-senate-CA");
+  assert.equal(matched.cycle, 2026);
+  assert.equal(contextLabel(matched), "U.S. Senate, California · 2026");
+
+  const empty = { bindingKey: null, historyScope: null, draft: "", turns: [] as ChatTurn[] };
+  const stored = {
+    bindingKey: "2026|CA|2026-senate-CA||mixed",
+    historyScope: "mixed" as const,
+    threadId: "thread-house",
+    draft: "old",
+    turns: [{ id: "u", role: "user" as const, text: "Who is running?" }],
+  };
+  const opened = applyAskBinding(empty, "2026|CA|2026-senate-CA||senate", stored);
+  assert.equal(opened.restore, false);
+  assert.equal(opened.state.turns.length, 0);
+  assert.equal(opened.state.threadId, undefined);
+
+  const again = applyAskBinding(empty, stored.bindingKey, stored);
+  assert.equal(again.restore, true);
+  assert.equal(again.state.threadId, "thread-house");
+
+  const switched = applyAskBinding(again.state, "2028|CA|2026-senate-CA||senate", stored);
+  assert.equal(switched.clear, true);
+  assert.equal(switched.state.turns.length, 0);
+  assert.equal(switched.state.draft, "");
+  assert.equal(switched.state.threadId, undefined);
+
+  const provisional = applyAskBinding(empty, "2026||||open", stored);
+  assert.equal(provisional.restore, false);
+  const settled = applyAskBinding(provisional.state, stored.bindingKey, stored);
+  assert.equal(settled.restore, true);
+  assert.equal(settled.state.turns.length, 1);
+});
+
+test("Ask wait copy warns before the 25s abort", () => {
+  assert.equal(loadingStatus(0), "Looking up public records…");
+  assert.equal(loadingStatus(3_000), "Looking up public records…");
+  assert.equal(loadingStatus(4_000), "Still looking up public records… You can cancel.");
+  assert.match(loadingStatus(8_000), /Still looking up public records \(8s\)/);
+  assert.match(loadingStatus(8_000), /narrower question/);
+  assert.match(loadingStatus(16_000), /This stops if public records don't come back/);
+  assert.match(loadingStatus(16_000), /16s/);
+  assert.equal(CHAT_TIMEOUT_MS, 25_000);
 });
 
 function render(node: React.ReactElement): string {

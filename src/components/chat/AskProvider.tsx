@@ -14,7 +14,7 @@ import {
 } from "react";
 import { ChatShell } from "@/components/chat/ChatShell";
 import { useChat, type ChatController } from "@/components/chat/useChat";
-import { contextFromLocation, isAskPanelPath, type ChatContextInput } from "@/lib/chat/ui";
+import { contextFromLocation, isAskPanelPath, presentedAskContext, type ChatContextInput } from "@/lib/chat/ui";
 
 type AskContextValue = {
   open: boolean;
@@ -86,7 +86,7 @@ function AskPanel({ cycles }: { cycles: number[] }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const located = contextFromLocation({ pathname, searchParams, cycles });
-  const context = mergePageContext(located, pageContext);
+  const context = presentedAskContext(located, pageContext);
   const panelRef = useRef<HTMLDivElement>(null);
   const [keyboardInset, setKeyboardInset] = useState(0);
   const close = useCallback(() => setOpen(false), [setOpen]);
@@ -125,26 +125,6 @@ function AskPanel({ cycles }: { cycles: number[] }) {
       </div>
     </div>
   );
-}
-
-function mergePageContext(
-  located: ChatContextInput,
-  page: ChatContextInput | null,
-): ChatContextInput {
-  if (!page) return located;
-  return {
-    cycle: page.cycle ?? located.cycle,
-    ...(page.raceId || located.raceId ? { raceId: page.raceId ?? located.raceId } : {}),
-    ...(page.candidateId || located.candidateId
-      ? { candidateId: page.candidateId ?? located.candidateId }
-      : {}),
-    ...(page.messagePrefix || located.messagePrefix
-      ? { messagePrefix: page.messagePrefix ?? located.messagePrefix }
-      : {}),
-    ...(page.label || located.label ? { label: page.label ?? located.label } : {}),
-    ...(page.state || located.state ? { state: page.state ?? located.state } : {}),
-    ...(page.zip || located.zip ? { zip: page.zip ?? located.zip } : {}),
-  };
 }
 
 function useScrollLock(active: boolean) {

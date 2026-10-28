@@ -127,6 +127,21 @@ function AssistantBubble({
   );
 }
 
+/** Wait copy while a lookup is in flight. The request itself aborts at 25s. */
+export function loadingStatus(elapsedMs: number): string {
+  const seconds = Math.floor(elapsedMs / 1000);
+  if (elapsedMs >= 16_000) {
+    return `Still looking (${seconds}s). This stops if public records don't come back. Cancel, or try one race.`;
+  }
+  if (elapsedMs >= 8_000) {
+    return `Still looking up public records (${seconds}s). Cancel if you want to stop, or try a narrower question.`;
+  }
+  if (elapsedMs >= 4_000) {
+    return "Still looking up public records… You can cancel.";
+  }
+  return "Looking up public records…";
+}
+
 function LoadingCopy() {
   const [seconds, setSeconds] = useState(0);
   useEffect(() => {
@@ -136,17 +151,7 @@ function LoadingCopy() {
     }, 1000);
     return () => window.clearInterval(timer);
   }, []);
-  if (seconds >= 8) {
-    return (
-      <p className="text-sm text-muted">
-        Still looking up public records ({seconds}s). Cancel if you want to stop, or try a narrower question.
-      </p>
-    );
-  }
-  if (seconds >= 4) {
-    return <p className="text-sm text-muted">Still looking up public records… You can cancel.</p>;
-  }
-  return <p className="text-sm text-muted">Looking up public records…</p>;
+  return <p className="text-sm text-muted">{loadingStatus(seconds * 1000)}</p>;
 }
 
 export function politeStatus(turns: ChatTurn[]): string {

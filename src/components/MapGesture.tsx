@@ -1,9 +1,38 @@
 "use client";
 
 import React, { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
-import { PAN_START, clampPan, midpoint, nextPan, pointDistance, type Pan, type Point } from "@/lib/map/gesture";
+import {
+  PAN_START,
+  clampPan,
+  midpoint,
+  nextPan,
+  pointDistance,
+  type Pan,
+  type PanLimits,
+  type Point,
+} from "@/lib/map/gesture";
 
 const TAP_SLOP = 8;
+
+/** Layout size of the drawing, plus the pinch-out scale that fits it in the frame. */
+function panLimits(frame: HTMLElement, scale: number): PanLimits {
+  const svg = frame.querySelector("svg");
+  const frameW = frame.clientWidth;
+  const frameH = frame.clientHeight;
+  if (!(svg instanceof SVGElement) || frameW <= 0 || frameH <= 0 || scale <= 0) {
+    return { minScale: 1 };
+  }
+  const rect = svg.getBoundingClientRect();
+  const width = rect.width / scale;
+  const height = rect.height / scale;
+  if (width <= 0 || height <= 0) return { minScale: 1 };
+  const fit = Math.min(frameW / width, frameH / height);
+  return {
+    contentWidth: width,
+    contentHeight: height,
+    minScale: fit >= 0.98 ? 1 : Math.max(0.2, fit),
+  };
+}
 
 type Origin = { pan: Pan; mid: Point; distance: number; moved: boolean };
 
@@ -75,6 +104,7 @@ export function MapGesture({
         nextPan(origin.pan, origin.mid, origin.distance, points, center()),
         frameBox.width,
         frameBox.height,
+        panLimits(frame, panRef.current.scale),
       );
       panRef.current = next;
       setPan(next);
