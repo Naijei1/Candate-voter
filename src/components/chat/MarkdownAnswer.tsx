@@ -24,19 +24,7 @@ export function MarkdownAnswer({ markdown }: { markdown: string }) {
           );
         }
         if (block.type === "ul" || block.type === "ol") {
-          const Tag = block.type;
-          return (
-            <Tag
-              key={index}
-              className={`${block.type === "ol" ? "list-decimal" : "list-disc"} space-y-1 pl-5`}
-            >
-              {block.items.map((item, itemIndex) => (
-                <li key={itemIndex}>
-                  <Inlines nodes={item} />
-                </li>
-              ))}
-            </Tag>
-          );
+          return <AnswerList key={index} type={block.type} items={block.items} />;
         }
         return (
           <p key={index}>
@@ -49,6 +37,37 @@ export function MarkdownAnswer({ markdown }: { markdown: string }) {
           </p>
         );
       })}
+    </div>
+  );
+}
+
+/** Long count dumps stay a short list until the visitor asks for the rest. */
+export const ASK_LIST_PREVIEW = 6;
+
+function AnswerList({ type, items }: { type: "ul" | "ol"; items: InlineNode[][] }) {
+  const [open, setOpen] = useState(false);
+  const total = items.length;
+  const shown = open || total <= ASK_LIST_PREVIEW ? items : items.slice(0, ASK_LIST_PREVIEW);
+  const Tag = type;
+  return (
+    <div>
+      <Tag className={`${type === "ol" ? "list-decimal" : "list-disc"} space-y-1 pl-5`}>
+        {shown.map((item, itemIndex) => (
+          <li key={itemIndex}>
+            <Inlines nodes={item} />
+          </li>
+        ))}
+      </Tag>
+      {total > ASK_LIST_PREVIEW ? (
+        <button
+          type="button"
+          className="mt-2 text-sm font-semibold text-accent underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          aria-expanded={open}
+          onClick={() => setOpen((value) => !value)}
+        >
+          {open ? "Show less" : `Show all ${total}`}
+        </button>
+      ) : null}
     </div>
   );
 }

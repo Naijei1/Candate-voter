@@ -31,6 +31,8 @@ export type AssistantTurn =
       markdown: string;
       sources: ChatSource[];
       mode: ChatMode | null;
+      /** Cursor time from the answer, when the API sent one. */
+      refreshedAt?: string | null;
     }
   | {
       id: string;
@@ -39,6 +41,7 @@ export type AssistantTurn =
       markdown: string;
       sources: ChatSource[];
       mode: ChatMode | null;
+      refreshedAt?: string | null;
     }
   | {
       id: string;
@@ -53,6 +56,38 @@ export type AssistantTurn =
     };
 
 export type ChatTurn = UserTurn | AssistantTurn;
+
+/**
+ * Replace an error row with a fresh loading row for the same question.
+ * A bad request stays put. Returns null when there is nothing to resend.
+ */
+export function prepareRetry(turns: readonly ChatTurn[]): {
+  message: string;
+  assistantId: string;
+  turns: ChatTurn[];
+} | null {
+  let errorIndex = -1;
+  for (let index = turns.length - 1; index >= 0; index -= 1) {
+    const turn = turns[index];
+    if (turn?.role === "assistant" && turn.status === "error") {
+      errorIndex = index;
+      break;
+    }
+  }
+  if (errorIndex < 1) return null;
+  const errorTurn = turns[errorIndex];
+  const userTurn = turns[errorIndex - 1];
+  if (!errorTurn || errorTurn.role !== "assistant" || errorTurn.status !== "error") return null;
+  if (!userTurn || userTurn.role !== "user") return null;
+  if (errorTurn.kind === "bad_request") return null;
+  return {
+    message: userTurn.text,
+    assistantId: errorTurn.id,
+    turns: turns.map((turn) =>
+      turn.id === errorTurn.id ? { id: errorTurn.id, role: "assistant", status: "loading" } : turn,
+    ),
+  };
+}
 
 /** Replace the in-flight assistant row. A success or error never leaves that row loading. */
 export function settleAssistantTurn(
@@ -289,32 +324,19 @@ export function useChat() {
 
   const retry = useCallback(
     async (context: ChatContextInput) => {
-      if (pendingRef.current || rateLimitBlocks(turnsRef.current)) return;
-      const current = turnsRef.current;
-      let errorIndex = -1;
-      for (let index = current.length - 1; index >= 0; index -= 1) {
-        const turn = current[index];
-        if (turn?.role === "assistant" && turn.status === "error") {
-          errorIndex = index;
-          break;
-        }
-      }
-      if (errorIndex < 1) return;
-      const errorTurn = current[errorIndex];
-      const userTurn = current[errorIndex - 1];
-      if (!errorTurn || errorTurn.role !== "assistant" || errorTurn.status !== "error") return;
-      if (!userTurn || userTurn.role !== "user") return;
-      if (errorTurn.kind === "bad_request") return;
-      pendingRef.current = true;
+      if (rateLimitBlocks(turnsRef.current)) return;
+      const prepared = prepareRetry(turnsRef.current);
+      if (!prepared) return;
+      // Drop the aborted request first so Retry is a new send, not a second cancel.
+      const previous = abortRef.current;
+      abortRef.current = null;
       const flight = flightRef.current + 1;
       flightRef.current = flight;
+      previous?.abort();
+      pendingRef.current = true;
       setPending(true);
-      setTurns((existing) =>
-        existing.map((turn) =>
-          turn.id === errorTurn.id ? { id: errorTurn.id, role: "assistant", status: "loading" } : turn,
-        ),
-      );
-      await run(userTurn.text, context, errorTurn.id, flight);
+      setTurns(prepared.turns);
+      await run(prepared.message, context, prepared.assistantId, flight);
     },
     [run],
   );
@@ -381,6 +403,7 @@ function applyAssistantResult(
             markdown: result.answer_markdown,
             sources: result.sources,
             mode: result.mode,
+            ...(result.refreshedAt !== undefined ? { refreshedAt: result.refreshedAt } : {}),
           }
         : {
             id: assistantId,
@@ -389,6 +412,7 @@ function applyAssistantResult(
             markdown: result.answer_markdown,
             sources: result.sources,
             mode: result.mode,
+            ...(result.refreshedAt !== undefined ? { refreshedAt: result.refreshedAt } : {}),
           };
     }
     const wait =

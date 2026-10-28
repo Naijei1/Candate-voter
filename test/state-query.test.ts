@@ -9,6 +9,7 @@ import {
   searchWithoutState,
   searchWithZip,
   withPreservedQuery,
+  yearChoiceAction,
   yearNavigationHref,
   zipFromSearch,
 } from "../src/lib/landing/state-query";
@@ -43,6 +44,13 @@ test("ZIP back keeps the highlight and a manual state tap forgets it", () => {
   assert.equal(nextRememberedPostal(null, null, "KY"), "KY");
   assert.equal(nextRememberedPostal(null, null, null), null);
   assert.equal(nextRememberedPostal("TX", null, null), null);
+});
+
+test("a stuck year choice reloads and a finished one stays", () => {
+  assert.equal(yearChoiceAction("/", "?year=2026", 2028, null), "push");
+  assert.equal(yearChoiceAction("/", "?year=2026", 2026, null), "stay");
+  assert.equal(yearChoiceAction("/", "?year=2028", 2028, 2028), "reload");
+  assert.equal(yearChoiceAction("/races/2026-senate-TX", "?year=2026", 2028, null), "push");
 });
 
 test("year navigation keeps the selected state on the home page", () => {

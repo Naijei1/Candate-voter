@@ -29,6 +29,8 @@ export type ChatCallResult =
       sources: ChatSource[];
       mode: ChatMode | null;
       threadId?: string;
+      /** Ingest cursor time when the answer included it. Absent on older payloads. */
+      refreshedAt?: string | null;
     }
   | {
       ok: false;
@@ -59,6 +61,7 @@ export async function postChatMessage(input: {
 
   const controller = new AbortController();
   let settled = false;
+  let timedOut = false;
   const clock: { id?: ReturnType<typeof setTimeout> } = {};
   let onUserAbort: (() => void) | undefined;
 
@@ -75,6 +78,7 @@ export async function postChatMessage(input: {
     };
 
     clock.id = setTimeout(() => {
+      timedOut = true;
       controller.abort();
       finish(() => resolve(TIMEOUT_ERROR));
     }, timeoutMs);
@@ -92,10 +96,20 @@ export async function postChatMessage(input: {
           finish(() => reject(error instanceof ChatCancelled ? error : new ChatCancelled()));
           return;
         }
+        if (timedOut || isDeadlineAbort(error)) {
+          finish(() => resolve(TIMEOUT_ERROR));
+          return;
+        }
         finish(() => resolve(NETWORK_ERROR));
       },
     );
   });
+}
+
+function isDeadlineAbort(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const name = (error as { name?: unknown }).name;
+  return name === "AbortError" || name === "TimeoutError";
 }
 
 async function requestChat(
@@ -130,6 +144,7 @@ async function requestChat(
       sources: parsed.sources,
       mode: parsed.mode,
       ...(parsed.threadId ? { threadId: parsed.threadId } : {}),
+      ...(parsed.refreshedAt !== undefined ? { refreshedAt: parsed.refreshedAt } : {}),
     };
   }
 
