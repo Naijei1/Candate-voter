@@ -330,11 +330,17 @@ paths:
         \`zip\` (five digits, for example \`40202\`) are page context from
         ZIP and state pages. When \`state\`, \`zip\`, \`raceId\`, or
         \`candidateId\` is present, the answer uses that place and does not
-        ask which state. A count or list question with one \`raceId\` is
-        answered from that contest's stored candidates and does not scan
-        other districts or another cycle. Tool lookups stay on \`cycle\` /
-        \`year\` and, for one contest, on that chamber. Response fields and
-        503 \`code\` values are unchanged. A vague "who is running"
+        ask which state.
+        A count or list question with one \`raceId\`
+        (\`how many\`, \`who is running\`, \`who is in the race\`, \`list the
+        candidates\`) is answered from that contest's stored candidates. It
+        does not scan other districts or call the model. A count is a short
+        sentence. A who or list question names candidates. Tool lookups stay
+        on \`cycle\` / \`year\` and, for one contest, on that chamber.
+        \`sources[].as_of\` matches top-level \`refreshedAt\` (the page
+        data-refresh time) when a cursor is stored. Response fields and 503
+        \`code\` values are unchanged. A cold read that cannot finish is
+        still 503 \`code: "timeout"\`. A vague "who is running"
         question with none of those, and no state named in the message,
         asks which contest to open instead of listing every state. \`mode\` is \`factual\` or
         \`alignment\`. Alignment is only for an explicit viewpoint question.

@@ -33,6 +33,8 @@ export async function runGroundedChat(input: {
   converse: ConverseFn;
   /** Epoch ms. The handler sets this from the Ask budget. */
   deadlineMs?: number;
+  /** Fires with the Ask budget so a cold read cannot outlive the browser abort. */
+  signal?: AbortSignal;
 }): Promise<ChatRunResult> {
   const modelId = chatModelId(input.env);
   const prompt = userPrompt(input.request);
@@ -51,7 +53,7 @@ export async function runGroundedChat(input: {
 
   for (let round = 0; round < MAX_TOOL_ROUNDS; round += 1) {
     const remaining = remainingMs(input.deadlineMs);
-    if (remaining != null && remaining < 500) {
+    if (input.signal?.aborted || (remaining != null && remaining < 500)) {
       throw new ChatUnavailableError(CHAT_TIMEOUT_MESSAGE, "timeout");
     }
     let response;
@@ -61,7 +63,7 @@ export async function runGroundedChat(input: {
         system: CHAT_SYSTEM_PROMPT,
         messages,
         maxTokens: MAX_TOKENS,
-        ...(remaining != null ? { signal: AbortSignal.timeout(remaining) } : {}),
+        ...converseSignal(input.signal, remaining),
       });
     } catch (error) {
       if (error instanceof ChatUnavailableError) throw error;
@@ -154,6 +156,16 @@ export async function runGroundedChat(input: {
   }
 
   throw new ChatUnavailableError(CHAT_INCOMPLETE_MESSAGE, "incomplete");
+}
+
+function converseSignal(
+  parent: AbortSignal | undefined,
+  remaining: number | null,
+): { signal?: AbortSignal } {
+  const timeout = remaining != null ? AbortSignal.timeout(Math.max(1, remaining)) : undefined;
+  if (parent && timeout) return { signal: AbortSignal.any([parent, timeout]) };
+  const signal = parent ?? timeout;
+  return signal ? { signal } : {};
 }
 
 function remainingMs(deadlineMs: number | undefined): number | null {

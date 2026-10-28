@@ -17,6 +17,7 @@ import {
 import type { Filing, Race } from "../types";
 import { isResourceId } from "../api/ids";
 import { chamberFromRaceId, stateFromRaceId, yearFromRaceId } from "./intent";
+import { pageRefreshAsOf, readIngestRefreshedAt } from "./freshness";
 import { canonicalUrl, humanRaceTitle } from "./polish";
 import type { ChatSource } from "./types";
 
@@ -193,7 +194,19 @@ export async function executeChatTool(
   if (!record) {
     return { ok: false, unavailable: false, message: "Tool input must be an object" };
   }
-  return tool.run(record, ctx);
+  const refreshPromise = readIngestRefreshedAt(ctx.repo);
+  const result = await tool.run(record, ctx);
+  if (!result.ok) return result;
+  const refresh = await refreshPromise;
+  const sources = result.sources.map((source) => ({
+    ...source,
+    as_of: pageRefreshAsOf(refresh, source.as_of, ctx.now),
+  }));
+  return {
+    ...result,
+    sources,
+    content: stampAsOfFields(result.content, refresh, ctx.now) as Record<string, unknown>,
+  };
 }
 
 async function listRaces(
@@ -698,6 +711,21 @@ function externalSource(
 ): ChatSource | null {
   if (!url || !/^https:\/\//i.test(url)) return null;
   return pageSource(title, url, asOf);
+}
+
+function stampAsOfFields(value: unknown, refresh: string | null, now: Date): unknown {
+  if (Array.isArray(value)) return value.map((item) => stampAsOfFields(item, refresh, now));
+  if (!value || typeof value !== "object") return value;
+  const record = value as Record<string, unknown>;
+  const next: Record<string, unknown> = {};
+  for (const [key, child] of Object.entries(record)) {
+    if (key === "as_of" && typeof child === "string") {
+      next[key] = pageRefreshAsOf(refresh, child, now);
+      continue;
+    }
+    next[key] = stampAsOfFields(child, refresh, now);
+  }
+  return next;
 }
 
 function dedupeSources(sources: readonly ChatSource[]): ChatSource[] {

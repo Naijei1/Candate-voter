@@ -6,9 +6,11 @@ import { AgentApiDocs } from "../src/components/AgentApiDocs";
 import { llmsText } from "../src/lib/api/llms";
 import { openApiDocument } from "../src/lib/api/openapi-document";
 import {
+  ASK_CLIENT_ABORT_MS,
   DEFAULT_HAIKU_MODEL_ID,
   DEFAULT_SONNET_MODEL_ID,
   chatModelId,
+  coldAskBudgetMs,
 } from "../src/lib/chat/config";
 import { inferenceConfigFor } from "../src/lib/chat/converse";
 import { postChat, type ChatDeps } from "../src/lib/chat/handler";
@@ -1447,12 +1449,25 @@ test("a Senate race count and list stay on that contest and do not scan the stat
     }),
   );
 
+  const refreshedAt = "2026-10-27T18:04:00.000Z";
+  await repo.saveWatermark({
+    source: "fec-efile-form2",
+    lastLoadTimestamp: "2026-10-27 17:00:00",
+    lastRunAt: refreshedAt,
+    lastStatus: "success",
+    lastError: null,
+    pagesFetched: 1,
+    filingsUpserted: 2,
+    skipped: 0,
+    updatedAt: refreshedAt,
+  });
   const deps = chatDeps(repo, async () => {
     throw new Error("model should not be called");
   });
   for (const message of [
     "How many Senate candidates have filed?",
     "Who is running for Senate?",
+    "Who is in the race?",
     "List the candidates",
   ]) {
     const response = await postChat(
@@ -1460,7 +1475,11 @@ test("a Senate race count and list stay on that contest and do not scan the stat
       deps,
     );
     assert.equal(response.status, 200, message);
-    const payload = (await response.json()) as { answer_markdown: string; sources: Array<{ url: string }> };
+    const payload = (await response.json()) as {
+      answer_markdown: string;
+      refreshedAt: string;
+      sources: Array<{ url: string; as_of: string }>;
+    };
     assert.match(payload.answer_markdown, /\*\*2\*\*/);
     assert.match(payload.answer_markdown, /Ada Senate/);
     assert.match(payload.answer_markdown, /Bea Senate/);
@@ -1470,9 +1489,24 @@ test("a Senate race count and list stay on that contest and do not scan the stat
     assert.doesNotMatch(payload.answer_markdown, /2028/);
     assert.doesNotMatch(payload.answer_markdown, /District/);
     assert.equal(RACE_SLUG.test(proseWithoutUrls(payload.answer_markdown)), false);
+    const list = /^(?:who|list)\b/i.test(message);
+    if (list) {
+      assert.match(payload.answer_markdown, /^- \*\*Ada Senate\*\*/m);
+    } else {
+      assert.match(payload.answer_markdown, /Ada Senate and Bea Senate/);
+      assert.doesNotMatch(payload.answer_markdown, /^- \*\*/m);
+    }
+    assert.equal(payload.refreshedAt, refreshedAt);
     assert.equal(
-      payload.sources.some((source) => source.url === "https://voter.example/races/2026-senate-KY"),
+      payload.sources.some(
+        (source) =>
+          source.url === "https://voter.example/races/2026-senate-KY" && source.as_of === refreshedAt,
+      ),
       true,
+    );
+    assert.equal(
+      payload.sources.some((source) => source.as_of === updatedAt || /2028/.test(source.as_of)),
+      false,
     );
     assert.equal(
       payload.sources.some((source) => source.url.includes("house") || source.url.includes("2028")),
@@ -1497,30 +1531,183 @@ test("a Senate race count and list stay on that contest and do not scan the stat
   assert.doesNotMatch(otherBody.answer_markdown, /District 1/);
 });
 
-test("a Senate count returns the timeout code when the race read does not finish", async () => {
+test("a Senate count or who-list returns the timeout code when the race read does not finish", async () => {
   class HangRace extends MemoryVoterRepository {
     override async getRace(): Promise<Race | null> {
       await new Promise((resolve) => setTimeout(resolve, 400));
       return null;
     }
+
+    override async listCandidatesForRace(): Promise<Candidate[]> {
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      return [];
+    }
   }
-  const started = Date.now();
-  const response = await postChat(
-    post({
-      message: "How many Senate candidates have filed?",
+  for (const message of [
+    "How many Senate candidates have filed?",
+    "Who is running for Senate?",
+    "List the candidates",
+  ]) {
+    const started = Date.now();
+    const response = await postChat(
+      post({
+        message,
+        raceId: "2026-senate-KY",
+        cycle: 2026,
+      }),
+      chatDeps(new HangRace(), async () => {
+        throw new Error("model should not be called");
+      }, { budgetMs: 50 }),
+    );
+    assert.ok(Date.now() - started < 300, message);
+    assert.equal(response.status, 503, message);
+    const payload = (await response.json()) as { error: string; code: string; message: string };
+    assert.equal(payload.error, "unavailable");
+    assert.equal(payload.code, "timeout");
+    assert.equal(payload.message, "The answer took too long. Try a narrower question.");
+  }
+});
+
+test("a future row stamp is not the Ask as-of when the page refresh is known", async () => {
+  const repo = new MemoryVoterRepository();
+  const refresh = "2026-10-27T18:04:00.000Z";
+  await repo.upsertRace(
+    race({
       raceId: "2026-senate-KY",
+      office: "senate",
       cycle: 2026,
+      state: "KY",
+      title: "U.S. Senate, Kentucky",
+      jurisdiction: "Kentucky",
+      updatedAt: "2028-10-26T00:00:00.000Z",
     }),
-    chatDeps(new HangRace(), async () => {
-      throw new Error("model should not be called");
-    }, { budgetMs: 50 }),
   );
-  assert.ok(Date.now() - started < 300);
-  assert.equal(response.status, 503);
-  const payload = (await response.json()) as { error: string; code: string; message: string };
-  assert.equal(payload.error, "unavailable");
-  assert.equal(payload.code, "timeout");
-  assert.equal(payload.message, "The answer took too long. Try a narrower question.");
+  await repo.upsertCandidate(
+    candidate({
+      candidateId: "S0KY00111",
+      raceId: "2026-senate-KY",
+      displayName: "Ada Senate",
+      office: "senate",
+      updatedAt: "2028-10-26T00:00:00.000Z",
+    }),
+  );
+  await repo.saveWatermark({
+    source: "fec-efile-form2",
+    lastLoadTimestamp: "2026-10-27 17:00:00",
+    lastRunAt: refresh,
+    lastStatus: "success",
+    lastError: null,
+    pagesFetched: 1,
+    filingsUpserted: 1,
+    skipped: 0,
+    updatedAt: refresh,
+  });
+  const response = await postChat(
+    post({ message: "Who is running for Senate?", raceId: "2026-senate-KY", cycle: 2026 }),
+    chatDeps(repo, async () => {
+      throw new Error("model should not be called");
+    }),
+  );
+  assert.equal(response.status, 200);
+  const payload = (await response.json()) as {
+    refreshedAt: string;
+    sources: Array<{ as_of: string }>;
+    answer_markdown: string;
+  };
+  assert.equal(payload.refreshedAt, refresh);
+  assert.equal(payload.sources[0]?.as_of, refresh);
+  assert.doesNotMatch(JSON.stringify(payload.sources), /2028/);
+  assert.doesNotMatch(payload.answer_markdown, /2028/);
+
+  const bare = new MemoryVoterRepository();
+  await bare.upsertRace(
+    race({
+      raceId: "2026-senate-KY",
+      office: "senate",
+      cycle: 2026,
+      state: "KY",
+      title: "U.S. Senate, Kentucky",
+      jurisdiction: "Kentucky",
+      updatedAt: "2028-10-26T00:00:00.000Z",
+    }),
+  );
+  const withoutCursor = await postChat(
+    post({ message: "How many have filed?", raceId: "2026-senate-KY", cycle: 2026 }),
+    chatDeps(bare, async () => {
+      throw new Error("model should not be called");
+    }),
+  );
+  const bareBody = (await withoutCursor.json()) as { sources: Array<{ as_of: string }> };
+  assert.equal(bareBody.sources[0]?.as_of, "unknown");
+});
+
+test("a live repository still answers who-is-running from prototype reads", async () => {
+  class LiveFake extends MemoryVoterRepository {
+    readonly liveReads = true;
+  }
+  const repo = new LiveFake();
+  await repo.upsertRace(
+    race({
+      raceId: "2026-senate-KY",
+      office: "senate",
+      cycle: 2026,
+      state: "KY",
+      title: "U.S. Senate, Kentucky",
+      jurisdiction: "Kentucky",
+    }),
+  );
+  await repo.upsertCandidate(
+    candidate({
+      candidateId: "S0KY00111",
+      raceId: "2026-senate-KY",
+      displayName: "Ada Senate",
+      office: "senate",
+    }),
+  );
+  const response = await postChat(
+    post({ message: "Who is running for Senate?", raceId: "2026-senate-KY", cycle: 2026 }),
+    chatDeps(repo, async () => {
+      throw new Error("model should not be called");
+    }),
+  );
+  assert.equal(response.status, 200);
+  const payload = (await response.json()) as { answer_markdown: string };
+  assert.match(payload.answer_markdown, /Ada Senate/);
+
+  const upcoming = await postChat(
+    post({ message: "What elections are coming up?", cycle: 2026 }),
+    chatDeps(repo, async () => {
+      throw new Error("model should not be called");
+    }),
+  );
+  assert.equal(upcoming.status, 200);
+  const calendar = (await upcoming.json()) as { answer_markdown: string };
+  assert.match(calendar.answer_markdown, /midterm/i);
+});
+
+test("a cold process keeps the Ask budget inside the browser abort", () => {
+  assert.equal(ASK_CLIENT_ABORT_MS, 25_000);
+  const bootedAt = 1_000;
+  assert.equal(
+    coldAskBudgetMs({ configured: 20_000, bootedAt, now: bootedAt, firstRequest: true }),
+    20_000,
+  );
+  assert.equal(
+    coldAskBudgetMs({ configured: 20_000, bootedAt, now: bootedAt + 12_000, firstRequest: true }),
+    11_000,
+  );
+  assert.equal(
+    coldAskBudgetMs({ configured: 20_000, bootedAt, now: bootedAt + 24_000, firstRequest: true }),
+    800,
+  );
+  assert.equal(
+    coldAskBudgetMs({ configured: 20_000, bootedAt, now: bootedAt + 40_000, firstRequest: true }),
+    20_000,
+  );
+  assert.equal(
+    coldAskBudgetMs({ configured: 20_000, bootedAt, now: bootedAt + 12_000, firstRequest: false }),
+    20_000,
+  );
 });
 
 test("Senate page tools and model text stay on the race year and chamber", async () => {

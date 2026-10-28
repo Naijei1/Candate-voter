@@ -9,17 +9,44 @@ export const DEFAULT_HAIKU_MODEL_ID = "us.anthropic.claude-haiku-5-5";
 /** Optional quality model. Same profile rule as Haiku. */
 export const DEFAULT_SONNET_MODEL_ID = "us.anthropic.claude-sonnet-5-5";
 
-export const CHAT_PROMPT_VERSION = "2026-10-28.1";
+export const CHAT_PROMPT_VERSION = "2026-10-28.2";
 
 /**
- * Wall clock for one Ask request, including Bedrock calls and tool reads.
- * Default 20s. The browser aborts at 30s (`CHAT_TIMEOUT_MS`) and Amplify
- * compute cuts the function off around 30s, so the handler returns before
- * either of those. Bedrock SDK retries are off (`maxAttempts: 1`) so a slow
- * call cannot stack past this budget. Override with `CANDATE_CHAT_BUDGET_MS`
- * (3000–25000). Tool rounds are capped at 3 in the Converse loop.
+ * Wall clock for one Ask request after the process is up, including Bedrock
+ * calls and tool reads. Default 20s. The browser aborts at 25s
+ * (`CHAT_TIMEOUT_MS` in `browser.ts`). A cold process shortens this budget
+ * by time already spent booting so the handler can still return 503
+ * `code: "timeout"` before that abort. Bedrock SDK retries are off
+ * (`maxAttempts: 1`). Override with `CANDATE_CHAT_BUDGET_MS` (3000–25000).
+ * Tool rounds are capped at 3 in the Converse loop.
  */
 export const DEFAULT_CHAT_BUDGET_MS = 20_000;
+
+/** Ask panel abort. Kept here so the server budget can see it. Do not raise it. */
+export const ASK_CLIENT_ABORT_MS = 25_000;
+
+const COLD_RESPONSE_SLACK_MS = 2_000;
+const COLD_BUDGET_FLOOR_MS = 800;
+
+/**
+ * Budget for one Ask call.
+ * The first call on a process that just booted has already used part of the
+ * browser's 25s. Later calls, and a process that has been up longer than
+ * that abort, use `configured` (the client's clock started with the request).
+ */
+export function coldAskBudgetMs(input: {
+  configured: number;
+  bootedAt: number;
+  now: number;
+  firstRequest: boolean;
+}): number {
+  if (!input.firstRequest) return input.configured;
+  const elapsed = Math.max(0, input.now - input.bootedAt);
+  if (elapsed >= ASK_CLIENT_ABORT_MS) return input.configured;
+  const room = ASK_CLIENT_ABORT_MS - elapsed - COLD_RESPONSE_SLACK_MS;
+  if (room >= input.configured) return input.configured;
+  return Math.max(COLD_BUDGET_FLOOR_MS, Math.min(input.configured, room));
+}
 
 const DEFAULT_RATE_LIMIT = 20;
 const DEFAULT_RATE_WINDOW_SECONDS = 60;

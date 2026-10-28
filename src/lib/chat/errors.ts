@@ -9,6 +9,13 @@ export const CHAT_INCOMPLETE_MESSAGE =
 
 export const CHAT_MODEL_UNAVAILABLE_MESSAGE = "The model is unavailable.";
 
+/** SDK and fetch aborts. These are budget misses, not a dead model. */
+export function isAbortError(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const name = "name" in error ? String(error.name) : "";
+  return name === "AbortError" || name === "TimeoutError";
+}
+
 export class ChatUnavailableError extends Error {
   readonly code?: ChatFailureCode;
 

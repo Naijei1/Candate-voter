@@ -1,6 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { basePathFromEnv } from "../base-path";
-import { createDynamoRepository } from "../data/repository";
+import { createDynamoRepository, isLiveRepository, runWithReadAbort } from "../data/repository";
+import { rosterCacheKey, rosterRead } from "../data/roster-cache";
+import type { ApiRepository } from "../api/deps";
 import { json } from "../api/http";
 import { originFromRequest } from "../api/public-origin";
 import { censusZipDistricts, type ZipDistrictHit } from "../geo/zip-districts";
@@ -13,10 +15,12 @@ import {
   CHAT_PROMPT_VERSION,
   chatBudgetMs,
   chatEnabled,
+  coldAskBudgetMs,
   rateLimitSettings,
 } from "./config";
 import { definitionAnswer } from "./definitions";
-import { CHAT_TIMEOUT_MESSAGE, ChatUnavailableError, unavailableBody } from "./errors";
+import { alignSourceAsOf } from "./freshness";
+import { CHAT_TIMEOUT_MESSAGE, ChatUnavailableError, isAbortError, unavailableBody } from "./errors";
 import { createBedrockConverse } from "./converse";
 import {
   asksForAnotherState,
@@ -42,7 +46,6 @@ import { isStateRosterQuestion, answerKnownPlace, answerScopedRace, answerStateR
 import { limitAnswerToRaceScope } from "./scope";
 import { runGroundedChat } from "./run";
 import type { ChatAnswer, ChatRequest, ConverseFn } from "./types";
-import type { ApiRepository } from "../api/deps";
 
 export type ChatDeps = {
   env: Record<string, string | undefined>;
@@ -174,10 +177,13 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
       deps.siteRoot ?? `${originFromRequest(request)}${basePathFromEnv(deps.env)}`;
     try {
       const answer = await withBudget(
-        answerScopedRace({
-          request: asked,
-          ctx: chatCtx(deps, now, siteRoot, asked),
-        }),
+        (signal) =>
+          runWithReadAbort(signal, () =>
+            answerScopedRace({
+              request: asked,
+              ctx: chatCtx(deps, now, siteRoot, asked),
+            }),
+          ),
         budgetMs(deps),
       );
       if ("unavailable" in answer) {
@@ -200,10 +206,13 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
       deps.siteRoot ?? `${originFromRequest(request)}${basePathFromEnv(deps.env)}`;
     try {
       const answer = await withBudget(
-        answerStateRoster({
-          request: asked,
-          ctx: chatCtx(deps, now, siteRoot, asked),
-        }),
+        (signal) =>
+          runWithReadAbort(signal, () =>
+            answerStateRoster({
+              request: asked,
+              ctx: chatCtx(deps, now, siteRoot, asked),
+            }),
+          ),
         budgetMs(deps),
       );
       if ("unavailable" in answer) {
@@ -269,10 +278,13 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
       deps.siteRoot ?? `${originFromRequest(request)}${basePathFromEnv(deps.env)}`;
     try {
       const answer = await withBudget(
-        answerKnownPlace({
-          request: asked,
-          ctx: chatCtx(deps, now, siteRoot, asked),
-        }),
+        (signal) =>
+          runWithReadAbort(signal, () =>
+            answerKnownPlace({
+              request: asked,
+              ctx: chatCtx(deps, now, siteRoot, asked),
+            }),
+          ),
         budgetMs(deps),
       );
       if ("unavailable" in answer) {
@@ -313,13 +325,17 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
   const budget = budgetMs(deps);
   try {
     let answer = await withBudget(
-      runGroundedChat({
-        request: asked,
-        env: deps.env,
-        converse: deps.converse ?? createBedrockConverse(deps.env),
-        deadlineMs: Date.now() + budget,
-        ctx: chatCtx(deps, now, siteRoot, asked),
-      }),
+      (signal) =>
+        runWithReadAbort(signal, () =>
+          runGroundedChat({
+            request: asked,
+            env: deps.env,
+            converse: deps.converse ?? createBedrockConverse(deps.env),
+            deadlineMs: Date.now() + budget,
+            signal,
+            ctx: chatCtx(deps, now, siteRoot, asked),
+          }),
+        ),
       budget,
     );
     if (asksForAnotherState(answer.answer_markdown) && hasPlaceContext(asked)) {
@@ -358,9 +374,10 @@ function chatBody(
     polishChatAnswer(answer, priorMessage, asked ? answerScope(asked) : undefined),
     asked ?? { message: priorMessage },
   );
+  const refreshedAt = polished.refreshedAt;
   return {
     answer_markdown: polished.answer_markdown,
-    sources: polished.sources,
+    sources: polished.sources.map((source) => alignSourceAsOf(source, refreshedAt)),
     refused: polished.refused,
     mode: polished.mode ?? "factual",
     threadId,
@@ -368,8 +385,37 @@ function chatBody(
   };
 }
 
+const processBootedAt = Date.now();
+let firstAskBudget = true;
+
 function budgetMs(deps: ChatDeps): number {
-  return deps.budgetMs ?? chatBudgetMs(deps.env);
+  const configured = deps.budgetMs ?? chatBudgetMs(deps.env);
+  if (deps.budgetMs != null) return configured;
+  const firstRequest = firstAskBudget;
+  firstAskBudget = false;
+  return coldAskBudgetMs({
+    configured,
+    bootedAt: processBootedAt,
+    now: Date.now(),
+    firstRequest,
+  });
+}
+
+/**
+ * Live Ask reuses the race, candidate list, and watermark the page just read.
+ * Tests use an in-memory repository and always hit that store.
+ */
+function askRepository(repo: ApiRepository): ApiRepository {
+  if (!isLiveRepository(repo)) return repo;
+  return {
+    listRacesByCycle: (cycle) => repo.listRacesByCycle(cycle),
+    getRace: (raceId) => rosterRead(rosterCacheKey("race", raceId), () => repo.getRace(raceId)),
+    getCandidate: (candidateId) => repo.getCandidate(candidateId),
+    listCandidatesForRace: (raceId) =>
+      rosterRead(rosterCacheKey("candidates", raceId), () => repo.listCandidatesForRace(raceId)),
+    listFilingsForCandidate: (candidateId) => repo.listFilingsForCandidate(candidateId),
+    getWatermark: () => rosterRead(rosterCacheKey("watermark"), () => repo.getWatermark()),
+  };
 }
 
 function chatCtx(deps: ChatDeps, now: Date, siteRoot: string, asked: ChatRequest) {
@@ -379,7 +425,7 @@ function chatCtx(deps: ChatDeps, now: Date, siteRoot: string, asked: ChatRequest
   const locked = isSingleContestScope(asked);
   const office = locked ? chamberFromRaceId(asked.raceId) ?? undefined : undefined;
   return {
-    repo: deps.repository(),
+    repo: askRepository(deps.repository()),
     env: deps.env,
     now,
     root,
@@ -420,15 +466,37 @@ async function withZipState(asked: ChatRequest, deps: ChatDeps): Promise<ChatReq
   }
 }
 
-function withBudget<T>(work: Promise<T>, budget: number): Promise<T> {
+function withBudget<T>(
+  work: Promise<T> | ((signal: AbortSignal) => Promise<T>),
+  budget: number,
+): Promise<T> {
+  const controller = new AbortController();
   let timer: ReturnType<typeof setTimeout> | undefined;
+  let settled = false;
   const timeout = new Promise<never>((_, reject) => {
     timer = setTimeout(() => {
+      if (settled) return;
+      controller.abort();
       reject(new ChatUnavailableError(CHAT_TIMEOUT_MESSAGE, "timeout"));
     }, budget);
   });
-  void work.catch(() => {});
-  return Promise.race([work, timeout]).finally(() => {
+  const promise = typeof work === "function" ? work(controller.signal) : work;
+  const guarded = promise.then(
+    (value) => {
+      settled = true;
+      return value;
+    },
+    (error: unknown) => {
+      settled = true;
+      if (controller.signal.aborted || isAbortError(error)) {
+        throw new ChatUnavailableError(CHAT_TIMEOUT_MESSAGE, "timeout");
+      }
+      throw error;
+    },
+  );
+  void guarded.catch(() => {});
+  return Promise.race([guarded, timeout]).finally(() => {
+    settled = true;
     if (timer) clearTimeout(timer);
   });
 }
