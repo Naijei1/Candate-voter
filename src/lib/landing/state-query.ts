@@ -107,6 +107,26 @@ export function searchWithoutState(search: string): string {
   return query ? `?${query}` : "";
 }
 
+export type YearChoice = "stay" | "push" | "reload";
+
+/**
+ * A year the URL already shows is a no-op, unless a previous choice is still
+ * pending. That pending choice reloads, so a stuck "Loading 2028…" can be
+ * chosen again. Any other year pushes.
+ */
+export function yearChoiceAction(
+  pathname: string,
+  search: string,
+  year: number,
+  pendingYear: number | null,
+): YearChoice {
+  const params = new URLSearchParams(search.startsWith("?") ? search.slice(1) : search);
+  if (pathname === "/" && params.get("year") === String(year)) {
+    return pendingYear != null ? "reload" : "stay";
+  }
+  return "push";
+}
+
 /**
  * Home year change. On `/`, the current query (including `state`) is kept.
  * Other paths return to the home index for that year.

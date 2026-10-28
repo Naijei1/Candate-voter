@@ -1,7 +1,7 @@
 "use client";
 
 // Classic JSX runtime for `node --import tsx --test`. Next compiles this with the automatic runtime.
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { findRacesByZip } from "@/lib/lookup/find-races";
 import {
   normalizeZip,
@@ -17,13 +17,22 @@ export const ZIP_PICK = "Tap a state on the map.";
 
 export function ZipLookup({
   year,
+  fieldKey = "",
   onFound,
+  onLookupStart,
   onPickState,
   onReject,
   lookup = findRacesByZip,
 }: {
   year: number;
+  /**
+   * Changes when the visitor leaves a state for the national map.
+   * The typed ZIP is cleared in that render so Back does not keep 78701.
+   */
+  fieldKey?: string;
   onFound: (payload: ZipLookupPayload) => void;
+  /** Fires when a 5-digit lookup starts, before the response. */
+  onLookupStart?: () => void;
   /** Moves the visitor to the national map so they can tap a state. */
   onPickState?: () => void;
   /** A failed lookup should drop a country-map highlight left by an earlier visit. */
@@ -35,7 +44,19 @@ export function ZipLookup({
   const [pending, setPending] = useState(false);
   const [failed, setFailed] = useState(false);
   const [failLead, setFailLead] = useState(ZIP_FAIL);
+  const [trackedKey, setTrackedKey] = useState(fieldKey);
   const flight = useRef(0);
+  useEffect(() => {
+    return () => {
+      flight.current += 1;
+    };
+  }, []);
+  if (trackedKey !== fieldKey) {
+    setTrackedKey(fieldKey);
+    setValue("");
+    setPending(false);
+    flight.current += 1;
+  }
 
   async function submit(raw: string) {
     const zip = normalizeZip(raw);
@@ -50,6 +71,7 @@ export function ZipLookup({
     setPending(true);
     setFailed(false);
     setValue(zip);
+    onLookupStart?.();
     try {
       const result = await settleZipLookup(lookup(zip, year));
       if (flight.current !== id) return;

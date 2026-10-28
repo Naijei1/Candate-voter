@@ -19,14 +19,18 @@ export type StateCallout = {
 const LABEL_X = 1004;
 const LINE_X = 996;
 
+/** Vertical step keeps a phone abbreviation off the label above it. */
+const CALLOUT_STEP = 68;
+const CALLOUT_TOP = 88;
+
 export const STATE_CALLOUTS: readonly StateCallout[] = [
-  { postal: "VT", x1: 868, y1: 142, x2: LINE_X, y2: 100, labelX: LABEL_X, labelY: 100 },
-  { postal: "NH", x1: 893, y1: 145, x2: LINE_X, y2: 158, labelX: LABEL_X, labelY: 158 },
-  { postal: "MA", x1: 900, y1: 172, x2: LINE_X, y2: 216, labelX: LABEL_X, labelY: 216 },
-  { postal: "RI", x1: 898, y1: 187, x2: LINE_X, y2: 274, labelX: LABEL_X, labelY: 274 },
-  { postal: "CT", x1: 882, y1: 196, x2: LINE_X, y2: 332, labelX: LABEL_X, labelY: 332 },
-  { postal: "NJ", x1: 862, y1: 224, x2: LINE_X, y2: 390, labelX: LABEL_X, labelY: 390 },
-  { postal: "DE", x1: 849, y1: 252, x2: LINE_X, y2: 448, labelX: LABEL_X, labelY: 448 },
+  { postal: "VT", x1: 868, y1: 142, x2: LINE_X, y2: CALLOUT_TOP, labelX: LABEL_X, labelY: CALLOUT_TOP },
+  { postal: "NH", x1: 893, y1: 145, x2: LINE_X, y2: CALLOUT_TOP + CALLOUT_STEP, labelX: LABEL_X, labelY: CALLOUT_TOP + CALLOUT_STEP },
+  { postal: "MA", x1: 900, y1: 172, x2: LINE_X, y2: CALLOUT_TOP + CALLOUT_STEP * 2, labelX: LABEL_X, labelY: CALLOUT_TOP + CALLOUT_STEP * 2 },
+  { postal: "RI", x1: 898, y1: 187, x2: LINE_X, y2: CALLOUT_TOP + CALLOUT_STEP * 3, labelX: LABEL_X, labelY: CALLOUT_TOP + CALLOUT_STEP * 3 },
+  { postal: "CT", x1: 882, y1: 196, x2: LINE_X, y2: CALLOUT_TOP + CALLOUT_STEP * 4, labelX: LABEL_X, labelY: CALLOUT_TOP + CALLOUT_STEP * 4 },
+  { postal: "NJ", x1: 862, y1: 224, x2: LINE_X, y2: CALLOUT_TOP + CALLOUT_STEP * 5, labelX: LABEL_X, labelY: CALLOUT_TOP + CALLOUT_STEP * 5 },
+  { postal: "DE", x1: 849, y1: 252, x2: LINE_X, y2: CALLOUT_TOP + CALLOUT_STEP * 6, labelX: LABEL_X, labelY: CALLOUT_TOP + CALLOUT_STEP * 6 },
   {
     postal: "DC",
     x1: DC_CALLOUT.x1,
@@ -42,3 +46,28 @@ export const CALLOUT_POSTALS = new Set(STATE_CALLOUTS.map((row) => row.postal));
 
 /** Extra viewBox width so the Atlantic callouts are not clipped. */
 export const LABEL_GUTTER = 180;
+
+/**
+ * Abbreviation shifts, in viewBox units, for labels that sit on a neighbor
+ * at phone size. The state shape stays put.
+ */
+const LABEL_NUDGE: Readonly<Record<string, { dx: number; dy: number }>> = {
+  KY: { dx: -13, dy: 2 },
+  TN: { dx: -7, dy: 17 },
+  VA: { dx: 10, dy: 1 },
+  WV: { dx: -6, dy: 7 },
+  NC: { dx: 16, dy: 13 },
+  SC: { dx: -6, dy: 6 },
+  MD: { dx: 9, dy: -11 },
+  PA: { dx: -16, dy: 5 },
+  AL: { dx: -3, dy: 10 },
+  MS: { dx: 2, dy: -16 },
+  GA: { dx: -16, dy: -15 },
+  FL: { dx: -11, dy: -18 },
+};
+
+export function labelPoint(postal: string, x: number, y: number): { x: number; y: number } {
+  const nudge = LABEL_NUDGE[postal];
+  if (!nudge) return { x, y };
+  return { x: x + nudge.dx, y: y + nudge.dy };
+}

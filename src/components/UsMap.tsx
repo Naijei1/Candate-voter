@@ -13,7 +13,7 @@ import React, {
 } from "react";
 import { MapGesture } from "@/components/MapGesture";
 import { isPostalState, stateName } from "@/lib/data/states";
-import { CALLOUT_POSTALS, LABEL_GUTTER, STATE_CALLOUTS } from "@/lib/geo/state-labels";
+import { CALLOUT_POSTALS, LABEL_GUTTER, STATE_CALLOUTS, labelPoint } from "@/lib/geo/state-labels";
 import { US_MAP_VIEW, US_STATE_SHAPES, type UsStateShape } from "@/lib/geo/us-states";
 
 const ARROW: Record<string, readonly [number, number]> = {
@@ -156,7 +156,7 @@ export function UsMap({
     <MapGesture resetKey={selected ?? ""} onPanActive={onHover ? onPanActive : undefined}>
     <svg
       viewBox={`0 0 ${US_MAP_VIEW.width + LABEL_GUTTER} ${US_MAP_VIEW.height}`}
-      preserveAspectRatio="xMidYMin meet"
+      preserveAspectRatio="xMidYMid meet"
       className={hot ? "us-map is-dimming h-full w-full" : "us-map h-full w-full"}
       role="group"
       aria-label={`${label} Arrow keys move between states. Enter selects.`}
@@ -292,9 +292,10 @@ const StateLabel = memo(function StateLabel({
 }) {
   if (HIDE_LABEL.has(shape.postal) || CALLOUT_POSTALS.has(shape.postal)) return null;
   const selectedClass = isSelected ? " is-selected" : "";
+  const point = labelPoint(shape.postal, shape.x, shape.y);
   if (shape.postal === "MD") {
     return (
-      <g className="us-callout" transform={`translate(${shape.x} ${shape.y})`}>
+      <g className="us-callout" transform={`translate(${point.x} ${point.y})`}>
         {isSelected ? null : (
           <rect className="us-label-plate" x="-1.2em" y="-0.58em" width="2.4em" height="1.16em" rx="0.18em" />
         )}
@@ -314,8 +315,8 @@ const StateLabel = memo(function StateLabel({
   return (
     <text
       data-postal={shape.postal}
-      x={shape.x}
-      y={shape.y}
+      x={point.x}
+      y={point.y}
       textAnchor="middle"
       dominantBaseline="central"
       className={`us-label${selectedClass}`}

@@ -5,7 +5,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { ChatComposer } from "../src/components/chat/ChatComposer";
 import { ChatMessageList, loadingStatus } from "../src/components/chat/ChatMessageList";
 import { MarkdownAnswer } from "../src/components/chat/MarkdownAnswer";
-import { applyAskBinding, settleAssistantTurn, type ChatTurn } from "../src/components/chat/useChat";
+import { applyAskBinding, prepareRetry, settleAssistantTurn, type ChatTurn } from "../src/components/chat/useChat";
 import { CHAT_TIMEOUT_MS, ChatCancelled, postChatMessage } from "../src/lib/chat/browser";
 import {
   buildChatRequestBody,
@@ -16,6 +16,7 @@ import {
   contextLabel,
   presentedAskContext,
   errorCopy,
+  citationAsOf,
   formatAsOf,
   parseChatSuccess,
   parseMarkdown,
@@ -118,7 +119,10 @@ test("suggested prompts and error copy stay factual", () => {
   assert.equal(NEUTRAL.test(errorCopy("timeout", null)), false);
   assert.equal(NEUTRAL.test(errorCopy("incomplete", null)), false);
   assert.equal(NEUTRAL.test(errorCopy("model_unavailable", null)), false);
-  assert.equal(errorCopy("timeout", null), "The answer took too long. Try a narrower question.");
+  assert.equal(
+    errorCopy("timeout", null),
+    "This stopped before an answer came back. Retry asks the same question again.",
+  );
   assert.equal(errorCopy("incomplete", null), "The answer was incomplete. Try one race at a time.");
   assert.equal(errorCopy("model_unavailable", null), "The model is unavailable.");
   assert.match(errorCopy("rate_limit", 12), /12 seconds/);
@@ -211,9 +215,13 @@ test("citations stay in-app for Candate paths and open FEC in a new tab", () => 
   const fec = citationLink("https://www.fec.gov/data/elections/senate/AK/2026/");
   assert.equal(fec?.external, true);
   assert.equal(citationLink("javascript:alert(1)"), null);
-  assert.match(formatAsOf("2026-10-26T17:00:00Z"), /As of Oct 26, 2026, 1:00 PM EDT/);
+  assert.match(formatAsOf("2026-10-26T17:00:00Z"), /As of Oct 26, 2026, 1:00\sPM ET/);
   assert.equal(formatAsOf("Oct 25, 2026"), "As of Oct 25, 2026");
   assert.equal(formatAsOf("unknown"), "As of unknown");
+  assert.match(citationAsOf("2026-10-26T17:00:00Z", "2026-10-26T18:48:47.307Z"), /1:00\sPM ET/);
+  assert.doesNotMatch(citationAsOf("2026-10-26T17:00:00Z", "2026-10-26T18:48:47.307Z"), /2:48/);
+  assert.match(citationAsOf("unknown", "2026-10-26T18:48:47.307Z"), /2:48\sPM ET/);
+  assert.equal(citationAsOf("unknown", null), "As of unknown");
 });
 
 test("POST /api/chat maps 200, refused, 400, 429, 503, and network", async () => {
@@ -621,12 +629,86 @@ test("Ask context year follows the year control and stale threads stay stored", 
 test("Ask wait copy warns before the 25s abort", () => {
   assert.equal(loadingStatus(0), "Looking up public records…");
   assert.equal(loadingStatus(3_000), "Looking up public records…");
-  assert.equal(loadingStatus(4_000), "Still looking up public records… You can cancel.");
+  assert.equal(loadingStatus(4_000), "Still looking up public records… You can cancel. This has not stopped.");
   assert.match(loadingStatus(8_000), /Still looking up public records \(8s\)/);
-  assert.match(loadingStatus(8_000), /narrower question/);
-  assert.match(loadingStatus(16_000), /This stops if public records don't come back/);
+  assert.match(loadingStatus(8_000), /25 seconds/);
+  assert.doesNotMatch(loadingStatus(8_000), /narrower question/);
+  assert.match(loadingStatus(16_000), /This stops at 25 seconds/);
+  assert.match(loadingStatus(16_000), /Retry then asks the same question again/);
   assert.match(loadingStatus(16_000), /16s/);
   assert.equal(CHAT_TIMEOUT_MS, 25_000);
+});
+
+test("a long Ask list keeps the count and collapses the rest", () => {
+  const lines = Array.from({ length: 10 }, (_, index) => `- Filer ${String(index + 1).padStart(2, "0")}`).join("\n");
+  const html = render(
+    React.createElement(MarkdownAnswer, {
+      markdown: `**10** candidates have FEC Form 2 filings.\n\n${lines}`,
+    }),
+  );
+  assert.match(html, /10/);
+  assert.match(html, /Filer 01/);
+  assert.match(html, /Filer 06/);
+  assert.doesNotMatch(html, /Filer 07/);
+  assert.match(html, /Show all 10/);
+  assert.match(html, /aria-expanded="false"/);
+});
+
+test("retry clears an abort and resends the same question", () => {
+  const turns: ChatTurn[] = [
+    { id: "u", role: "user", text: "Who is running for Senate?" },
+    {
+      id: "a",
+      role: "assistant",
+      status: "error",
+      kind: "timeout",
+      retryAt: null,
+      retryAfterSeconds: null,
+      hadRetryAfter: false,
+    },
+  ];
+  const prepared = prepareRetry(turns);
+  assert.ok(prepared);
+  assert.equal(prepared.message, "Who is running for Senate?");
+  assert.equal(prepared.assistantId, "a");
+  assert.equal(prepared.turns[0]?.role === "user" && prepared.turns[0].text, "Who is running for Senate?");
+  assert.equal(prepared.turns[1]?.role === "assistant" && prepared.turns[1].status, "loading");
+  assert.equal(
+    prepareRetry([
+      { id: "u", role: "user", text: "x" },
+      {
+        id: "b",
+        role: "assistant",
+        status: "error",
+        kind: "bad_request",
+        retryAt: null,
+        retryAfterSeconds: null,
+        hadRetryAfter: false,
+      },
+    ]),
+    null,
+  );
+});
+
+test("deadline abort stays a timeout when fetch rejects AbortError", async () => {
+  const result = await postChatMessage({
+    body: { message: "Who is running for Senate?" },
+    timeoutMs: 30,
+    fetchImpl: (_input, init) =>
+      new Promise((_resolve, reject) => {
+        const signal = init?.signal;
+        if (!signal) {
+          reject(new Error("missing signal"));
+          return;
+        }
+        signal.addEventListener("abort", () => {
+          const error = new Error("aborted");
+          error.name = "AbortError";
+          reject(error);
+        });
+      }),
+  });
+  assert.deepEqual(result, { ok: false, kind: "timeout", retryAfterSeconds: null });
 });
 
 function render(node: React.ReactElement): string {

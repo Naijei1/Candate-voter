@@ -5,14 +5,22 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { basePathFromEnv } from "@/lib/base-path";
 import { instantDateTime } from "@/lib/format";
-import { citationLabel, citationLink, formatAsOf } from "@/lib/chat/ui";
+import { citationAsOf, citationLabel, citationLink } from "@/lib/chat/ui";
 import type { ChatSource } from "@/lib/chat/types";
 
-export function CitationCard({ source }: { source: ChatSource }) {
+export function CitationCard({
+  source,
+  refreshedAt = null,
+}: {
+  source: ChatSource;
+  /** Page cursor time from the same answer, used only when `as_of` is unknown. */
+  refreshedAt?: string | null;
+}) {
   const origin = useClientOrigin();
   const link = citationLink(source.url, { origin, basePath: basePathFromEnv() });
-  const dateTime = instantDateTime(source.as_of);
-  const freshness = formatAsOf(source.as_of);
+  const freshness = citationAsOf(source.as_of, refreshedAt);
+  const shown = source.as_of.trim().toLowerCase() === "unknown" ? (refreshedAt ?? source.as_of) : source.as_of;
+  const dateTime = instantDateTime(shown);
   const label = citationLabel(source);
 
   const text = (

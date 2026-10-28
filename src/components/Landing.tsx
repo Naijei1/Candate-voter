@@ -103,17 +103,40 @@ export function Landing({
   entriesRef.current = entries;
   const heldZip = useRef<ZipLookupPayload | null>(null);
   const marked = statesWithRaces(races);
-  const { replacePageContext } = useAsk();
+  const { replacePageContext, chat } = useAsk();
+  const cancelAsk = chat.cancel;
   const { pendingYear, clearPendingYear } = useYearNavigation();
+  const yearLock = useRef<number | null>(null);
+  const zipEpoch = useRef(0);
+  const manualZip = useRef(false);
+  const yearChanging = pendingYear != null && pendingYear !== year;
+  yearLock.current = yearChanging ? pendingYear : null;
 
   useEffect(() => {
     if (pendingYear != null && pendingYear === year) clearPendingYear();
   }, [clearPendingYear, pendingYear, year]);
 
+  useEffect(() => {
+    if (!yearChanging) return;
+    zipEpoch.current += 1;
+    manualZip.current = false;
+    heldZip.current = null;
+    setZipPayload(null);
+    setZipLoading(false);
+    setZipFailed(false);
+    setZipNotice(null);
+    setRememberedPostal(null);
+    setHot(null);
+    cancelAsk();
+  }, [cancelAsk, yearChanging]);
+
   const listed = selected ? stateRaces(races, selected) : [];
-  const yours = zipPayload && zipPayload.state === selected ? zipRaceSlots(races, zipPayload) : [];
+  const yours =
+    zipPayload && zipPayload.state === selected && zipPayload.zip === zipCode
+      ? zipRaceSlots(races, zipPayload)
+      : [];
   const yourIds = new Set(yours.map((slot) => slot.raceId));
-  const pinYours = Boolean(zipCode && selected && !zipFailed);
+  const pinYours = Boolean(zipCode && selected && !zipFailed && zipPayload && zipPayload.zip === zipCode);
   const zipRaceKey = pinYours ? yours.map((slot) => slot.raceId).join("\n") : "";
 
   useEffect(() => {
@@ -158,6 +181,7 @@ export function Landing({
   }, [selected]);
 
   const writeUrl = useCallback((search: string) => {
+    if (yearLock.current != null) return;
     const next = `${window.location.pathname}${search}${window.location.hash}`;
     const current = `${window.location.pathname}${window.location.search}${window.location.hash}`;
     if (next === current) return;
@@ -165,6 +189,7 @@ export function Landing({
   }, []);
 
   useEffect(() => {
+    if (manualZip.current || yearLock.current != null) return;
     if (!zipCode || !selected) {
       heldZip.current = null;
       setZipPayload(null);
@@ -180,14 +205,16 @@ export function Landing({
       setZipNotice(null);
       return;
     }
+    const epoch = zipEpoch.current;
     let active = true;
     setZipLoading(true);
     setZipFailed(false);
     setZipNotice(null);
+    setZipPayload(null);
     (async () => {
       try {
         const result = await settleZipLookup((lookupZip ?? findRacesByZip)(zipCode, year));
-        if (!active) return;
+        if (!active || zipEpoch.current !== epoch) return;
         if (!result.ok || result.payload.state !== selected) {
           const clearMap = result.ok || zipFailureClearsSelection(result.reason);
           heldZip.current = null;
@@ -203,7 +230,7 @@ export function Landing({
         setZipPayload(result.payload);
         setZipNotice(null);
       } catch {
-        if (!active) return;
+        if (!active || zipEpoch.current !== epoch) return;
         heldZip.current = null;
         setZipPayload(null);
         setZipFailed(true);
@@ -212,7 +239,7 @@ export function Landing({
         setHot(null);
         writeUrl(searchWithoutState(window.location.search));
       } finally {
-        if (active) setZipLoading(false);
+        if (active && zipEpoch.current === epoch) setZipLoading(false);
       }
     })();
     return () => {
@@ -285,24 +312,45 @@ export function Landing({
     [writeUrl],
   );
 
+  const beginZipLookup = useCallback(() => {
+    if (yearLock.current != null) return;
+    zipEpoch.current += 1;
+    manualZip.current = true;
+    heldZip.current = null;
+    setZipPayload(null);
+    setZipFailed(false);
+    setZipNotice(null);
+    setZipLoading(true);
+  }, []);
+
   const openZip = useCallback(
     (payload: ZipLookupPayload) => {
-      if (!payload.state) return;
+      manualZip.current = false;
+      if (yearLock.current != null || !payload.state) return;
       heldZip.current = payload;
       setZipNotice(null);
+      setZipLoading(false);
       writeUrl(searchWithZip(window.location.search, payload.state, payload.zip));
     },
     [writeUrl],
   );
 
   const backToMap = useCallback(() => {
+    zipEpoch.current += 1;
+    manualZip.current = false;
     heldZip.current = null;
+    setZipPayload(null);
+    setZipLoading(false);
+    setZipFailed(false);
+    setZipNotice(null);
     setHot(null);
     setRememberedPostal(null);
     writeUrl(searchWithoutState(window.location.search));
   }, [writeUrl]);
 
   const rejectZip = useCallback(() => {
+    zipEpoch.current += 1;
+    manualZip.current = false;
     heldZip.current = null;
     setZipPayload(null);
     setZipLoading(false);
@@ -349,7 +397,9 @@ export function Landing({
       <div className="zip-slot">
         <ZipLookup
           year={year}
+          fieldKey={selected ?? "national"}
           onFound={openZip}
+          onLookupStart={beginZipLookup}
           onPickState={pickState}
           onReject={rejectZip}
           lookup={lookupZip}

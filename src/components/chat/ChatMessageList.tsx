@@ -118,7 +118,11 @@ function AssistantBubble({
           <h3 className="text-xs font-semibold tracking-wide text-muted uppercase">{heading}</h3>
           <ul className="mt-2 space-y-2" aria-label={heading}>
             {turn.sources.map((source) => (
-              <CitationCard key={`${source.url}:${source.title}`} source={source} />
+              <CitationCard
+                key={`${source.url}:${source.title}`}
+                source={source}
+                refreshedAt={turn.refreshedAt}
+              />
             ))}
           </ul>
         </div>
@@ -127,17 +131,20 @@ function AssistantBubble({
   );
 }
 
-/** Wait copy while a lookup is in flight. The request itself aborts at 25s. */
+/**
+ * Wait copy while a lookup is in flight. The request itself aborts at 25s.
+ * Copy names that deadline. It does not tell the visitor to change the question.
+ */
 export function loadingStatus(elapsedMs: number): string {
   const seconds = Math.floor(elapsedMs / 1000);
   if (elapsedMs >= 16_000) {
-    return `Still looking (${seconds}s). This stops if public records don't come back. Cancel, or try one race.`;
+    return `Still looking (${seconds}s). This stops at 25 seconds. Retry then asks the same question again.`;
   }
   if (elapsedMs >= 8_000) {
-    return `Still looking up public records (${seconds}s). Cancel if you want to stop, or try a narrower question.`;
+    return `Still looking up public records (${seconds}s). You can cancel. A first lookup can take until 25 seconds.`;
   }
   if (elapsedMs >= 4_000) {
-    return "Still looking up public records… You can cancel.";
+    return "Still looking up public records… You can cancel. This has not stopped.";
   }
   return "Looking up public records…";
 }

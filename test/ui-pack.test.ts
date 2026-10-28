@@ -54,7 +54,7 @@ test("multi-id notes collapse behind the filing count and keep the existing copy
   assert.equal(race.includes("<p className=\"mt-1 text-sm leading-6 text-muted\">{candidate.multiFilingNote}</p>"), false);
 });
 
-test("Ask citations render a human title and ignore an optional refreshedAt", () => {
+test("Ask citations prefer source as_of and fall back to refreshedAt", () => {
   const parsed = parseChatSuccess({
     answer_markdown: "Stored filings for U.S. Senate, Kentucky.",
     sources: [
@@ -71,9 +71,24 @@ test("Ask citations render a human title and ignore an optional refreshedAt", ()
   assert.equal(parsed.ok, true);
   if (!parsed.ok) return;
   assert.equal(parsed.sources[0]?.title, "U.S. Senate, Kentucky");
-  const html = renderToStaticMarkup(React.createElement(CitationCard, { source: parsed.sources[0]! }));
+  assert.equal(parsed.refreshedAt, "2026-10-26T18:48:47.307Z");
+  const html = renderToStaticMarkup(
+    React.createElement(CitationCard, {
+      source: parsed.sources[0]!,
+      refreshedAt: parsed.refreshedAt,
+    }),
+  );
   assert.match(html, /U\.S\. Senate, Kentucky/);
-  assert.match(html, /As of /);
+  assert.match(html, /As of Oct 26, 2026, 1:00\sPM ET/);
+  assert.equal(html.includes("2:48"), false);
   assert.equal(html.includes(">https://www.fec.gov"), false);
   assert.equal(html.includes("2026-senate-KY"), false);
+
+  const unknown = renderToStaticMarkup(
+    React.createElement(CitationCard, {
+      source: { title: "U.S. Senate, Kentucky", url: "/races/2026-senate-KY", as_of: "unknown" },
+      refreshedAt: "2026-10-26T18:48:47.307Z",
+    }),
+  );
+  assert.match(unknown, /As of Oct 26, 2026, 2:48\sPM ET/);
 });

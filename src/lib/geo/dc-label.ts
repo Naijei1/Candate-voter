@@ -7,7 +7,7 @@ export const DC_CALLOUT = {
   x1: 825.8,
   y1: 261.2,
   x2: 996,
-  y2: 506,
+  y2: 564,
   labelX: 1004,
-  labelY: 506,
+  labelY: 564,
 } as const;

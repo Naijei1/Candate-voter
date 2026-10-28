@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { DC_CALLOUT } from "../src/lib/geo/dc-label";
+import { STATE_CALLOUTS, labelPoint } from "../src/lib/geo/state-labels";
 import { US_STATE_SHAPES } from "../src/lib/geo/us-states";
 import {
   filingCoverageLabel,
@@ -186,6 +187,32 @@ test("the state map is one geographic outline per state and DC", () => {
   }
   assert.ok(DC_CALLOUT.labelX > maxX);
   assert.ok(DC_CALLOUT.labelY > maxY);
+  assert.ok(DC_CALLOUT.labelY < 600);
+});
+
+test("phone map labels keep a gap between crowded states and callouts", () => {
+  const ys = STATE_CALLOUTS.map((row) => row.labelY);
+  for (let index = 1; index < ys.length; index += 1) {
+    assert.ok((ys[index] ?? 0) - (ys[index - 1] ?? 0) >= 60);
+  }
+  const points = US_STATE_SHAPES.filter((shape) => !STATE_CALLOUTS.some((row) => row.postal === shape.postal)).map(
+    (shape) => ({ postal: shape.postal, ...labelPoint(shape.postal, shape.x, shape.y) }),
+  );
+  let closest = 999;
+  let pair = "";
+  for (let left = 0; left < points.length; left += 1) {
+    for (let right = left + 1; right < points.length; right += 1) {
+      const a = points[left];
+      const b = points[right];
+      if (!a || !b) continue;
+      const distance = Math.hypot(a.x - b.x, a.y - b.y);
+      if (distance < closest) {
+        closest = distance;
+        pair = `${a.postal} ${b.postal}`;
+      }
+    }
+  }
+  assert.ok(closest >= 44, `${pair} are ${closest.toFixed(1)} apart`);
 });
 
 test("coverage and the map ignore empty ballot stubs", () => {
