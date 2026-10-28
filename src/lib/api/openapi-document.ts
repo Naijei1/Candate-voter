@@ -330,7 +330,11 @@ paths:
         \`zip\` (five digits, for example \`40202\`) are page context from
         ZIP and state pages. When \`state\`, \`zip\`, \`raceId\`, or
         \`candidateId\` is present, the answer uses that place and does not
-        ask which state. A vague "who is running"
+        ask which state. A count or list question with one \`raceId\` is
+        answered from that contest's stored candidates and does not scan
+        other districts or another cycle. Tool lookups stay on \`cycle\` /
+        \`year\` and, for one contest, on that chamber. Response fields and
+        503 \`code\` values are unchanged. A vague "who is running"
         question with none of those, and no state named in the message,
         asks which contest to open instead of listing every state. \`mode\` is \`factual\` or
         \`alignment\`. Alignment is only for an explicit viewpoint question.
