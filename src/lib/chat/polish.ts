@@ -1,8 +1,15 @@
 import { houseContestTitle } from "../data/at-large";
 import { leadSentences, presidentialContestNote } from "../data/calendar";
-import { stateName } from "../data/states";
+import { stateName, stateOptions } from "../data/states";
 import { collapseRepeatedParty } from "../format";
 import type { ChatAnswer, ChatSource } from "./types";
+
+/** Page binding applied after the model writes. Deterministic answers use it too. */
+export type AnswerScope = {
+  cycle?: number;
+  office?: "senate" | "house" | "president";
+  state?: string;
+};
 
 const RACE_SLUG_SOURCE =
   "(?:19|20)\\d{2}-(?:president|senate-[A-Z]{2}|house-[A-Z]{2}-\\d{2})";
@@ -107,15 +114,93 @@ export function collapseBoilerplate(markdown: string, priorText = ""): string {
   return kept.join("\n\n").trim();
 }
 
-export function polishChatAnswer(answer: ChatAnswer, priorText = ""): ChatAnswer {
+export function polishChatAnswer(
+  answer: ChatAnswer,
+  priorText = "",
+  scope?: AnswerScope,
+): ChatAnswer {
+  const human = replaceRaceSlugs(humanizeAskProse(answer.answer_markdown));
   return {
     ...answer,
-    answer_markdown: collapseBoilerplate(
-      replaceRaceSlugs(humanizeAskProse(answer.answer_markdown)),
-      priorText,
-    ),
-    sources: polishSources(answer.sources),
+    answer_markdown: collapseBoilerplate(scope ? dropOffScope(human, scope) : human, priorText),
+    sources: polishSources(scope ? answer.sources.filter((source) => sourceInScope(source, scope)) : answer.sources),
   };
+}
+
+/**
+ * Drop paragraphs that cite another election year, a House district on a
+ * Senate page, or another state. The page already named the contest.
+ */
+export function dropOffScope(markdown: string, scope: AnswerScope): string {
+  const kept = markdown
+    .split(/\n{2,}/)
+    .filter((paragraph) => paragraph.trim().length > 0 && !paragraphOffScope(paragraph, scope));
+  const next = kept.join("\n\n").trim();
+  if (next) return next;
+  return scopeFallback(scope);
+}
+
+function scopeFallback(scope: AnswerScope): string {
+  if (scope.cycle != null && scope.office) {
+    const chamber = scope.office === "senate" ? "Senate" : scope.office === "house" ? "House" : "presidential";
+    return `I can only use the ${scope.cycle} ${chamber} contest on this page.`;
+  }
+  if (scope.cycle != null && scope.state) {
+    return `I can only use ${scope.cycle} ${stateName(scope.state)} records for this page.`;
+  }
+  if (scope.cycle != null) return `I can only use ${scope.cycle} records for this page.`;
+  if (scope.state) return `I can only use ${stateName(scope.state)} records for this page.`;
+  return "I can only use the contest already on this page.";
+}
+
+function sourceInScope(source: ChatSource, scope: AnswerScope): boolean {
+  return !paragraphOffScope(`${source.title}\n${source.url}`, scope);
+}
+
+function paragraphOffScope(paragraph: string, scope: AnswerScope): boolean {
+  if (scope.cycle != null) {
+    const years = paragraph.match(/\b(?:19|20)\d{2}\b/g) ?? [];
+    if (years.some((year) => Number(year) !== scope.cycle)) return true;
+  }
+  if (scope.office === "senate" || scope.office === "house") {
+    if (citesOtherChamber(paragraph, scope.office)) return true;
+  }
+  if (scope.state && citesOtherState(paragraph, scope.state)) return true;
+  return false;
+}
+
+function citesOtherChamber(text: string, office: "senate" | "house"): boolean {
+  if (office === "senate") {
+    if (citesHouseDistrict(text)) return true;
+    if (/\bpresidential\b/i.test(text) && /\b(?:filing|filed|candidate|race)s?\b/i.test(text)) return true;
+    return false;
+  }
+  if (/senate-[A-Z]{2}\b/i.test(text)) return true;
+  if (/\bu\.s\. senate\b/i.test(text) && !/\bhouse\b/i.test(text)) return true;
+  if (/\bsenate\b/i.test(text) && /\b(?:candidate|filing|filed)s?\b/i.test(text) && !/\bhouse\b/i.test(text)) {
+    return true;
+  }
+  if (/\bpresidential\b/i.test(text) && /\b(?:filing|filed|candidate|race)s?\b/i.test(text)) return true;
+  return false;
+}
+
+function citesHouseDistrict(text: string): boolean {
+  if (/house-[A-Z]{2}-\d{2}/i.test(text)) return true;
+  if (/\bhouse district\b/i.test(text)) return true;
+  if (/\bdistrict\s+\d+\b/i.test(text) && /\bhouse\b/i.test(text)) return true;
+  if (/\bat-large\b/i.test(text) && /\bhouse\b/i.test(text)) return true;
+  return false;
+}
+
+function citesOtherState(paragraph: string, postal: string): boolean {
+  const names = stateOptions()
+    .filter((option) => option.postal !== postal && option.name.length >= 4)
+    .sort((a, b) => b.name.length - a.name.length);
+  for (const option of names) {
+    const pattern = new RegExp(`\\b(?:in|for|from)\\s+${escapeRegExp(option.name)}\\b`, "i");
+    if (pattern.test(paragraph)) return true;
+  }
+  return false;
 }
 
 const PARTY_CODE = String.raw`([A-Za-z][A-Za-z0-9/]{0,8})`;

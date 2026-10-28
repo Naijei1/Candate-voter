@@ -358,7 +358,16 @@ test("year selects the race list and a mismatched race id is omitted", async () 
   );
   assert.equal(explicit.ok, true);
   if (!explicit.ok) return;
-  assert.deepEqual(explicit.content.cycles, [2026]);
+  assert.deepEqual(explicit.content.cycles, [2024]);
+  const explicitRaces = explicit.content.races as Array<{ raceId: string }>;
+  assert.equal(
+    explicitRaces.some((item) => item.raceId === "2024-senate-KY"),
+    true,
+  );
+  assert.equal(
+    explicitRaces.some((item) => item.raceId.startsWith("2026-")),
+    false,
+  );
 });
 
 test("Ask year is an alias, novice questions skip the model, and failures carry a code", async () => {

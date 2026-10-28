@@ -771,7 +771,7 @@ test("a model that asks which state is replaced when the page sent a race", asyn
     }),
   );
   const response = await postChat(
-    post({ message: "Who's running", raceId: "2026-house-TX-07", cycle: 2026 }),
+    post({ message: "Summarize this contest.", raceId: "2026-house-TX-07", cycle: 2026 }),
     chatDeps(
       repo,
       scripted([
@@ -1320,4 +1320,375 @@ test("ask polish strips partyLabel echoes and site-database provenance", () => {
     "Ada Klein is Democratic (DEM).",
   );
   assert.equal(polished("Republican Republican (REP) filed."), "Republican (REP) filed.");
+});
+
+test("scoped polish drops another year, another state, and House districts", () => {
+  const polished = polishChatAnswer(
+    {
+      answer_markdown: [
+        "**Ada Senate** has a 2026 filing for U.S. Senate, Kentucky.",
+        "In 2028, Bea House filed for U.S. House, Kentucky District 1.",
+        "Look in Texas for a different Senate filing.",
+      ].join("\n\n"),
+      sources: [
+        {
+          title: "U.S. Senate, Kentucky",
+          url: "https://voter.example/races/2026-senate-KY",
+          as_of: updatedAt,
+        },
+        {
+          title: "U.S. House, Kentucky District 1",
+          url: "https://voter.example/races/2026-house-KY-01",
+          as_of: updatedAt,
+        },
+      ],
+      refused: false,
+    },
+    "",
+    { cycle: 2026, office: "senate", state: "KY" },
+  );
+  assert.match(polished.answer_markdown, /Ada Senate/);
+  assert.match(polished.answer_markdown, /2026/);
+  assert.doesNotMatch(polished.answer_markdown, /2028/);
+  assert.doesNotMatch(polished.answer_markdown, /Bea House/);
+  assert.doesNotMatch(polished.answer_markdown, /District 1/);
+  assert.doesNotMatch(polished.answer_markdown, /Texas/);
+  assert.deepEqual(
+    polished.sources.map((source) => source.url),
+    ["https://voter.example/races/2026-senate-KY"],
+  );
+
+  const calendar = polishChatAnswer(
+    {
+      answer_markdown:
+        "**2026 is a midterm year.** Federal contests on the ballot are U.S. Senate and U.S. House. There is no presidential general election.",
+      sources: [],
+      refused: false,
+    },
+    "",
+    { cycle: 2026, office: "senate", state: "KY" },
+  );
+  assert.match(calendar.answer_markdown, /2026 is a midterm year/);
+  assert.match(calendar.answer_markdown, /U\.S\. House/);
+});
+
+test("a Senate race count and list stay on that contest and do not scan the state", async () => {
+  class NoCycleList extends MemoryVoterRepository {
+    override async listRacesByCycle(): Promise<Race[]> {
+      throw new Error("listRacesByCycle should not run");
+    }
+  }
+  const repo = new NoCycleList();
+  await repo.upsertRace(
+    race({
+      raceId: "2026-senate-KY",
+      office: "senate",
+      cycle: 2026,
+      state: "KY",
+      title: "U.S. Senate, Kentucky",
+      jurisdiction: "Kentucky",
+    }),
+  );
+  await repo.upsertRace(
+    race({
+      raceId: "2026-house-KY-01",
+      office: "house",
+      cycle: 2026,
+      state: "KY",
+      district: "01",
+      title: "U.S. House, Kentucky District 1",
+      jurisdiction: "Kentucky District 1",
+    }),
+  );
+  await repo.upsertRace(
+    race({
+      raceId: "2028-senate-KY",
+      office: "senate",
+      cycle: 2028,
+      state: "KY",
+      title: "U.S. Senate, Kentucky",
+      jurisdiction: "Kentucky",
+    }),
+  );
+  await repo.upsertCandidate(
+    candidate({
+      candidateId: "S0KY00111",
+      raceId: "2026-senate-KY",
+      displayName: "Ada Senate",
+      office: "senate",
+      partyAffiliation: "DEM",
+    }),
+  );
+  await repo.upsertCandidate(
+    candidate({
+      candidateId: "S0KY00222",
+      raceId: "2026-senate-KY",
+      displayName: "Bea Senate",
+      office: "senate",
+      partyAffiliation: "REP",
+    }),
+  );
+  await repo.upsertCandidate(
+    candidate({
+      candidateId: "H6KY01001",
+      raceId: "2026-house-KY-01",
+      displayName: "Cara House",
+      office: "house",
+      partyAffiliation: "DEM",
+    }),
+  );
+  await repo.upsertCandidate(
+    candidate({
+      candidateId: "S8KY00333",
+      raceId: "2028-senate-KY",
+      displayName: "Dana Future",
+      office: "senate",
+      partyAffiliation: "IND",
+    }),
+  );
+
+  const deps = chatDeps(repo, async () => {
+    throw new Error("model should not be called");
+  });
+  for (const message of [
+    "How many Senate candidates have filed?",
+    "Who is running for Senate?",
+    "List the candidates",
+  ]) {
+    const response = await postChat(
+      post({ message, raceId: "2026-senate-KY", cycle: 2026, year: 2026, state: "KY" }),
+      deps,
+    );
+    assert.equal(response.status, 200, message);
+    const payload = (await response.json()) as { answer_markdown: string; sources: Array<{ url: string }> };
+    assert.match(payload.answer_markdown, /\*\*2\*\*/);
+    assert.match(payload.answer_markdown, /Ada Senate/);
+    assert.match(payload.answer_markdown, /Bea Senate/);
+    assert.match(payload.answer_markdown, /U\.S\. Senate, Kentucky/);
+    assert.doesNotMatch(payload.answer_markdown, /Cara House/);
+    assert.doesNotMatch(payload.answer_markdown, /Dana Future/);
+    assert.doesNotMatch(payload.answer_markdown, /2028/);
+    assert.doesNotMatch(payload.answer_markdown, /District/);
+    assert.equal(RACE_SLUG.test(proseWithoutUrls(payload.answer_markdown)), false);
+    assert.equal(
+      payload.sources.some((source) => source.url === "https://voter.example/races/2026-senate-KY"),
+      true,
+    );
+    assert.equal(
+      payload.sources.some((source) => source.url.includes("house") || source.url.includes("2028")),
+      false,
+    );
+  }
+
+  const otherChamber = await postChat(
+    post({
+      message: "How many House candidates have filed?",
+      raceId: "2026-senate-KY",
+      cycle: 2026,
+      state: "KY",
+    }),
+    deps,
+  );
+  assert.equal(otherChamber.status, 200);
+  const otherBody = (await otherChamber.json()) as { answer_markdown: string };
+  assert.match(otherBody.answer_markdown, /stays on that contest/i);
+  assert.match(otherBody.answer_markdown, /Ada Senate/);
+  assert.doesNotMatch(otherBody.answer_markdown, /Cara House/);
+  assert.doesNotMatch(otherBody.answer_markdown, /District 1/);
+});
+
+test("a Senate count returns the timeout code when the race read does not finish", async () => {
+  class HangRace extends MemoryVoterRepository {
+    override async getRace(): Promise<Race | null> {
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      return null;
+    }
+  }
+  const started = Date.now();
+  const response = await postChat(
+    post({
+      message: "How many Senate candidates have filed?",
+      raceId: "2026-senate-KY",
+      cycle: 2026,
+    }),
+    chatDeps(new HangRace(), async () => {
+      throw new Error("model should not be called");
+    }, { budgetMs: 50 }),
+  );
+  assert.ok(Date.now() - started < 300);
+  assert.equal(response.status, 503);
+  const payload = (await response.json()) as { error: string; code: string; message: string };
+  assert.equal(payload.error, "unavailable");
+  assert.equal(payload.code, "timeout");
+  assert.equal(payload.message, "The answer took too long. Try a narrower question.");
+});
+
+test("Senate page tools and model text stay on the race year and chamber", async () => {
+  const repo = new MemoryVoterRepository();
+  await repo.upsertRace(
+    race({
+      raceId: "2026-senate-KY",
+      office: "senate",
+      cycle: 2026,
+      state: "KY",
+      title: "U.S. Senate, Kentucky",
+      jurisdiction: "Kentucky",
+    }),
+  );
+  await repo.upsertRace(
+    race({
+      raceId: "2026-house-KY-01",
+      office: "house",
+      cycle: 2026,
+      state: "KY",
+      district: "01",
+      title: "U.S. House, Kentucky District 1",
+      jurisdiction: "Kentucky District 1",
+    }),
+  );
+  await repo.upsertRace(
+    race({
+      raceId: "2028-senate-KY",
+      office: "senate",
+      cycle: 2028,
+      state: "KY",
+      title: "U.S. Senate, Kentucky",
+      jurisdiction: "Kentucky",
+    }),
+  );
+  await repo.upsertCandidate(
+    candidate({
+      candidateId: "S0KY00111",
+      raceId: "2026-senate-KY",
+      displayName: "Ada Senate",
+      office: "senate",
+    }),
+  );
+  await repo.upsertCandidate(
+    candidate({
+      candidateId: "H6KY01001",
+      raceId: "2026-house-KY-01",
+      displayName: "Cara House",
+      office: "house",
+    }),
+  );
+  const locked = {
+    repo,
+    env: {},
+    now,
+    root: ROOT,
+    cycle: 2026,
+    state: "KY",
+    raceId: "2026-senate-KY",
+    office: "senate" as const,
+  };
+  const listed = await executeChatTool(
+    "list_races",
+    { state: "TX", office: "house", cycle: 2028 },
+    locked,
+  );
+  assert.equal(listed.ok, true);
+  if (!listed.ok) return;
+  assert.deepEqual(listed.content.cycles, [2026]);
+  const races = listed.content.races as Array<{ raceId: string }>;
+  assert.deepEqual(races.map((item) => item.raceId), ["2026-senate-KY"]);
+  assert.deepEqual((listed.content.coverage as { house: unknown[] }).house, []);
+
+  const house = await executeChatTool("get_race", { raceId: "2026-house-KY-01" }, locked);
+  assert.equal(house.ok, false);
+  if (house.ok) return;
+  assert.match(house.message, /page contest/i);
+
+  const later = await executeChatTool(
+    "get_race",
+    { raceId: "2028-senate-KY" },
+    { repo, env: {}, now, root: ROOT, cycle: 2026 },
+  );
+  assert.equal(later.ok, false);
+  if (later.ok) return;
+  assert.match(later.message, /page year/i);
+
+  const coverage = await executeChatTool("get_coverage", { state: "KY", cycle: 2026 }, locked);
+  assert.equal(coverage.ok, false);
+
+  const drifted = await postChat(
+    post({
+      message: "Summarize the records on this page.",
+      raceId: "2026-senate-KY",
+      cycle: 2026,
+      state: "KY",
+    }),
+    chatDeps(
+      repo,
+      scripted([
+        modelJson({
+          answer_markdown: [
+            "**Ada Senate** has a 2026 filing for U.S. Senate, Kentucky.",
+            "In 2028, Dana Future filed for U.S. House, Kentucky District 1.",
+            "Look in Texas for another filing.",
+          ].join("\n\n"),
+          sources: [
+            {
+              title: "U.S. Senate, Kentucky",
+              url: "https://voter.example/races/2026-senate-KY",
+              as_of: updatedAt,
+            },
+            {
+              title: "U.S. House, Kentucky District 1",
+              url: "https://voter.example/races/2026-house-KY-01",
+              as_of: updatedAt,
+            },
+          ],
+          refused: false,
+          mode: "factual",
+        }),
+      ]),
+    ),
+  );
+  assert.equal(drifted.status, 200);
+  const body = (await drifted.json()) as { answer_markdown: string; sources: Array<{ url: string }> };
+  assert.match(body.answer_markdown, /Ada Senate/);
+  assert.doesNotMatch(body.answer_markdown, /2028/);
+  assert.doesNotMatch(body.answer_markdown, /Dana Future/);
+  assert.doesNotMatch(body.answer_markdown, /Texas/);
+  assert.doesNotMatch(body.answer_markdown, /District 1/);
+  assert.equal(
+    body.sources.some((source) => /house-|2028-/.test(source.url)),
+    false,
+  );
+
+  const upcoming = await postChat(
+    post({
+      message: "What elections are coming up?",
+      raceId: "2026-senate-KY",
+      cycle: 2026,
+      state: "KY",
+    }),
+    chatDeps(repo, async () => {
+      throw new Error("model should not be called");
+    }),
+  );
+  assert.equal(upcoming.status, 200);
+  const upcomingBody = (await upcoming.json()) as { answer_markdown: string };
+  assert.match(upcomingBody.answer_markdown, /U\.S\. Senate, Kentucky/);
+  assert.doesNotMatch(upcomingBody.answer_markdown, /Cara House/);
+  assert.doesNotMatch(upcomingBody.answer_markdown, /District 1/);
+  assert.doesNotMatch(upcomingBody.answer_markdown, /2028/);
+
+  const statePanel = await postChat(
+    post({
+      message:
+        "Page context: browsing Kentucky · 2026. Stored Senate and House race ids: 2026-senate-KY, 2026-house-KY-01.\n\nCompare all House and Senate candidates.",
+      raceId: "2026-senate-KY",
+      cycle: 2026,
+      state: "KY",
+    }),
+    chatDeps(repo, async () => {
+      throw new Error("model should not be called");
+    }),
+  );
+  assert.equal(statePanel.status, 200);
+  const panelBody = (await statePanel.json()) as { answer_markdown: string };
+  assert.match(panelBody.answer_markdown, /Ada Senate/);
+  assert.match(panelBody.answer_markdown, /Cara House/);
 });

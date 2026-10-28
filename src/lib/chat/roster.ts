@@ -6,8 +6,8 @@ import { stateName } from "../data/states";
 import { loadPublicCandidates, loadVisibleRace, visibleRaces, type PublicCandidate } from "../data/view";
 import { partyLabel } from "../format";
 import type { Race } from "../types";
-import { askedChamber, chamberFromRaceId, cycleMentionedIn, stateFromRaceId, stateMentionedIn, visitorQuestion } from "./intent";
-import { humanRaceTitle } from "./polish";
+import { askedChamber, chamberFromRaceId, cycleMentionedIn, stateFromRaceId, stateMentionedIn, visitorQuestion, yearFromRaceId } from "./intent";
+import { FORM2_FILINGS_SENTENCE, humanRaceTitle } from "./polish";
 import type { ToolContext } from "./tools";
 import type { ChatAnswer, ChatRequest, ChatSource } from "./types";
 
@@ -249,5 +249,98 @@ export async function answerKnownPlace(input: {
 
 function resolveCycle(request: ChatRequest, now: Date): number {
   if (request.cycle != null) return request.cycle;
-  return cycleMentionedIn(request.message) ?? now.getUTCFullYear();
+  return cycleMentionedIn(request.message) ?? yearFromRaceId(request.raceId) ?? now.getUTCFullYear();
+}
+
+/**
+ * Count and list for one page contest. One race read, no state-wide scan,
+ * no model call. House districts stay off a Senate race.
+ */
+export async function answerScopedRace(input: {
+  request: ChatRequest;
+  ctx: ToolContext;
+}): Promise<ChatAnswer | { unavailable: true; message: string }> {
+  const raceId = input.request.raceId;
+  if (!raceId) {
+    return {
+      answer_markdown: "Name a race and I can count the FEC Form 2 filings stored for it.",
+      sources: [],
+      refused: false,
+      mode: "factual",
+    };
+  }
+  const cycle =
+    input.request.cycle ?? yearFromRaceId(raceId) ?? input.ctx.now.getUTCFullYear();
+  try {
+    const race = await loadVisibleRace(input.ctx.repo, raceId);
+    const candidates = race ? await loadPublicCandidates(input.ctx.repo, race.raceId) : [];
+    let refreshedAt: string | null = null;
+    try {
+      refreshedAt = (await input.ctx.repo.getWatermark())?.updatedAt ?? null;
+    } catch (error) {
+      logReadError("getWatermark", error);
+    }
+    return {
+      ...renderScopedRace({
+        race,
+        cycle,
+        candidates,
+        root: input.ctx.root,
+        message: input.request.message,
+      }),
+      refreshedAt,
+    };
+  } catch (error) {
+    logReadError("getRace", error);
+    return { unavailable: true, message: "Stored records are unavailable." };
+  }
+}
+
+function renderScopedRace(input: {
+  race: Race | null;
+  cycle: number;
+  candidates: readonly PublicCandidate[];
+  root: string;
+  message: string;
+}): ChatAnswer {
+  const title = input.race ? humanRaceTitle(input.race) : "this contest";
+  const office = input.race?.office ?? chamberFromRaceId(input.race?.raceId);
+  const note = otherContestNote(input.message, office, title, input.cycle);
+  const shown = input.candidates.slice(0, NAME_CAP);
+  const blocks = [note, countSentence(input.candidates.length, title, input.cycle), FORM2_FILINGS_SENTENCE].filter(
+    (block): block is string => Boolean(block),
+  );
+  if (shown.length > 0) {
+    blocks.push(shown.map((candidate) => personLine(candidate, input.race!)).join("\n"));
+  }
+  const extra = input.candidates.length - shown.length;
+  if (extra > 0) blocks.push(`And ${extra} more filings are stored for this contest.`);
+  return {
+    answer_markdown: blocks.join("\n\n"),
+    sources: input.race ? rosterSources([input.race], input.root) : [],
+    refused: false,
+    mode: "factual",
+  };
+}
+
+function countSentence(count: number, title: string, cycle: number): string {
+  if (count === 0) return `No FEC Form 2 filings are stored for **${title}** in ${cycle}.`;
+  if (count === 1) {
+    return `**1** candidate has an FEC Form 2 filing for **${title}** in ${cycle}.`;
+  }
+  return `**${count}** candidates have FEC Form 2 filings for **${title}** in ${cycle}.`;
+}
+
+function otherContestNote(
+  message: string,
+  office: Race["office"] | null,
+  title: string,
+  cycle: number,
+): string | null {
+  if (!office) return null;
+  const asksHouse = office !== "house" && /\bhouse\b/i.test(message);
+  const asksSenate = office !== "senate" && /\bsenate\b/i.test(message);
+  const asksPresident = office !== "president" && /\bpresidents?\b/i.test(message);
+  if (!asksHouse && !asksSenate && !asksPresident) return null;
+  return `This page is **${title}** in ${cycle}. The count stays on that contest.`;
 }

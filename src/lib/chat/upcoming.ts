@@ -2,7 +2,7 @@ import { cycleCalendar, leadSentences } from "../data/calendar";
 import { logReadError } from "../data/read";
 import { visibleRaces } from "../data/view";
 import type { Race } from "../types";
-import { cycleMentionedIn, stateMentionedIn } from "./intent";
+import { chamberFromRaceId, cycleMentionedIn, isSingleContestScope, stateMentionedIn, yearFromRaceId } from "./intent";
 import {
   ASK_PRESIDENTIAL_YEAR_SENTENCE,
   ASK_STATE_SENTENCE,
@@ -26,6 +26,9 @@ export async function answerUpcoming(input: {
 }): Promise<ChatAnswer | { unavailable: true; message: string }> {
   const cycle = resolveCycle(input.request, input.ctx.now);
   const state = input.request.state ?? stateMentionedIn(input.request.message);
+  const office = isSingleContestScope(input.request)
+    ? chamberFromRaceId(input.request.raceId)
+    : null;
   try {
     const stored = visibleRaces(await input.ctx.repo.listRacesByCycle(cycle));
     let refreshedAt: string | null = null;
@@ -40,6 +43,7 @@ export async function answerUpcoming(input: {
         state,
         races: stored,
         root: input.ctx.root,
+        office,
       }),
       refreshedAt,
     };
@@ -54,11 +58,17 @@ export function renderUpcoming(input: {
   state: string | null;
   races: readonly Race[];
   root: string;
+  /** When the page is one contest, list only that chamber's stored filings. */
+  office?: Race["office"] | null;
 }): ChatAnswer {
   const calendar = cycleCalendar(input.cycle);
-  const senate = filterOffice(input.races, "senate", input.state);
-  const house = filterOffice(input.races, "house", input.state);
-  const president = input.races.filter((race) => race.office === "president");
+  const office = input.office ?? null;
+  const senate = office === "house" || office === "president" ? [] : filterOffice(input.races, "senate", input.state);
+  const house = office === "senate" || office === "president" ? [] : filterOffice(input.races, "house", input.state);
+  const president =
+    office === "senate" || office === "house"
+      ? []
+      : input.races.filter((race) => race.office === "president");
   const paragraphs: string[] = [lead(input.cycle), FORM2_FILINGS_SENTENCE];
   const mentioned: Race[] = [];
 
@@ -94,13 +104,8 @@ export function renderUpcoming(input: {
 function resolveCycle(request: ChatRequest, now: Date): number {
   if (request.cycle != null) return request.cycle;
   const mentioned = cycleMentionedIn(request.message);
-  if (mentioned != null) return mentioned;
-  const fromRace = /^(\d{4})-/.exec(request.raceId ?? "");
-  if (fromRace?.[1]) {
-    const parsed = Number(fromRace[1]);
-    if (Number.isInteger(parsed)) return parsed;
-  }
-  return now.getUTCFullYear();
+  if (mentioned != null && !isSingleContestScope(request)) return mentioned;
+  return yearFromRaceId(request.raceId) ?? mentioned ?? now.getUTCFullYear();
 }
 
 function lead(cycle: number): string {

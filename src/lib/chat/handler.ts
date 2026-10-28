@@ -19,21 +19,26 @@ import { definitionAnswer } from "./definitions";
 import { CHAT_TIMEOUT_MESSAGE, ChatUnavailableError, unavailableBody } from "./errors";
 import { createBedrockConverse } from "./converse";
 import {
+  asksForAnotherState,
   CLARIFY_RACE_MARKDOWN,
   askedChamber,
   hasPlaceContext,
   isAlignmentRequest,
+  isScopedRosterQuestion,
+  isSingleContestScope,
   isUpcomingElectionsQuestion,
   isVagueRunningQuestion,
   needsRaceClarification,
+  chamberFromRaceId,
   stateFromRaceId,
+  yearFromRaceId,
 } from "./intent";
-import { polishChatAnswer } from "./polish";
+import { polishChatAnswer, type AnswerScope } from "./polish";
 import { answerUpcoming } from "./upcoming";
 import { isVotingAdvice, VOTING_ADVICE_MARKDOWN } from "./prompt";
 import { clientAddress, createRateLimiter, type RateLimiter } from "./rate-limit";
 import { parseChatRequest } from "./request";
-import { isStateRosterQuestion, answerKnownPlace, answerStateRoster } from "./roster";
+import { isStateRosterQuestion, answerKnownPlace, answerScopedRace, answerStateRoster } from "./roster";
 import { limitAnswerToRaceScope } from "./scope";
 import { runGroundedChat } from "./run";
 import type { ChatAnswer, ChatRequest, ConverseFn } from "./types";
@@ -164,6 +169,32 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
     }
   }
 
+  if (isScopedRosterQuestion(asked)) {
+    const siteRoot =
+      deps.siteRoot ?? `${originFromRequest(request)}${basePathFromEnv(deps.env)}`;
+    try {
+      const answer = await withBudget(
+        answerScopedRace({
+          request: asked,
+          ctx: chatCtx(deps, now, siteRoot, asked),
+        }),
+        budgetMs(deps),
+      );
+      if ("unavailable" in answer) {
+        return json({ error: "unavailable", message: answer.message }, 503);
+      }
+      logOutcome({
+        refused: answer.refused,
+        tools: ["race"],
+        latencyMs: Date.now() - started,
+        mode: "factual",
+      });
+      return json(chatBody(answer, threadId, asked.message, asked));
+    } catch (error) {
+      return json(unavailableBody(error), 503);
+    }
+  }
+
   if (isStateRosterQuestion(asked.message, asked.state)) {
     const siteRoot =
       deps.siteRoot ?? `${originFromRequest(request)}${basePathFromEnv(deps.env)}`;
@@ -291,11 +322,16 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
       }),
       budget,
     );
-    if (/which state/i.test(answer.answer_markdown) && hasPlaceContext(asked)) {
-      const replaced = await answerKnownPlace({
-        request: asked,
-        ctx: chatCtx(deps, now, siteRoot, asked),
-      });
+    if (asksForAnotherState(answer.answer_markdown) && hasPlaceContext(asked)) {
+      const replaced = isSingleContestScope(asked)
+        ? await answerScopedRace({
+            request: asked,
+            ctx: chatCtx(deps, now, siteRoot, asked),
+          })
+        : await answerKnownPlace({
+            request: asked,
+            ctx: chatCtx(deps, now, siteRoot, asked),
+          });
       if (!("unavailable" in replaced)) answer = { ...answer, ...replaced };
     }
     logOutcome({
@@ -316,11 +352,12 @@ function chatBody(
   answer: ChatAnswer,
   threadId: string,
   priorMessage: string,
-  request?: ChatRequest,
+  asked?: ChatRequest,
 ) {
-  const polished = limitAnswerToRaceScope(polishChatAnswer(answer, priorMessage), request ?? {
-    message: priorMessage,
-  });
+  const polished = limitAnswerToRaceScope(
+    polishChatAnswer(answer, priorMessage, asked ? answerScope(asked) : undefined),
+    asked ?? { message: priorMessage },
+  );
   return {
     answer_markdown: polished.answer_markdown,
     sources: polished.sources,
@@ -338,14 +375,32 @@ function budgetMs(deps: ChatDeps): number {
 function chatCtx(deps: ChatDeps, now: Date, siteRoot: string, asked: ChatRequest) {
   const root = (deps.siteRoot ?? siteRoot).replace(/\/+$/, "");
   const state = asked.state ?? stateFromRaceId(asked.raceId) ?? undefined;
+  const cycle = asked.cycle ?? yearFromRaceId(asked.raceId) ?? undefined;
+  const locked = isSingleContestScope(asked);
+  const office = locked ? chamberFromRaceId(asked.raceId) ?? undefined : undefined;
   return {
     repo: deps.repository(),
     env: deps.env,
     now,
     root,
-    ...(asked.cycle != null ? { cycle: asked.cycle } : {}),
+    ...(cycle != null ? { cycle } : {}),
     ...(state ? { state } : {}),
     ...(asked.zip ? { zip: asked.zip } : {}),
+    ...(locked && asked.raceId ? { raceId: asked.raceId } : {}),
+    ...(office ? { office } : {}),
+  };
+}
+
+function answerScope(asked: ChatRequest): AnswerScope | undefined {
+  const locked = isSingleContestScope(asked);
+  const office = locked ? chamberFromRaceId(asked.raceId) ?? undefined : undefined;
+  const cycle = asked.cycle ?? yearFromRaceId(asked.raceId) ?? undefined;
+  const state = asked.state ?? stateFromRaceId(asked.raceId) ?? undefined;
+  if (cycle == null && !office && !state) return undefined;
+  return {
+    ...(cycle != null ? { cycle } : {}),
+    ...(office ? { office } : {}),
+    ...(state ? { state } : {}),
   };
 }
 

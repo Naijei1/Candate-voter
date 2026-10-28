@@ -16,6 +16,7 @@ import {
 } from "../data/view";
 import type { Filing, Race } from "../types";
 import { isResourceId } from "../api/ids";
+import { chamberFromRaceId, stateFromRaceId, yearFromRaceId } from "./intent";
 import { canonicalUrl, humanRaceTitle } from "./polish";
 import type { ChatSource } from "./types";
 
@@ -43,6 +44,13 @@ export type ToolContext = {
   state?: string;
   /** Five-digit ZIP from the Ask page. */
   zip?: string;
+  /**
+   * Page contest. When set, list and search read this race only.
+   * A state panel that lists every district does not set it.
+   */
+  raceId?: string;
+  /** Chamber of `raceId`. Tool filters cannot switch chambers. */
+  office?: Race["office"];
 };
 
 export type ToolOutput =
@@ -198,18 +206,19 @@ async function listRaces(
   if (!office.ok) return toolError(office.message);
   const requested = readState(input.state);
   if (!requested.ok) return toolError(requested.message);
-  const state = {
-    ok: true as const,
-    value: requested.value ?? (office.value === "president" ? null : (ctx.state ?? null)),
-  };
+  const officeValue = ctx.office ?? office.value;
+  const stateValue = officeValue === "president" ? null : (ctx.state ?? requested.value);
+
+  if (ctx.raceId) return listLockedRace(ctx, cycle.cycles);
+
   const limit = readLimit(
     input.limit,
-    state.value ? LIST_STATE_DEFAULT : LIST_DEFAULT,
+    stateValue ? LIST_STATE_DEFAULT : LIST_DEFAULT,
     LIST_MAX,
   );
   if (!limit.ok) return toolError(limit.message);
 
-  if (!state.value && office.value !== "president") {
+  if (!stateValue && officeValue !== "president") {
     return toolError(
       "Pass a state, or set office to president. Do not list Senate or House races for every state.",
     );
@@ -221,13 +230,13 @@ async function listRaces(
     );
     const stored = visibleRaces(groups.flat());
     const listed = appendExpectedRaces(stored, cycles, {
-      state: state.value,
-      office: office.value,
+      state: stateValue,
+      office: officeValue,
     });
     const races = listed
       .filter((race) => {
-        if (state.value && race.state !== state.value) return false;
-        if (office.value && race.office !== office.value) return false;
+        if (stateValue && race.state !== stateValue) return false;
+        if (officeValue && race.office !== officeValue) return false;
         return true;
       })
       .sort((a, b) => upcomingRaceRank(a) - upcomingRaceRank(b) || a.raceId.localeCompare(b.raceId))
@@ -242,7 +251,7 @@ async function listRaces(
         scope: FORM2_SCOPE,
         filingsSoFarOnly: true,
         scopeNote: FORM2_SCOPE_NOTE,
-        house: houseCoverageForRaces(listed, cycles, state.value),
+        house: houseCoverageForRaces(listed, cycles, stateValue),
       },
       sources: sources.slice(0, MAX_SOURCES),
     });
@@ -251,22 +260,59 @@ async function listRaces(
   }
 }
 
+async function listLockedRace(ctx: ToolContext, cycles: number[]): Promise<ToolOutput> {
+  const raceId = ctx.raceId;
+  if (!raceId) return toolError("raceId is invalid");
+  try {
+    const race = await loadVisibleRace(ctx.repo, raceId);
+    const year = cycles[0];
+    const visible =
+      race &&
+      raceInYear(race, year) &&
+      (!ctx.office || race.office === ctx.office)
+        ? [chatRace(race)]
+        : [];
+    const sources = visible.flatMap((item) => sourcesForRace(item, ctx.root));
+    return ok(visible.length, sources, visible.map(raceSnippet), {
+      cycles,
+      cycleCalendar: cycles.map(cycleCalendar),
+      races: visible,
+      coverage: {
+        scope: FORM2_SCOPE,
+        filingsSoFarOnly: true,
+        scopeNote: FORM2_SCOPE_NOTE,
+        house: [],
+      },
+      sources: sources.slice(0, MAX_SOURCES),
+    });
+  } catch (error) {
+    return unavailable("getRace", error);
+  }
+}
+
+function raceInYear(race: Race, year: number | undefined): boolean {
+  if (year == null) return true;
+  if (race.cycle === year) return true;
+  return race.raceId.startsWith(`${year}-`);
+}
+
 async function getRace(
   input: Record<string, unknown>,
   ctx: ToolContext,
 ): Promise<ToolOutput> {
   const raceId = readId(input.raceId, "raceId");
   if (!raceId.ok) return toolError(raceId.message);
+  const mismatch = contestMismatch(raceId.value, ctx);
+  if (mismatch) return toolError(mismatch);
   try {
     const race = await loadVisibleRace(ctx.repo, raceId.value);
     if (!race) {
       return ok(0, [], [], { race: null, candidates: [], sources: [] });
     }
-    const candidates = await withCrossContestFilings(
-      ctx.repo,
-      await loadPublicCandidates(ctx.repo, race.raceId),
-      race,
-    );
+    const loaded = await loadPublicCandidates(ctx.repo, race.raceId);
+    const candidates = ctx.raceId
+      ? loaded
+      : await withCrossContestFilings(ctx.repo, loaded, race);
     const annotated = chatRace(race);
     const sources = [
       ...sourcesForRace(annotated, ctx.root),
@@ -301,11 +347,15 @@ async function searchCandidates(
   if (!limit.ok) return toolError(limit.message);
 
   const needle = query.toLowerCase();
+  const stateValue = ctx.state ?? state.value;
+  const officeValue = ctx.office ?? office.value;
   try {
     if (isResourceId(query)) {
       const stored = await ctx.repo.getCandidate(query);
       const direct = stored ? presentCandidate(stored) : null;
       if (direct && matchesCandidate(direct, needle)) {
+        const mismatch = contestMismatch(direct.raceId, ctx);
+        if (mismatch) return toolError(mismatch);
         const race = await loadVisibleRace(ctx.repo, direct.raceId);
         const sources = sourcesForCandidate(direct, ctx.root);
         return ok(1, sources, [candidateSnippet(direct)], {
@@ -317,6 +367,8 @@ async function searchCandidates(
       }
     }
 
+    if (ctx.raceId) return searchLockedRace(ctx.raceId, needle, limit.value, ctx);
+
     const cycles = cycle.cycles;
     const matches: Array<{ candidate: PublicCandidate; race: Race | null }> = [];
     let scanned = 0;
@@ -324,8 +376,8 @@ async function searchCandidates(
     for (const year of cycles) {
       const races = visibleRaces(await ctx.repo.listRacesByCycle(year));
       for (const race of races) {
-        if (state.value && race.state !== state.value) continue;
-        if (office.value && race.office !== office.value) continue;
+        if (stateValue && race.state !== stateValue) continue;
+        if (officeValue && race.office !== officeValue) continue;
         if (scanned >= MAX_RACES_SCANNED) {
           truncated = true;
           break;
@@ -372,6 +424,8 @@ async function getCandidate(
     if (!candidate) {
       return ok(0, [], [], { candidate: null, race: null, sources: [] });
     }
+    const mismatch = contestMismatch(candidate.raceId, ctx);
+    if (mismatch) return toolError(mismatch);
     const race = await loadVisibleRace(ctx.repo, candidate.raceId);
     const sources = [
       ...sourcesForCandidate(candidate, ctx.root),
@@ -399,6 +453,8 @@ async function listFilings(
     if (!candidate) {
       return ok(0, [], [], { candidate: null, filings: [], sources: [] });
     }
+    const mismatch = contestMismatch(candidate.raceId, ctx);
+    if (mismatch) return toolError(mismatch);
     const filings = collapseIdenticalFilings(
       await ctx.repo.listFilingsForCandidate(candidateId.value),
     );
@@ -486,14 +542,46 @@ function unavailable(operation: string, error: unknown): ToolOutput {
   };
 }
 
+async function searchLockedRace(
+  raceId: string,
+  needle: string,
+  limit: number,
+  ctx: ToolContext,
+): Promise<ToolOutput> {
+  const race = await loadVisibleRace(ctx.repo, raceId);
+  if (!race) {
+    return ok(0, [], [], { matches: [], scannedRaces: 0, truncated: false, sources: [] });
+  }
+  const matches: Array<{ candidate: PublicCandidate; race: Race | null }> = [];
+  const candidates = await loadPublicCandidates(ctx.repo, race.raceId);
+  for (const candidate of candidates) {
+    if (!matchesCandidate(candidate, needle)) continue;
+    matches.push({ candidate, race: chatRace(race) });
+    if (matches.length >= limit) break;
+  }
+  const sources = matches.flatMap((match) => sourcesForCandidate(match.candidate, ctx.root));
+  return ok(matches.length, sources, matches.map((match) => candidateSnippet(match.candidate)), {
+    matches,
+    scannedRaces: 1,
+    truncated: false,
+    sources: sources.slice(0, MAX_SOURCES),
+  });
+}
+
 async function getCoverage(
   input: Record<string, unknown>,
   ctx: ToolContext,
 ): Promise<ToolOutput> {
+  if (ctx.raceId) {
+    return toolError(
+      "This page is one contest. Use get_race. Do not report House district coverage or another chamber.",
+    );
+  }
   const cycle = resolveCycles(input, ctx);
   if (!cycle.ok) return toolError(cycle.message);
   const state = readState(input.state);
   if (!state.ok) return toolError(state.message);
+  const stateValue = ctx.state ?? state.value;
   const cycles = cycle.cycles;
   try {
     const groups = await Promise.all(
@@ -501,7 +589,7 @@ async function getCoverage(
     );
     const visible = visibleRaces(groups.flat());
     const watermark = await ctx.repo.getWatermark();
-    const house = houseCoverageForRaces(visible, cycles, state.value);
+    const house = houseCoverageForRaces(visible, cycles, stateValue);
     const sources: ChatSource[] = watermark
       ? [
           {
@@ -719,9 +807,29 @@ function resolveCycles(
   }
   const cycle = readCycle(input.cycle ?? input.year);
   if (!cycle.ok) return cycle;
-  if (cycle.value != null) return { ok: true, cycles: [cycle.value] };
   if (ctx.cycle != null) return { ok: true, cycles: [ctx.cycle] };
+  if (cycle.value != null) return { ok: true, cycles: [cycle.value] };
   return { ok: true, cycles: cyclesFromEnv(ctx.env, ctx.now) };
+}
+
+/** Page race, year, chamber, and state win over a drifted tool argument. */
+function contestMismatch(raceId: string, ctx: ToolContext): string | null {
+  if (ctx.raceId && raceId !== ctx.raceId) {
+    return "Stay on the page contest. Do not look up another race, chamber, or year.";
+  }
+  const year = yearFromRaceId(raceId);
+  if (ctx.cycle != null && year != null && year !== ctx.cycle) {
+    return "Stay on the page year. Do not look up another election year.";
+  }
+  const office = chamberFromRaceId(raceId);
+  if (ctx.office && office && office !== ctx.office) {
+    return "Stay on the page chamber. Do not look up another chamber.";
+  }
+  const state = stateFromRaceId(raceId);
+  if (ctx.state && state && state !== ctx.state) {
+    return "Stay on the page state. Do not look up another state.";
+  }
+  return null;
 }
 
 function readCycle(

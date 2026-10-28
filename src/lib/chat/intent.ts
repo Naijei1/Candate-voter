@@ -109,6 +109,72 @@ export function chamberFromRaceId(raceId: string | null | undefined): AskedChamb
   return null;
 }
 
+/** Election year prefix on a race id, when it is in range. */
+export function yearFromRaceId(raceId: string | null | undefined): number | null {
+  if (!raceId) return null;
+  const match = /^((?:19|20)\d{2})-/.exec(raceId);
+  if (!match?.[1]) return null;
+  return parseCycle(match[1]);
+}
+
+/**
+ * State browse text lists stored race ids. That is not one contest
+ * unless the question names the same chamber as `raceId`.
+ */
+export function isStatePanelMessage(message: string): boolean {
+  const text = message.trim();
+  return (
+    /Stored (?:Senate and House|Senate|House|presidential) race ids/i.test(text) ||
+    /^Page context:\s*browsing\b/i.test(text)
+  );
+}
+
+/**
+ * One race id. A state panel stays broad unless the question names that
+ * race's chamber (Senate count on a Senate anchor, for example).
+ */
+export function isSingleContestScope(request: Pick<ChatRequest, "message" | "raceId">): boolean {
+  const office = chamberFromRaceId(request.raceId);
+  if (!request.raceId || !office) return false;
+  if (!isStatePanelMessage(request.message)) return true;
+  return askedChamber(request.message) === office;
+}
+
+const COUNT_OR_LIST: readonly RegExp[] = [
+  /\bhow many\b/i,
+  /\bnumber of\b[^.\n]{0,48}\b(?:candidates|filings|people)\b/i,
+  /\bwho(?:'s|’s|s| is| are)\s+running\b/i,
+  /\bwho(?:'s|’s| has| have| is| are)?\s*filed\b/i,
+  /\bwho(?:'s| is)\s+on the ballot\b/i,
+  /\bwho are the candidates\b/i,
+  /\bwhich candidates\b/i,
+  /\bcandidates?\s+(?:are\s+)?(?:running|filed|on the ballot)\b/i,
+  /\b(?:list|name|show)\b(?:\s+\w+){0,5}\s+candidates\b/i,
+  /\b(?:have|has)\s+filed\b/i,
+];
+
+/**
+ * Who-filed, who-is-running, or a count. Answer from the page race
+ * instead of a state-wide tool loop.
+ */
+export function isCountOrListQuestion(message: string): boolean {
+  const text = visitorQuestion(message).trim();
+  if (RACE_ID.test(text)) return false;
+  if (COUNT_OR_LIST.some((pattern) => pattern.test(text))) return true;
+  return /\bcompare\b/i.test(text) && /\b(?:candidates|filings|running|filed)\b/i.test(text);
+}
+
+/** Count or list while the page is one contest (a Senate race page, for example). */
+export function isScopedRosterQuestion(request: ChatRequest): boolean {
+  if (!isSingleContestScope(request)) return false;
+  return isCountOrListQuestion(request.message);
+}
+
+/** The model asked the visitor to name a state the page already sent. */
+export function asksForAnotherState(markdown: string): boolean {
+  return /\b(?:which|what)\s+state\b/i.test(markdown) || /\bname a state\b/i.test(markdown);
+}
+
 /** Who-is-running wording that used to become a national list. */
 export function isVagueRunningQuestion(message: string): boolean {
   const text = visitorQuestion(message).trim();
