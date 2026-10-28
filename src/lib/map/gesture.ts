@@ -58,12 +58,25 @@ export function nextPan(
   };
 }
 
+export type PanLimits = {
+  /** Lowest pinch scale. Defaults to 1 so a fitted map cannot shrink away. */
+  minScale?: number;
+  /** Unscaled drawing size. Larger than the frame when the map covers a tall stage. */
+  contentWidth?: number;
+  contentHeight?: number;
+};
+
 /** Keep the map on screen. At 1x a drag can still move it by about half the frame. */
-export function clampPan(pan: Pan, width: number, height: number): Pan {
-  const scale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, pan.scale));
-  const span = 0.46 + (scale - 1) * 0.55;
-  const limitX = Math.max(0, width) * span;
-  const limitY = Math.max(0, height) * span;
+export function clampPan(pan: Pan, width: number, height: number, limits?: PanLimits): Pan {
+  const minScale = limits?.minScale ?? MIN_SCALE;
+  const scale = Math.min(MAX_SCALE, Math.max(minScale, pan.scale));
+  const contentWidth = limits?.contentWidth ?? width;
+  const contentHeight = limits?.contentHeight ?? height;
+  const overflowX = Math.max(0, contentWidth * scale - Math.max(0, width)) / 2;
+  const overflowY = Math.max(0, contentHeight * scale - Math.max(0, height)) / 2;
+  const span = 0.46 + Math.max(0, scale - 1) * 0.55;
+  const limitX = Math.max(overflowX, Math.max(0, width) * span);
+  const limitY = Math.max(overflowY, Math.max(0, height) * span);
   return {
     scale,
     x: Math.min(limitX, Math.max(-limitX, pan.x)),

@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useState } from "react";
 import { ChatComposer } from "@/components/chat/ChatComposer";
 import { ChatMessageList, politeStatus } from "@/components/chat/ChatMessageList";
 import type { ChatController } from "@/components/chat/useChat";
+import { askHistoryKey } from "@/lib/chat/scope";
 import {
   chatPageHref,
   contextLabel,
@@ -24,7 +25,7 @@ export function ChatShell({
   onClose?: () => void;
 }) {
   const [dismissed, setDismissed] = useState(false);
-  const contextKey = `${context.raceId ?? ""}:${context.candidateId ?? ""}`;
+  const contextKey = askHistoryKey(context);
   useEffect(() => {
     setDismissed(false);
   }, [contextKey]);
@@ -52,6 +53,11 @@ export function ChatShell({
       dismissed,
     ],
   );
+  const bindingKey = askHistoryKey(active);
+  useLayoutEffect(() => {
+    chat.syncBinding(bindingKey);
+  }, [bindingKey, chat]);
+
   const label = dismissed ? null : contextLabel(context);
   const titleId = mode === "page" ? "chat-page-title" : "ask-panel-title";
   const latest = [...chat.turns].reverse().find((turn) => turn.role === "assistant");

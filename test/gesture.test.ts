@@ -30,6 +30,21 @@ test("a finger drag pans the map and a pinch scales it", () => {
   assert.equal(aroundFingers.y, 0);
   const zoomed = clampPan({ x: 0, y: 0, scale: 9 }, 300, 200);
   assert.equal(zoomed.scale, 4);
+  const fitted = clampPan({ x: 0, y: 0, scale: 0.2 }, 300, 200);
+  assert.equal(fitted.scale, 1);
+
+  const covered = clampPan({ x: -4000, y: 0, scale: 1 }, 390, 640, {
+    contentWidth: 1216,
+    contentHeight: 640,
+    minScale: 390 / 1216,
+  });
+  assert.equal(covered.x, -((1216 - 390) / 2));
+  const wholeMap = clampPan({ x: 0, y: 0, scale: 0.05 }, 390, 640, {
+    contentWidth: 1216,
+    contentHeight: 640,
+    minScale: 390 / 1216,
+  });
+  assert.equal(wholeMap.scale, 390 / 1216);
 });
 
 test("pulling the sheet below a peek dismisses, otherwise it snaps", () => {
@@ -60,6 +75,12 @@ test("phone maps and the state sheet expose pan and drag targets", () => {
   assert.match(css, /\.national-shell \.map-bleed\s*\{[^}]*top:\s*var\(--map-clearance\)/);
   const mobile = css.slice(css.indexOf("@media (max-width: 1023px)"), css.indexOf("@media (max-width: 420px)"));
   assert.match(mobile, /\.us-map \.us-label-callout[\s\S]*?font-size:\s*44px/);
+  assert.match(mobile, /\.national-shell\s*\{[^}]*display:\s*flex/);
+  assert.match(mobile, /\.national-shell\s*\{[^}]*flex-direction:\s*column/);
+  assert.match(mobile, /\.national-shell \.map-stage\s*\{[^}]*flex:\s*1 1 auto/);
+  assert.match(mobile, /\.national-shell \.map-stage\s*\{[^}]*min-height:\s*0/);
+  assert.match(mobile, /\.national-shell \.map-stage \.us-map\s*\{[^}]*aspect-ratio:\s*1140 \/ 600/);
+  assert.match(mobile, /\.national-shell \.map-stage \.us-map\s*\{[^}]*height:\s*100%/);
   assert.match(landing, /zipFailureClearsSelection/);
   assert.match(landing, /heldZip\.current = null/);
   assert.match(landing, /onReject=\{rejectZip\}/);

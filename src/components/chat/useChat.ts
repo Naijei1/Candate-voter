@@ -2,7 +2,14 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ChatCancelled, postChatMessage, type ChatCallResult } from "@/lib/chat/browser";
-import { applyPagePrefix, narrowAskContext } from "@/lib/chat/scope";
+import {
+  applyPagePrefix,
+  askHistoryScope,
+  narrowAskContext,
+  scopeFromHistoryKey,
+  shouldDropHistoryForSend,
+  type AskHistoryScope,
+} from "@/lib/chat/scope";
 import {
   buildChatRequestBody,
   rateLimitRemainingSeconds,
@@ -62,39 +69,134 @@ export function settleAssistantTurn(
 }
 
 type SessionShape = {
-  version: 1;
+  version: 2;
+  bindingKey: string;
+  historyScope: AskHistoryScope | null;
   threadId?: string;
-  draft?: string;
+  draft: string;
   turns: ChatTurn[];
 };
 
+export type AskHistorySnapshot = {
+  bindingKey: string | null;
+  historyScope: AskHistoryScope | null;
+  threadId?: string;
+  draft: string;
+  turns: ChatTurn[];
+};
+
+export type StoredAskHistory = {
+  bindingKey: string;
+  historyScope: AskHistoryScope | null;
+  threadId?: string;
+  draft: string;
+  turns: ChatTurn[];
+};
+
+/**
+ * Restore a thread only when it was saved for this year, place, race, and scope.
+ * A different context starts empty so a Senate open cannot show a House answer.
+ */
+export function applyAskBinding(
+  state: AskHistorySnapshot,
+  key: string,
+  stored: StoredAskHistory | null,
+): { state: AskHistorySnapshot; restore: boolean; clear: boolean } {
+  if (state.bindingKey === key) return { state, restore: false, clear: false };
+  const untouched = state.turns.length === 0 && state.threadId == null;
+  if (stored && stored.bindingKey === key && (state.bindingKey == null || untouched)) {
+    return {
+      restore: true,
+      clear: false,
+      state: {
+        bindingKey: key,
+        historyScope: stored.historyScope ?? scopeFromHistoryKey(key),
+        threadId: stored.threadId,
+        draft: stored.draft,
+        turns: stored.turns,
+      },
+    };
+  }
+  return {
+    restore: false,
+    clear: state.bindingKey != null,
+    state: {
+      bindingKey: key,
+      historyScope: scopeFromHistoryKey(key),
+      threadId: undefined,
+      draft: state.bindingKey == null ? state.draft : "",
+      turns: [],
+    },
+  };
+}
+
 export function useChat() {
   const [turns, setTurns] = useState<ChatTurn[]>([]);
-  const [draft, setDraft] = useState("");
+  const [draft, setDraftState] = useState("");
   const [threadId, setThreadId] = useState<string | undefined>(undefined);
   const [ready, setReady] = useState(false);
   const [pending, setPending] = useState(false);
   const turnsRef = useRef(turns);
   const threadRef = useRef(threadId);
+  const draftRef = useRef(draft);
+  const bindingRef = useRef<string | null>(null);
+  const historyScopeRef = useRef<AskHistoryScope | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const flightRef = useRef(0);
   const pendingRef = useRef(false);
   turnsRef.current = turns;
   threadRef.current = threadId;
+  draftRef.current = draft;
 
-  useEffect(() => {
+  const setDraft = useCallback((value: string) => {
+    draftRef.current = value;
+    setDraftState(value);
+  }, []);
+
+  const syncBinding = useCallback((key: string) => {
     const stored = readSession();
-    if (stored) {
-      setTurns((current) => (current.length > 0 ? current : stored.turns));
-      setThreadId((current) => current ?? stored.threadId);
-      setDraft((current) => (current ? current : stored.draft ?? ""));
+    const applied = applyAskBinding(
+      {
+        bindingKey: bindingRef.current,
+        historyScope: historyScopeRef.current,
+        threadId: threadRef.current,
+        draft: draftRef.current,
+        turns: turnsRef.current,
+      },
+      key,
+      stored,
+    );
+    if (applied.state.bindingKey === bindingRef.current && !applied.restore) return;
+    if (applied.clear) {
+      flightRef.current += 1;
+      pendingRef.current = false;
+      abortRef.current?.abort();
+      setPending(false);
     }
+    bindingRef.current = applied.state.bindingKey;
+    historyScopeRef.current = applied.state.historyScope;
+    threadRef.current = applied.state.threadId;
+    draftRef.current = applied.state.draft;
+    setThreadId(applied.state.threadId);
+    setDraftState(applied.state.draft);
+    setTurns(applied.state.turns);
     setReady(true);
   }, []);
 
   useEffect(() => {
-    if (!ready) return;
-    writeSession({ version: 1, threadId, draft, turns: persistable(turns) });
+    if (!ready || !bindingRef.current) return;
+    if (turns.length === 0 && threadId == null) {
+      const stored = readSession();
+      if (stored && stored.bindingKey !== bindingRef.current && stored.turns.length > 0) return;
+    }
+    writeSession({
+      version: 2,
+      bindingKey: bindingRef.current,
+      historyScope: historyScopeRef.current,
+      threadId,
+      draft,
+      turns: persistable(turns),
+    });
   }, [ready, threadId, draft, turns]);
 
   const run = useCallback(
@@ -152,7 +254,7 @@ export function useChat() {
         }
       }
     },
-    [],
+    [setDraft],
   );
 
   const send = useCallback(
@@ -160,21 +262,29 @@ export function useChat() {
       const trimmed = message.trim();
       if (!trimmed || pendingRef.current) return;
       if (rateLimitBlocks(turnsRef.current)) return;
+      const dropMixed = shouldDropHistoryForSend(historyScopeRef.current, trimmed, context);
       pendingRef.current = true;
       const flight = flightRef.current + 1;
       flightRef.current = flight;
       const userId = newId();
       const assistantId = newId();
+      if (dropMixed) {
+        historyScopeRef.current = "senate";
+        threadRef.current = undefined;
+        setThreadId(undefined);
+      } else if (askHistoryScope(narrowAskContext(trimmed, context)) !== "senate") {
+        historyScopeRef.current = askHistoryScope(context);
+      } else if (historyScopeRef.current == null) {
+        historyScopeRef.current = "senate";
+      }
       setPending(true);
       setDraft("");
-      setTurns((current) => [
-        ...current,
-        { id: userId, role: "user", text: trimmed },
-        { id: assistantId, role: "assistant", status: "loading" },
-      ]);
+      const userTurn: UserTurn = { id: userId, role: "user", text: trimmed };
+      const loading: AssistantTurn = { id: assistantId, role: "assistant", status: "loading" };
+      setTurns((current) => [...(dropMixed ? [] : current), userTurn, loading]);
       await run(trimmed, context, assistantId, flight);
     },
-    [run],
+    [run, setDraft],
   );
 
   const retry = useCallback(
@@ -234,7 +344,7 @@ export function useChat() {
         return true;
       }),
     );
-  }, []);
+  }, [setDraft]);
 
   return {
     turns,
@@ -246,6 +356,7 @@ export function useChat() {
     send,
     retry,
     cancel,
+    syncBinding,
   };
 }
 
@@ -342,15 +453,18 @@ function persistable(turns: ChatTurn[]): ChatTurn[] {
   return turns.filter((turn) => !(turn.role === "assistant" && turn.status === "loading"));
 }
 
-function readSession(): SessionShape | null {
+function readSession(): StoredAskHistory | null {
   if (typeof window === "undefined") return null;
   try {
     const raw = window.sessionStorage.getItem(SESSION_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as SessionShape;
-    if (!parsed || parsed.version !== 1 || !Array.isArray(parsed.turns)) return null;
+    if (!parsed || parsed.version !== 2 || typeof parsed.bindingKey !== "string" || !Array.isArray(parsed.turns)) {
+      return null;
+    }
     return {
-      version: 1,
+      bindingKey: parsed.bindingKey,
+      historyScope: readHistoryScope(parsed.historyScope, parsed.bindingKey),
       threadId: typeof parsed.threadId === "string" ? parsed.threadId : undefined,
       draft: typeof parsed.draft === "string" ? parsed.draft.slice(0, 2000) : "",
       turns: parsed.turns.filter(isTurn),
@@ -367,6 +481,13 @@ function writeSession(session: SessionShape): void {
   } catch {
     // The transcript is a convenience. A full storage quota must not break send.
   }
+}
+
+function readHistoryScope(value: unknown, bindingKey: string): AskHistoryScope {
+  if (value === "senate" || value === "house" || value === "president" || value === "mixed" || value === "open") {
+    return value;
+  }
+  return scopeFromHistoryKey(bindingKey);
 }
 
 function isTurn(value: unknown): value is ChatTurn {

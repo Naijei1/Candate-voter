@@ -8,9 +8,9 @@ import {
 import type { ChatMode, ChatRequest, ChatSource } from "./types";
 
 /**
- * Client wait for one answer. The chat contract aborts at 25 seconds so a
- * novice is not left on “Looking up public records…” for half a minute.
- * Cancel can stop sooner.
+ * Client wait for one answer. The server budget is about 20 seconds.
+ * This aborts at 25 seconds so a slow count still fails in the UI instead of
+ * sitting on “Looking up public records…”. Cancel can stop sooner.
  */
 export const CHAT_TIMEOUT_MS = 25_000;
 

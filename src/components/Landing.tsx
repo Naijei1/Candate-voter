@@ -398,22 +398,24 @@ export function Landing({
         />
       ) : (
         <div className="map-bleed" data-testid="national-map">
-          <h1 className="sr-only">Find races on the map</h1>
-          <UsMap
-            mapId="hero-map"
-            labelled
-            selected={mapPostal}
-            hot={hot}
-            statesWithRaces={marked}
-            onSelect={selectState}
-            onHover={setHot}
-            label={`Map of the United States for ${year}. States with candidates are filled. Alaska and Hawaii are inset.`}
-          />
-          {hotCaption ? (
-            <p className="glass-chip map-hover-card" role="status">
-              {hotCaption}
-            </p>
-          ) : null}
+          <div className="map-stage">
+            <h1 className="sr-only">Find races on the map</h1>
+            <UsMap
+              mapId="hero-map"
+              labelled
+              selected={mapPostal}
+              hot={hot}
+              statesWithRaces={marked}
+              onSelect={selectState}
+              onHover={setHot}
+              label={`Map of the United States for ${year}. States with candidates are filled. Alaska and Hawaii are inset.`}
+            />
+            {hotCaption ? (
+              <p className="glass-chip map-hover-card" role="status">
+                {hotCaption}
+              </p>
+            ) : null}
+          </div>
           <div className="map-bottom-dock">
             <div className="map-meta-dock">
               <DataRefreshedBanner refreshedAt={refreshedAt} compact />
