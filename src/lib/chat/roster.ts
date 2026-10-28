@@ -6,12 +6,15 @@ import { stateName } from "../data/states";
 import { loadPublicCandidates, loadVisibleRace, visibleRaces, type PublicCandidate } from "../data/view";
 import { partyLabel } from "../format";
 import type { Race } from "../types";
-import { askedChamber, chamberFromRaceId, cycleMentionedIn, stateFromRaceId, stateMentionedIn, visitorQuestion, yearFromRaceId } from "./intent";
+import { isAbortError } from "./errors";
+import { pageRefreshAsOf, readIngestRefreshedAt } from "./freshness";
+import { askedChamber, chamberFromRaceId, cycleMentionedIn, isExplicitListQuestion, stateFromRaceId, stateMentionedIn, visitorQuestion, yearFromRaceId } from "./intent";
 import { FORM2_FILINGS_SENTENCE, humanRaceTitle } from "./polish";
 import type { ToolContext } from "./tools";
 import type { ChatAnswer, ChatRequest, ChatSource } from "./types";
 
-const NAME_CAP = 24;
+const NAME_CAP = 12;
+const COUNT_NAME_CAP = 6;
 const SOURCE_CAP = 8;
 
 const ROSTER = /\b(?:compare|all|every|list|who|candidates|running|filed)\b/i;
@@ -64,20 +67,17 @@ export async function answerStateRoster(input: {
       const focused = filed.filter((race) => race.raceId === input.request.raceId);
       if (focused.length > 0) filed = focused;
     }
-    const presented = await Promise.all(
-      filed.map(async (race) => ({
-        race,
-        candidates: await loadPublicCandidates(input.ctx.repo, race.raceId),
-      })),
-    );
+    const [presented, refreshedAt] = await Promise.all([
+      Promise.all(
+        filed.map(async (race) => ({
+          race,
+          candidates: await loadPublicCandidates(input.ctx.repo, race.raceId),
+        })),
+      ),
+      readIngestRefreshedAt(input.ctx.repo),
+    ]);
     const linked = linkPersonFilings(presented.flatMap((group) => group.candidates));
     const byId = new Map(linked.map((row) => [row.candidateId, row]));
-    let refreshedAt: string | null = null;
-    try {
-      refreshedAt = (await input.ctx.repo.getWatermark())?.updatedAt ?? null;
-    } catch (error) {
-      logReadError("getWatermark", error);
-    }
     const rendered = renderRoster({
       cycle,
       state,
@@ -87,12 +87,14 @@ export async function answerStateRoster(input: {
         candidates: group.candidates.map((row) => byId.get(row.candidateId) ?? row),
       })),
       root: input.ctx.root,
+      refreshedAt,
     });
     if (input.request.zip) {
       rendered.answer_markdown = `ZIP ${input.request.zip} is in ${stateName(state)}.\n\n${rendered.answer_markdown}`;
     }
     return { ...rendered, refreshedAt };
   } catch (error) {
+    if (isAbortError(error)) throw error;
     logReadError("listRacesByCycle", error);
     return { unavailable: true, message: "Stored records are unavailable." };
   }
@@ -104,6 +106,7 @@ function renderRoster(input: {
   chamber: "senate" | "house" | "president" | null;
   groups: ReadonlyArray<{ race: Race; candidates: readonly PublicCandidate[] }>;
   root: string;
+  refreshedAt: string | null;
 }): ChatAnswer {
   const name = stateName(input.state);
   const office = input.chamber === "senate" || input.chamber === "house" ? input.chamber : null;
@@ -138,6 +141,7 @@ function renderRoster(input: {
     sources: rosterSources(
       input.groups.filter((group) => group.candidates.length > 0).map((group) => group.race),
       input.root,
+      input.refreshedAt,
     ),
     refused: false,
     mode: "factual",
@@ -192,7 +196,11 @@ function crossContestNote(candidates: readonly PublicCandidate[]): string | null
   return notes.length > 0 ? notes.join(" ") : null;
 }
 
-function rosterSources(races: readonly Race[], root: string): ChatSource[] {
+function rosterSources(
+  races: readonly Race[],
+  root: string,
+  refreshedAt: string | null,
+): ChatSource[] {
   const sources: ChatSource[] = [];
   const seen = new Set<string>();
   for (const race of races) {
@@ -202,7 +210,7 @@ function rosterSources(races: readonly Race[], root: string): ChatSource[] {
     sources.push({
       title: humanRaceTitle(race),
       url,
-      as_of: race.updatedAt?.trim() || "unknown",
+      as_of: pageRefreshAsOf(refreshedAt, race.updatedAt),
     });
     if (sources.length >= SOURCE_CAP) break;
   }
@@ -226,6 +234,7 @@ export async function answerKnownPlace(input: {
         state = race?.state ?? stateFromRaceId(candidate.raceId);
       }
     } catch (error) {
+      if (isAbortError(error)) throw error;
       logReadError("getCandidate", error);
       return { unavailable: true, message: "Stored records are unavailable." };
     }
@@ -272,14 +281,12 @@ export async function answerScopedRace(input: {
   const cycle =
     input.request.cycle ?? yearFromRaceId(raceId) ?? input.ctx.now.getUTCFullYear();
   try {
-    const race = await loadVisibleRace(input.ctx.repo, raceId);
-    const candidates = race ? await loadPublicCandidates(input.ctx.repo, race.raceId) : [];
-    let refreshedAt: string | null = null;
-    try {
-      refreshedAt = (await input.ctx.repo.getWatermark())?.updatedAt ?? null;
-    } catch (error) {
-      logReadError("getWatermark", error);
-    }
+    const [race, listed, refreshedAt] = await Promise.all([
+      loadVisibleRace(input.ctx.repo, raceId),
+      loadPublicCandidates(input.ctx.repo, raceId),
+      readIngestRefreshedAt(input.ctx.repo),
+    ]);
+    const candidates = race ? listed : [];
     return {
       ...renderScopedRace({
         race,
@@ -287,10 +294,12 @@ export async function answerScopedRace(input: {
         candidates,
         root: input.ctx.root,
         message: input.request.message,
+        refreshedAt,
       }),
       refreshedAt,
     };
   } catch (error) {
+    if (isAbortError(error)) throw error;
     logReadError("getRace", error);
     return { unavailable: true, message: "Stored records are unavailable." };
   }
@@ -302,33 +311,58 @@ function renderScopedRace(input: {
   candidates: readonly PublicCandidate[];
   root: string;
   message: string;
+  refreshedAt: string | null;
 }): ChatAnswer {
   const title = input.race ? humanRaceTitle(input.race) : "this contest";
   const office = input.race?.office ?? chamberFromRaceId(input.race?.raceId);
   const note = otherContestNote(input.message, office, title, input.cycle);
+  const list = isExplicitListQuestion(input.message);
   const shown = input.candidates.slice(0, NAME_CAP);
-  const blocks = [note, countSentence(input.candidates.length, title, input.cycle), FORM2_FILINGS_SENTENCE].filter(
-    (block): block is string => Boolean(block),
-  );
-  if (shown.length > 0) {
-    blocks.push(shown.map((candidate) => personLine(candidate, input.race!)).join("\n"));
+  const blocks = [
+    note,
+    countSentence(
+      input.candidates.length,
+      title,
+      input.cycle,
+      list ? null : countNameClause(input.candidates),
+    ),
+  ].filter((block): block is string => Boolean(block));
+  if (list && shown.length > 0 && input.race) {
+    blocks.push(shown.map((candidate) => personLine(candidate, input.race as Race)).join("\n"));
   }
-  const extra = input.candidates.length - shown.length;
+  const extra = list ? input.candidates.length - shown.length : 0;
   if (extra > 0) blocks.push(`And ${extra} more filings are stored for this contest.`);
+  blocks.push(FORM2_FILINGS_SENTENCE);
   return {
     answer_markdown: blocks.join("\n\n"),
-    sources: input.race ? rosterSources([input.race], input.root) : [],
+    sources: input.race ? rosterSources([input.race], input.root, input.refreshedAt) : [],
     refused: false,
     mode: "factual",
   };
 }
 
-function countSentence(count: number, title: string, cycle: number): string {
+function countNameClause(candidates: readonly PublicCandidate[]): string | null {
+  if (candidates.length === 0) return null;
+  const names = candidates.slice(0, COUNT_NAME_CAP).map((candidate) => candidate.displayName);
+  const extra = candidates.length - names.length;
+  if (extra > 0) return `${names.join(", ")}, and ${extra} more`;
+  if (names.length === 1) return names[0] ?? null;
+  if (names.length === 2) return `${names[0]} and ${names[1]}`;
+  return `${names.slice(0, -1).join(", ")}, and ${names[names.length - 1]}`;
+}
+
+function countSentence(
+  count: number,
+  title: string,
+  cycle: number,
+  names: string | null,
+): string {
   if (count === 0) return `No FEC Form 2 filings are stored for **${title}** in ${cycle}.`;
+  const who = names ? `: ${names}` : "";
   if (count === 1) {
-    return `**1** candidate has an FEC Form 2 filing for **${title}** in ${cycle}.`;
+    return `**1** candidate has an FEC Form 2 filing for **${title}** in ${cycle}${who}.`;
   }
-  return `**${count}** candidates have FEC Form 2 filings for **${title}** in ${cycle}.`;
+  return `**${count}** candidates have FEC Form 2 filings for **${title}** in ${cycle}${who}.`;
 }
 
 function otherContestNote(

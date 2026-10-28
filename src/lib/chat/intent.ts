@@ -151,6 +151,8 @@ const COUNT_OR_LIST: readonly RegExp[] = [
   /\bcandidates?\s+(?:are\s+)?(?:running|filed|on the ballot)\b/i,
   /\b(?:list|name|show)\b(?:\s+\w+){0,5}\s+candidates\b/i,
   /\b(?:have|has)\s+filed\b/i,
+  /\bwho(?:'s|’s| is| are)\s+in (?:the|this) race\b/i,
+  /\bcandidates?\s+(?:in|for|on)\s+(?:this|the)\s+(?:race|contest)\b/i,
 ];
 
 /**
@@ -167,7 +169,25 @@ export function isCountOrListQuestion(message: string): boolean {
 /** Count or list while the page is one contest (a Senate race page, for example). */
 export function isScopedRosterQuestion(request: ChatRequest): boolean {
   if (!isSingleContestScope(request)) return false;
-  return isCountOrListQuestion(request.message);
+  if (isCountOrListQuestion(request.message)) return true;
+  return isVagueRunningQuestion(request.message);
+}
+
+/**
+ * Who / list / "on the ballot". A bare "how many" stays a short count.
+ * "How many" plus who or list still names people.
+ */
+export function isExplicitListQuestion(message: string): boolean {
+  const text = visitorQuestion(message);
+  const count = /\bhow many\b/i.test(text) || /\bnumber of\b/i.test(text);
+  const namesPeople =
+    /\bwho\b/i.test(text) ||
+    /\b(?:list|name|show)\b/i.test(text) ||
+    /\bon the ballot\b/i.test(text) ||
+    /\bwhich candidates\b/i.test(text) ||
+    /\bcompare\b/i.test(text);
+  if (count) return namesPeople;
+  return namesPeople || /\brunning\b/i.test(text);
 }
 
 /** The model asked the visitor to name a state the page already sent. */

@@ -1,3 +1,4 @@
+import { AsyncLocalStorage } from "node:async_hooks";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import {
   DynamoDBDocumentClient,
@@ -29,6 +30,7 @@ import {
 } from "./items";
 import type { Candidate, Filing, IngestWatermark, Race } from "../types";
 import { raceMatchesCycle } from "./cycle-match";
+import { dropRosterRead, primeRosterRead, rosterCacheKey } from "./roster-cache";
 
 export type CandidateUpsertResult = "applied" | "kept-newer";
 
@@ -56,6 +58,29 @@ const CANDIDATE_MONOTONIC =
 type DocumentClient = DynamoDBDocumentClient;
 
 let cached: { client: DocumentClient; tableName: string } | null = null;
+
+const readAbort = new AsyncLocalStorage<AbortSignal>();
+
+/** Table reads inside `work` stop when `signal` aborts. */
+export function runWithReadAbort<T>(signal: AbortSignal, work: () => Promise<T>): Promise<T> {
+  return readAbort.run(signal, work);
+}
+
+/**
+ * Start the Dynamo credential and TLS handshake during process boot.
+ * No-op outside Amplify compute so `next build` does not call the table.
+ */
+export function warmTableReads(): void {
+  if (process.env.NEXT_PHASE === "phase-production-build") return;
+  if (!process.env.AWS_LAMBDA_FUNCTION_NAME && !process.env.AWS_EXECUTION_ENV) return;
+  try {
+    void createDynamoRepository()
+      .getWatermark()
+      .catch(() => {});
+  } catch {
+    // The request path still reads. A boot failure must not crash the route.
+  }
+}
 
 /** Public table name. Not a secret. Used when `CANDATE_TABLE_NAME` is unset. */
 export const DEFAULT_TABLE_NAME = "candate-voter";
@@ -99,16 +124,20 @@ function getSharedClient(): DocumentClient {
 }
 
 class DynamoVoterRepository implements VoterRepository {
+  readonly liveReads = true;
+
   constructor(
     private readonly client: DocumentClient,
     private readonly tableName: string,
   ) {}
 
   async upsertRace(race: Race): Promise<void> {
+    dropRosterRead(rosterCacheKey("race", race.raceId));
     await this.update(toRaceItem(race));
   }
 
   async upsertCandidate(candidate: Candidate): Promise<CandidateUpsertResult> {
+    dropRosterRead(rosterCacheKey("candidates", candidate.raceId));
     try {
       await this.update(toCandidateItem(candidate), CANDIDATE_MONOTONIC);
       return "applied";
@@ -127,7 +156,9 @@ class DynamoVoterRepository implements VoterRepository {
       pk: racePk(raceId),
       sk: ENTITY_META_SK,
     });
-    return item ? fromRaceItem(item) : null;
+    const race = item ? fromRaceItem(item) : null;
+    primeRosterRead(rosterCacheKey("race", raceId), race);
+    return race;
   }
 
   async listRacesByCycle(cycle: number): Promise<Race[]> {
@@ -158,10 +189,12 @@ class DynamoVoterRepository implements VoterRepository {
       ExpressionAttributeNames: { "#gsi1pk": GSI1.partition },
       ExpressionAttributeValues: { ":gsi1pk": racePk(raceId) },
     });
-    return items.flatMap((item) => {
+    const candidates = items.flatMap((item) => {
       const candidate = fromCandidateItem(item);
       return candidate ? [candidate] : [];
     });
+    primeRosterRead(rosterCacheKey("candidates", raceId), candidates);
+    return candidates;
   }
 
   async listFilingsForCandidate(candidateId: string): Promise<Filing[]> {
@@ -187,10 +220,13 @@ class DynamoVoterRepository implements VoterRepository {
       { pk: INGEST_PK, sk: INGEST_SK },
       { consistent: true },
     );
-    return item ? fromWatermarkItem(item) : null;
+    const watermark = item ? fromWatermarkItem(item) : null;
+    primeRosterRead(rosterCacheKey("watermark"), watermark);
+    return watermark;
   }
 
   async saveWatermark(watermark: IngestWatermark): Promise<void> {
+    dropRosterRead(rosterCacheKey("watermark"));
     await this.update(toWatermarkItem(watermark));
   }
 
@@ -244,12 +280,15 @@ class DynamoVoterRepository implements VoterRepository {
     key: { pk: string; sk: string },
     options: { consistent?: boolean } = {},
   ): Promise<Record<string, unknown> | null> {
+    const signal = readAbort.getStore();
+    throwIfAborted(signal);
     const result = await this.client.send(
       new GetCommand({
         TableName: this.tableName,
         Key: key,
         ConsistentRead: options.consistent ?? false,
       }),
+      signal ? { abortSignal: signal } : {},
     );
     return asRecord(result.Item);
   }
@@ -262,7 +301,9 @@ class DynamoVoterRepository implements VoterRepository {
   }): Promise<Record<string, unknown>[]> {
     const items: Record<string, unknown>[] = [];
     let startKey: Record<string, unknown> | undefined;
+    const signal = readAbort.getStore();
     do {
+      throwIfAborted(signal);
       const result = await this.client.send(
         new QueryCommand({
           TableName: this.tableName,
@@ -272,6 +313,7 @@ class DynamoVoterRepository implements VoterRepository {
           ExpressionAttributeValues: input.ExpressionAttributeValues,
           ExclusiveStartKey: startKey,
         }),
+        signal ? { abortSignal: signal } : {},
       );
       for (const item of result.Items ?? []) {
         const record = asRecord(item);
@@ -281,6 +323,17 @@ class DynamoVoterRepository implements VoterRepository {
     } while (startKey);
     return items;
   }
+}
+
+export function isLiveRepository(repo: object): boolean {
+  return "liveReads" in repo && (repo as { liveReads?: boolean }).liveReads === true;
+}
+
+function throwIfAborted(signal: AbortSignal | undefined): void {
+  if (!signal?.aborted) return;
+  const error = new Error("The operation was aborted");
+  error.name = "AbortError";
+  throw error;
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {

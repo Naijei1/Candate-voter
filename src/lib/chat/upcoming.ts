@@ -2,6 +2,8 @@ import { cycleCalendar, leadSentences } from "../data/calendar";
 import { logReadError } from "../data/read";
 import { visibleRaces } from "../data/view";
 import type { Race } from "../types";
+import { isAbortError } from "./errors";
+import { pageRefreshAsOf, readIngestRefreshedAt } from "./freshness";
 import { chamberFromRaceId, cycleMentionedIn, isSingleContestScope, stateMentionedIn, yearFromRaceId } from "./intent";
 import {
   ASK_PRESIDENTIAL_YEAR_SENTENCE,
@@ -30,13 +32,10 @@ export async function answerUpcoming(input: {
     ? chamberFromRaceId(input.request.raceId)
     : null;
   try {
-    const stored = visibleRaces(await input.ctx.repo.listRacesByCycle(cycle));
-    let refreshedAt: string | null = null;
-    try {
-      refreshedAt = (await input.ctx.repo.getWatermark())?.updatedAt ?? null;
-    } catch (error) {
-      logReadError("getWatermark", error);
-    }
+    const [stored, refreshedAt] = await Promise.all([
+      input.ctx.repo.listRacesByCycle(cycle).then((races) => visibleRaces(races)),
+      readIngestRefreshedAt(input.ctx.repo),
+    ]);
     return {
       ...renderUpcoming({
         cycle,
@@ -44,10 +43,12 @@ export async function answerUpcoming(input: {
         races: stored,
         root: input.ctx.root,
         office,
+        refreshedAt,
       }),
       refreshedAt,
     };
   } catch (error) {
+    if (isAbortError(error)) throw error;
     logReadError("listRacesByCycle", error);
     return { unavailable: true, message: "Stored records are unavailable." };
   }
@@ -60,6 +61,7 @@ export function renderUpcoming(input: {
   root: string;
   /** When the page is one contest, list only that chamber's stored filings. */
   office?: Race["office"] | null;
+  refreshedAt?: string | null;
 }): ChatAnswer {
   const calendar = cycleCalendar(input.cycle);
   const office = input.office ?? null;
@@ -91,7 +93,7 @@ export function renderUpcoming(input: {
   }
 
   const sources = polishSources(
-    mentioned.flatMap((race) => sourcesForRace(race, input.root)),
+    mentioned.flatMap((race) => sourcesForRace(race, input.root, input.refreshedAt ?? null)),
   ).slice(0, 8);
   return {
     answer_markdown: paragraphs.join("\n\n"),
@@ -151,8 +153,8 @@ function filterOffice(races: readonly Race[], office: Race["office"], state: str
     .sort((a, b) => a.raceId.localeCompare(b.raceId));
 }
 
-function sourcesForRace(race: Race, root: string): ChatSource[] {
-  const asOf = race.updatedAt?.trim() || "unknown";
+function sourcesForRace(race: Race, root: string, refreshedAt: string | null): ChatSource[] {
+  const asOf = pageRefreshAsOf(refreshedAt, race.updatedAt);
   const title = humanRaceTitle(race);
   const sources: ChatSource[] = [
     {
