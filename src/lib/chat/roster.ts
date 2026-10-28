@@ -6,7 +6,7 @@ import { stateName } from "../data/states";
 import { loadPublicCandidates, loadVisibleRace, visibleRaces, type PublicCandidate } from "../data/view";
 import { partyLabel } from "../format";
 import type { Race } from "../types";
-import { cycleMentionedIn, stateFromRaceId, stateMentionedIn } from "./intent";
+import { askedChamber, chamberFromRaceId, cycleMentionedIn, stateFromRaceId, stateMentionedIn, visitorQuestion } from "./intent";
 import { humanRaceTitle } from "./polish";
 import type { ToolContext } from "./tools";
 import type { ChatAnswer, ChatRequest, ChatSource } from "./types";
@@ -21,9 +21,10 @@ const ROSTER = /\b(?:compare|all|every|list|who|candidates|running|filed)\b/i;
  * that calls get_race once per district.
  */
 export function isStateRosterQuestion(message: string, state?: string | null): boolean {
-  if (!state && !stateMentionedIn(message)) return false;
-  if (!/\bhouse\b/i.test(message) || !/\bsenate\b/i.test(message)) return false;
-  return ROSTER.test(message);
+  const question = visitorQuestion(message);
+  if (!state && !stateMentionedIn(question) && !stateMentionedIn(message)) return false;
+  if (!/\bhouse\b/i.test(question) || !/\bsenate\b/i.test(question)) return false;
+  return ROSTER.test(question);
 }
 
 export async function answerStateRoster(input: {
@@ -40,16 +41,29 @@ export async function answerStateRoster(input: {
     };
   }
   const cycle = resolveCycle(input.request, input.ctx.now);
+  const chamber = askedChamber(input.request.message);
   try {
     const stored = visibleRaces(await input.ctx.repo.listRacesByCycle(cycle)).filter((race) =>
       raceMatchesCycle(race, cycle),
     );
-    const filed = stored.filter(
+    let filed = stored.filter(
       (race) =>
         race.state === state &&
         race.empty !== true &&
         (race.office === "senate" || race.office === "house"),
     );
+    if (chamber === "senate" || chamber === "house") {
+      filed = filed.filter((race) => race.office === chamber);
+    }
+    const pageChamber = chamberFromRaceId(input.request.raceId);
+    if (
+      input.request.raceId &&
+      (chamber === "senate" || chamber === "house") &&
+      pageChamber === chamber
+    ) {
+      const focused = filed.filter((race) => race.raceId === input.request.raceId);
+      if (focused.length > 0) filed = focused;
+    }
     const presented = await Promise.all(
       filed.map(async (race) => ({
         race,
@@ -67,6 +81,7 @@ export async function answerStateRoster(input: {
     const rendered = renderRoster({
       cycle,
       state,
+      chamber,
       groups: presented.map((group) => ({
         race: group.race,
         candidates: group.candidates.map((row) => byId.get(row.candidateId) ?? row),
@@ -86,16 +101,19 @@ export async function answerStateRoster(input: {
 function renderRoster(input: {
   cycle: number;
   state: string;
+  chamber: "senate" | "house" | "president" | null;
   groups: ReadonlyArray<{ race: Race; candidates: readonly PublicCandidate[] }>;
   root: string;
 }): ChatAnswer {
   const name = stateName(input.state);
+  const office = input.chamber === "senate" || input.chamber === "house" ? input.chamber : null;
   const people = input.groups.flatMap((group) =>
     group.candidates.map((candidate) => ({ race: group.race, candidate })),
   );
   if (people.length === 0) {
+    const which = office === "senate" ? "Senate" : office === "house" ? "House" : "Senate or House";
     return {
-      answer_markdown: `No Senate or House Form 2 filings are stored for ${name} in ${input.cycle}. Filings so far are not a full ballot.`,
+      answer_markdown: `No ${which} Form 2 filings are stored for ${name} in ${input.cycle}. Filings so far are not a full ballot.`,
       sources: [],
       refused: false,
       mode: "factual",
@@ -104,11 +122,9 @@ function renderRoster(input: {
   const shown = people.slice(0, NAME_CAP);
   const senate = shown.filter((row) => row.race.office === "senate");
   const house = shown.filter((row) => row.race.office === "house");
-  const blocks = [
-    `**${name}, ${input.cycle}.** FEC Form 2 filings so far, not a full ballot.`,
-    senateBlock(senate),
-    houseBlock(house),
-  ];
+  const blocks = [`**${name}, ${input.cycle}.** FEC Form 2 filings so far, not a full ballot.`];
+  if (office !== "house") blocks.push(senateBlock(senate));
+  if (office !== "senate") blocks.push(houseBlock(house));
   const extra = people.length - shown.length;
   if (extra > 0) {
     blocks.push(

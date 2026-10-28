@@ -17,10 +17,13 @@ export function MapGesture({
   children,
   resetKey = "",
   className = "",
+  onPanActive,
 }: {
   children: ReactNode;
   resetKey?: string;
   className?: string;
+  /** True while a drag has moved the map. False when that drag ends. */
+  onPanActive?: (active: boolean) => void;
 }) {
   const frameRef = useRef<HTMLDivElement>(null);
   const panRef = useRef<Pan>(PAN_START);
@@ -29,6 +32,9 @@ export function MapGesture({
   const modeRef = useRef<"pointer" | "touch" | null>(null);
   const pointerDroveRef = useRef(false);
   const suppressClick = useRef(false);
+  const panActiveRef = useRef(false);
+  const onPanActiveRef = useRef(onPanActive);
+  onPanActiveRef.current = onPanActive;
   const [pan, setPan] = useState<Pan>(PAN_START);
 
   useEffect(() => {
@@ -38,6 +44,7 @@ export function MapGesture({
     originRef.current = null;
     modeRef.current = null;
     pointerDroveRef.current = false;
+    panActiveRef.current = false;
   }, [resetKey]);
 
   useEffect(() => {
@@ -71,9 +78,15 @@ export function MapGesture({
       );
       panRef.current = next;
       setPan(next);
+      if (!panActiveRef.current) {
+        panActiveRef.current = true;
+        onPanActiveRef.current?.(true);
+      }
     };
     const finish = (moved: boolean) => {
+      panActiveRef.current = false;
       if (!moved) return;
+      onPanActiveRef.current?.(false);
       suppressClick.current = true;
       window.setTimeout(() => {
         suppressClick.current = false;
@@ -135,7 +148,7 @@ export function MapGesture({
       remember(points, moved);
     };
 
-    window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointermove", onPointerMove, true);
     window.addEventListener("pointerup", onPointerUp);
     window.addEventListener("pointercancel", onPointerUp);
     frame.addEventListener("touchstart", onTouchStart, { passive: true });
@@ -143,7 +156,7 @@ export function MapGesture({
     frame.addEventListener("touchend", onTouchEnd);
     frame.addEventListener("touchcancel", onTouchEnd);
     return () => {
-      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointermove", onPointerMove, true);
       window.removeEventListener("pointerup", onPointerUp);
       window.removeEventListener("pointercancel", onPointerUp);
       frame.removeEventListener("touchstart", onTouchStart);

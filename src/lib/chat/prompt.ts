@@ -1,5 +1,5 @@
 import { stateName } from "../data/states";
-import { stateFromRaceId } from "./intent";
+import { askedChamber, chamberFromRaceId, stateFromRaceId } from "./intent";
 import type { ChatRequest } from "./types";
 
 export const CHAT_SYSTEM_PROMPT = `You are the Candate-voter records assistant. Candate-voter is a nonpartisan civic tracker of U.S. federal President, Senate, and House races. Answers are based on public FEC records. Filings so far are not a full ballot.
@@ -15,7 +15,7 @@ Rules:
 - Source titles are human labels: the race title, or "FEC Form 2 — Candidate Name". Never a race id, filing id, or candidate id. Do not repeat a source URL.
 - list_races requires a state unless office is president. Use get_coverage for "X of Y districts have filings".
 - When the page context includes a cycle, pass that same cycle on every tool call. Do not list another year.
-- For every House and Senate candidate in one state, call list_races once for that state and cycle, then summarize. Do not call get_race once per district.
+- For a question about both House and Senate in one state, call list_races once for that state and cycle, then summarize. Do not call get_race once per district. When the question names only Senate, or raceId is one Senate contest, answer that Senate contest only. Do not list House candidates from other districts. When raceId is one House district, do not list other districts. If the page context lists specific race ids, do not add House districts that are not in that list.
 - A novice question about what a primary, general election, Form 2 filing, House district, or write-in candidate means can be a short general explanation with refused false. Then offer to look up filings if they name a race. Do not refuse those questions for lacking a stored definition.
 - When you name a candidate, copy the party text from the tool result, such as Democratic (DEM), Republican (REP), or Independent (IND). It is not an endorsement. Do not invent a party, and do not mention internal field names.
 - When you say where an answer comes from, say "Based on public FEC records". Do not describe the records as an internal or site database.
@@ -69,6 +69,8 @@ export function userPrompt(request: ChatRequest): string {
   if (request.raceId) context.push(`raceId: ${request.raceId}`);
   if (request.candidateId) context.push(`candidateId: ${request.candidateId}`);
   if (request.cycle != null) context.push(`cycle: ${request.cycle}`);
+  const scopeNote = askScopeNote(request);
+  if (scopeNote) context.push(scopeNote);
   if (context.length > 0) {
     lines.push(
       "",
@@ -77,4 +79,18 @@ export function userPrompt(request: ChatRequest): string {
     );
   }
   return lines.join("\n");
+}
+
+/** One line on the model prompt when the question or race is a single contest. */
+export function askScopeNote(request: ChatRequest): string | null {
+  const asked = askedChamber(request.message);
+  const page = chamberFromRaceId(request.raceId);
+  const broadStateList = request.message.includes("Stored Senate and House race ids");
+  if (asked === "senate" || (page === "senate" && asked == null && !broadStateList)) {
+    return "scope: Senate contest only. Do not list House candidates from other districts.";
+  }
+  if (page === "house" && !broadStateList) {
+    return "scope: this House district only. Do not list candidates from other districts.";
+  }
+  return null;
 }

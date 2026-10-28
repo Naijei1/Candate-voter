@@ -73,6 +73,14 @@ export function UsMap({
     },
     [onHover],
   );
+  const panning = useRef(false);
+  const onPanActive = useCallback(
+    (active: boolean) => {
+      panning.current = active;
+      reportHover(null);
+    },
+    [reportHover],
+  );
 
   useEffect(() => {
     if (selected) setTabStop(selected);
@@ -134,6 +142,7 @@ export function UsMap({
   }
 
   function onMapPointerMove(event: PointerEvent<SVGSVGElement>) {
+    if (panning.current) return;
     const target = event.target;
     const fromTarget = target instanceof Element ? postalFromTarget(target) : null;
     if (fromTarget) {
@@ -144,9 +153,10 @@ export function UsMap({
   }
 
   return (
-    <MapGesture resetKey={selected ?? ""}>
+    <MapGesture resetKey={selected ?? ""} onPanActive={onHover ? onPanActive : undefined}>
     <svg
       viewBox={`0 0 ${US_MAP_VIEW.width + LABEL_GUTTER} ${US_MAP_VIEW.height}`}
+      preserveAspectRatio="xMidYMin meet"
       className={hot ? "us-map is-dimming h-full w-full" : "us-map h-full w-full"}
       role="group"
       aria-label={`${label} Arrow keys move between states. Enter selects.`}
@@ -196,7 +206,7 @@ export function UsMap({
                 className="us-callout"
                 transform={`translate(${callout.labelX} ${callout.labelY})`}
               >
-                <rect className="us-label-plate" x="-0.7em" y="-0.72em" width="2.85em" height="1.44em" rx="0.18em" />
+                <rect className="us-label-plate" x="-0.7em" y="-0.58em" width="2.85em" height="1.16em" rx="0.18em" />
                 <text
                   data-postal={callout.postal}
                   x="0"
@@ -286,7 +296,7 @@ const StateLabel = memo(function StateLabel({
     return (
       <g className="us-callout" transform={`translate(${shape.x} ${shape.y})`}>
         {isSelected ? null : (
-          <rect className="us-label-plate" x="-1.2em" y="-0.72em" width="2.4em" height="1.44em" rx="0.18em" />
+          <rect className="us-label-plate" x="-1.2em" y="-0.58em" width="2.4em" height="1.16em" rx="0.18em" />
         )}
         <text
           data-postal={shape.postal}
