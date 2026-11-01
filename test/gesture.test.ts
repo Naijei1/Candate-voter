@@ -55,33 +55,19 @@ test("pulling the sheet below a peek dismisses, otherwise it snaps", () => {
   assert.deepEqual(sheetSnap(450, snaps, true), { height: 520, dismiss: false });
 });
 
-test("phone maps and the state sheet expose pan and drag targets", () => {
+test("explore and district maps still use the pan gesture", () => {
   const css = readFileSync(new URL("../src/app/globals.css", import.meta.url), "utf8");
   const national = readFileSync(new URL("../src/components/UsMap.tsx", import.meta.url), "utf8");
   const district = readFileSync(new URL("../src/components/DistrictMap.tsx", import.meta.url), "utf8");
-  const landing = readFileSync(new URL("../src/components/Landing.tsx", import.meta.url), "utf8");
+  const explore = readFileSync(new URL("../src/app/states/page.tsx", import.meta.url), "utf8");
+  const note = readFileSync(new URL("../src/components/site/DistrictVintageNote.tsx", import.meta.url), "utf8");
   assert.match(national, /<MapGesture/);
   assert.match(district, /<MapGesture/);
   assert.match(css, /\.map-gesture\s*\{[^}]*touch-action:\s*none/);
-  assert.match(landing, /className="sheet-grab"/);
-  assert.match(landing, /useMobileSheet\(onSheetDismiss, postal\)/);
-  assert.match(landing, /onSheetDismiss=\{pinYours \? null : backToMap\}/);
-  assert.match(landing, /onBack=\{backToMap\}/);
-  assert.match(css, /--sheet-height,\s*var\(--state-sheet-max\)/);
-  assert.match(css, /\.ask-sheet\s*\{[^}]*top:\s*var\(--chrome-block\)/);
-  assert.match(css, /env\(safe-area-inset-top/);
   assert.match(national, /onPanActive/);
   assert.match(national, /preserveAspectRatio="xMidYMin meet"/);
-  assert.match(css, /\.national-shell \.map-bleed\s*\{[^}]*top:\s*var\(--map-clearance\)/);
-  const mobile = css.slice(css.indexOf("@media (max-width: 1023px)"), css.indexOf("@media (max-width: 420px)"));
-  assert.match(mobile, /\.us-map \.us-label-callout[\s\S]*?font-size:\s*44px/);
-  assert.match(mobile, /\.national-shell\s*\{[^}]*display:\s*flex/);
-  assert.match(mobile, /\.national-shell\s*\{[^}]*flex-direction:\s*column/);
-  assert.match(mobile, /\.national-shell \.map-stage\s*\{[^}]*flex:\s*1 1 auto/);
-  assert.match(mobile, /\.national-shell \.map-stage\s*\{[^}]*min-height:\s*0/);
-  assert.match(mobile, /\.national-shell \.map-stage \.us-map\s*\{[^}]*aspect-ratio:\s*1140 \/ 600/);
-  assert.match(mobile, /\.national-shell \.map-stage \.us-map\s*\{[^}]*height:\s*100%/);
-  assert.match(landing, /zipFailureClearsSelection/);
-  assert.match(landing, /heldZip\.current = null/);
-  assert.match(landing, /onReject=\{rejectZip\}/);
+  assert.match(explore, /StateExplore/);
+  assert.match(explore, /DistrictVintageNote/);
+  assert.match(note, /CD119_CONGRESS/);
+  assert.match(note, /120th/);
 });

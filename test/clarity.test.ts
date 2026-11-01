@@ -279,10 +279,13 @@ test("home and ask copy stay plain and the map does not lead with Popular", () =
   assert.equal(landing.includes("1 candidate so far"), false);
   assert.equal(landing.includes("candidates so far"), false);
   assert.equal(looking.includes("What am I looking at"), false);
+  assert.match(header, /Find My Races/);
+  assert.match(header, /Sign in/);
   assert.equal(header.includes("map-chrome-info"), false);
-  assert.equal(footer.includes("does not endorse"), false);
-  assert.equal(footer.includes("Form 2"), false);
-  assert.match(footer, /Agent API/);
+  assert.match(footer, /does not endorse/);
+  assert.match(footer, /Privacy/);
+  assert.match(footer, /Sources and methodology/);
+  assert.equal(footer.includes("Agent API"), false);
   assert.match(landing, /<ZipLookup/);
   assert.match(landing, /searchWithoutState/);
   assert.match(landing, /Your races/);
@@ -319,11 +322,12 @@ test("home and ask copy stay plain and the map does not lead with Popular", () =
   assert.match(askNav, /Ask a question/);
   assert.match(shell, /Asking about/);
   assert.match(shell, /Clear context/);
-  assert.match(candidatePage, /CandidateTechnicalDetails/);
   assert.match(technical, /Technical details/);
   assert.doesNotMatch(technical, /<details[^>]*\sopen/);
-  assert.match(candidatePage, /Running for:/);
+  assert.match(candidatePage, /Voting record/);
+  assert.match(candidatePage, /Form 2/);
   assert.equal(candidatePage.includes("Form {filing.formType}"), false);
+  assert.equal(candidatePage.includes("CandidateTechnicalDetails"), false);
 });
 
 test("empty district copy follows returned stubs and leaves coverage on filings", () => {
