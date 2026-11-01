@@ -1,249 +1,117 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { BackChrome } from "@/components/BackChrome";
-import { AskPageContext } from "@/components/chat/AskProvider";
-import { CandidateDisclosure } from "@/components/CandidateDisclosure";
 import { DataRefreshedBanner } from "@/components/DataRefreshedBanner";
-import { RecordMeta } from "@/components/RecordMeta";
-import { StorageNotice } from "@/components/StorageNotice";
-import { ballotVersusFilingLine, emptyHouseNext, emptyRaceSentence, federalScopeLine, jurisdictionRepeatsTitle, officeOneLiner, runningForLine } from "@/lib/copy";
-import { isBogusAtLargeContest } from "@/lib/data/at-large";
-import { withCrossContestFilings } from "@/lib/data/cross-filings";
+import { MultiFilingDetails } from "@/components/MultiFilingDetails";
+import { AiPrototype } from "@/components/site/AiPrototype";
+import { FollowControl } from "@/components/site/FollowControl";
+import { StatusMark } from "@/components/site/StatusMark";
+import { generalElectionLabel } from "@/lib/copy";
 import { personFilingNote } from "@/lib/data/filing-note";
-import { createDynamoRepository } from "@/lib/data/repository";
-import { isPresidentialElectionYear } from "@/lib/data/calendar";
-import {
-  logReadError,
-  readCandidatesForRace,
-  readRace,
-  readRacesForCycle,
-  readWatermark,
-} from "@/lib/data/read";
-import { displayedPartyLabels, type PublicCandidate } from "@/lib/data/view";
 import { httpsUrl, partyCue } from "@/lib/format";
-import { withPreservedQuery, type MapContext } from "@/lib/landing/state-query";
-import type { Race } from "@/lib/types";
+import { stateName } from "@/lib/data/states";
+import { loadContest } from "@/lib/site/contest";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-type RacePageProps = {
+type PageProps = {
   params: Promise<{ raceId: string }>;
-  searchParams: Promise<{ year?: string; state?: string; zip?: string }>;
 };
 
-export async function generateMetadata({
-  params,
-}: RacePageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { raceId } = await params;
-  try {
-    const race = await readRace(raceId);
-    if (!race || isBogusAtLargeContest(race)) return { title: "Race" };
-    return { title: race.title };
-  } catch (error) {
-    logReadError("getRace", error);
-    return { title: "Race" };
-  }
+  const loaded = await loadContest(raceId);
+  return { title: loaded.race?.title ?? "Race" };
 }
 
-export default async function RacePage({ params, searchParams }: RacePageProps) {
+export default async function RacePage({ params }: PageProps) {
   const { raceId } = await params;
-  const query = await searchParams;
-  const loaded = await loadRace(raceId);
-  if (loaded.ok === false) {
-    return (
-      <StorageNotice tone="error">
-        This race could not be loaded from the table.
-      </StorageNotice>
-    );
-  }
-  if (!loaded.race || isBogusAtLargeContest(loaded.race)) notFound();
-
+  const loaded = await loadContest(raceId);
+  if (!loaded.race) notFound();
   const race = loaded.race;
-  const context: MapContext = {
-    year: race.cycle,
-    state: race.state,
-    zip: query.zip ?? null,
-  };
-  const [candidates, refreshedAt, cycleRaces] = await Promise.all([
-    loadCandidates(race),
-    loadRefreshedAt(),
-    race.empty === true && race.office === "house" ? loadCycleRaces(race.cycle) : Promise.resolve([]),
-  ]);
-  const next = emptyHouseNext(race, cycleRaces);
   const sourceHref = httpsUrl(race.sourceUrl);
+  const stateHref = race.state ? `/states/${race.state.toLowerCase()}` : "/states";
+  const when = race.cycle != null ? generalElectionLabel(race.cycle) : null;
 
   return (
-    <article className="race-page">
-      <AskPageContext
-        raceId={race.raceId}
-        cycle={race.cycle ?? undefined}
-        state={race.state ?? undefined}
-        zip={query.zip}
-        label={race.cycle != null ? `${race.title} · ${race.cycle}` : race.title}
-      />
-      <BackChrome state={race.state} year={race.cycle} zip={context.zip} district={race.office === "house"} />
-      <header className="race-heading">
-        <h1 className="page-title">{race.title}</h1>
-        <RacePlace race={race} />
-        {race.office === "president" &&
-        race.cycle != null &&
-        !isPresidentialElectionYear(race.cycle) ? (
-          <p className="mt-2 max-w-2xl text-base leading-6 text-ink">
-            There is no presidential race on the {race.cycle} ballot. This page lists
-            national statements of candidacy (Form 2) only.
+    <article className="wrap">
+      <p>
+        <Link href={stateHref}>
+          {race.state ? stateName(race.state) : "All states"}
+        </Link>
+      </p>
+      <header>
+        <h1>{race.title}</h1>
+        <p>{race.jurisdiction}</p>
+        <p>
+          {when ? `Election day for the federal general election: ${when}. ` : null}
+          Stage shown here: general election. Primary, special, and runoff stages are not stored as
+          separate contests.
+        </p>
+        <p>Ballot status: not verified. A Form 2 filing is a statement of candidacy, not a place on the printed ballot.</p>
+        <DataRefreshedBanner refreshedAt={loaded.refreshedAt} />
+        {sourceHref ? (
+          <p>
+            <a href={sourceHref}>Source for this contest</a>
           </p>
         ) : null}
-        {race.cycle != null ? (
-          <p className="mt-2 max-w-2xl text-base leading-6 text-ink">{ballotVersusFilingLine(race.cycle)}</p>
-        ) : null}
       </header>
-      <section aria-labelledby="candidates-heading" className="race-candidates">
-        <h2 id="candidates-heading" className="text-lg font-semibold text-ink">
-          Candidates
-        </h2>
-        {candidates.ok === false && race.empty !== true ? (
-          <div className="mt-3">
-            <StorageNotice tone="error">
-              Candidates could not be loaded from the table.
-            </StorageNotice>
-          </div>
-        ) : !candidates.ok || candidates.list.length === 0 ? (
-          <>
-            <p className="mt-3 text-base leading-6 text-ink">{emptyRaceSentence(race)}</p>
-            {race.empty === true && race.office === "house" ? (
-              <p className="mt-3">
-                <Link
-                  href={
-                    next
-                      ? withPreservedQuery(`/races/${next.raceId}`, context)
-                      : withPreservedQuery("/", context)
-                  }
-                  className="tap-link text-sm font-semibold text-accent underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
-                >
-                  {next ? next.label : "Back to the map"}
-                </Link>
-              </p>
-            ) : null}
-          </>
-        ) : (
-          <ul className="mt-3 divide-y divide-line rounded-lg border border-line bg-card">
-            {candidates.list.map((candidate) => (
-              <CandidateRow
-                key={candidate.candidateId}
-                candidate={candidate}
-                race={race}
-                context={context}
-                filingNote={personFilingNote(candidate.filings)}
-              />
-            ))}
-          </ul>
-        )}
-      </section>
-      <details className="page-details">
-        <summary>Details</summary>
-        <div className="page-details-body">
-          <p>{federalScopeLine()}</p>
-          {race.cycle != null ? <p>{ballotVersusFilingLine(race.cycle)}</p> : null}
-          {sourceHref ? <RecordMeta sourceUrl={race.sourceUrl} updatedAt={race.updatedAt} /> : null}
-        </div>
-      </details>
-      <div className="page-refresh">
-        <DataRefreshedBanner refreshedAt={refreshedAt} compact />
-      </div>
-    </article>
-  );
-}
 
-function RacePlace({ race }: { race: Race }) {
-  const line = officeOneLiner(race);
-  const place = jurisdictionRepeatsTitle(race.title, race.jurisdiction) ? "" : race.jurisdiction;
-  return (
-    <>
-      {line ? <p className="text-base text-ink">{line}</p> : null}
-      {place || race.cycle != null ? (
-        <p className="text-base text-ink">
-          {place}
-          {place && race.cycle != null ? (
-            <span className="mx-2" aria-hidden="true">
-              ·
-            </span>
-          ) : null}
-          {race.cycle}
+      {!loaded.filingsLoaded ? (
+        <p className="notice notice-error" role="status">
+          Candidate names could not be loaded from the filings table. This page does not substitute
+          sample people.
         </p>
       ) : null}
-    </>
+
+      <section className="section" aria-labelledby="candidates-heading">
+        <h2 id="candidates-heading">Candidates</h2>
+        <p>Listed A to Z by the name on the filing. The order is not a ranking.</p>
+        {loaded.filingsLoaded && loaded.candidates.length === 0 ? (
+          <p>No Form 2 filing is stored for this contest yet.</p>
+        ) : (
+          <ul className="person-grid">
+            {loaded.candidates.map((candidate) => {
+              const filingCount = candidate.alternateFilings.length + 1;
+              const note = personFilingNote(candidate.filings);
+              return (
+                <li className="person-card" key={candidate.candidateId}>
+                  <div className="photo-slot" aria-hidden="true">
+                    Photo not on file
+                  </div>
+                  <h3>
+                    <Link href={`/candidates/${candidate.candidateId}`}>{candidate.displayName}</Link>
+                  </h3>
+                  <p className="party">{partyCue([candidate.partyLabel])}</p>
+                  <p>Incumbency: not in this record.</p>
+                  <p>Filing: statement of candidacy stored. Ballot status: not verified.</p>
+                  <p>Campaign website: not verified.</p>
+                  <MultiFilingDetails count={filingCount}>
+                    {note ? <p>{note}</p> : <p>{filingCount === 1 ? "One Form 2 id on this row." : null}</p>}
+                  </MultiFilingDetails>
+                  <FollowControl what="candidate" />
+                </li>
+              );
+            })}
+          </ul>
+        )}
+        <p>
+          <Link className="btn btn-navy" href={`/races/${race.raceId}/compare`}>
+            Compare candidates
+          </Link>
+        </p>
+      </section>
+
+      <div className="section race-layout">
+        <FollowControl what="race" />
+        <AiPrototype />
+      </div>
+      <p>
+        <StatusMark kind="sample" />
+        Issue positions, polls, and fundraising are not on this filing record. Open the comparison
+        for those tabs.
+      </p>
+    </article>
   );
-}
-
-function CandidateRow({
-  candidate,
-  race,
-  context,
-  filingNote,
-}: {
-  candidate: PublicCandidate;
-  race: Race;
-  context: MapContext;
-  filingNote: string | null;
-}) {
-  const parties = displayedPartyLabels(candidate);
-  return (
-    <li className="px-4 py-3">
-      <CandidateDisclosure
-        name={candidate.displayName}
-        cue={partyCue(parties)}
-        partyAffiliation={candidate.partyAffiliation}
-        href={withPreservedQuery(`/candidates/${candidate.candidateId}`, context)}
-        filingCount={candidate.alternateFilings.length + 1}
-        updatedAt={candidate.updatedAt}
-        runningFor={runningForLine(race)}
-        filingNote={filingNote}
-      />
-    </li>
-  );
-}
-
-async function loadRefreshedAt(): Promise<string | null> {
-  try {
-    return (await readWatermark())?.updatedAt ?? null;
-  } catch (error) {
-    logReadError("getWatermark", error);
-    return null;
-  }
-}
-
-async function loadCycleRaces(cycle: number | null): Promise<Race[]> {
-  if (cycle == null) return [];
-  try {
-    return await readRacesForCycle(cycle);
-  } catch (error) {
-    logReadError("listRacesByCycle", error);
-    return [];
-  }
-}
-
-async function loadRace(
-  raceId: string,
-): Promise<{ ok: true; race: Race | null } | { ok: false }> {
-  try {
-    const race = await readRace(raceId);
-    return { ok: true, race };
-  } catch (error) {
-    logReadError("getRace", error);
-    return { ok: false };
-  }
-}
-
-async function loadCandidates(
-  race: Race,
-): Promise<{ ok: true; list: PublicCandidate[] } | { ok: false }> {
-  try {
-    const list = await readCandidatesForRace(race.raceId);
-    return { ok: true, list: await withCrossContestFilings(createDynamoRepository(), list, race) };
-  } catch (error) {
-    logReadError("listCandidatesForRace", error);
-    return { ok: false };
-  }
 }

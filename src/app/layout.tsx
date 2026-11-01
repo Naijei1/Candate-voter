@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
-import { AppFrame } from "@/components/AppFrame";
 import { AskProvider } from "@/components/chat/AskProvider";
+import { SiteFooter } from "@/components/SiteFooter";
+import { SiteHeader } from "@/components/SiteHeader";
+import { brand } from "@/content/brand";
 import { cyclesFromEnv } from "@/lib/data/cycles";
 import "./globals.css";
 
@@ -8,16 +10,15 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  interactiveWidget: "resizes-content",
 };
 
 export const metadata: Metadata = {
   title: {
-    default: "Candate",
-    template: "%s · Candate",
+    default: brand.name,
+    template: `%s · ${brand.name}`,
   },
   description:
-    "Nonpartisan tracker for federal President, Senate, and House races. Pages cite stored public filings with sources and timestamps.",
+    "Find a contest, compare candidates on the same fields, and see the source of each fact.",
 };
 
 export default function RootLayout({
@@ -28,15 +29,16 @@ export default function RootLayout({
   const cycles = cyclesFromEnv();
   return (
     <html lang="en">
-      <body className="antialiased">
-        <a
-          href="#main"
-          className="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-50 focus:rounded-md focus:bg-card focus:px-3 focus:py-2 focus:outline-2 focus:outline-accent"
-        >
+      <body>
+        <a className="skip-link" href="#main">
           Skip to content
         </a>
         <AskProvider cycles={cycles}>
-          <AppFrame cycles={cycles}>{children}</AppFrame>
+          <SiteHeader />
+          <main id="main" className="page-main">
+            {children}
+          </main>
+          <SiteFooter />
         </AskProvider>
       </body>
     </html>

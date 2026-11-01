@@ -30,11 +30,17 @@ Package manager is npm. Commit `package-lock.json`. Amplify runs `npm ci`.
 
 | Path | Page |
 | --- | --- |
-| `/` | Full-bleed United States map. `?state=KY` opens that state. `?state=KY&zip=40502` pins Your races. |
-| `/races/[raceId]` | Race detail |
-| `/candidates/[candidateId]` | Candidate detail |
-| `/chat` | Ask about stored races and filings |
-| `/agent` | Read API documentation and live ingest freshness |
+| `/` | Homepage: ZIP or state search, how it works, featured Kentucky links, state list and map lower on the page. |
+| `/states`, `/states/[state]` | Explore by state. Kentucky `2026` federal contests live at `/states/ky`. |
+| `/races/[raceId]` | Race, stored Form 2 names, follow preview, prototype Ask panel. |
+| `/races/[raceId]/compare` | Same-field comparison. |
+| `/candidates`, `/candidates/[candidateId]` | Filer directory entry and one profile. Officeholders are `/officeholders` and are not loaded. |
+| `/measures/example-kentucky` | Sample ballot-measure layout. |
+| `/news`, `/polls`, `/finance` | Framework pages. Finance includes `/finance/committees/example-pac`. |
+| `/about`, `/sources`, `/contact`, `/accessibility`, `/privacy`, `/terms` | Credibility and legal shells. |
+| `/sign-in`, `/account` | Account and alert previews. Nothing is emailed. |
+| `/chat` | Filings assistant for stored races. Not the race-page prototype. |
+| `/agent` | Read API documentation and live ingest freshness. Linked from Sources, not the public header. |
 | `/openapi.yaml` | OpenAPI 3.0 document for `/api/v1` |
 | `/llms.txt` | Short index for agents |
 

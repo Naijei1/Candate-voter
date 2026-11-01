@@ -35,26 +35,20 @@ test("map shapes drop the browser focus rectangle and keep a fill for the select
   assert.equal(/stroke:\s*var\(--color-ink\)/.test(focusBlock), false);
 });
 
-test("landing is a map shell without a Popular list or ranking copy", () => {
-  const source = readFileSync(new URL("../src/components/Landing.tsx", import.meta.url), "utf8");
-  assert.equal(source.includes("popular-heading"), false);
-  assert.equal(source.includes("Recently updated filings"), false);
-  assert.equal(/not a ranking/i.test(source), false);
-  assert.equal(/not a rating/i.test(source), false);
-  assert.equal(source.includes("newest stored update"), false);
-  assert.equal(/<ol\b/.test(source), false);
-  assert.match(source, /data-testid="national-map"/);
-  assert.match(source, /data-testid="your-races"/);
-});
-
-test("national map fills the viewport and the state page uses one scroll", () => {
+test("homepage is a document in the navy and red palette, not a map shell", () => {
+  const page = readFileSync(new URL("../src/app/page.tsx", import.meta.url), "utf8");
+  const brand = readFileSync(new URL("../src/content/brand.ts", import.meta.url), "utf8");
   const css = readFileSync(new URL("../src/app/globals.css", import.meta.url), "utf8");
-  assert.match(css, /\.national-shell\s*\{[^}]*height:\s*100dvh/);
-  assert.match(css, /\.map-main\s*\{[^}]*overflow:\s*auto/);
-  assert.match(css, /\.state-shell\s*\{[^}]*flex-direction:\s*column/);
-  const block = css.slice(css.indexOf("@media (min-width: 1024px)"));
-  assert.match(block, /\.state-shell\s*\{[^}]*display:\s*grid/);
-  assert.match(block, /\.state-map-pane\s*\{[^}]*position:\s*sticky/);
-  assert.equal(/\.state-overview\s*\{[^}]*overflow:\s*auto/.test(block), false);
-  assert.equal(/max-height:\s*100dvh/.test(block), false);
+  assert.match(page, /brand\.headline/);
+  assert.match(brand, /Your elections\. All in one place\./);
+  assert.match(page, /Explore by state/);
+  assert.equal(page.includes("Landing"), false);
+  assert.equal(page.includes("your ballot"), false);
+  assert.match(css, /--color-navy:\s*#142b49/);
+  assert.match(css, /--color-cta:\s*#b32635/);
+  assert.match(css, /--color-paper:\s*#f4f6f8/);
+  assert.match(css, /--color-ink:\s*#202833/);
+  assert.equal(/prefers-color-scheme:\s*dark/.test(css), false);
+  assert.equal(/body\s*\{[^}]*overflow:\s*hidden/.test(css), false);
+  assert.equal(/\.national-shell/.test(css), false);
 });
