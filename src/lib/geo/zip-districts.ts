@@ -3,6 +3,8 @@ import { isPostalState } from "../data/states";
 
 /**
  * ZIP → congressional districts for the 2026 maps (120th Congress).
+ * The state district map uses the same TIGERweb 120th layer, saved in
+ * `public/geo/cd120`.
  *
  * Census TIGERweb is public and needs no API key. A ZIP Code Tabulation
  * Area can overlap more than one district, so the lookup intersects the

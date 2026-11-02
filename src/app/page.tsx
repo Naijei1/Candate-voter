@@ -5,6 +5,7 @@ import { StatusMark } from "@/components/site/StatusMark";
 import { ZipSearch } from "@/components/site/ZipSearch";
 import { brand } from "@/content/brand";
 import { generalElectionLabel } from "@/lib/copy";
+import { formatInstant } from "@/lib/format";
 import { statesWithRaces } from "@/lib/landing";
 import { PILOT_YEAR, loadPilotIndex } from "@/lib/site/contest";
 
@@ -21,10 +22,17 @@ export default async function HomePage() {
   return (
     <>
       <section className="hero">
-        <div className="wrap">
-          <h1>{brand.headline}</h1>
-          <p className="lede">{brand.lede}</p>
-          <ZipSearch />
+        <div className="wrap hero-grid">
+          <div>
+            <h1>{brand.headline}</h1>
+            <p className="lede">{brand.lede}</p>
+            <ZipSearch />
+          </div>
+          <figure>
+            <div className="photo-slot" role="img" aria-label={brand.heroImageAlt}>
+              <StatusMark kind="awaiting" /> Photo placeholder
+            </div>
+          </figure>
         </div>
       </section>
       <div className="wrap">
@@ -56,6 +64,17 @@ export default async function HomePage() {
               </p>
             </li>
           </ol>
+          <div className="compare-grid">
+            {["Sample candidate A", "Sample candidate B"].map((name) => (
+              <article className="person-card" key={name}>
+                <p>
+                  <StatusMark kind="sample" /> Not a real race.
+                </p>
+                <h3>{name}</h3>
+                <p className="party">Party label</p>
+              </article>
+            ))}
+          </div>
         </section>
 
         <section className="section" aria-labelledby="featured">
@@ -64,6 +83,7 @@ export default async function HomePage() {
             <li className="card">
               <h3>Kentucky {PILOT_YEAR}</h3>
               <p>Federal general, {generalElectionLabel(PILOT_YEAR)}.</p>
+              <p className="hint">Source: federal election calendar.</p>
               <Link className="btn btn-navy" href="/states/ky">
                 Open Kentucky
               </Link>
@@ -77,16 +97,19 @@ export default async function HomePage() {
                   {recent.map((race) => (
                     <li key={race.raceId}>
                       <Link href={`/races/${race.raceId}`}>{race.title}</Link>
+                      <span className="hint"> {formatInstant(race.updatedAt)} · FEC Form 2</span>
                     </li>
                   ))}
                 </ul>
               )}
+              <p className="hint">Source: FEC Form 2.</p>
             </li>
             <li className="card">
               <h3>Ballot measure</h3>
               <p>
-                <StatusMark kind="sample" /> Layout only.
+                <StatusMark kind="sample" /> October 30, 2026
               </p>
+              <p className="hint">Source: sample layout.</p>
               <Link href="/measures/example-kentucky">Open sample</Link>
             </li>
           </ul>
@@ -95,6 +118,21 @@ export default async function HomePage() {
         <section className="section" aria-labelledby="explore">
           <h2 id="explore">Explore by state</h2>
           <StateExplore statesWithRaces={statesWithRaces(loaded.races)} />
+        </section>
+
+        <section className="section" aria-labelledby="trust">
+          <h2 id="trust">Who runs this</h2>
+          <p>
+            {brand.founderName}, {brand.founderRole}.
+          </p>
+          <p>
+            <StatusMark kind="awaiting" /> Mission statement.
+          </p>
+          <p>
+            <Link href="/about">About Us</Link>
+            {" · "}
+            <Link href="/sources">About this data</Link>
+          </p>
         </section>
       </div>
     </>

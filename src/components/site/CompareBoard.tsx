@@ -25,9 +25,11 @@ type Tab = (typeof TABS)[number];
 export function CompareBoard({
   candidates,
   raceHref,
+  filingsLoaded = true,
 }: {
   candidates: readonly CompareCandidate[];
   raceHref: string;
+  filingsLoaded?: boolean;
 }) {
   const [tab, setTab] = useState<Tab>("Overview");
   return (
@@ -49,9 +51,8 @@ export function CompareBoard({
       <p className="hint" title="Alphabetical by filing name. Not a ranking.">
         A to Z
       </p>
-      {candidates.length === 0 ? (
-        <p>No candidates stored.</p>
-      ) : (
+      {filingsLoaded ? <p>{filedLine(candidates.length)}</p> : null}
+      {candidates.length === 0 ? null : (
         <div className="compare-grid">
           {candidates.map((candidate) => (
             <article className="person-card" key={candidate.candidateId}>
@@ -70,9 +71,14 @@ export function CompareBoard({
       <p>
         <Link href={raceHref}>Back to race</Link>
       </p>
-      {candidates.length < 3 ? <SampleTrio /> : null}
     </div>
   );
+}
+
+function filedLine(count: number): string {
+  if (count === 0) return "No one has filed.";
+  if (count === 1) return "Uncontested — only 1 filed.";
+  return `Only ${count} filed.`;
 }
 
 function TabBody({ tab }: { tab: Tab }) {
@@ -85,25 +91,7 @@ function TabBody({ tab }: { tab: Tab }) {
     );
   }
   if (tab === "Polls") return <p>No qualifying polls available.</p>;
-  if (tab === "Voting Record") return <p>No votes in this record.</p>;
+  if (tab === "Voting Record") return <p>Not available.</p>;
   if (tab === "Updates") return <p>No updates beyond the filing.</p>;
   return <p>Not available.</p>;
-}
-
-function SampleTrio() {
-  return (
-    <details className="fold">
-      <summary>
-        <StatusMark kind="sample" /> 3-candidate layout
-      </summary>
-      <div className="compare-grid">
-        {["Sample candidate A", "Sample candidate B", "Sample candidate C"].map((name) => (
-          <article className="person-card" key={name}>
-            <h3>{name}</h3>
-            <p className="party">Party label</p>
-          </article>
-        ))}
-      </div>
-    </details>
-  );
 }

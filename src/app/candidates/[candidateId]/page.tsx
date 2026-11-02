@@ -53,7 +53,7 @@ export default async function CandidatePage({ params }: PageProps) {
       <p className="hint">
         <StatusMark kind="awaiting" hint="No approved photo." /> No photo
         {" · "}
-        {website ? <a href={website}>Website</a> : "Website not verified"}
+        {website ? <a href={website}>FEC filing</a> : "No FEC filing link"}
       </p>
       <div className="actions">
         {race ? (
@@ -63,9 +63,6 @@ export default async function CandidatePage({ params }: PageProps) {
         ) : null}
         <FollowControl what="candidate" />
       </div>
-
-      <h2>Voting record</h2>
-      <p>Not in this record.</p>
 
       <h2 id="filings-heading">Filings</h2>
       {filings.length === 0 ? (
@@ -77,7 +74,7 @@ export default async function CandidatePage({ params }: PageProps) {
             const when = formatInstant(filing.updatedAt);
             return (
               <li key={filing.filingId}>
-                Form 2{href ? <> · <a href={href}>Document</a></> : null}
+                Form 2{href ? <> · <a href={href}>FEC filing</a></> : null}
                 {when ? ` · ${when}` : null}
               </li>
             );
