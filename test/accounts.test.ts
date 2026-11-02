@@ -102,5 +102,7 @@ test("account infrastructure stays least privilege and separate from filings", (
   const store = readFileSync("src/lib/users/store.ts", "utf8");
   assert.match(store, /deliveryStatus: ALERT_DELIVERY_STATUS/);
   const admin = readFileSync("src/app/admin/corrections/page.tsx", "utf8");
-  assert.match(admin, /isAdminEmail/);
+  const guard = readFileSync("src/lib/auth/guard.ts", "utf8");
+  assert.match(admin, /adminActor/);
+  assert.match(guard, /isAdminEmail/);
 });

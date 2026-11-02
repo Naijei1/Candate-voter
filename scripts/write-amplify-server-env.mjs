@@ -24,6 +24,7 @@ export const AMPLIFY_SERVER_ENV_KEYS = Object.freeze([
   "COGNITO_USER_POOL_ID",
   "COGNITO_CLIENT_ID",
   "ADMIN_EMAILS",
+  "CANDATE_MEDIA_BUCKET",
 ]);
 
 /** Prefix copied in addition to the named keys. `FEC_API_KEY` does not match. */

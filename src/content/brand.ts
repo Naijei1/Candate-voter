@@ -1,6 +1,7 @@
 /**
- * Copy and image slots the team can replace without changing page layout.
- * Empty image paths render a labeled placeholder. Do not invent a biography.
+ * Product chrome only. Mission, biography, ownership, funding, affiliations,
+ * editorial standards, corrections policy, and contact method are stored in
+ * DynamoDB and fall back to "Awaiting content". Do not invent that copy here.
  */
 
 export const brand = {

@@ -22,6 +22,8 @@ export async function POST(request: Request): Promise<Response> {
     candidateId: shortId(record.candidateId),
     note,
     createdAt: new Date().toISOString(),
+    status: "new" as const,
+    statusLog: [] as { at: string; by: string; status: "new" }[],
   };
   try {
     await createDynamoRepository().saveCorrection(correction);

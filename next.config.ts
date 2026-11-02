@@ -17,7 +17,9 @@ const nextConfig: NextConfig = {
     "@aws-sdk/client-dynamodb",
     "@aws-sdk/client-bedrock-runtime",
     "@aws-sdk/client-cognito-identity-provider",
+    "@aws-sdk/client-s3",
     "@aws-sdk/lib-dynamodb",
+    "@aws-sdk/s3-request-presigner",
     "aws-jwt-verify",
   ],
   ...(basePath

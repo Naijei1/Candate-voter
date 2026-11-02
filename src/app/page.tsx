@@ -3,7 +3,9 @@ import { DataRefreshedBanner } from "@/components/DataRefreshedBanner";
 import { StateExplore } from "@/components/site/StateExplore";
 import { StatusMark } from "@/components/site/StatusMark";
 import { ZipSearch } from "@/components/site/ZipSearch";
+import { CopyText } from "@/components/site/CopyText";
 import { brand } from "@/content/brand";
+import { loadSiteCopy } from "@/lib/content/store";
 import { generalElectionLabel } from "@/lib/copy";
 import { formatInstant } from "@/lib/format";
 import { statesWithRaces } from "@/lib/landing";
@@ -14,6 +16,7 @@ export const runtime = "nodejs";
 
 export default async function HomePage() {
   const loaded = await loadPilotIndex();
+  const copy = await loadSiteCopy();
   const recent = loaded.races
     .filter((race) => race.state === "KY" && race.updatedAt)
     .sort((a, b) => (b.updatedAt ?? "").localeCompare(a.updatedAt ?? ""))
@@ -29,9 +32,13 @@ export default async function HomePage() {
             <ZipSearch />
           </div>
           <figure>
-            <div className="photo-slot" role="img" aria-label={brand.heroImageAlt}>
-              <StatusMark kind="awaiting" /> Photo placeholder
-            </div>
+            {copy.heroKey ? (
+              <img src="/media/hero" alt={brand.heroImageAlt} />
+            ) : (
+              <div className="photo-slot" role="img" aria-label={brand.heroImageAlt}>
+                <StatusMark kind="awaiting" /> Photo placeholder
+              </div>
+            )}
           </figure>
         </div>
       </section>
@@ -125,9 +132,7 @@ export default async function HomePage() {
           <p>
             {brand.founderName}, {brand.founderRole}.
           </p>
-          <p>
-            <StatusMark kind="awaiting" /> Mission statement.
-          </p>
+          <CopyText text={copy.mission} />
           <p>
             <Link href="/about">About Us</Link>
             {" · "}
