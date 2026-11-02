@@ -99,7 +99,7 @@ export default async function RacePage({ params }: PageProps) {
           <Link className="btn btn-navy" href={`/races/${race.raceId}/compare`}>
             Compare candidates
           </Link>
-          <FollowControl what="race" />
+          <FollowControl what="race" targetId={race.raceId} />
         </div>
       </section>
       <AskPanel raceId={race.raceId} cycle={race.cycle} state={race.state} />

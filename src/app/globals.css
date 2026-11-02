@@ -130,6 +130,52 @@ a {
   border-radius: 0.5rem;
 }
 
+.account-menu {
+  position: relative;
+}
+
+.account-menu summary {
+  display: inline-flex;
+  align-items: center;
+  max-width: 14rem;
+  min-height: 44px;
+  overflow: hidden;
+  padding: 0.35rem 0.7rem;
+  border-radius: 0.4rem;
+  color: #fff;
+  cursor: pointer;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account-menu summary:hover {
+  background: rgb(255 255 255 / 12%);
+}
+
+.account-menu > div {
+  position: absolute;
+  right: 0;
+  z-index: 20;
+  display: grid;
+  min-width: 14rem;
+  padding: 0.35rem;
+  background: var(--color-navy);
+  border: 1px solid rgb(255 255 255 / 25%);
+  border-radius: 0.5rem;
+}
+
+.account-menu button {
+  min-height: 44px;
+  padding: 0.35rem 0.7rem;
+  border: 0;
+  border-radius: 0.4rem;
+  background: transparent;
+  color: #fff;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
 .nav-mobile {
   display: none;
 }

@@ -14,6 +14,7 @@ import type { FederalOffice } from "../types";
  * | List candidates in a race | Query gsi1 `gsi1pk=RACE#<raceId>` |
  * | List a candidate's filings | Query `pk=CAND#<candidateId>`, `sk` begins_with `FILING#` |
  * | Read or write the ingest cursor | Get/Update `pk=INGEST#F2`, `sk=WATERMARK` |
+ * | List correction reports | Query gsi1 `gsi1pk=CORRECTIONS`, newest `gsi1sk` first |
  *
  * Upserts are UpdateItem on those keys, so repeating a filing is idempotent.
  */
@@ -34,6 +35,12 @@ export const FILING_SK_PREFIX = "FILING#";
 export const INGEST_PK = "INGEST#F2";
 export const INGEST_SK = "WATERMARK";
 export const CORRECTION_PK_PREFIX = "CORRECTION#";
+/** gsi1 partition for staff review. Not a user id. */
+export const CORRECTIONS_GSI_PK = "CORRECTIONS";
+
+export function correctionGsiSk(createdAt: string, correctionId: string): string {
+  return `${createdAt}#${correctionId}`;
+}
 
 export function racePk(raceId: string): string {
   return `RACE#${raceId}`;

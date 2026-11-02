@@ -6,7 +6,7 @@ template = "template.yaml"
 [default.deploy.parameters]
 stack_name = "candate-voter-data"
 region = "us-east-1"
-capabilities = "CAPABILITY_IAM"
+capabilities = "CAPABILITY_IAM CAPABILITY_NAMED_IAM"
 confirm_changeset = true
 resolve_s3 = true
 s3_prefix = "candate-voter-data"

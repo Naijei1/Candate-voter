@@ -1,17 +1,15 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { SignInPreview } from "@/components/site/SignInPreview";
+import { SignInForm } from "@/components/site/SignInForm";
+import { cognitoSettings } from "@/lib/auth/cognito";
 
 export const metadata: Metadata = { title: "Sign in" };
+export const dynamic = "force-dynamic";
 
 export default function SignInPage() {
   return (
     <article className="wrap">
       <h1>Sign in</h1>
-      <SignInPreview />
-      <p>
-        <Link href="/account">Look at alert preferences without an account</Link>
-      </p>
+      <SignInForm configured={cognitoSettings() !== null} />
     </article>
   );
 }

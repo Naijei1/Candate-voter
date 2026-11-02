@@ -16,7 +16,9 @@ const nextConfig: NextConfig = {
   serverExternalPackages: [
     "@aws-sdk/client-dynamodb",
     "@aws-sdk/client-bedrock-runtime",
+    "@aws-sdk/client-cognito-identity-provider",
     "@aws-sdk/lib-dynamodb",
+    "aws-jwt-verify",
   ],
   ...(basePath
     ? {

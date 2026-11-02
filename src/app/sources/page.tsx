@@ -14,7 +14,7 @@ const ROWS = [
   ["Ballot measures", "Sample", "Layout only."],
   ["Photos, biography, issues", "Awaiting", "Not invented."],
   ["Polls and fundraising", "Sample", "Not loaded."],
-  ["Alerts", "Preview", "Not saved or sent."],
+  ["Alerts", "Planned", "Saved per account after sign-in. Email delivery is planned."],
 ] as const;
 
 export default function SourcesPage() {

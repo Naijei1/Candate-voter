@@ -68,7 +68,7 @@ export default async function CandidatePage({ params }: PageProps) {
             Compare
           </Link>
         ) : null}
-        <FollowControl what="candidate" />
+        <FollowControl what="candidate" targetId={loaded.ok ? loaded.candidate.candidateId : id} />
       </div>
 
       <h2>Verified</h2>

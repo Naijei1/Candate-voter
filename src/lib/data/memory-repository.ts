@@ -82,6 +82,14 @@ export class MemoryVoterRepository implements VoterRepository {
     this.corrections.push(clone(correction));
   }
 
+  async listCorrections(limit = 50): Promise<StoredCorrection[]> {
+    const cap = Math.min(Math.max(Math.floor(limit), 1), 100);
+    return [...this.corrections]
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt) || b.correctionId.localeCompare(a.correctionId))
+      .slice(0, cap)
+      .map((item) => clone(item));
+  }
+
   async markCandidateSuperseded(
     candidateId: string,
     supersededBy: string,

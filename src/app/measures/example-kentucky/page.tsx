@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Crumbs } from "@/components/site/Crumbs";
+import { FollowControl } from "@/components/site/FollowControl";
 import { StatusMark } from "@/components/site/StatusMark";
 import { SAMPLE_MEASURE } from "@/content/pilot";
 
@@ -21,6 +22,7 @@ export default function SampleMeasurePage() {
         <StatusMark kind="sample" /> {measure.eyebrow}
       </p>
       <h1>{measure.title}</h1>
+      <FollowControl what="measure" targetId="example-kentucky" />
       <p className="lede">{measure.officialTitle}</p>
       <p>{measure.plain}</p>
       <div className="card-grid">

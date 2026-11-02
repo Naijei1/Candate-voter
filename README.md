@@ -38,7 +38,8 @@ Package manager is npm. Commit `package-lock.json`. Amplify runs `npm ci`.
 | `/measures/example-kentucky` | Sample ballot-measure layout. |
 | `/news`, `/polls`, `/finance` | Framework pages. Finance includes `/finance/committees/example-pac`. |
 | `/about`, `/sources`, `/contact`, `/accessibility`, `/privacy`, `/terms` | Credibility and legal shells. |
-| `/sign-in`, `/account` | Account and alert previews. Nothing is emailed. |
+| `/sign-in`, `/account` | Email sign-in and saved follows. Email delivery is planned. |
+| `/admin/corrections` | Review queue. Visible when the signed-in email is in `ADMIN_EMAILS`. |
 | `/chat` | Filings assistant for stored races. Not the race-page prototype. |
 | `/agent` | Read API documentation and live ingest freshness. Linked from Sources, not the public header. |
 | `/openapi.yaml` | OpenAPI 3.0 document for `/api/v1` |
@@ -319,7 +320,7 @@ Build image Node is 22 (`nvm install 22` in `amplify.yml`, `.nvmrc`). Amplify bl
 
 ### Environment variables
 
-Branch environment variables are available to the build shell. WEB_COMPUTE does not pass them into the Next.js server. Before `next build`, `amplify.yml` replaces `.env.production` using `scripts/write-amplify-server-env.mjs`. That is the only writer. It records `CANDATE_TABLE_NAME`, `CANDATE_API_KEY`, `CANDATE_CYCLES`, `AWS_REGION`, the chat settings listed under [Browser chat](#browser-chat), and `NEXT_PUBLIC_*` when they are set. It skips `FEC_API_KEY`. Next.js loads `.env.production` when it serves traffic. An empty `CANDATE_TABLE_NAME` selects `candate-voter`. An empty `AWS_REGION` selects `us-east-1` in the repository client. `/api/v1` returns 401 until `CANDATE_API_KEY` is set. Changing one of these values requires a new deploy. Do not commit `.env.production`. Values in that file are readable by anyone who can read the deployment artifact.
+Branch environment variables are available to the build shell. WEB_COMPUTE does not pass them into the Next.js server. Before `next build`, `amplify.yml` replaces `.env.production` using `scripts/write-amplify-server-env.mjs`. That is the only writer. It records `CANDATE_TABLE_NAME`, `CANDATE_API_KEY`, `CANDATE_CYCLES`, `AWS_REGION`, the chat settings listed under [Browser chat](#browser-chat), `CANDATE_USERS_TABLE`, `COGNITO_USER_POOL_ID`, `COGNITO_CLIENT_ID`, `ADMIN_EMAILS`, and `NEXT_PUBLIC_*` when they are set. It skips `FEC_API_KEY`. Next.js loads `.env.production` when it serves traffic. An empty `CANDATE_TABLE_NAME` selects `candate-voter`. An empty `AWS_REGION` selects `us-east-1` in the repository client. `/api/v1` returns 401 until `CANDATE_API_KEY` is set. Changing one of these values requires a new deploy. Do not commit `.env.production`. Values in that file are readable by anyone who can read the deployment artifact.
 
 | Name | MVP value |
 | --- | --- |
@@ -335,8 +336,39 @@ Branch environment variables are available to the build shell. WEB_COMPUTE does 
 | `BEDROCK_SONNET_MODEL_ID` | Optional override for the Sonnet inference profile id. |
 | `CANDATE_CHAT_RATE_LIMIT` | Optional. Default 20 requests per address per instance. |
 | `CANDATE_CHAT_RATE_WINDOW_SECONDS` | Optional. Default 60. |
+| `CANDATE_USERS_TABLE` | Optional. `candate-voter-users` when unset. |
+| `COGNITO_USER_POOL_ID` | User pool id from the stack output `UserPoolId`. Sign-in stays unavailable until this and the client id are set. |
+| `COGNITO_CLIENT_ID` | Public app client id from `UserPoolClientId`. No client secret. |
+| `ADMIN_EMAILS` | Optional comma-separated emails allowed to open `/admin/corrections`. |
 
 `FEC_API_KEY` stays on the ingest Lambda (or the shell that runs `npm run ingest`). The site does not call OpenFEC. Do not set `FEC_API_KEY` on the Amplify app.
+
+### Make accounts live
+
+From `infra/`, with the same AWS account that owns stack `candate-voter-data`:
+
+```bash
+sam build
+sam deploy --parameter-overrides AmplifyComputeRoleName=AMPLIFY_SSR_COMPUTE_ROLE_NAME
+```
+
+`samconfig.toml` already sets stack `candate-voter-data`, region `us-east-1`, and `CAPABILITY_IAM CAPABILITY_NAMED_IAM`. Leave `FecApiKey` as the value already stored on the stack. Omit `AmplifyComputeRoleName` to create the managed policy without attaching it.
+
+The role name is the Amplify SSR compute role (App settings → IAM roles), not the build role. Do not remove that role’s existing `GetItem` and `Query` policy on `candate-voter`.
+
+If the parameter was empty, attach the output `AmplifyComputePolicyArn` (`candate-voter-amplify-compute`) to that role. The policy allows read/write on `candate-voter-users`, including `DeleteItem` so a follow can be removed, and `dynamodb:PutItem` / `dynamodb:UpdateItem` on `candate-voter` only when the partition key matches `CORRECTION#*`. Listing reports is `dynamodb:Query` on `gsi1` limited to partition `CORRECTIONS`.
+
+Then set these Amplify branch environment variables and redeploy so `scripts/write-amplify-server-env.mjs` copies them into `.env.production`:
+
+| Name | Value |
+| --- | --- |
+| `COGNITO_USER_POOL_ID` | Stack output `UserPoolId` |
+| `COGNITO_CLIENT_ID` | Stack output `UserPoolClientId` |
+| `CANDATE_USERS_TABLE` | Stack output `UsersTableName` (`candate-voter-users`) |
+| `AWS_REGION` | `us-east-1` |
+| `ADMIN_EMAILS` | Comma-separated reviewer emails |
+
+Cognito sends its own verification code with the pool’s default email (a low daily quota). Google sign-in is not in the template. Alert email stays labeled planned until SES is configured. There is no client secret and no `FEC_API_KEY` on Amplify.
 
 `NEXT_PUBLIC_*` values are inlined at build time. Changing `NEXT_PUBLIC_BASE_PATH` requires a new build.
 
