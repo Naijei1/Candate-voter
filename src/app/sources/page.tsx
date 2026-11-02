@@ -13,7 +13,7 @@ const ROWS = [
   ["State, county, city, judicial, school", "Not covered", "No source connected."],
   ["Ballot measures", "Sample", "Layout only."],
   ["Photos, biography, issues", "Awaiting", "Not invented."],
-  ["Polls and fundraising", "Sample", "Not loaded."],
+  ["Polls and fundraising", "Polls: sample. Fundraising: FEC totals.", "OpenFEC candidate totals and Schedule E aggregates. Direct and outside spending are not added."],
   ["Alerts", "Planned", "Saved per account after sign-in. Email delivery is planned."],
 ] as const;
 

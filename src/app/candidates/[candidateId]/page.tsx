@@ -2,10 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Crumbs } from "@/components/site/Crumbs";
+import { DirectList, OutsideList } from "@/components/site/FinanceLists";
 import { FollowControl } from "@/components/site/FollowControl";
 import { StatusMark } from "@/components/site/StatusMark";
 import { stateName } from "@/lib/data/states";
 import { formatInstant, httpsUrl, partyCue, partyLabel } from "@/lib/format";
+import { financeForCandidate, loadFinance } from "@/lib/finance/load";
+import { selectDirect, selectOutside } from "@/lib/finance/present";
 import { loadProfile } from "@/lib/site/contest";
 import { showcaseCandidate, showcaseRace, type ShowcaseCandidate } from "@/lib/site/showcase";
 import type { Filing, Race } from "@/lib/types";
@@ -48,6 +51,9 @@ export default async function CandidatePage({ params }: PageProps) {
   const raceHref = race ? `/races/${race.raceId}` : snap ? `/races/${showcaseRace()?.raceId}` : null;
   const raceLabel = race ? shortRace(race) : snap ? "Senate" : "Race";
   const retrieved = showcaseRace()?.retrievedAt ?? null;
+  const finance = financeForCandidate(await loadFinance(race?.cycle ?? 2026), id);
+  const direct = selectDirect(finance.direct, null);
+  const outside = selectOutside(finance.outside, null);
 
   return (
     <article className="wrap">
@@ -123,6 +129,20 @@ export default async function CandidatePage({ params }: PageProps) {
           <StatusMark kind="awaiting" /> No campaign statement is on file.
         </p>
       )}
+
+      <h2>Campaign finance</h2>
+      {finance.notice ? <p className="notice">{finance.notice}</p> : null}
+      <p>
+        <Link href="/finance#direct-and-outside">Direct money and outside spending are not added together.</Link>
+      </p>
+      {direct.length === 0 && outside.length === 0 ? <p>No FEC totals stored for this candidate.</p> : null}
+      {direct.length > 0 ? <DirectList rows={direct} /> : null}
+      {outside.length > 0 ? (
+        <>
+          <h3>Outside spending</h3>
+          <OutsideList rows={outside} />
+        </>
+      ) : null}
 
       <h2>Not on file</h2>
       <p>

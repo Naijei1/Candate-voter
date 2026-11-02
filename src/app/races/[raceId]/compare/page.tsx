@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { AskPanel } from "@/components/site/AskPanel";
 import { CompareBoard } from "@/components/site/CompareBoard";
 import { Crumbs } from "@/components/site/Crumbs";
+import { loadFinance } from "@/lib/finance/load";
+import { selectDirect, selectOutside } from "@/lib/finance/present";
 import { cardsForRace } from "@/lib/site/showcase";
 import { stateName } from "@/lib/data/states";
 import { loadContest } from "@/lib/site/contest";
@@ -24,6 +26,10 @@ export default async function ComparePage({ params }: PageProps) {
   if (!loaded.race) notFound();
   const race = loaded.race;
   const roster = cardsForRace(race.raceId, loaded.candidates, loaded.filingsLoaded);
+  const finance = await loadFinance(race.cycle ?? 2026);
+  const ids = new Set(roster.cards.map((candidate) => candidate.id));
+  const direct = selectDirect(finance.direct, null).filter((row) => ids.has(row.candidateId));
+  const outside = selectOutside(finance.outside, null).filter((row) => ids.has(row.candidateId));
   const place = race.state ? stateName(race.state) : "States";
   const stateHref = race.state ? `/states/${race.state.toLowerCase()}` : "/states";
 
@@ -53,6 +59,7 @@ export default async function ComparePage({ params }: PageProps) {
           raceHref={`/races/${race.raceId}`}
           filingsLoaded={loaded.filingsLoaded && !roster.fecList}
           summary={roster.summary}
+          finance={{ notice: finance.notice, direct, outside }}
           candidates={roster.cards.map((candidate) => ({
             candidateId: candidate.id,
             displayName: candidate.name,

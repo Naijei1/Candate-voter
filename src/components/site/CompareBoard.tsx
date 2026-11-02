@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { StatusMark } from "@/components/site/StatusMark";
+import { coverageLabel, formatMoney, type FinanceDirect, type FinanceOutside } from "@/lib/finance/model";
 
 export type CompareCandidate = {
   candidateId: string;
@@ -27,11 +27,17 @@ export function CompareBoard({
   raceHref,
   filingsLoaded = true,
   summary = null,
+  finance = null,
 }: {
   candidates: readonly CompareCandidate[];
   raceHref: string;
   filingsLoaded?: boolean;
   summary?: string | null;
+  finance?: {
+    notice: string | null;
+    direct: readonly FinanceDirect[];
+    outside: readonly FinanceOutside[];
+  } | null;
 }) {
   const [tab, setTab] = useState<Tab>("Overview");
   return (
@@ -68,7 +74,7 @@ export function CompareBoard({
         </div>
       )}
       <div className="card" role="tabpanel">
-        <TabBody tab={tab} />
+        <TabBody tab={tab} finance={finance} />
       </div>
       <p>
         <Link href={raceHref}>Back to race</Link>
@@ -83,13 +89,61 @@ function filedLine(count: number): string {
   return `Only ${count} filed.`;
 }
 
-function TabBody({ tab }: { tab: Tab }) {
+function TabBody({
+  tab,
+  finance,
+}: {
+  tab: Tab;
+  finance: {
+    notice: string | null;
+    direct: readonly FinanceDirect[];
+    outside: readonly FinanceOutside[];
+  } | null;
+}) {
   if (tab === "Overview") return <p>Same fields on every card.</p>;
   if (tab === "Campaign Finance") {
+    if (!finance || (finance.direct.length === 0 && finance.outside.length === 0)) {
+      return <p>No FEC totals stored for this race.</p>;
+    }
     return (
-      <p>
-        <StatusMark kind="sample" /> Not loaded. <Link href="/finance">Sample finance</Link>
-      </p>
+      <div>
+        {finance.notice ? <p>{finance.notice}</p> : null}
+        <p>
+          <Link href="/finance#direct-and-outside">Direct money and outside spending are not added together.</Link>
+        </p>
+        <ul className="plain-list">
+          {finance.direct.map((row) => (
+            <li key={row.candidateId}>
+              <Link href={`/candidates/${row.candidateId}`}>{row.name ?? row.candidateId}</Link>
+              {": "}
+              receipts {formatMoney(row.receipts)}, disbursements {formatMoney(row.disbursements)}, cash{" "}
+              {formatMoney(row.cashOnHand)}, debts {formatMoney(row.debts)}. {coverageLabel(row.coverageStart, row.coverageEnd)}
+              {row.sourceUrl ? (
+                <>
+                  {" "}
+                  <a href={row.sourceUrl}>{row.sourceLabel}</a>
+                </>
+              ) : null}
+            </li>
+          ))}
+        </ul>
+        {finance.outside.length > 0 ? (
+          <ul className="plain-list">
+            {finance.outside.map((row) => (
+              <li key={`${row.candidateId}-${row.committeeId}-${row.support}`}>
+                {row.committeeName ?? row.committeeId} {row.support === "support" ? "supports" : "opposes"}{" "}
+                {row.candidateName ?? row.candidateId}: {formatMoney(row.total)}. Not a receipt.
+                {row.sourceUrl ? (
+                  <>
+                    {" "}
+                    <a href={row.sourceUrl}>{row.sourceLabel}</a>
+                  </>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        ) : null}
+      </div>
     );
   }
   if (tab === "Polls") return <p>No qualifying polls available.</p>;

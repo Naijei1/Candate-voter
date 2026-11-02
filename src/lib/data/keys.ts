@@ -15,6 +15,8 @@ import type { FederalOffice } from "../types";
  * | List a candidate's filings | Query `pk=CAND#<candidateId>`, `sk` begins_with `FILING#` |
  * | Read or write the ingest cursor | Get/Update `pk=INGEST#F2`, `sk=WATERMARK` |
  * | List correction reports | Query gsi1 `gsi1pk=CORRECTIONS`, newest `gsi1sk` first |
+ * | List finance rows for a cycle | Query gsi1 `gsi1pk=FINANCE#<cycle>` |
+ * | Read or write the totals cursor | Get/Update `pk=INGEST#FEC_TOTALS`, `sk=WATERMARK` |
  *
  * Upserts are UpdateItem on those keys, so repeating a filing is idempotent.
  */
@@ -34,6 +36,7 @@ export const ENTITY_META_SK = "META";
 export const FILING_SK_PREFIX = "FILING#";
 export const INGEST_PK = "INGEST#F2";
 export const INGEST_SK = "WATERMARK";
+export const TOTALS_INGEST_PK = "INGEST#FEC_TOTALS";
 export const CORRECTION_PK_PREFIX = "CORRECTION#";
 /** gsi1 partition for staff review. Not a user id. */
 export const CORRECTIONS_GSI_PK = "CORRECTIONS";

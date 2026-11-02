@@ -1,3 +1,4 @@
+import type { FinanceDirect, FinanceOutside, TotalsWatermark } from "../finance/model";
 import type { Candidate, Filing, IngestWatermark, Race } from "../types";
 import { raceMatchesCycle } from "./cycle-match";
 import type { CandidateUpsertResult, StoredCorrection, VoterRepository } from "./repository";
@@ -13,6 +14,9 @@ export class MemoryVoterRepository implements VoterRepository {
   private readonly superseded = new Set<string>();
   private watermark: IngestWatermark | null = null;
   readonly corrections: StoredCorrection[] = [];
+  private readonly financeDirect: FinanceDirect[] = [];
+  private readonly financeOutside: FinanceOutside[] = [];
+  private totalsWatermark: TotalsWatermark | null = null;
 
   async upsertRace(race: Race): Promise<void> {
     this.races.set(race.raceId, clone(race));
@@ -80,6 +84,47 @@ export class MemoryVoterRepository implements VoterRepository {
 
   async saveCorrection(correction: StoredCorrection): Promise<void> {
     this.corrections.push(clone(correction));
+  }
+
+  async upsertFinanceDirect(row: FinanceDirect): Promise<void> {
+    const index = this.financeDirect.findIndex(
+      (item) =>
+        item.cycle === row.cycle &&
+        item.candidateId === row.candidateId &&
+        item.scope === row.scope &&
+        item.committeeId === row.committeeId &&
+        item.coverageEnd === row.coverageEnd &&
+        item.fileNumber === row.fileNumber,
+    );
+    if (index >= 0) this.financeDirect[index] = clone(row);
+    else this.financeDirect.push(clone(row));
+  }
+
+  async upsertFinanceOutside(row: FinanceOutside): Promise<void> {
+    const index = this.financeOutside.findIndex(
+      (item) =>
+        item.cycle === row.cycle &&
+        item.candidateId === row.candidateId &&
+        item.committeeId === row.committeeId &&
+        item.support === row.support,
+    );
+    if (index >= 0) this.financeOutside[index] = clone(row);
+    else this.financeOutside.push(clone(row));
+  }
+
+  async listFinance(cycle: number): Promise<{ direct: FinanceDirect[]; outside: FinanceOutside[] }> {
+    return {
+      direct: this.financeDirect.filter((row) => row.cycle === cycle).map((row) => clone(row)),
+      outside: this.financeOutside.filter((row) => row.cycle === cycle).map((row) => clone(row)),
+    };
+  }
+
+  async getTotalsWatermark(): Promise<TotalsWatermark | null> {
+    return clone(this.totalsWatermark);
+  }
+
+  async saveTotalsWatermark(watermark: TotalsWatermark): Promise<void> {
+    this.totalsWatermark = clone(watermark);
   }
 
   async listCorrections(limit = 50): Promise<StoredCorrection[]> {

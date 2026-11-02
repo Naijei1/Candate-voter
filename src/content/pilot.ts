@@ -16,19 +16,6 @@ export const SAMPLE_MEASURE = {
   fiscal: "No fiscal estimate.",
 } as const;
 
-export const SAMPLE_PAC = {
-  path: "/finance/committees/example-pac",
-  name: "Example Civic PAC",
-  type: "Sample committee type, not a registered committee",
-  funding: "Disclosed funding sources would be listed from a filing. None are loaded.",
-  direct:
-    "Sample direct contribution: $1,000 on January 1, 2026, from Example Donor to Sample candidate A. Demonstration amounts only.",
-  outside:
-    "Sample outside spending: $1,000 on January 2, 2026, by Example Civic PAC about Sample candidate A. This is not money the candidate received.",
-  relationship:
-    "No evidence in this sample establishes which real candidates the committee supports or opposes.",
-} as const;
-
 export const SAMPLE_NEWS = [
   {
     id: "statements",

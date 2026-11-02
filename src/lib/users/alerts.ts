@@ -8,7 +8,12 @@ export type AlertCategory =
   | "statements"
   | "polls"
   | "debates"
-  | "deadlines";
+  | "deadlines"
+  | "finance-receipts"
+  | "finance-disbursements"
+  | "finance-cash"
+  | "finance-debts"
+  | "finance-outside";
 
 export const ALERT_CATEGORIES: readonly AlertCategory[] = [
   "filings",
@@ -17,7 +22,20 @@ export const ALERT_CATEGORIES: readonly AlertCategory[] = [
   "polls",
   "debates",
   "deadlines",
+  "finance-receipts",
+  "finance-disbursements",
+  "finance-cash",
+  "finance-debts",
+  "finance-outside",
 ];
+
+export const FINANCE_ALERT_CATEGORIES = [
+  "finance-receipts",
+  "finance-disbursements",
+  "finance-cash",
+  "finance-debts",
+  "finance-outside",
+] as const satisfies readonly AlertCategory[];
 
 /** SES is not configured. Nothing is sent. */
 export const ALERT_DELIVERY_STATUS = "planned" as const;
@@ -50,6 +68,26 @@ export type AlertNotice = {
   detectedAt: string;
   dedupeKey: string;
 };
+
+/** `eventAt` is the coverage end or filing date. `detectedAt` is when this system noticed it. */
+export function financeAlertNotice(input: {
+  userId: string;
+  category: (typeof FINANCE_ALERT_CATEGORIES)[number];
+  targetType: FollowType;
+  targetId: string;
+  eventAt: string;
+  detectedAt: string;
+}): AlertNotice {
+  return {
+    userId: input.userId,
+    category: input.category,
+    targetType: input.targetType,
+    targetId: input.targetId,
+    eventAt: input.eventAt,
+    detectedAt: input.detectedAt,
+    dedupeKey: alertDedupeKey(input),
+  };
+}
 
 export function alertDedupeKey(input: {
   category: string;

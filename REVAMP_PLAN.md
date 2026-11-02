@@ -38,7 +38,7 @@ Do not budget a polling vendor, a licensed ballot file, or social APIs until acc
 | Founder photo, mission, affiliations | awaiting content | Luke Wyatt | None | $0 | “Awaiting” badge. No biography written here. |
 | Voting record | planned | Congress.gov when service is known | Not connected | $0 API if used later | Omitted unless we know the person served. |
 | Polls | planned | No vendor | None | Unscoped | “No qualifying polls available.” |
-| Fundraising and PACs | demo | Sample pages. OpenFEC totals later | Not connected | $0 until Phase 3 | Sample badge. Direct money and outside spending stay separate. |
+| Fundraising and PACs | working for totals | OpenFEC candidate totals and Schedule E aggregates | `FEC_API_KEY` on the totals Lambda | $0 API | Direct committee money and outside spending stay in separate figures and are not added. Itemized Schedule A stays out. |
 | News | demo | Sample cards | None | Unknown | Sample badge. No fake news URL. |
 | Follow and alerts | working to save; planned to send | Cognito plus `candate-voter-users` | Amplify compute role | Cognito free tier. No SES. | Preferences save after sign-in. Email delivery stays planned. |
 | Ask panel examples | demo | Example answers. Real FEC filing link when a row has one | No model call | $0 | Otherwise the source is marked Sample. |
@@ -260,7 +260,7 @@ New public routes (names can shift, the jobs cannot):
 | `/races/[raceId]/compare` | Equal cards. Tabs: Overview, Issues, Statements, Voting Record, Polls, Campaign Finance, Updates. |
 | `/candidates/[candidateId]` | One real filer, with demonstration profile fields labeled. |
 | `/measures/example-kentucky` | Measure layout. Title makes the demonstration status obvious. |
-| `/news`, `/polls`, `/finance`, `/finance/committees/example-pac` | Framework pages and one PAC example. |
+| `/news`, `/polls`, `/finance` | News and polls stay sample. Finance lists FEC totals and Schedule E aggregates. |
 | `/about`, `/sources`, `/accessibility`, `/privacy`, `/terms`, `/contact` | Shells. Approved copy only. Missing bio and legal text render as “awaiting approved copy.” |
 | `/account`, `/sign-in` | Follow and alert demo. |
 | `/explore` | Optional during the branch. Not a second product. |

@@ -16,6 +16,7 @@ import {
   INGEST_PK,
   INGEST_SK,
   TABLE_KEYS,
+  TOTALS_INGEST_PK,
   candidatePk,
   correctionGsiSk,
   cycleGsiPk,
@@ -31,6 +32,9 @@ import {
   toRaceItem,
   toWatermarkItem,
 } from "./items";
+import { toDirectItem, toOutsideItem } from "../finance/keys";
+import type { FinanceDirect, FinanceOutside, TotalsWatermark } from "../finance/model";
+import { fromDirectItem, fromOutsideItem, fromTotalsWatermark } from "../finance/read";
 import type { Candidate, Filing, IngestWatermark, Race } from "../types";
 import { raceMatchesCycle } from "./cycle-match";
 import { dropRosterRead, primeRosterRead, rosterCacheKey } from "./roster-cache";
@@ -56,6 +60,11 @@ export type VoterRepository = {
   saveCorrection(correction: StoredCorrection): Promise<void>;
   /** Newest first. Reads gsi1 partition `CORRECTIONS`. */
   listCorrections(limit?: number): Promise<StoredCorrection[]>;
+  upsertFinanceDirect(row: FinanceDirect): Promise<void>;
+  upsertFinanceOutside(row: FinanceOutside): Promise<void>;
+  listFinance(cycle: number): Promise<{ direct: FinanceDirect[]; outside: FinanceOutside[] }>;
+  getTotalsWatermark(): Promise<TotalsWatermark | null>;
+  saveTotalsWatermark(watermark: TotalsWatermark): Promise<void>;
 };
 
 export type StoredCorrection = {
@@ -279,6 +288,54 @@ class DynamoVoterRepository implements VoterRepository {
       const record = asRecord(item);
       const correction = record ? correctionFromItem(record) : null;
       return correction ? [correction] : [];
+    });
+  }
+
+  async upsertFinanceDirect(row: FinanceDirect): Promise<void> {
+    await this.update(toDirectItem(row));
+  }
+
+  async upsertFinanceOutside(row: FinanceOutside): Promise<void> {
+    await this.update(toOutsideItem(row));
+  }
+
+  async listFinance(cycle: number): Promise<{ direct: FinanceDirect[]; outside: FinanceOutside[] }> {
+    const items = await this.queryAll({
+      IndexName: GSI1.name,
+      KeyConditionExpression: "#gsi1pk = :gsi1pk",
+      ExpressionAttributeNames: { "#gsi1pk": GSI1.partition },
+      ExpressionAttributeValues: { ":gsi1pk": `FINANCE#${cycle}` },
+    });
+    const direct: FinanceDirect[] = [];
+    const outside: FinanceOutside[] = [];
+    for (const item of items) {
+      const directRow = fromDirectItem(item);
+      if (directRow) direct.push(directRow);
+      const outsideRow = fromOutsideItem(item);
+      if (outsideRow) outside.push(outsideRow);
+    }
+    return { direct, outside };
+  }
+
+  async getTotalsWatermark(): Promise<TotalsWatermark | null> {
+    const item = await this.get({ pk: TOTALS_INGEST_PK, sk: INGEST_SK }, { consistent: true });
+    return item ? fromTotalsWatermark(item) : null;
+  }
+
+  async saveTotalsWatermark(watermark: TotalsWatermark): Promise<void> {
+    await this.update({
+      pk: TOTALS_INGEST_PK,
+      sk: INGEST_SK,
+      entityType: "totalsWatermark",
+      source: watermark.source,
+      lastRunAt: watermark.lastRunAt,
+      lastStatus: watermark.lastStatus,
+      lastError: watermark.lastError,
+      candidatesSeen: watermark.candidatesSeen,
+      directUpserted: watermark.directUpserted,
+      periodsUpserted: watermark.periodsUpserted,
+      outsideUpserted: watermark.outsideUpserted,
+      updatedAt: watermark.updatedAt,
     });
   }
 
