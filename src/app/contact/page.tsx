@@ -15,8 +15,8 @@ export default function ContactPage() {
       </p>
       <h2 id="corrections">Feedback and corrections</h2>
       <p>
-        Race pages include a report control. In this phase it confirms on the page and does not
-        deliver the note. <Link href="/sources">How records are sourced</Link>
+        Race pages include a report control. A saved note is stored for review and is not
+        published on the race page. <Link href="/sources">How records are sourced</Link>
       </p>
     </article>
   );

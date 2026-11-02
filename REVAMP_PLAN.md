@@ -10,7 +10,7 @@ Reviewed against Luke Wyatt’s product brief of October 30, 2026, and the tree 
 
 Phase 1 (homepage and Kentucky journey) and the copy pass in PR #45 are on `main`. This section is the current inventory. Labels are the brief’s four: **working**, **demo**, **awaiting content**, **planned**. The review below is the original decision record.
 
-Approach B is in progress. No CloudFormation change in Phase 1 or 1.5.
+Approach B is in progress. Phase 1 and 1.5 did not change CloudFormation. Phase 2 adds Cognito email sign-in, table `candate-voter-users`, and a least-privilege Amplify policy in `infra/template.yaml`. Alert email stays planned. Google sign-in is not included.
 
 ### Phase scope and cost
 
@@ -40,7 +40,7 @@ Do not budget a polling vendor, a licensed ballot file, or social APIs until acc
 | Polls | planned | No vendor | None | Unscoped | “No qualifying polls available.” |
 | Fundraising and PACs | demo | Sample pages. OpenFEC totals later | Not connected | $0 until Phase 3 | Sample badge. Direct money and outside spending stay separate. |
 | News | demo | Sample cards | None | Unknown | Sample badge. No fake news URL. |
-| Follow and alerts | demo | On-page preview | None | Cognito in Phase 2 | Nothing is emailed. |
+| Follow and alerts | working to save; planned to send | Cognito plus `candate-voter-users` | Amplify compute role | Cognito free tier. No SES. | Preferences save after sign-in. Email delivery stays planned. |
 | Ask panel examples | demo | Example answers. Real FEC filing link when a row has one | No model call | $0 | Otherwise the source is marked Sample. |
 | Filings assistant (`/chat`) | working when enabled | Stored Form 2 rows via Bedrock | Compute role. Off until `CANDATE_CHAT_ENABLED=true` | Per token if turned on | Refuses when the table has no fact. |
 

@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { DistrictMap } from "@/components/DistrictMap";
 import { DataRefreshedBanner } from "@/components/DataRefreshedBanner";
 import { Crumbs } from "@/components/site/Crumbs";
+import { FollowControl } from "@/components/site/FollowControl";
 import { StatusMark } from "@/components/site/StatusMark";
 import { isPostalState, stateName } from "@/lib/data/states";
 import { generalElectionLabel } from "@/lib/copy";
@@ -50,6 +51,7 @@ export default async function StatePage({ params, searchParams }: PageProps) {
       <p className="lede">
         {year} general · {generalElectionLabel(year)}
       </p>
+      <FollowControl what="jurisdiction" targetId={postal} />
       <DataRefreshedBanner refreshedAt={loaded.refreshedAt} />
       {loaded.filingsLoaded ? null : (
         <p className="notice notice-error" role="status">

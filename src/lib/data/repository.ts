@@ -9,6 +9,7 @@ import {
 import { buildSetExpression } from "./expressions";
 import {
   CORRECTION_PK_PREFIX,
+  CORRECTIONS_GSI_PK,
   ENTITY_META_SK,
   FILING_SK_PREFIX,
   GSI1,
@@ -16,6 +17,7 @@ import {
   INGEST_SK,
   TABLE_KEYS,
   candidatePk,
+  correctionGsiSk,
   cycleGsiPk,
   racePk,
 } from "./keys";
@@ -52,6 +54,8 @@ export type VoterRepository = {
    */
   markCandidateSuperseded(candidateId: string, supersededBy: string): Promise<void>;
   saveCorrection(correction: StoredCorrection): Promise<void>;
+  /** Newest first. Reads gsi1 partition `CORRECTIONS`. */
+  listCorrections(limit?: number): Promise<StoredCorrection[]>;
 };
 
 export type StoredCorrection = {
@@ -249,7 +253,32 @@ class DynamoVoterRepository implements VoterRepository {
       ...(correction.raceId ? { raceId: correction.raceId } : {}),
       ...(correction.candidateId ? { candidateId: correction.candidateId } : {}),
       note: correction.note,
+      [GSI1.partition]: CORRECTIONS_GSI_PK,
+      [GSI1.sort]: correctionGsiSk(correction.createdAt, correction.correctionId),
       updatedAt: correction.createdAt,
+    });
+  }
+
+  async listCorrections(limit = 50): Promise<StoredCorrection[]> {
+    const cap = Math.min(Math.max(Math.floor(limit), 1), 100);
+    const signal = readAbort.getStore();
+    throwIfAborted(signal);
+    const result = await this.client.send(
+      new QueryCommand({
+        TableName: this.tableName,
+        IndexName: GSI1.name,
+        KeyConditionExpression: "#pk = :pk",
+        ExpressionAttributeNames: { "#pk": GSI1.partition },
+        ExpressionAttributeValues: { ":pk": CORRECTIONS_GSI_PK },
+        ScanIndexForward: false,
+        Limit: cap,
+      }),
+      signal ? { abortSignal: signal } : {},
+    );
+    return (result.Items ?? []).flatMap((item) => {
+      const record = asRecord(item);
+      const correction = record ? correctionFromItem(record) : null;
+      return correction ? [correction] : [];
     });
   }
 
@@ -357,6 +386,24 @@ function throwIfAborted(signal: AbortSignal | undefined): void {
   const error = new Error("The operation was aborted");
   error.name = "AbortError";
   throw error;
+}
+
+function correctionFromItem(item: Record<string, unknown>): StoredCorrection | null {
+  if (typeof item.correctionId !== "string" || typeof item.note !== "string") return null;
+  const createdAt =
+    typeof item.createdAt === "string"
+      ? item.createdAt
+      : typeof item.updatedAt === "string"
+        ? item.updatedAt
+        : null;
+  if (!createdAt) return null;
+  return {
+    correctionId: item.correctionId,
+    raceId: typeof item.raceId === "string" ? item.raceId : null,
+    candidateId: typeof item.candidateId === "string" ? item.candidateId : null,
+    note: item.note,
+    createdAt,
+  };
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {

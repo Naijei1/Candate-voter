@@ -2,8 +2,9 @@ AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: >
   Candate voter data layer for account 402275401617 in us-east-1.
-  Creates one DynamoDB table, an IAM role, a Lambda function, a log group,
-  and an EventBridge schedule. Does not modify Amplify Hosting.
+  Filings table, Form 2 ingest, a separate users table, and a Cognito
+  email sign-in pool. Does not create Amplify Hosting. Optionally attaches
+  a managed policy to an existing Amplify SSR compute role.
 
 Parameters:
   TableName:
@@ -24,6 +25,22 @@ Parameters:
     Default: rate(6 hours)
     AllowedPattern: ^(rate\(.+\)|cron\(.+\))$
     Description: EventBridge schedule. rate(6 hours) keeps filings within hours.
+  UsersTableName:
+    Type: String
+    Default: candate-voter-users
+    AllowedPattern: "[a-zA-Z0-9_.-]{3,255}"
+    Description: DynamoDB table for follows and alert preferences. Not the filings table.
+  AmplifyComputeRoleName:
+    Type: String
+    Default: ""
+    AllowedPattern: "^$|[A-Za-z0-9+=,.@_-]{1,64}"
+    Description: >
+      Optional name of the existing Amplify SSR compute role. When set, the
+      candate-voter-amplify-compute policy is attached to it. Leave empty to
+      create the policy and attach it in the Amplify console.
+
+Conditions:
+  AttachAmplifyPolicy: !Not [!Equals [!Ref AmplifyComputeRoleName, ""]]
 
 Resources:
   VoterTable:
@@ -124,6 +141,138 @@ Resources:
         Minify: false
         Sourcemap: true
 
+  UsersTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: !Ref UsersTableName
+      BillingMode: PAY_PER_REQUEST
+      DeletionProtectionEnabled: false
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      AttributeDefinitions:
+        - AttributeName: pk
+          AttributeType: S
+        - AttributeName: sk
+          AttributeType: S
+      KeySchema:
+        - AttributeName: pk
+          KeyType: HASH
+        - AttributeName: sk
+          KeyType: RANGE
+      Tags:
+        - Key: Project
+          Value: candate
+        - Key: Component
+          Value: accounts
+
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      UserPoolName: candate-voter
+      UsernameAttributes:
+        - email
+      AutoVerifiedAttributes:
+        - email
+      UsernameConfiguration:
+        CaseSensitive: false
+      MfaConfiguration: "OFF"
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: false
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 12
+          RequireLowercase: true
+          RequireUppercase: true
+          RequireNumbers: true
+          RequireSymbols: false
+      AccountRecoverySetting:
+        RecoveryMechanisms:
+          - Name: verified_email
+            Priority: 1
+      UserPoolTags:
+        Project: candate
+        Component: accounts
+
+  UserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: candate-voter-web
+      UserPoolId: !Ref UserPool
+      GenerateSecret: false
+      PreventUserExistenceErrors: ENABLED
+      ExplicitAuthFlows:
+        - ALLOW_USER_PASSWORD_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+        - ALLOW_USER_SRP_AUTH
+      SupportedIdentityProviders:
+        - COGNITO
+      AllowedOAuthFlowsUserPoolClient: true
+      AllowedOAuthFlows:
+        - code
+      AllowedOAuthScopes:
+        - email
+        - openid
+      CallbackURLs:
+        - https://voter.naijei.com/sign-in
+        - http://localhost:3000/sign-in
+      LogoutURLs:
+        - https://voter.naijei.com/
+        - http://localhost:3000/
+      IdTokenValidity: 1
+      AccessTokenValidity: 1
+      RefreshTokenValidity: 30
+      TokenValidityUnits:
+        IdToken: hours
+        AccessToken: hours
+        RefreshToken: days
+
+  AmplifyComputePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: candate-voter-amplify-compute
+      Description: >
+        Amplify SSR access for candate-voter-users and correction reports.
+        Does not grant DeleteItem on the filings table.
+      Roles: !If
+        - AttachAmplifyPolicy
+        - - !Ref AmplifyComputeRoleName
+        - !Ref AWS::NoValue
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: UsersTableReadWrite
+            Effect: Allow
+            Action:
+              - dynamodb:GetItem
+              - dynamodb:PutItem
+              - dynamodb:UpdateItem
+              - dynamodb:DeleteItem
+              - dynamodb:Query
+            Resource: !GetAtt UsersTable.Arn
+          - Sid: SaveCorrections
+            Effect: Allow
+            Action:
+              - dynamodb:PutItem
+              - dynamodb:UpdateItem
+            Resource: !GetAtt VoterTable.Arn
+            Condition:
+              ForAllValues:StringLike:
+                dynamodb:LeadingKeys:
+                  - "CORRECTION#*"
+          - Sid: ListCorrections
+            Effect: Allow
+            Action:
+              - dynamodb:Query
+            Resource: !Sub "${VoterTable.Arn}/index/gsi1"
+            Condition:
+              ForAllValues:StringEquals:
+                dynamodb:LeadingKeys:
+                  - CORRECTIONS
+
 Outputs:
   TableName:
     Description: DynamoDB table. Set this as CANDATE_TABLE_NAME.
@@ -138,3 +287,15 @@ Outputs:
     Value: !GetAtt FecIngestFunction.Arn
   LogGroupName:
     Value: !Ref FecIngestLogGroup
+  UsersTableName:
+    Description: Set this as CANDATE_USERS_TABLE on Amplify.
+    Value: !Ref UsersTable
+  UserPoolId:
+    Description: Set this as COGNITO_USER_POOL_ID on Amplify.
+    Value: !Ref UserPool
+  UserPoolClientId:
+    Description: Public app client id. Set this as COGNITO_CLIENT_ID. There is no client secret.
+    Value: !Ref UserPoolClient
+  AmplifyComputePolicyArn:
+    Description: Attach to the Amplify SSR compute role when AmplifyComputeRoleName was left empty.
+    Value: !Ref AmplifyComputePolicy

@@ -1,5 +1,8 @@
 import Link from "next/link";
 import { brand } from "@/content/brand";
+import { isAdminEmail } from "@/lib/auth/admin";
+import { signOutAction } from "@/lib/auth/actions";
+import { currentUser } from "@/lib/auth/session";
 
 const PRIMARY = [
   { href: "/#find", label: "Find My Races" },
@@ -11,10 +14,10 @@ const MORE = [
   { href: "/polls", label: "Polls and Analysis" },
   { href: "/finance", label: "Campaign Finance" },
   { href: "/about", label: "About Us" },
-  { href: "/account", label: "Saved races and alerts" },
 ] as const;
 
-export function SiteHeader() {
+export async function SiteHeader() {
+  const user = await currentUser();
   return (
     <header className="site-header">
       <div className="nav-bar">
@@ -38,9 +41,22 @@ export function SiteHeader() {
             </div>
           </details>
         </nav>
-        <Link href="/sign-in" className="btn btn-cta">
-          Sign in
-        </Link>
+        {user ? (
+          <details className="account-menu">
+            <summary>{user.email}</summary>
+            <div>
+              <Link href="/account">Saved races and alerts</Link>
+              {isAdminEmail(user.email) ? <Link href="/admin/corrections">Review queue</Link> : null}
+              <form action={signOutAction}>
+                <button type="submit">Sign out</button>
+              </form>
+            </div>
+          </details>
+        ) : (
+          <Link href="/sign-in" className="btn btn-cta">
+            Sign in
+          </Link>
+        )}
         <details className="nav-mobile">
           <summary>Menu</summary>
           <div>
@@ -54,6 +70,7 @@ export function SiteHeader() {
                 {item.label}
               </Link>
             ))}
+            {user ? <Link href="/account">Saved races and alerts</Link> : null}
           </div>
         </details>
       </div>

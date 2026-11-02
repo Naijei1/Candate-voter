@@ -20,6 +20,10 @@ export const AMPLIFY_SERVER_ENV_KEYS = Object.freeze([
   "CANDATE_CHAT_RATE_WINDOW_SECONDS",
   "BEDROCK_MODEL_ID",
   "BEDROCK_SONNET_MODEL_ID",
+  "CANDATE_USERS_TABLE",
+  "COGNITO_USER_POOL_ID",
+  "COGNITO_CLIENT_ID",
+  "ADMIN_EMAILS",
 ]);
 
 /** Prefix copied in addition to the named keys. `FEC_API_KEY` does not match. */
