@@ -55,7 +55,7 @@ export function DistrictMap({
     const controller = new AbortController();
     (async () => {
       try {
-        const response = await fetch(withBasePath(`/geo/cd119/${postal}.json`), {
+        const response = await fetch(withBasePath(`/geo/cd120/${postal}.json`), {
           signal: controller.signal,
         });
         if (!response.ok) throw new Error("missing");

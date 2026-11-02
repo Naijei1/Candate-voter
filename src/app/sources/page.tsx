@@ -8,7 +8,7 @@ const ROWS = [
   ["FEC Form 2 name, party, filing", "Working", "OpenFEC, about every 6 hours."],
   ["House and Senate contest list", "Working", "Even-year structure plus stored filings."],
   ["ZIP to House district", "Limited", "Census. Not a full ballot."],
-  ["District shapes", "Limited", "119th Congress file. ZIP uses the 120th layer."],
+  ["District shapes and ZIP", "Working", "Both use Census 120th districts, January 1, 2026."],
   ["Ballot qualification", "Planned", "A filing is not a place on the ballot."],
   ["State, county, city, judicial, school", "Not covered", "No source connected."],
   ["Ballot measures", "Sample", "Layout only."],

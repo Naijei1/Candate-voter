@@ -3,9 +3,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { DataRefreshedBanner } from "@/components/DataRefreshedBanner";
 import { MultiFilingDetails } from "@/components/MultiFilingDetails";
-import { AiPrototype } from "@/components/site/AiPrototype";
+import { AskPanel } from "@/components/site/AskPanel";
 import { Crumbs } from "@/components/site/Crumbs";
 import { FollowControl } from "@/components/site/FollowControl";
+import { askExamples } from "@/lib/site/ask-examples";
 import { personFilingNote } from "@/lib/data/filing-note";
 import { generalElectionLabel } from "@/lib/copy";
 import { httpsUrl, partyCue } from "@/lib/format";
@@ -49,7 +50,7 @@ export default async function RacePage({ params }: PageProps) {
         {sourceHref ? (
           <>
             {" · "}
-            <a href={sourceHref}>Source</a>
+            <a href={sourceHref}>FEC filing</a>
           </>
         ) : null}
       </p>
@@ -60,6 +61,7 @@ export default async function RacePage({ params }: PageProps) {
         </p>
       )}
 
+      <div className="race-layout">
       <section aria-labelledby="candidates-heading">
         <h2 id="candidates-heading" className="sr-only">
           Candidates
@@ -88,11 +90,15 @@ export default async function RacePage({ params }: PageProps) {
           <FollowControl what="race" />
         </div>
       </section>
-
-      <details className="fold">
-        <summary>Ask about this race</summary>
-        <AiPrototype />
-      </details>
+      <AskPanel
+        examples={askExamples(
+          loaded.candidates.map((candidate) => ({
+            url: candidate.sourceUrl,
+            updatedAt: candidate.updatedAt,
+          })),
+        )}
+      />
+      </div>
     </article>
   );
 }

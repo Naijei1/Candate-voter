@@ -1,8 +1,10 @@
 import Link from "next/link";
+import { StatusMark } from "@/components/site/StatusMark";
 
 const LINKS = [
   { href: "/sources", label: "About this data" },
   { href: "/about", label: "About Us" },
+  { href: "/contact#corrections", label: "Feedback and corrections" },
   { href: "/contact", label: "Contact" },
   { href: "/accessibility", label: "Accessibility" },
   { href: "/privacy", label: "Privacy" },
@@ -21,6 +23,9 @@ export function SiteFooter() {
           ))}
         </nav>
         <p>This site does not endorse candidates.</p>
+        <p>
+          <StatusMark kind="awaiting" /> Independence, ownership, funding, and affiliations.
+        </p>
       </div>
     </footer>
   );

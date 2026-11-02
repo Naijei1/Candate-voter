@@ -275,6 +275,33 @@ a.contest-link h2 {
   font-size: 1.15rem;
 }
 
+.text-xs {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+.ask-desktop {
+  display: block;
+}
+
+.ask-mobile {
+  display: none;
+}
+
+.ask-sheet {
+  position: fixed;
+  z-index: 60;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  max-height: min(80dvh, 36rem);
+  overflow: auto;
+  padding: 1rem 1rem calc(1rem + env(safe-area-inset-bottom));
+  background: #fff;
+  border-top: 1px solid var(--color-line);
+  box-shadow: 0 -8px 24px rgb(20 43 73 / 12%);
+}
+
 .sr-only {
   position: absolute;
   width: 1px;
@@ -325,7 +352,7 @@ a.contest-link h2 {
   background: #fff;
   border: 1px solid var(--color-cta);
   color: var(--color-cta);
-  font-size: 0.78rem;
+  font-size: 0.875rem;
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -707,7 +734,16 @@ td {
   }
 
   .compare-grid,
-  .race-layout {
+  .race-layout,
+  .hero-grid {
     grid-template-columns: 1fr;
+  }
+
+  .ask-desktop {
+    display: none;
+  }
+
+  .ask-mobile {
+    display: block;
   }
 }

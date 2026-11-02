@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { AiPrototype } from "@/components/site/AiPrototype";
+import { AskPanel } from "@/components/site/AskPanel";
 import { CompareBoard } from "@/components/site/CompareBoard";
 import { Crumbs } from "@/components/site/Crumbs";
+import { askExamples } from "@/lib/site/ask-examples";
 import { stateName } from "@/lib/data/states";
 import { loadContest } from "@/lib/site/contest";
 import type { Race } from "@/lib/types";
@@ -42,18 +43,25 @@ export default async function ComparePage({ params }: PageProps) {
           Names could not be loaded. <Link href="/sources">About this data</Link>
         </p>
       )}
-      <CompareBoard
-        raceHref={`/races/${race.raceId}`}
-        candidates={loaded.candidates.map((candidate) => ({
-          candidateId: candidate.candidateId,
-          displayName: candidate.displayName,
-          partyLabel: candidate.partyLabel,
-        }))}
-      />
-      <details className="fold">
-        <summary>Ask about this race</summary>
-        <AiPrototype />
-      </details>
+      <div className="race-layout">
+        <CompareBoard
+          raceHref={`/races/${race.raceId}`}
+          candidates={loaded.candidates.map((candidate) => ({
+            candidateId: candidate.candidateId,
+            displayName: candidate.displayName,
+            partyLabel: candidate.partyLabel,
+          }))}
+          filingsLoaded={loaded.filingsLoaded}
+        />
+        <AskPanel
+          examples={askExamples(
+            loaded.candidates.map((candidate) => ({
+              url: candidate.sourceUrl,
+              updatedAt: candidate.updatedAt,
+            })),
+          )}
+        />
+      </div>
     </article>
   );
 }

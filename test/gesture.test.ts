@@ -69,6 +69,7 @@ test("explore and district maps still use the pan gesture", () => {
   assert.match(national, /preserveAspectRatio="xMidYMin meet"/);
   assert.match(explore, /StateExplore/);
   assert.match(sources, /DistrictVintageNote/);
-  assert.match(note, /CD119_CONGRESS/);
   assert.match(note, /120th/);
+  assert.match(note, /ZIP lookup/);
+  assert.equal(/119th/.test(note), false);
 });
