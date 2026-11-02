@@ -141,6 +141,67 @@ Resources:
         Minify: false
         Sourcemap: true
 
+  FecTotalsLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /aws/lambda/candate-voter-fec-totals
+      RetentionInDays: 30
+
+  FecTotalsFunction:
+    Type: AWS::Serverless::Function
+    DependsOn: FecTotalsLogGroup
+    Properties:
+      FunctionName: candate-voter-fec-totals
+      Description: >
+        Upsert OpenFEC candidate totals, committee report periods, and
+        Schedule E aggregates. Does not itemize Schedule A or Schedule E lines.
+      CodeUri: ../
+      Handler: workers/fec-totals/app.handler
+      Runtime: nodejs22.x
+      Architectures:
+        - arm64
+      Timeout: 900
+      MemorySize: 512
+      LoggingConfig:
+        LogGroup: !Ref FecTotalsLogGroup
+      Environment:
+        Variables:
+          CANDATE_TABLE_NAME: !Ref TableName
+          FEC_API_KEY: !Ref FecApiKey
+          FEC_API_BASE_URL: https://api.open.fec.gov/v1
+          FEC_MIN_DELAY_MS: "250"
+      Policies:
+        - Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Action:
+                - dynamodb:GetItem
+                - dynamodb:UpdateItem
+                - dynamodb:Query
+              Resource:
+                - !GetAtt VoterTable.Arn
+                - !Sub "${VoterTable.Arn}/index/gsi1"
+      Events:
+        EverySixHours:
+          Type: Schedule
+          Properties:
+            Schedule: !Ref ScheduleExpression
+            Description: Refresh FEC totals and Schedule E aggregates.
+            Enabled: true
+      Tags:
+        Project: candate
+        Component: voter-data
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        EntryPoints:
+          - workers/fec-totals/app.ts
+        Target: es2022
+        Format: cjs
+        Platform: node
+        Minify: false
+        Sourcemap: true
+
   UsersTable:
     Type: AWS::DynamoDB::Table
     DeletionPolicy: Retain
@@ -234,7 +295,7 @@ Resources:
     Type: AWS::IAM::ManagedPolicy
     Properties:
       ManagedPolicyName: candate-voter-amplify-compute
-      Description: >
+      Description: >-
         Amplify SSR access for candate-voter-users and correction reports.
         Does not grant DeleteItem on the filings table.
       Roles: !If
@@ -285,6 +346,9 @@ Outputs:
     Value: !Ref FecIngestFunction
   IngestFunctionArn:
     Value: !GetAtt FecIngestFunction.Arn
+  TotalsFunctionName:
+    Description: Scheduled FEC totals and Schedule E aggregate function.
+    Value: !Ref FecTotalsFunction
   LogGroupName:
     Value: !Ref FecIngestLogGroup
   UsersTableName:

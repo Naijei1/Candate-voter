@@ -111,7 +111,7 @@ export class FecClient {
 
   async getForm2Page(query: FecForm2Query): Promise<FecForm2Page> {
     const url = this.buildForm2Url(query);
-    return this.fetchJson(url);
+    return (await this.fetchJson(url)) as FecForm2Page;
   }
 
   buildForm2Url(query: FecForm2Query): URL {
@@ -134,7 +134,70 @@ export class FecClient {
     return url;
   }
 
-  private async fetchJson(url: URL): Promise<FecForm2Page> {
+  async getCandidateTotals(candidateId: string, cycle: number): Promise<Record<string, unknown> | null> {
+    const url = this.endpoint(`/candidate/${encodeURIComponent(candidateId)}/totals/`, {
+      cycle: String(cycle),
+    });
+    const results = await this.getResults(url);
+    return results[0] ?? null;
+  }
+
+  async getCandidateCommittees(candidateId: string, cycle: number): Promise<Record<string, unknown>[]> {
+    const url = this.endpoint(`/candidate/${encodeURIComponent(candidateId)}/committees/`, {
+      cycle: String(cycle),
+      per_page: "20",
+    });
+    return this.getResults(url);
+  }
+
+  async getScheduleEByCandidate(candidateId: string, cycle: number): Promise<Record<string, unknown>[]> {
+    const url = this.endpoint("/schedules/schedule_e/by_candidate/", {
+      candidate_id: candidateId,
+      cycle: String(cycle),
+      per_page: "100",
+    });
+    return this.getResults(url);
+  }
+
+  async *iterateCommitteeReports(
+    committeeId: string,
+    cycle: number,
+    maxPages = 5,
+  ): AsyncGenerator<Record<string, unknown>[]> {
+    const cap = Math.min(Math.max(maxPages, 1), 5);
+    for (let page = 1; page <= cap; page += 1) {
+      const url = this.endpoint(`/committee/${encodeURIComponent(committeeId)}/reports/`, {
+        cycle: String(cycle),
+        per_page: "100",
+        page: String(page),
+        sort: "-coverage_end_date",
+      });
+      const body = await this.fetchJson(url);
+      const results = asRecords(body.results);
+      if (results.length === 0) return;
+      yield results;
+      const pages = typeof body.pagination?.pages === "number" ? body.pagination.pages : page;
+      if (page >= pages) return;
+      if (this.minDelayMs > 0) await this.sleepImpl(this.minDelayMs);
+    }
+  }
+
+  private endpoint(path: string, params: Record<string, string>): URL {
+    const url = new URL(`${this.baseUrl}${path}`);
+    url.searchParams.set("api_key", this.apiKey);
+    for (const [key, value] of Object.entries(params)) url.searchParams.set(key, value);
+    return url;
+  }
+
+  private async getResults(url: URL): Promise<Record<string, unknown>[]> {
+    const body = await this.fetchJson(url);
+    return asRecords(body.results);
+  }
+
+  private async fetchJson(url: URL): Promise<{
+    results?: unknown[];
+    pagination?: { pages?: number };
+  }> {
     const path = `${url.pathname}${redactQuery(url)}`;
 
     for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt += 1) {
@@ -159,7 +222,7 @@ export class FecClient {
       }
 
       if (response.ok) {
-        return (await response.json()) as FecForm2Page;
+        return (await response.json()) as { results?: unknown[]; pagination?: { pages?: number } };
       }
 
       const detail = await readErrorDetail(response);
@@ -256,6 +319,11 @@ function retryAfterMs(header: string | null, now: number): number | null {
   const date = Date.parse(header);
   if (Number.isFinite(date)) return Math.max(0, date - now);
   return null;
+}
+
+function asRecords(value: unknown): Record<string, unknown>[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((item): item is Record<string, unknown> => !!item && typeof item === "object" && !Array.isArray(item));
 }
 
 function delay(ms: number): Promise<void> {

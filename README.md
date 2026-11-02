@@ -36,7 +36,7 @@ Package manager is npm. Commit `package-lock.json`. Amplify runs `npm ci`.
 | `/races/[raceId]/compare` | Same-field comparison. |
 | `/candidates`, `/candidates/[candidateId]` | Filer directory entry and one profile. Officeholders are `/officeholders` and are not loaded. |
 | `/measures/example-kentucky` | Sample ballot-measure layout. |
-| `/news`, `/polls`, `/finance` | Framework pages. Finance includes `/finance/committees/example-pac`. |
+| `/news`, `/polls`, `/finance` | News and polls stay sample. `/finance` lists FEC committee totals and Schedule E aggregates. Committee pages are `/finance/committees/[committeeId]`. |
 | `/about`, `/sources`, `/contact`, `/accessibility`, `/privacy`, `/terms` | Credibility and legal shells. |
 | `/sign-in`, `/account` | Email sign-in and saved follows. Email delivery is planned. |
 | `/admin/corrections` | Review queue. Visible when the signed-in email is in `ADMIN_EMAILS`. |
@@ -320,12 +320,12 @@ Build image Node is 22 (`nvm install 22` in `amplify.yml`, `.nvmrc`). Amplify bl
 
 ### Environment variables
 
-Branch environment variables are available to the build shell. WEB_COMPUTE does not pass them into the Next.js server. Before `next build`, `amplify.yml` replaces `.env.production` using `scripts/write-amplify-server-env.mjs`. That is the only writer. It records `CANDATE_TABLE_NAME`, `CANDATE_API_KEY`, `CANDATE_CYCLES`, `AWS_REGION`, the chat settings listed under [Browser chat](#browser-chat), `CANDATE_USERS_TABLE`, `COGNITO_USER_POOL_ID`, `COGNITO_CLIENT_ID`, `ADMIN_EMAILS`, and `NEXT_PUBLIC_*` when they are set. It skips `FEC_API_KEY`. Next.js loads `.env.production` when it serves traffic. An empty `CANDATE_TABLE_NAME` selects `candate-voter`. An empty `AWS_REGION` selects `us-east-1` in the repository client. `/api/v1` returns 401 until `CANDATE_API_KEY` is set. Changing one of these values requires a new deploy. Do not commit `.env.production`. Values in that file are readable by anyone who can read the deployment artifact.
+Branch environment variables are available to the build shell. WEB_COMPUTE does not pass them into the Next.js server. Before `next build`, `amplify.yml` replaces `.env.production` using `scripts/write-amplify-server-env.mjs`. That is the only writer. It records `CANDATE_TABLE_NAME`, `CANDATE_API_KEY`, `CANDATE_CYCLES`, `AWS_REGION`, the chat settings listed under [Browser chat](#browser-chat), `CANDATE_USERS_TABLE`, `COGNITO_USER_POOL_ID`, `COGNITO_CLIENT_ID`, `ADMIN_EMAILS`, and `NEXT_PUBLIC_*` when they are set. It skips `FEC_API_KEY`. Next.js loads `.env.production` when it serves traffic. An empty `CANDATE_TABLE_NAME` selects `candate-voter`. Do not set `AWS_REGION` on Amplify: the console rejects environment names that start with `AWS_`. The server falls back to `us-east-1`. `/api/v1` returns 401 until `CANDATE_API_KEY` is set. Changing one of these values requires a new deploy. Do not commit `.env.production`. Values in that file are readable by anyone who can read the deployment artifact.
 
 | Name | MVP value |
 | --- | --- |
 | `NEXT_PUBLIC_BASE_PATH` | Leave unset or empty. |
-| `AWS_REGION` | Optional. `us-east-1` when unset. Copied into `.env.production` when set. |
+| `AWS_REGION` | Do not set this on Amplify. Names starting with `AWS_` are rejected. Unset uses `us-east-1`. |
 | `CANDATE_TABLE_NAME` | Optional. `candate-voter` when unset. Copied into `.env.production` when set. |
 | `CANDATE_CYCLES` | Optional. Comma-separated election years for the home index and for `GET /api/v1/races` when `cycle` is omitted. When unset, the query uses the previous UTC year through six years ahead. |
 | `CANDATE_API_KEY` | Long random secret for `/api/v1`. HTML pages and `/api/chat` do not use it. |
@@ -341,20 +341,27 @@ Branch environment variables are available to the build shell. WEB_COMPUTE does 
 | `COGNITO_CLIENT_ID` | Public app client id from `UserPoolClientId`. No client secret. |
 | `ADMIN_EMAILS` | Optional comma-separated emails allowed to open `/admin/corrections`. |
 
-`FEC_API_KEY` stays on the ingest Lambda (or the shell that runs `npm run ingest`). The site does not call OpenFEC. Do not set `FEC_API_KEY` on the Amplify app.
+`FEC_API_KEY` stays on the ingest Lambdas (or the shell that runs `npm run ingest`). The site does not call OpenFEC. Do not set `FEC_API_KEY` on the Amplify app.
+
+### FEC totals
+
+`candate-voter-fec-totals` reads candidate ids already stored by the Form 2 ingest and writes cycle totals, current committee-report periods, and Schedule E `by_candidate` aggregates into `candate-voter`. The cursor is `INGEST#FEC_TOTALS`. Schedule A itemized donors and raw Schedule E lines are not stored. Direct receipts are not added to outside spending.
+
+Phase 2 is already deployed. The Amplify compute role is `candate-voter-amplify-compute`. Pass that name so this update keeps the managed policy attached. `FecApiKey` stays the value already stored on the stack. Do not pass the key on the command line. Do not add an Amplify variable named `AWS_REGION`.
+
+```bash
+cd infra
+sam build
+sam deploy --parameter-overrides AmplifyComputeRoleName=candate-voter-amplify-compute
+```
+
+The new function `candate-voter-fec-totals` uses the same `FecApiKey`. Amplify needs no new variable for the job. Redeploy the site so the pages read the new rows. The server uses `us-east-1` when `AWS_REGION` is unset.
 
 ### Make accounts live
 
-From `infra/`, with the same AWS account that owns stack `candate-voter-data`:
+Phase 2 is deployed. The Amplify compute role is `candate-voter-amplify-compute`. Keep that name on later stack updates so the managed policy stays attached. `samconfig.toml` sets stack `candate-voter-data`, region `us-east-1`, and `CAPABILITY_IAM CAPABILITY_NAMED_IAM`.
 
-```bash
-sam build
-sam deploy --parameter-overrides AmplifyComputeRoleName=AMPLIFY_SSR_COMPUTE_ROLE_NAME
-```
-
-`samconfig.toml` already sets stack `candate-voter-data`, region `us-east-1`, and `CAPABILITY_IAM CAPABILITY_NAMED_IAM`. Leave `FecApiKey` as the value already stored on the stack. Omit `AmplifyComputeRoleName` to create the managed policy without attaching it.
-
-The role name is the Amplify SSR compute role (App settings → IAM roles), not the build role. Do not remove that role’s existing `GetItem` and `Query` policy on `candate-voter`.
+The role is the Amplify SSR compute role, not the build role. Do not remove its existing `GetItem` and `Query` policy on `candate-voter`.
 
 If the parameter was empty, attach the output `AmplifyComputePolicyArn` (`candate-voter-amplify-compute`) to that role. The policy allows read/write on `candate-voter-users`, including `DeleteItem` so a follow can be removed, and `dynamodb:PutItem` / `dynamodb:UpdateItem` on `candate-voter` only when the partition key matches `CORRECTION#*`. Listing reports is `dynamodb:Query` on `gsi1` limited to partition `CORRECTIONS`.
 
@@ -365,8 +372,9 @@ Then set these Amplify branch environment variables and redeploy so `scripts/wri
 | `COGNITO_USER_POOL_ID` | Stack output `UserPoolId` |
 | `COGNITO_CLIENT_ID` | Stack output `UserPoolClientId` |
 | `CANDATE_USERS_TABLE` | Stack output `UsersTableName` (`candate-voter-users`) |
-| `AWS_REGION` | `us-east-1` |
 | `ADMIN_EMAILS` | Comma-separated reviewer emails |
+
+Do not set `AWS_REGION` in Amplify. The console rejects names that start with `AWS_`. DynamoDB and Cognito calls use `us-east-1` when it is unset.
 
 Cognito sends its own verification code with the pool’s default email (a low daily quota). Google sign-in is not in the template. Alert email stays labeled planned until SES is configured. There is no client secret and no `FEC_API_KEY` on Amplify.
 

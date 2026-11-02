@@ -10,6 +10,11 @@ const CATEGORY_LABEL: Record<(typeof ALERT_CATEGORIES)[number], string> = {
   polls: "Polls",
   debates: "Debates",
   deadlines: "Deadlines",
+  "finance-receipts": "Receipts",
+  "finance-disbursements": "Disbursements",
+  "finance-cash": "Cash on hand",
+  "finance-debts": "Debts",
+  "finance-outside": "Outside spending",
 };
 
 const FOLLOW_LABEL = {
