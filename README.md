@@ -35,7 +35,7 @@ Package manager is npm. Commit `package-lock.json`. Amplify runs `npm ci`.
 | `/races/[raceId]` | Race, stored Form 2 names, follow preview, prototype Ask panel. |
 | `/races/[raceId]/compare` | Same-field comparison. |
 | `/candidates`, `/candidates/[candidateId]` | Filer directory entry and one profile. Officeholders are `/officeholders` and are not loaded. |
-| `/measures/example-kentucky` | Sample ballot-measure layout. |
+| `/measures` | Index of states and measure kinds. `/measures/ky` is the Kentucky template. `/measures/example-kentucky` stays a sample layout. |
 | `/news`, `/polls`, `/finance` | News and polls stay sample. `/finance` lists FEC committee totals and Schedule E aggregates. Committee pages are `/finance/committees/[committeeId]`. |
 | `/about`, `/sources`, `/contact`, `/accessibility`, `/privacy`, `/terms` | Credibility and legal shells. |
 | `/sign-in`, `/account` | Email sign-in and saved follows. Email delivery is planned. |

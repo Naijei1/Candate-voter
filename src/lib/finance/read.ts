@@ -52,13 +52,15 @@ export function fromOutsideItem(item: Record<string, unknown>): FinanceOutside |
 export function fromTotalsWatermark(item: Record<string, unknown>): TotalsWatermark | null {
   if (item.entityType !== "totalsWatermark" || item.source !== "fec-totals") return null;
   const status = item.lastStatus;
-  if (status !== "running" && status !== "success" && status !== "partial" && status !== "error") return null;
+  if (status !== "running" && status !== "success" && status !== "partial" && status !== "error" && status !== "rate_limited") return null;
   if (typeof item.updatedAt !== "string") return null;
   return {
     source: "fec-totals",
     lastRunAt: stringOrNull(item.lastRunAt),
     lastStatus: status,
     lastError: stringOrNull(item.lastError),
+    httpStatus: numberOrNull(item.httpStatus),
+    retryAfterMs: numberOrNull(item.retryAfterMs),
     candidatesSeen: numberOrZero(item.candidatesSeen),
     directUpserted: numberOrZero(item.directUpserted),
     periodsUpserted: numberOrZero(item.periodsUpserted),

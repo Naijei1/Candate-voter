@@ -42,8 +42,10 @@ export type TotalsWatermark = {
   source: "fec-totals";
   lastRunAt: string | null;
   /** `partial` means the next scheduled run should continue after the cursor. */
-  lastStatus: "running" | "success" | "partial" | "error";
+  lastStatus: "running" | "success" | "partial" | "error" | "rate_limited";
   lastError: string | null;
+  httpStatus: number | null;
+  retryAfterMs: number | null;
   candidatesSeen: number;
   directUpserted: number;
   periodsUpserted: number;
