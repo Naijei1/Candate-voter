@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { brand } from "@/content/brand";
 import { isAdminEmail } from "@/lib/auth/admin";
+import { loadSiteCopy } from "@/lib/content/store";
 import { signOutAction } from "@/lib/auth/actions";
 import { currentUser } from "@/lib/auth/session";
 
@@ -18,10 +19,12 @@ const MORE = [
 
 export async function SiteHeader() {
   const user = await currentUser();
+  const copy = await loadSiteCopy();
   return (
     <header className="site-header">
       <div className="nav-bar">
         <Link href="/" className="brand">
+          {copy.logoKey ? <img src="/media/logo" alt="" width={28} height={28} /> : null}
           {brand.name}
         </Link>
         <nav className="nav-desktop" aria-label="Primary">
@@ -46,7 +49,7 @@ export async function SiteHeader() {
             <summary>{user.email}</summary>
             <div>
               <Link href="/account">Saved races and alerts</Link>
-              {isAdminEmail(user.email) ? <Link href="/admin/corrections">Review queue</Link> : null}
+              {isAdminEmail(user.email) ? <Link href="/admin">Admin</Link> : null}
               <form action={signOutAction}>
                 <button type="submit">Sign out</button>
               </form>

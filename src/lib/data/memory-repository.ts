@@ -1,7 +1,7 @@
 import type { FinanceDirect, FinanceOutside, TotalsWatermark } from "../finance/model";
 import type { Candidate, Filing, IngestWatermark, Race } from "../types";
 import { raceMatchesCycle } from "./cycle-match";
-import type { CandidateUpsertResult, StoredCorrection, VoterRepository } from "./repository";
+import type { CandidateUpsertResult, CorrectionStatus, StoredCorrection, VoterRepository } from "./repository";
 
 /**
  * In-memory store with the same keys and monotonic candidate rule as DynamoDB.
@@ -83,7 +83,29 @@ export class MemoryVoterRepository implements VoterRepository {
   }
 
   async saveCorrection(correction: StoredCorrection): Promise<void> {
-    this.corrections.push(clone(correction));
+    this.corrections.push(
+      clone({
+        ...correction,
+        status: correction.status ?? "new",
+        statusLog:
+          correction.statusLog && correction.statusLog.length > 0
+            ? correction.statusLog
+            : [{ at: correction.createdAt, by: "public", status: "new" }],
+      }),
+    );
+  }
+
+  async updateCorrectionStatus(
+    correctionId: string,
+    status: CorrectionStatus,
+    actor: string,
+    at: string,
+  ): Promise<StoredCorrection | null> {
+    const current = this.corrections.find((item) => item.correctionId === correctionId);
+    if (!current) return null;
+    current.status = status;
+    current.statusLog = [...current.statusLog, { at, by: actor, status }].slice(-20);
+    return clone(current);
   }
 
   async upsertFinanceDirect(row: FinanceDirect): Promise<void> {

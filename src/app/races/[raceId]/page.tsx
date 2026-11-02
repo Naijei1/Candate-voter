@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { DataRefreshedBanner } from "@/components/DataRefreshedBanner";
 import { MultiFilingDetails } from "@/components/MultiFilingDetails";
 import { AskPanel } from "@/components/site/AskPanel";
+import { CheckHistory } from "@/components/site/CheckHistory";
 import { Crumbs } from "@/components/site/Crumbs";
 import { FollowControl } from "@/components/site/FollowControl";
 import { cardsForRace } from "@/lib/site/showcase";
@@ -11,6 +12,7 @@ import { personFilingNote } from "@/lib/data/filing-note";
 import { generalElectionLabel } from "@/lib/copy";
 import { httpsUrl } from "@/lib/format";
 import { stateName } from "@/lib/data/states";
+import { loadChecks } from "@/lib/content/store";
 import { loadContest } from "@/lib/site/contest";
 import type { Race } from "@/lib/types";
 
@@ -31,6 +33,7 @@ export default async function RacePage({ params }: PageProps) {
   const sourceHref = httpsUrl(race.sourceUrl);
   const roster = cardsForRace(race.raceId, loaded.candidates, loaded.filingsLoaded);
   const place = race.state ? stateName(race.state) : "States";
+  const checks = await loadChecks("race", race.raceId);
   const stateHref = race.state ? `/states/${race.state.toLowerCase()}` : "/states";
 
   return (
@@ -66,6 +69,7 @@ export default async function RacePage({ params }: PageProps) {
         </p>
       )}
 
+      <CheckHistory checks={checks} />
       <div className="race-layout">
       <section aria-labelledby="candidates-heading">
         <h2 id="candidates-heading" className="sr-only">

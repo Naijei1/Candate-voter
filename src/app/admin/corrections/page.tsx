@@ -1,58 +1,28 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { isAdminEmail } from "@/lib/auth/admin";
-import { currentUser } from "@/lib/auth/session";
+import { AdminDenied } from "@/components/admin/AdminDenied";
+import { ReviewList } from "@/components/admin/ReviewList";
+import { adminActor } from "@/lib/auth/guard";
 import { createDynamoRepository } from "@/lib/data/repository";
+import { currentUser } from "@/lib/auth/session";
 
 export const metadata: Metadata = { title: "Review queue" };
 export const dynamic = "force-dynamic";
 
 export default async function CorrectionsQueuePage() {
   const user = await currentUser();
-  if (!user) {
-    return (
-      <article className="wrap">
-        <h1>Review queue</h1>
-        <p>Sign in with an admin account to see reports.</p>
-        <p>
-          <Link className="btn btn-cta" href="/sign-in">
-            Sign in
-          </Link>
-        </p>
-      </article>
-    );
-  }
-  if (!isAdminEmail(user.email)) {
-    return (
-      <article className="wrap">
-        <h1>Review queue</h1>
-        <p>This list is limited to admin accounts.</p>
-      </article>
-    );
-  }
-
+  const admin = await adminActor();
+  if (!admin) return <AdminDenied title="Review queue" signedIn={!!user} />;
   try {
     const items = await createDynamoRepository().listCorrections(50);
     return (
       <article className="wrap">
+        <p>
+          <Link href="/admin">Admin</Link>
+        </p>
         <h1>Review queue</h1>
-        <p>Reports saved from race pages. They are not published.</p>
-        {items.length === 0 ? (
-          <p>No reports yet.</p>
-        ) : (
-          <ul className="plain-list">
-            {items.map((item) => (
-              <li key={item.correctionId}>
-                <p>{item.note}</p>
-                <p className="hint">
-                  {item.createdAt}
-                  {item.raceId ? ` · ${item.raceId}` : ""}
-                  {item.candidateId ? ` · ${item.candidateId}` : ""}
-                </p>
-              </li>
-            ))}
-          </ul>
-        )}
+        <p>new, reviewing, fixed, or rejected. Reports are not published on the race page.</p>
+        <ReviewList items={items} />
       </article>
     );
   } catch (error) {

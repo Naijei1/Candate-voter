@@ -78,6 +78,13 @@ a {
   min-height: 4.25rem;
 }
 
+.brand img {
+  width: 1.75rem;
+  height: 1.75rem;
+  margin-right: 0.45rem;
+  object-fit: cover;
+}
+
 .brand {
   font-weight: 700;
   font-size: 1.25rem;

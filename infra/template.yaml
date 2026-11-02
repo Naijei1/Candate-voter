@@ -291,13 +291,45 @@ Resources:
         AccessToken: hours
         RefreshToken: days
 
+  MediaBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BucketName: !Sub candate-voter-media-${AWS::AccountId}
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerEnforced
+      CorsConfiguration:
+        CorsRules:
+          - AllowedHeaders:
+              - "*"
+            AllowedMethods:
+              - PUT
+              - GET
+              - HEAD
+            AllowedOrigins:
+              - https://voter.naijei.com
+              - http://localhost:3000
+            MaxAge: 300
+      Tags:
+        - Key: Project
+          Value: candate
+        - Key: Component
+          Value: brand-media
+
   AmplifyComputePolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
       ManagedPolicyName: candate-voter-amplify-compute
       Description: >-
-        Amplify SSR access for candate-voter-users and correction reports.
-        Does not grant DeleteItem on the filings table.
+        Amplify SSR access for accounts, site copy, brand images, and correction review.
+        Does not grant DeleteItem on filing rows.
       Roles: !If
         - AttachAmplifyPolicy
         - - !Ref AmplifyComputeRoleName
@@ -317,13 +349,24 @@ Resources:
           - Sid: SaveCorrections
             Effect: Allow
             Action:
+              - dynamodb:GetItem
               - dynamodb:PutItem
               - dynamodb:UpdateItem
+              - dynamodb:Query
             Resource: !GetAtt VoterTable.Arn
             Condition:
               ForAllValues:StringLike:
                 dynamodb:LeadingKeys:
                   - "CORRECTION#*"
+                  - "CONTENT#*"
+                  - "CHECK#*"
+          - Sid: BrandMedia
+            Effect: Allow
+            Action:
+              - s3:GetObject
+              - s3:PutObject
+              - s3:DeleteObject
+            Resource: !Sub ${MediaBucket.Arn}/brand/*
           - Sid: ListCorrections
             Effect: Allow
             Action:
@@ -363,3 +406,6 @@ Outputs:
   AmplifyComputePolicyArn:
     Description: Attach to the Amplify SSR compute role when AmplifyComputeRoleName was left empty.
     Value: !Ref AmplifyComputePolicy
+  MediaBucketName:
+    Description: Set this as CANDATE_MEDIA_BUCKET on Amplify. Do not set AWS_REGION.
+    Value: !Ref MediaBucket

@@ -1,19 +1,19 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { StatusMark } from "@/components/site/StatusMark";
+import { CopyText } from "@/components/site/CopyText";
+import { loadSiteCopy } from "@/lib/content/store";
 
 export const metadata: Metadata = { title: "Contact" };
+export const dynamic = "force-dynamic";
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  const copy = await loadSiteCopy();
   return (
     <article className="wrap">
       <h1>Contact</h1>
-      <p>
-        <StatusMark kind="awaiting" />
-        A public email or form has not been approved. Please do not send personal data to this
-        site until a contact method is published.
-      </p>
+      <CopyText text={copy.contactMethod} />
       <h2 id="corrections">Feedback and corrections</h2>
+      <CopyText text={copy.correctionsPolicy} />
       <p>
         Race pages include a report control. A saved note is stored for review and is not
         published on the race page. <Link href="/sources">How records are sourced</Link>

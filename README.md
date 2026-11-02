@@ -357,6 +357,16 @@ sam deploy --parameter-overrides AmplifyComputeRoleName=candate-voter-amplify-co
 
 The new function `candate-voter-fec-totals` uses the same `FecApiKey`. Amplify needs no new variable for the job. Redeploy the site so the pages read the new rows. The server uses `us-east-1` when `AWS_REGION` is unset.
 
+### Brand images and site copy
+
+The same `sam deploy` creates private bucket `candate-voter-media-<account id>` and lets the compute role read and write only `brand/*`. Set one Amplify variable, then redeploy the site:
+
+| Name | Value |
+| --- | --- |
+| `CANDATE_MEDIA_BUCKET` | Stack output `MediaBucketName` |
+
+Do not set `AWS_REGION`. Copy, correction status, and last-checked notes use the existing `candate-voter` table under `CONTENT#` and `CHECK#` keys. `ADMIN_EMAILS` still gates `/admin`.
+
 ### Make accounts live
 
 Phase 2 is deployed. The Amplify compute role is `candate-voter-amplify-compute`. Keep that name on later stack updates so the managed policy stays attached. `samconfig.toml` sets stack `candate-voter-data`, region `us-east-1`, and `CAPABILITY_IAM CAPABILITY_NAMED_IAM`.

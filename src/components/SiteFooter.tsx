@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { StatusMark } from "@/components/site/StatusMark";
+import { CopyText } from "@/components/site/CopyText";
+import { loadSiteCopy } from "@/lib/content/store";
 
 const LINKS = [
   { href: "/sources", label: "About this data" },
@@ -11,7 +12,9 @@ const LINKS = [
   { href: "/terms", label: "Terms" },
 ] as const;
 
-export function SiteFooter() {
+export async function SiteFooter() {
+  const copy = await loadSiteCopy();
+  const detail = [copy.ownership, copy.funding, copy.affiliations].filter(Boolean).join(" ");
   return (
     <footer className="site-footer">
       <div className="site-footer-inner">
@@ -23,9 +26,7 @@ export function SiteFooter() {
           ))}
         </nav>
         <p>This site does not endorse candidates.</p>
-        <p>
-          <StatusMark kind="awaiting" /> Independence, ownership, funding, and affiliations.
-        </p>
+        {detail ? <p>{detail}</p> : <CopyText text={null} />}
       </div>
     </footer>
   );

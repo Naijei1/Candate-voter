@@ -60,11 +60,26 @@ export type VoterRepository = {
   saveCorrection(correction: StoredCorrection): Promise<void>;
   /** Newest first. Reads gsi1 partition `CORRECTIONS`. */
   listCorrections(limit?: number): Promise<StoredCorrection[]>;
+  updateCorrectionStatus(
+    correctionId: string,
+    status: CorrectionStatus,
+    actor: string,
+    at: string,
+  ): Promise<StoredCorrection | null>;
   upsertFinanceDirect(row: FinanceDirect): Promise<void>;
   upsertFinanceOutside(row: FinanceOutside): Promise<void>;
   listFinance(cycle: number): Promise<{ direct: FinanceDirect[]; outside: FinanceOutside[] }>;
   getTotalsWatermark(): Promise<TotalsWatermark | null>;
   saveTotalsWatermark(watermark: TotalsWatermark): Promise<void>;
+};
+
+export const CORRECTION_STATUSES = ["new", "reviewing", "fixed", "rejected"] as const;
+export type CorrectionStatus = (typeof CORRECTION_STATUSES)[number];
+
+export type CorrectionEvent = {
+  at: string;
+  by: string;
+  status: CorrectionStatus;
 };
 
 export type StoredCorrection = {
@@ -73,7 +88,14 @@ export type StoredCorrection = {
   candidateId: string | null;
   note: string;
   createdAt: string;
+  status: CorrectionStatus;
+  statusLog: CorrectionEvent[];
 };
+
+export function parseCorrectionStatus(value: unknown): CorrectionStatus {
+  if (value === "new" || value === "reviewing" || value === "fixed" || value === "rejected") return value;
+  return "new";
+}
 
 const CANDIDATE_MONOTONIC =
   "attribute_not_exists(#sourceLoadedAt) OR #sourceLoadedAt <= :sourceLoadedAt";
@@ -262,6 +284,11 @@ class DynamoVoterRepository implements VoterRepository {
       ...(correction.raceId ? { raceId: correction.raceId } : {}),
       ...(correction.candidateId ? { candidateId: correction.candidateId } : {}),
       note: correction.note,
+      status: correction.status ?? "new",
+      statusLog:
+        correction.statusLog && correction.statusLog.length > 0
+          ? correction.statusLog
+          : [{ at: correction.createdAt, by: "public", status: "new" satisfies CorrectionStatus }],
       [GSI1.partition]: CORRECTIONS_GSI_PK,
       [GSI1.sort]: correctionGsiSk(correction.createdAt, correction.correctionId),
       updatedAt: correction.createdAt,
@@ -289,6 +316,29 @@ class DynamoVoterRepository implements VoterRepository {
       const correction = record ? correctionFromItem(record) : null;
       return correction ? [correction] : [];
     });
+  }
+
+  async updateCorrectionStatus(
+    correctionId: string,
+    status: CorrectionStatus,
+    actor: string,
+    at: string,
+  ): Promise<StoredCorrection | null> {
+    const item = await this.get(
+      { pk: `${CORRECTION_PK_PREFIX}${correctionId}`, sk: ENTITY_META_SK },
+      { consistent: true },
+    );
+    const current = item ? correctionFromItem(item) : null;
+    if (!current) return null;
+    const statusLog = [...current.statusLog, { at, by: actor, status }].slice(-20);
+    await this.update({
+      pk: `${CORRECTION_PK_PREFIX}${correctionId}`,
+      sk: ENTITY_META_SK,
+      status,
+      statusLog,
+      updatedAt: at,
+    });
+    return { ...current, status, statusLog };
   }
 
   async upsertFinanceDirect(row: FinanceDirect): Promise<void> {
@@ -460,7 +510,20 @@ function correctionFromItem(item: Record<string, unknown>): StoredCorrection | n
     candidateId: typeof item.candidateId === "string" ? item.candidateId : null,
     note: item.note,
     createdAt,
+    status: parseCorrectionStatus(item.status),
+    statusLog: readStatusLog(item.statusLog, createdAt),
   };
+}
+
+function readStatusLog(value: unknown, createdAt: string): CorrectionEvent[] {
+  if (!Array.isArray(value)) return [{ at: createdAt, by: "public", status: "new" }];
+  const events = value.flatMap((entry) => {
+    if (!entry || typeof entry !== "object") return [];
+    const record = entry as Record<string, unknown>;
+    if (typeof record.at !== "string") return [];
+    return [{ at: record.at, by: typeof record.by === "string" ? record.by : "public", status: parseCorrectionStatus(record.status) }];
+  });
+  return events.length > 0 ? events : [{ at: createdAt, by: "public", status: "new" }];
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {

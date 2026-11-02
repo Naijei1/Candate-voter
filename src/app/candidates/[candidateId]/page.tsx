@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { CheckHistory } from "@/components/site/CheckHistory";
 import { Crumbs } from "@/components/site/Crumbs";
 import { DirectList, OutsideList } from "@/components/site/FinanceLists";
 import { FollowControl } from "@/components/site/FollowControl";
@@ -9,6 +10,7 @@ import { stateName } from "@/lib/data/states";
 import { formatInstant, httpsUrl, partyCue, partyLabel } from "@/lib/format";
 import { financeForCandidate, loadFinance } from "@/lib/finance/load";
 import { selectDirect, selectOutside } from "@/lib/finance/present";
+import { loadChecks } from "@/lib/content/store";
 import { loadProfile } from "@/lib/site/contest";
 import { showcaseCandidate, showcaseRace, type ShowcaseCandidate } from "@/lib/site/showcase";
 import type { Filing, Race } from "@/lib/types";
@@ -52,6 +54,7 @@ export default async function CandidatePage({ params }: PageProps) {
   const raceLabel = race ? shortRace(race) : snap ? "Senate" : "Race";
   const retrieved = showcaseRace()?.retrievedAt ?? null;
   const finance = financeForCandidate(await loadFinance(race?.cycle ?? 2026), id);
+  const checks = await loadChecks("candidate", id);
   const direct = selectDirect(finance.direct, null);
   const outside = selectOutside(finance.outside, null);
 
@@ -143,6 +146,8 @@ export default async function CandidatePage({ params }: PageProps) {
           <OutsideList rows={outside} />
         </>
       ) : null}
+
+      <CheckHistory checks={checks} />
 
       <h2>Not on file</h2>
       <p>
