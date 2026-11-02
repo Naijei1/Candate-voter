@@ -1,13 +1,12 @@
 import Link from "next/link";
 
 const LINKS = [
+  { href: "/sources", label: "About this data" },
+  { href: "/about", label: "About Us" },
   { href: "/contact", label: "Contact" },
-  { href: "/contact#corrections", label: "Feedback and corrections" },
-  { href: "/sources", label: "Sources and methodology" },
   { href: "/accessibility", label: "Accessibility" },
   { href: "/privacy", label: "Privacy" },
   { href: "/terms", label: "Terms" },
-  { href: "/about", label: "About Us" },
 ] as const;
 
 export function SiteFooter() {
@@ -21,10 +20,7 @@ export function SiteFooter() {
             </Link>
           ))}
         </nav>
-        <p>
-          This site does not endorse candidates or tell you how to vote. Ownership, funding,
-          and affiliations: awaiting approved copy.
-        </p>
+        <p>This site does not endorse candidates.</p>
       </div>
     </footer>
   );

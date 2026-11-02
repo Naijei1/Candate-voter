@@ -1,35 +1,30 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { SAMPLE_PAC } from "@/content/pilot";
 import { StatusMark } from "@/components/site/StatusMark";
 
-export const metadata: Metadata = { title: "Campaign Finance" };
+export const metadata: Metadata = { title: "Campaign finance" };
 
 export default function FinancePage() {
   return (
     <article className="wrap">
       <h1>Campaign finance</h1>
-      <p>
-        Live receipts, spending, and cash on hand are not connected. Form 2 filings are statements
-        of candidacy, not fundraising totals. Amounts below are a layout sample and are not anyone’s
-        money.
+      <p className="lede">
+        <StatusMark kind="sample" /> Not loaded from filings.
       </p>
-      <section className="card">
-        <h2>Direct contributions</h2>
-        <p>
-          <StatusMark kind="sample" />
-          {SAMPLE_PAC.direct}
-        </p>
-      </section>
-      <section className="card">
-        <h2>Outside spending</h2>
-        <p>
-          <StatusMark kind="sample" />
-          {SAMPLE_PAC.outside}
-        </p>
-      </section>
+      <div className="card-grid">
+        <section className="card">
+          <h2>Direct contributions</h2>
+          <p>Money given to a campaign.</p>
+        </section>
+        <section className="card">
+          <h2>Outside spending</h2>
+          <p>Money spent about a candidate, not given to them.</p>
+        </section>
+      </div>
       <p>
-        <Link href={SAMPLE_PAC.path}>Open the sample PAC profile</Link>
+        <Link className="btn btn-navy" href="/finance/committees/example-pac">
+          Sample PAC
+        </Link>
       </p>
     </article>
   );

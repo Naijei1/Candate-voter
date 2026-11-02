@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
-import { SAMPLE_MEASURE } from "@/content/pilot";
+import Link from "next/link";
+import { Crumbs } from "@/components/site/Crumbs";
 import { StatusMark } from "@/components/site/StatusMark";
+import { SAMPLE_MEASURE } from "@/content/pilot";
 
 export const metadata: Metadata = { title: SAMPLE_MEASURE.title };
 
@@ -8,44 +10,37 @@ export default function SampleMeasurePage() {
   const measure = SAMPLE_MEASURE;
   return (
     <article className="wrap">
+      <Crumbs
+        items={[
+          { href: "/", label: "Home" },
+          { href: "/states/ky", label: "Kentucky" },
+          { label: "Measure" },
+        ]}
+      />
       <p>
-        <StatusMark kind="sample" />
-        {measure.eyebrow}
+        <StatusMark kind="sample" /> {measure.eyebrow}
       </p>
       <h1>{measure.title}</h1>
-      <section>
-        <h2>Official title</h2>
-        <p>{measure.officialTitle}</p>
-      </section>
-      <section>
-        <h2>Plain English</h2>
-        <p>{measure.plain}</p>
-      </section>
-      <section>
-        <h2>What a yes vote means</h2>
-        <p>{measure.yes}</p>
-      </section>
-      <section>
-        <h2>What a no vote means</h2>
-        <p>{measure.no}</p>
-      </section>
-      <section>
-        <h2>Arguments</h2>
-        <h3>Supporters</h3>
-        <p>
-          <StatusMark kind="sample" />
-          {measure.support}
-        </p>
-        <h3>Opponents</h3>
-        <p>
-          <StatusMark kind="sample" />
-          {measure.oppose}
-        </p>
-      </section>
-      <section>
-        <h2>Fiscal estimate</h2>
-        <p>{measure.fiscal}</p>
-      </section>
+      <p className="lede">{measure.officialTitle}</p>
+      <p>{measure.plain}</p>
+      <div className="card-grid">
+        <section className="card">
+          <h2>Yes</h2>
+          <p>{measure.yes}</p>
+        </section>
+        <section className="card">
+          <h2>No</h2>
+          <p>{measure.no}</p>
+        </section>
+      </div>
+      <ul className="plain-list">
+        <li>Supporters: {measure.support}</li>
+        <li>Opponents: {measure.oppose}</li>
+        <li>Fiscal: {measure.fiscal}</li>
+      </ul>
+      <p>
+        <Link href="/states/ky">Back to Kentucky</Link>
+      </p>
     </article>
   );
 }

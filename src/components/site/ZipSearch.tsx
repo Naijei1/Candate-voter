@@ -38,23 +38,17 @@ export function ZipSearch() {
             placeholder="40502"
             value={zip}
             onChange={(event) => setZip(event.target.value)}
-            aria-describedby="zip-help"
           />
         </label>
         <button className="btn btn-cta" type="submit" disabled={pending}>
-          {pending ? "Looking up…" : "Find congressional districts"}
+          {pending ? "Looking up…" : "Find races"}
         </button>
       </div>
-      <p id="zip-help">
-        A ZIP can point to a congressional district. It is not a confirmed personal ballot.
-        State and local contests need a state, and sometimes an address, which this preview does
-        not store.
+      <p className="hint">
+        <StatusMark kind="preview" hint="A ZIP shows congressional districts, not a full ballot." />
+        Congressional districts only.
       </p>
-      {pending ? (
-        <p role="status" aria-busy="true">
-          Looking up congressional districts…
-        </p>
-      ) : null}
+      {pending ? <p role="status">Looking up…</p> : null}
       {result ? <ZipResult result={result} /> : null}
     </form>
   );
@@ -64,58 +58,43 @@ function ZipResult({ result }: { result: ZipLookupResult }) {
   if (!result.ok) {
     const message =
       result.reason === "not_found"
-        ? "No congressional district is published for that ZIP."
+        ? "No district for that ZIP."
         : result.reason === "timeout"
-          ? "The lookup did not finish in time."
+          ? "Lookup timed out."
           : result.reason === "bad_request"
-            ? (result.message ?? "Enter a 5-digit ZIP code.")
-            : "Congressional district lookup is unavailable.";
+            ? (result.message ?? "Enter a 5-digit ZIP.")
+            : "Lookup unavailable.";
     return (
-      <div className="notice notice-error" role="status">
-        <p>{message} Choose a state from the list below. Nothing was saved.</p>
-      </div>
+      <p className="notice notice-error" role="status">
+        {message} <Link href="/states">Choose a state</Link>
+      </p>
     );
   }
   const { payload } = result;
-  const place = payload.state ? stateName(payload.state) : "that area";
+  const place = payload.state ? stateName(payload.state) : "";
   return (
     <div className="notice" role="status">
       <p>
-        Congressional districts for ZIP {payload.zip}
-        {payload.state ? ` in ${place}` : ""}. This is not your full ballot.
-        {payload.districts.length > 1
-          ? " This ZIP touches more than one House district. Each one is listed."
-          : ""}
+        <StatusMark kind="preview" hint="Not a full personal ballot." />
+        {payload.zip}
+        {place ? ` · ${place}` : ""}
+        {payload.districts.length > 1 ? " · more than one district" : ""}
       </p>
-      <ul>
+      <ul className="result-links">
         {payload.senateRaceId ? (
           <li>
-            <Link href={`/races/${payload.senateRaceId}`}>U.S. Senate{payload.state ? `, ${place}` : ""}</Link>
+            <Link href={`/races/${payload.senateRaceId}`}>U.S. Senate</Link>
           </li>
         ) : null}
         {payload.districts.map((district) => (
           <li key={district.raceId}>
             <Link href={`/races/${district.raceId}`}>
-              U.S. House district {district.district === "00" ? "at large" : String(Number(district.district))}
+              House {district.district === "00" ? "at large" : Number(district.district)}
             </Link>
           </li>
         ))}
       </ul>
-      {payload.state ? (
-        <p>
-          <Link href={`/states/${payload.state.toLowerCase()}`}>Browse {place} contests</Link>
-        </p>
-      ) : null}
+      {payload.state ? <Link href={`/states/${payload.state.toLowerCase()}`}>All {place} contests</Link> : null}
     </div>
-  );
-}
-
-export function PreviewNote() {
-  return (
-    <p>
-      <StatusMark kind="preview" />
-      ZIP lookup uses the live congressional map when the service responds. It does not build a
-      personal ballot.
-    </p>
   );
 }

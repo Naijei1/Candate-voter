@@ -6,8 +6,7 @@
 export const brand = {
   name: "Candate",
   headline: "Your elections. All in one place.",
-  lede:
-    "Find a contest, compare candidates on the same fields, and see where each fact came from.",
+  lede: "Find a contest. Compare candidates.",
   heroImageAlt: "Placeholder for an approved civic photograph. No image is available yet.",
   founderName: "Luke Wyatt",
   founderRole: "Founder",

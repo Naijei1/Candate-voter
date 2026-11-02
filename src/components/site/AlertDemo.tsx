@@ -5,12 +5,12 @@ import { NEWS_CATEGORIES, SAMPLE_NEWS } from "@/content/pilot";
 import { StatusMark } from "@/components/site/StatusMark";
 
 const ALERT_TYPES = [
-  "Newly detected filings",
-  "Ballot-status changes",
+  "Filings",
+  "Ballot status",
   "Statements",
   "Polls",
   "Debates",
-  "Election deadlines",
+  "Deadlines",
 ] as const;
 
 type Screen = "empty" | "loading" | "error" | "none";
@@ -19,11 +19,6 @@ export function AlertDemo() {
   const [screen, setScreen] = useState<Screen>("empty");
   return (
     <div>
-      <p>
-        <StatusMark kind="preview" />
-        These screens are a demonstration. Preferences stay in this page only. Refreshing clears
-        them. Nothing is emailed, and there is no push notification.
-      </p>
       <div className="filters" role="group" aria-label="Alert preview states">
         {(
           [
@@ -45,12 +40,12 @@ export function AlertDemo() {
         ))}
       </div>
       <AlertScreen screen={screen} />
-      <fieldset className="section">
-        <legend>Alert categories</legend>
+      <fieldset>
+        <legend>Categories</legend>
         <div className="check-grid">
           {ALERT_TYPES.map((item) => (
             <label key={item}>
-              <input type="checkbox" defaultChecked={item === "Newly detected filings"} /> {item}
+              <input type="checkbox" defaultChecked={item === "Filings"} /> {item}
             </label>
           ))}
         </div>
@@ -61,12 +56,11 @@ export function AlertDemo() {
           <input type="radio" name="digest" defaultChecked /> Immediate
         </label>
         <label>
-          <input type="radio" name="digest" /> Daily digest
+          <input type="radio" name="digest" /> Daily
         </label>
         <label>
-          <input type="radio" name="digest" /> Weekly digest
+          <input type="radio" name="digest" /> Weekly
         </label>
-        <p>Quiet hours and unsubscribe will be settings on the account. They do not send mail in this preview.</p>
       </fieldset>
     </div>
   );
@@ -76,29 +70,27 @@ function AlertScreen({ screen }: { screen: Screen }) {
   if (screen === "loading") {
     return (
       <p className="notice" role="status" aria-busy="true">
-        Loading alert preferences…
+        Loading…
       </p>
     );
   }
   if (screen === "error") {
     return (
       <p className="notice notice-error" role="alert">
-        Alert preferences could not be displayed. This preview does not contact a server. Try the
-        empty screen.
+        Could not load alerts.
       </p>
     );
   }
   if (screen === "none") {
     return (
       <p className="notice" role="status">
-        No alerts match these categories.
+        No matching alerts.
       </p>
     );
   }
   return (
     <p className="notice" role="status">
-      You are not following any races or candidates. Follow a race to see it here once accounts
-      exist.
+      No saved races.
     </p>
   );
 }
@@ -109,12 +101,7 @@ export function NewsBoard() {
   return (
     <div>
       <fieldset>
-        <legend>News categories on this page</legend>
-        <p>
-          <StatusMark kind="preview" />
-          Choosing a category changes this page only. It is not permission to send a notification.
-          Following a candidate is separate from these boxes.
-        </p>
+        <legend>Categories</legend>
         <div className="check-grid">
           {NEWS_CATEGORIES.map((category) => (
             <label key={category}>
@@ -135,21 +122,18 @@ export function NewsBoard() {
         </div>
       </fieldset>
       {items.length === 0 ? (
-        <p role="status">No sample stories match the categories you selected.</p>
+        <p role="status">No stories in those categories.</p>
       ) : (
         <ul className="card-grid">
           {items.map((item) => (
             <li className="card" key={item.id}>
               <p>
-                <StatusMark kind="sample" />
-                {item.kind}
+                <StatusMark kind="sample" /> {item.kind}
               </p>
               <h2>{item.headline}</h2>
-              <p>
+              <p className="hint">
                 {item.publisher} · {item.date}
               </p>
-              <p>Related race: {item.race}</p>
-              <p>Source link: not available in this sample. No outside article is being presented as live reporting.</p>
             </li>
           ))}
         </ul>

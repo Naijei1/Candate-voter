@@ -5,16 +5,15 @@
 
 export const SAMPLE_MEASURE = {
   path: "/measures/example-kentucky",
-  title: "Sample ballot-measure layout",
-  eyebrow: "Demonstration. This is not a certified 2026 Kentucky ballot question.",
-  officialTitle: "Sample constitutional amendment (layout only)",
-  plain:
-    "This paragraph shows where a plain-English explanation will go. It does not describe a real proposal.",
-  yes: "A yes vote would be explained here, in the words of the official text, once a real measure is sourced.",
-  no: "A no vote would be explained here the same way. This sample does not change any law.",
-  support: "Supporter arguments will be quoted from a named source. This sentence is not one of them.",
-  oppose: "Opponent arguments will be quoted from a named source. This sentence is not one of them.",
-  fiscal: "No fiscal estimate is attached to this sample. Uncertainty would be stated when a real estimate exists.",
+  title: "Sample ballot measure",
+  eyebrow: "Not a certified 2026 question.",
+  officialTitle: "Sample amendment",
+  plain: "Plain-English summary.",
+  yes: "What a yes vote would do.",
+  no: "What a no vote would do.",
+  support: "Supporter argument, with a source.",
+  oppose: "Opponent argument, with a source.",
+  fiscal: "No fiscal estimate.",
 } as const;
 
 export const SAMPLE_PAC = {
@@ -74,23 +73,23 @@ export const NEWS_CATEGORIES = [
 export const AI_EXAMPLES = [
   {
     id: "quote",
-    prompt: "What did this candidate say in the latest debate?",
+    prompt: "Latest debate?",
     kind: "Sample quotation",
-    body: "“This sentence is placeholder copy, not a statement by any candidate.”",
-    source: "Sample layout, October 30, 2026. Not a transcript.",
+    body: "Placeholder quote, not a real statement.",
+    source: "Sample",
   },
   {
     id: "summary",
-    prompt: "How do their education positions compare?",
+    prompt: "Education positions?",
     kind: "Sample summary",
-    body: "A sourced comparison would name the record and its date. No education positions are on file, so this prototype does not summarize any.",
-    source: "Sample layout, October 30, 2026. No interpretation is added.",
+    body: "No positions on file.",
+    source: "None",
   },
   {
     id: "none",
-    prompt: "What would this ballot amendment change?",
+    prompt: "What would an amendment change?",
     kind: "No evidence",
-    body: "No reliable information is available for that question. This prototype will not guess a vote, quote, endorsement, poll, or position.",
-    source: "No source. Nothing was retrieved.",
+    body: "No record. Nothing guessed.",
+    source: "None",
   },
 ] as const;
