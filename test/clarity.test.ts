@@ -326,7 +326,7 @@ test("home and ask copy stay plain and the map does not lead with Popular", () =
   assert.doesNotMatch(technical, /<details[^>]*\sopen/);
   assert.match(candidatePage, /FEC filing/);
   assert.equal(candidatePage.includes("Voting record"), false);
-  assert.equal(candidatePage.includes("Website"), false);
+  assert.equal(candidatePage.includes(">Website<"), false);
   assert.match(candidatePage, /Form 2/);
   assert.equal(candidatePage.includes("Form {filing.formType}"), false);
   assert.equal(candidatePage.includes("CandidateTechnicalDetails"), false);

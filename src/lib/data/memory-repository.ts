@@ -1,6 +1,6 @@
 import type { Candidate, Filing, IngestWatermark, Race } from "../types";
 import { raceMatchesCycle } from "./cycle-match";
-import type { CandidateUpsertResult, VoterRepository } from "./repository";
+import type { CandidateUpsertResult, StoredCorrection, VoterRepository } from "./repository";
 
 /**
  * In-memory store with the same keys and monotonic candidate rule as DynamoDB.
@@ -12,6 +12,7 @@ export class MemoryVoterRepository implements VoterRepository {
   private readonly filings = new Map<string, Filing>();
   private readonly superseded = new Set<string>();
   private watermark: IngestWatermark | null = null;
+  readonly corrections: StoredCorrection[] = [];
 
   async upsertRace(race: Race): Promise<void> {
     this.races.set(race.raceId, clone(race));
@@ -75,6 +76,10 @@ export class MemoryVoterRepository implements VoterRepository {
 
   async saveWatermark(watermark: IngestWatermark): Promise<void> {
     this.watermark = clone(watermark);
+  }
+
+  async saveCorrection(correction: StoredCorrection): Promise<void> {
+    this.corrections.push(clone(correction));
   }
 
   async markCandidateSuperseded(

@@ -8,6 +8,7 @@ import {
 } from "@aws-sdk/lib-dynamodb";
 import { buildSetExpression } from "./expressions";
 import {
+  CORRECTION_PK_PREFIX,
   ENTITY_META_SK,
   FILING_SK_PREFIX,
   GSI1,
@@ -50,6 +51,15 @@ export type VoterRepository = {
    * Filings are not moved by this call.
    */
   markCandidateSuperseded(candidateId: string, supersededBy: string): Promise<void>;
+  saveCorrection(correction: StoredCorrection): Promise<void>;
+};
+
+export type StoredCorrection = {
+  correctionId: string;
+  raceId: string | null;
+  candidateId: string | null;
+  note: string;
+  createdAt: string;
 };
 
 const CANDIDATE_MONOTONIC =
@@ -228,6 +238,19 @@ class DynamoVoterRepository implements VoterRepository {
   async saveWatermark(watermark: IngestWatermark): Promise<void> {
     dropRosterRead(rosterCacheKey("watermark"));
     await this.update(toWatermarkItem(watermark));
+  }
+
+  async saveCorrection(correction: StoredCorrection): Promise<void> {
+    await this.update({
+      pk: `${CORRECTION_PK_PREFIX}${correction.correctionId}`,
+      sk: ENTITY_META_SK,
+      entityType: "correction",
+      correctionId: correction.correctionId,
+      ...(correction.raceId ? { raceId: correction.raceId } : {}),
+      ...(correction.candidateId ? { candidateId: correction.candidateId } : {}),
+      note: correction.note,
+      updatedAt: correction.createdAt,
+    });
   }
 
   async markCandidateSuperseded(

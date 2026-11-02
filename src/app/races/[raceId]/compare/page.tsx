@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { AskPanel } from "@/components/site/AskPanel";
 import { CompareBoard } from "@/components/site/CompareBoard";
 import { Crumbs } from "@/components/site/Crumbs";
-import { askExamples } from "@/lib/site/ask-examples";
+import { cardsForRace } from "@/lib/site/showcase";
 import { stateName } from "@/lib/data/states";
 import { loadContest } from "@/lib/site/contest";
 import type { Race } from "@/lib/types";
@@ -23,6 +23,7 @@ export default async function ComparePage({ params }: PageProps) {
   const loaded = await loadContest((await params).raceId);
   if (!loaded.race) notFound();
   const race = loaded.race;
+  const roster = cardsForRace(race.raceId, loaded.candidates, loaded.filingsLoaded);
   const place = race.state ? stateName(race.state) : "States";
   const stateHref = race.state ? `/states/${race.state.toLowerCase()}` : "/states";
 
@@ -38,7 +39,11 @@ export default async function ComparePage({ params }: PageProps) {
       />
       <h1>Compare</h1>
       <p className="lede">{race.title}</p>
-      {loaded.filingsLoaded ? null : (
+      {loaded.filingsLoaded ? null : roster.fecList ? (
+        <p className="notice" role="status">
+          Form 2 table unavailable. Names below are the FEC candidate list.
+        </p>
+      ) : (
         <p className="notice notice-error" role="status">
           Names could not be loaded. <Link href="/sources">About this data</Link>
         </p>
@@ -46,21 +51,15 @@ export default async function ComparePage({ params }: PageProps) {
       <div className="race-layout">
         <CompareBoard
           raceHref={`/races/${race.raceId}`}
-          candidates={loaded.candidates.map((candidate) => ({
-            candidateId: candidate.candidateId,
-            displayName: candidate.displayName,
-            partyLabel: candidate.partyLabel,
+          filingsLoaded={loaded.filingsLoaded && !roster.fecList}
+          summary={roster.summary}
+          candidates={roster.cards.map((candidate) => ({
+            candidateId: candidate.id,
+            displayName: candidate.name,
+            partyLabel: candidate.party,
           }))}
-          filingsLoaded={loaded.filingsLoaded}
         />
-        <AskPanel
-          examples={askExamples(
-            loaded.candidates.map((candidate) => ({
-              url: candidate.sourceUrl,
-              updatedAt: candidate.updatedAt,
-            })),
-          )}
-        />
+        <AskPanel raceId={race.raceId} cycle={race.cycle} state={race.state} />
       </div>
     </article>
   );

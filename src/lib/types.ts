@@ -41,6 +41,10 @@ export type Race = {
    * as `districtsWithFilings`. Omitted only before the read-time signal.
    */
   hasCandidates?: boolean;
+  /**
+   * Set only when a filing source names the stage. Absent when FEC does not.
+   */
+  electionStage?: "primary" | "general" | "special" | "runoff" | null;
 };
 
 /** A person on a race, keyed by FEC candidate id when the filing has one. */
