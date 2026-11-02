@@ -33,6 +33,7 @@ export const ENTITY_META_SK = "META";
 export const FILING_SK_PREFIX = "FILING#";
 export const INGEST_PK = "INGEST#F2";
 export const INGEST_SK = "WATERMARK";
+export const CORRECTION_PK_PREFIX = "CORRECTION#";
 
 export function racePk(raceId: string): string {
   return `RACE#${raceId}`;

@@ -6,10 +6,10 @@ import { MultiFilingDetails } from "@/components/MultiFilingDetails";
 import { AskPanel } from "@/components/site/AskPanel";
 import { Crumbs } from "@/components/site/Crumbs";
 import { FollowControl } from "@/components/site/FollowControl";
-import { askExamples } from "@/lib/site/ask-examples";
+import { cardsForRace } from "@/lib/site/showcase";
 import { personFilingNote } from "@/lib/data/filing-note";
 import { generalElectionLabel } from "@/lib/copy";
-import { httpsUrl, partyCue } from "@/lib/format";
+import { httpsUrl } from "@/lib/format";
 import { stateName } from "@/lib/data/states";
 import { loadContest } from "@/lib/site/contest";
 import type { Race } from "@/lib/types";
@@ -29,6 +29,7 @@ export default async function RacePage({ params }: PageProps) {
   if (!loaded.race) notFound();
   const race = loaded.race;
   const sourceHref = httpsUrl(race.sourceUrl);
+  const roster = cardsForRace(race.raceId, loaded.candidates, loaded.filingsLoaded);
   const place = race.state ? stateName(race.state) : "States";
   const stateHref = race.state ? `/states/${race.state.toLowerCase()}` : "/states";
 
@@ -55,7 +56,11 @@ export default async function RacePage({ params }: PageProps) {
         ) : null}
       </p>
       <DataRefreshedBanner refreshedAt={loaded.refreshedAt} />
-      {loaded.filingsLoaded ? null : (
+      {loaded.filingsLoaded ? null : roster.fecList ? (
+        <p className="notice" role="status">
+          Form 2 table unavailable. Names below are the FEC candidate list.
+        </p>
+      ) : (
         <p className="notice notice-error" role="status">
           Names could not be loaded. <Link href="/sources">About this data</Link>
         </p>
@@ -66,19 +71,26 @@ export default async function RacePage({ params }: PageProps) {
         <h2 id="candidates-heading" className="sr-only">
           Candidates
         </h2>
-        {loaded.filingsLoaded && loaded.candidates.length === 0 ? <p>No filing stored.</p> : null}
+        {loaded.filingsLoaded && loaded.candidates.length === 0 && roster.cards.length === 0 ? (
+          <p>No filing stored.</p>
+        ) : null}
+        {roster.summary ? <p>{roster.summary}</p> : null}
+        {race.electionStage ? <p>Stage: {race.electionStage}</p> : null}
         <ul className="person-grid">
-          {loaded.candidates.map((candidate) => {
-            const filingCount = candidate.alternateFilings.length + 1;
-            const note = personFilingNote(candidate.filings);
+          {roster.cards.map((candidate) => {
+            const live = loaded.candidates.find((row) => row.candidateId === candidate.id);
+            const filingCount = live ? live.alternateFilings.length + 1 : 1;
+            const note = live ? personFilingNote(live.filings) : null;
             return (
-              <li className="person-card" key={candidate.candidateId}>
+              <li className="person-card" key={candidate.id}>
                 <h3>
-                  <Link href={`/candidates/${candidate.candidateId}`}>{candidate.displayName}</Link>
+                  <Link href={`/candidates/${candidate.id}`}>{candidate.name}</Link>
                 </h3>
-                <p className="party">{partyCue([candidate.partyLabel])}</p>
-                <p className="hint">Filing stored · Ballot not verified</p>
-                <MultiFilingDetails count={filingCount}>{note ? <p>{note}</p> : null}</MultiFilingDetails>
+                <p className="party">{candidate.party}</p>
+                <p className="hint">{candidate.line}</p>
+                {live ? (
+                  <MultiFilingDetails count={filingCount}>{note ? <p>{note}</p> : null}</MultiFilingDetails>
+                ) : null}
               </li>
             );
           })}
@@ -90,14 +102,7 @@ export default async function RacePage({ params }: PageProps) {
           <FollowControl what="race" />
         </div>
       </section>
-      <AskPanel
-        examples={askExamples(
-          loaded.candidates.map((candidate) => ({
-            url: candidate.sourceUrl,
-            updatedAt: candidate.updatedAt,
-          })),
-        )}
-      />
+      <AskPanel raceId={race.raceId} cycle={race.cycle} state={race.state} />
       </div>
     </article>
   );

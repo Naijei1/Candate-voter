@@ -7,22 +7,30 @@ import { StatusMark } from "@/components/site/StatusMark";
 import { stateName } from "@/lib/data/states";
 import { formatInstant, httpsUrl, partyCue, partyLabel } from "@/lib/format";
 import { loadProfile } from "@/lib/site/contest";
-import type { Race } from "@/lib/types";
+import { showcaseCandidate, showcaseRace, type ShowcaseCandidate } from "@/lib/site/showcase";
+import type { Filing, Race } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
+const AWAITING = ["Biography", "Issues", "Public service", "Endorsements", "Speeches"] as const;
+
 type PageProps = { params: Promise<{ candidateId: string }> };
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const loaded = await loadProfile((await params).candidateId);
+  const id = (await params).candidateId;
+  const snap = showcaseCandidate(id);
+  if (snap) return { title: snap.displayName };
+  const loaded = await loadProfile(id);
   return { title: loaded.ok ? loaded.candidate.displayName : "Candidate" };
 }
 
 export default async function CandidatePage({ params }: PageProps) {
-  const loaded = await loadProfile((await params).candidateId);
-  if (!loaded.ok) {
-    if (loaded.missing) notFound();
+  const id = (await params).candidateId;
+  const snap = showcaseCandidate(id);
+  const loaded = await loadProfile(id);
+  if (!loaded.ok && loaded.missing && !snap) notFound();
+  if (!loaded.ok && !loaded.missing && !snap) {
     return (
       <article className="wrap">
         <h1>Candidate</h1>
@@ -32,10 +40,14 @@ export default async function CandidatePage({ params }: PageProps) {
     );
   }
 
-  const { candidate, race, filings } = loaded;
-  const website = httpsUrl(candidate.sourceUrl);
-  const place = race?.state ? stateName(race.state) : "States";
-  const stateHref = race?.state ? `/states/${race.state.toLowerCase()}` : "/states";
+  const race = loaded.ok ? loaded.race : null;
+  const name = snap?.displayName ?? (loaded.ok ? loaded.candidate.displayName : "Candidate");
+  const party = snap?.partyLabel ?? (loaded.ok ? partyCue([partyLabel(loaded.candidate.partyAffiliation, loaded.candidate.partyLabel)]) : "");
+  const place = race?.state ? stateName(race.state) : snap ? "Kentucky" : "States";
+  const stateHref = race?.state ? `/states/${race.state.toLowerCase()}` : snap ? "/states/ky" : "/states";
+  const raceHref = race ? `/races/${race.raceId}` : snap ? `/races/${showcaseRace()?.raceId}` : null;
+  const raceLabel = race ? shortRace(race) : snap ? "Senate" : "Race";
+  const retrieved = showcaseRace()?.retrievedAt ?? null;
 
   return (
     <article className="wrap">
@@ -43,45 +55,149 @@ export default async function CandidatePage({ params }: PageProps) {
         items={[
           { href: "/", label: "Home" },
           { href: stateHref, label: place },
-          ...(race ? [{ href: `/races/${race.raceId}`, label: shortRace(race) }] : []),
-          { label: candidate.displayName },
+          ...(raceHref ? [{ href: raceHref, label: raceLabel }] : []),
+          { label: name },
         ]}
       />
-      <h1>{candidate.displayName}</h1>
-      <p className="lede">{partyCue([partyLabel(candidate.partyAffiliation, candidate.partyLabel)])}</p>
-      <p>{race ? race.title : "Race not loaded."}</p>
-      <p className="hint">
-        <StatusMark kind="awaiting" hint="No approved photo." /> No photo
-        {" · "}
-        {website ? <a href={website}>FEC filing</a> : "No FEC filing link"}
-      </p>
+      <h1>{name}</h1>
+      <p className="lede">{party}</p>
+      {race ? <p>{race.title}</p> : snap ? <p>U.S. Senate, Kentucky · 2026</p> : null}
       <div className="actions">
-        {race ? (
-          <Link className="btn btn-navy" href={`/races/${race.raceId}/compare`}>
+        {raceHref ? (
+          <Link className="btn btn-navy" href={`${raceHref}/compare`}>
             Compare
           </Link>
         ) : null}
         <FollowControl what="candidate" />
       </div>
 
-      <h2 id="filings-heading">Filings</h2>
-      {filings.length === 0 ? (
-        <p>None stored.</p>
-      ) : (
+      <h2>Verified</h2>
+      <ul className="plain-list">
+        {snap?.incumbentLabel && retrieved ? (
+          <Fact
+            label="Incumbency"
+            value={snap.incumbentLabel}
+            href={snap.profileUrl}
+            source="FEC candidate record"
+            date={retrieved}
+          />
+        ) : (
+          <li>
+            Incumbency <StatusMark kind="awaiting" />
+          </li>
+        )}
+        {snap?.statusLabel && retrieved ? (
+          <Fact
+            label="FEC status"
+            value={snap.statusLabel}
+            href={showcaseRace()?.dictionary ?? snap.profileUrl}
+            source="FEC candidate master dictionary"
+            date={retrieved}
+          />
+        ) : null}
+        {snap?.committeeName && snap.committeeUrl && retrieved ? (
+          <Fact
+            label="Committee"
+            value={snap.committeeName}
+            href={snap.committeeUrl}
+            source="FEC committee record"
+            date={retrieved}
+          />
+        ) : null}
+        <FilingFacts filings={loaded.ok ? loaded.filings : []} snap={snap} />
+      </ul>
+
+      <h2>Candidate says</h2>
+      {snap?.committeeWebsite && snap.committeeUrl && retrieved ? (
         <ul className="plain-list">
-          {filings.map((filing) => {
-            const href = httpsUrl(filing.sourceUrl);
-            const when = formatInstant(filing.updatedAt);
-            return (
-              <li key={filing.filingId}>
-                Form 2{href ? <> · <a href={href}>FEC filing</a></> : null}
-                {when ? ` · ${when}` : null}
-              </li>
-            );
-          })}
+          <Fact
+            label="Campaign site"
+            value={snap.committeeWebsite}
+            href={snap.committeeWebsite}
+            source="Reported on the FEC committee record"
+            date={retrieved}
+          />
         </ul>
+      ) : (
+        <p>
+          <StatusMark kind="awaiting" /> No campaign statement is on file.
+        </p>
       )}
+
+      <h2>Not on file</h2>
+      <p>
+        {AWAITING.map((item) => (
+          <span key={item}>
+            <StatusMark kind="awaiting" /> {item}{" "}
+          </span>
+        ))}
+      </p>
     </article>
+  );
+}
+
+function Fact({
+  label,
+  value,
+  href,
+  source,
+  date,
+}: {
+  label: string;
+  value: string;
+  href: string;
+  source: string;
+  date: string;
+}) {
+  const shown = formatInstant(date) ?? date.slice(0, 10);
+  return (
+    <li>
+      {label}: {href ? <a href={href}>{value}</a> : value}
+      <span className="hint"> {source} · {shown}</span>
+    </li>
+  );
+}
+
+function FilingFacts({
+  filings,
+  snap,
+}: {
+  filings: Filing[];
+  snap: ShowcaseCandidate | null;
+}) {
+  if (filings.length > 0) {
+    return (
+      <>
+        {filings.map((filing) => {
+          const href = httpsUrl(filing.sourceUrl);
+          const when = formatInstant(filing.fecLoadTimestamp) ?? formatInstant(filing.updatedAt) ?? "date not stored";
+          return (
+            <li key={filing.filingId}>
+              Form 2
+              {href ? (
+                <>
+                  : <a href={href}>FEC filing</a>
+                </>
+              ) : null}
+              <span className="hint"> FEC load · {when}</span>
+            </li>
+          );
+        })}
+      </>
+    );
+  }
+  if (snap?.filingPdf && snap.filingDate) {
+    return (
+      <li>
+        Form 2: <a href={snap.filingPdf}>FEC filing</a>
+        <span className="hint"> FEC receipt · {snap.filingDate.slice(0, 10)}</span>
+      </li>
+    );
+  }
+  return (
+    <li>
+      Form 2 <StatusMark kind="awaiting" />
+    </li>
   );
 }
 

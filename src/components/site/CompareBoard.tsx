@@ -26,10 +26,12 @@ export function CompareBoard({
   candidates,
   raceHref,
   filingsLoaded = true,
+  summary = null,
 }: {
   candidates: readonly CompareCandidate[];
   raceHref: string;
   filingsLoaded?: boolean;
+  summary?: string | null;
 }) {
   const [tab, setTab] = useState<Tab>("Overview");
   return (
@@ -51,7 +53,7 @@ export function CompareBoard({
       <p className="hint" title="Alphabetical by filing name. Not a ranking.">
         A to Z
       </p>
-      {filingsLoaded ? <p>{filedLine(candidates.length)}</p> : null}
+      {summary ? <p>{summary}</p> : filingsLoaded ? <p>{filedLine(candidates.length)}</p> : null}
       {candidates.length === 0 ? null : (
         <div className="compare-grid">
           {candidates.map((candidate) => (
