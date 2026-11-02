@@ -1,4 +1,4 @@
-export type FollowType = "race" | "candidate" | "jurisdiction" | "measure";
+export type FollowType = "race" | "candidate" | "jurisdiction" | "measure" | "issue";
 
 export type AlertDelivery = "immediate" | "daily" | "weekly";
 
@@ -133,7 +133,7 @@ export function parseQuietHours(
 }
 
 export function parseFollowType(value: unknown): FollowType | null {
-  if (value === "race" || value === "candidate" || value === "jurisdiction" || value === "measure") {
+  if (value === "race" || value === "candidate" || value === "jurisdiction" || value === "measure" || value === "issue") {
     return value;
   }
   return null;

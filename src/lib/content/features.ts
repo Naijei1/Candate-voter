@@ -23,6 +23,6 @@ export const FEATURES: readonly FeatureRecord[] = [
   { id: "photos", name: "Photos, biography, and issues", status: "awaiting content", note: "Not invented. Admin can upload approved images and copy." },
   { id: "legal", name: "Ownership, funding, and affiliations", status: "awaiting content", note: "Shown only after an admin saves approved text." },
   { id: "ballot", name: "Ballot qualification", status: "planned", note: "A filing is not a place on the ballot." },
-  { id: "local", name: "State, county, city, judicial, and school", status: "planned", note: "No source connected." },
+  { id: "local", name: "State, county, city, judicial, and school", status: "awaiting content", note: "Kentucky templates only. elect.ky.gov returned HTTP 403, so no names were copied." },
   { id: "alerts", name: "Alert email", status: "planned", note: "Preferences save. Nothing is sent." },
 ];

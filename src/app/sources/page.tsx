@@ -10,7 +10,7 @@ const ROWS = [
   ["ZIP to House district", "Limited", "Census. Not a full ballot."],
   ["District shapes and ZIP", "Working", "Both use Census 120th districts, January 1, 2026."],
   ["Ballot qualification", "Planned", "A filing is not a place on the ballot."],
-  ["State, county, city, judicial, school", "Not covered", "No source connected."],
+  ["State, county, city, judicial, school", "Awaiting", "Templates only. elect.ky.gov was not readable, so no names were copied."],
   ["Ballot measures", "Sample", "Layout only."],
   ["Photos, biography, issues", "Awaiting", "Not invented."],
   ["Polls and fundraising", "Polls: sample. Fundraising: FEC totals.", "OpenFEC candidate totals and Schedule E aggregates. Direct and outside spending are not added."],

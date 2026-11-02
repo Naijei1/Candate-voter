@@ -385,6 +385,8 @@ class DynamoVoterRepository implements VoterRepository {
       directUpserted: watermark.directUpserted,
       periodsUpserted: watermark.periodsUpserted,
       outsideUpserted: watermark.outsideUpserted,
+      cursorCycle: watermark.cursorCycle,
+      cursorCandidateId: watermark.cursorCandidateId,
       updatedAt: watermark.updatedAt,
     });
   }

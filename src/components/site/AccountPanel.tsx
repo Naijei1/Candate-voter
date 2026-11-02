@@ -22,6 +22,7 @@ const FOLLOW_LABEL = {
   candidate: "Candidate",
   jurisdiction: "Jurisdiction",
   measure: "Measure",
+  issue: "Issue",
 } as const;
 
 export function AccountPanel({

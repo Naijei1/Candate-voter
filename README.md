@@ -347,7 +347,9 @@ Branch environment variables are available to the build shell. WEB_COMPUTE does 
 
 `candate-voter-fec-totals` reads candidate ids already stored by the Form 2 ingest and writes cycle totals, current committee-report periods, and Schedule E `by_candidate` aggregates into `candate-voter`. The cursor is `INGEST#FEC_TOTALS`. Schedule A itemized donors and raw Schedule E lines are not stored. Direct receipts are not added to outside spending.
 
-Phase 2 is already deployed. The Amplify compute role is `candate-voter-amplify-compute`. Pass that name so this update keeps the managed policy attached. `FecApiKey` stays the value already stored on the stack. Do not pass the key on the command line. Do not add an Amplify variable named `AWS_REGION`.
+Phase 2 is already deployed. `FecApiKey` stays the value already stored on the stack. Do not pass the key on the command line. Do not add an Amplify variable named `AWS_REGION`.
+
+The compute policy no longer has a fixed name. A fixed `ManagedPolicyName` made CloudFormation try to replace the policy and fail with `AlreadyExists`. After deploy, use output `AmplifyComputePolicyArn`. Pass the live SSR compute role so this update attaches that new policy. The role used for Phase 2 is `candate-voter-amplify-compute`.
 
 ```bash
 cd infra
@@ -355,7 +357,7 @@ sam build
 sam deploy --parameter-overrides AmplifyComputeRoleName=candate-voter-amplify-compute
 ```
 
-The new function `candate-voter-fec-totals` uses the same `FecApiKey`. Amplify needs no new variable for the job. Redeploy the site so the pages read the new rows. The server uses `us-east-1` when `AWS_REGION` is unset.
+The new function `candate-voter-fec-totals` uses the same `FecApiKey`. It stops when less than 60 seconds remain (`getRemainingTimeInMillis`), writes a `partial` status with a candidate cursor, and the next schedule continues after that cursor. A finished pass writes `success` and clears the cursor. Amplify needs no new variable for the job. Redeploy the site so the pages read the new rows. The server uses `us-east-1` when `AWS_REGION` is unset.
 
 ### Brand images and site copy
 
@@ -369,11 +371,11 @@ Do not set `AWS_REGION`. Copy, correction status, and last-checked notes use the
 
 ### Make accounts live
 
-Phase 2 is deployed. The Amplify compute role is `candate-voter-amplify-compute`. Keep that name on later stack updates so the managed policy stays attached. `samconfig.toml` sets stack `candate-voter-data`, region `us-east-1`, and `CAPABILITY_IAM CAPABILITY_NAMED_IAM`.
+Phase 2 is deployed. `samconfig.toml` sets stack `candate-voter-data`, region `us-east-1`, and `CAPABILITY_IAM CAPABILITY_NAMED_IAM`. The compute policy is output `AmplifyComputePolicyArn`. It does not use a fixed name, because replacing a named policy returns `AlreadyExists`.
 
 The role is the Amplify SSR compute role, not the build role. Do not remove its existing `GetItem` and `Query` policy on `candate-voter`.
 
-If the parameter was empty, attach the output `AmplifyComputePolicyArn` (`candate-voter-amplify-compute`) to that role. The policy allows read/write on `candate-voter-users`, including `DeleteItem` so a follow can be removed, and `dynamodb:PutItem` / `dynamodb:UpdateItem` on `candate-voter` only when the partition key matches `CORRECTION#*`. Listing reports is `dynamodb:Query` on `gsi1` limited to partition `CORRECTIONS`.
+If the parameter was empty, attach the output `AmplifyComputePolicyArn` to that role. The policy allows read/write on `candate-voter-users`, including `DeleteItem` so a follow can be removed, and `dynamodb:PutItem` / `dynamodb:UpdateItem` on `candate-voter` only when the partition key matches `CORRECTION#*`. Listing reports is `dynamodb:Query` on `gsi1` limited to partition `CORRECTIONS`.
 
 Then set these Amplify branch environment variables and redeploy so `scripts/write-amplify-server-env.mjs` copies them into `.env.production`:
 

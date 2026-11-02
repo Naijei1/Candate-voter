@@ -41,12 +41,15 @@ export type FinanceOutside = {
 export type TotalsWatermark = {
   source: "fec-totals";
   lastRunAt: string | null;
-  lastStatus: "running" | "success" | "error";
+  /** `partial` means the next scheduled run should continue after the cursor. */
+  lastStatus: "running" | "success" | "partial" | "error";
   lastError: string | null;
   candidatesSeen: number;
   directUpserted: number;
   periodsUpserted: number;
   outsideUpserted: number;
+  cursorCycle: number | null;
+  cursorCandidateId: string | null;
   updatedAt: string;
 };
 

@@ -86,6 +86,8 @@ export default async function StatePage({ params, searchParams }: PageProps) {
             ))}
           </ul>
         )
+      ) : category === "judicial" || category === "school" ? (
+        <LocalTemplate postal={postal} kind={category} />
       ) : (
         <p className="notice" role="status">
           <StatusMark kind="gap" /> {labelFor(category)} contests are not connected.
@@ -105,9 +107,9 @@ export default async function StatePage({ params, searchParams }: PageProps) {
       ) : null}
 
       <p>
-        <Link href="/measures/example-kentucky">
-          <StatusMark kind="sample" /> Ballot measure
-        </Link>
+        <Link href={`/measures/${postal.toLowerCase()}`}>Ballot measures</Link>
+        {" · "}
+        <Link href={`/states/${postal.toLowerCase()}/issues`}>Issues</Link>
       </p>
     </article>
   );
@@ -126,6 +128,39 @@ function parseYear(value: string | undefined): number {
 
 function parseCategory(value: string | undefined): Category {
   return CATEGORIES.find((item) => item.id === value)?.id ?? "federal";
+}
+
+function LocalTemplate({ postal, kind }: { postal: string; kind: "judicial" | "school" }) {
+  const title = kind === "judicial" ? "Judicial" : "School board";
+  return (
+    <section className="card" aria-labelledby={`${kind}-template`}>
+      <h2 id={`${kind}-template`}>{title}</h2>
+      <p>
+        <StatusMark kind="awaiting" /> No official list is loaded.
+      </p>
+      <p>
+        Kentucky State Board of Elections (elect.ky.gov) did not return a readable file from this server, so no
+        names or districts were copied.
+      </p>
+      <ul className="plain-list">
+        {kind === "judicial" ? (
+          <>
+            <li>Court: Awaiting content</li>
+            <li>Seat: Awaiting content</li>
+            <li>Contested or retention: Awaiting content</li>
+          </>
+        ) : (
+          <>
+            <li>District: Awaiting content</li>
+            <li>Seats: Awaiting content</li>
+            <li>Term: Awaiting content</li>
+          </>
+        )}
+        <li>Candidates: Awaiting content</li>
+      </ul>
+      <FollowControl what="jurisdiction" targetId={`${postal}-${kind}`} />
+    </section>
+  );
 }
 
 function labelFor(category: Category): string {
