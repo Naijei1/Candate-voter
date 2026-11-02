@@ -4,14 +4,9 @@ import { notFound } from "next/navigation";
 import { FollowControl } from "@/components/site/FollowControl";
 import { StatusMark } from "@/components/site/StatusMark";
 import { isPostalState, stateName } from "@/lib/data/states";
+import { MEASURE_KINDS } from "@/lib/site/measure-kinds";
 
 export const dynamic = "force-dynamic";
-
-const KINDS = [
-  { id: "proposition", label: "Proposition" },
-  { id: "referendum", label: "Referendum" },
-  { id: "retention", label: "Retention question" },
-] as const;
 
 type PageProps = { params: Promise<{ state: string }> };
 
@@ -26,6 +21,9 @@ export default async function MeasuresPage({ params }: PageProps) {
   const name = stateName(postal);
   return (
     <article className="wrap">
+      <p>
+        <Link href="/measures">All states</Link>
+      </p>
       <h1>{name} ballot measures</h1>
       <p>
         <StatusMark kind="awaiting" /> No certified question is loaded.
@@ -36,7 +34,7 @@ export default async function MeasuresPage({ params }: PageProps) {
           : "No official measure list is connected for this state."}
       </p>
       <ul className="card-grid">
-        {KINDS.map((kind) => (
+        {MEASURE_KINDS.map((kind) => (
           <li className="card" key={kind.id}>
             <h2>{kind.label}</h2>
             <p>Official title: Awaiting content</p>

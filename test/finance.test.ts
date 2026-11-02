@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 import { MemoryVoterRepository } from "../src/lib/data/memory-repository";
+import { FecApiError } from "../src/lib/fec/client";
 import { mapCandidateCycleTotal, mapCommitteeReport, mapScheduleEByCandidate } from "../src/lib/finance/map";
 import { fecImagePdf } from "../src/lib/finance/model";
 import { runTotalsIngest } from "../src/lib/finance/ingest";
@@ -234,6 +235,72 @@ test("totals ingest stops before the time budget and the next run resumes", asyn
   assert.equal(second.status, "success");
   assert.deepEqual(seen, ["S6KY00001", "S6KY00002"]);
   assert.equal((await repo.getTotalsWatermark())?.cursorCandidateId, null);
+});
+
+test("a 429 keeps the cursor and records rate_limited", async () => {
+  const repo = new MemoryVoterRepository();
+  await repo.upsertRace({
+    raceId: "2026-senate-KY",
+    office: "senate",
+    cycle: 2026,
+    state: "KY",
+    district: null,
+    title: "U.S. Senate, Kentucky",
+    jurisdiction: "Kentucky",
+    sourceUrl: null,
+    updatedAt: "2026-11-02T00:00:00.000Z",
+  });
+  for (const id of ["S6KY00001", "S6KY00002"]) {
+    await repo.upsertCandidate({
+      candidateId: id,
+      raceId: "2026-senate-KY",
+      displayName: id,
+      nameAsFiled: id,
+      office: "senate",
+      partyAffiliation: null,
+      fecCandidateId: id,
+      sourceUrl: null,
+      sourceLoadedAt: null,
+      updatedAt: "2026-11-02T00:00:00.000Z",
+    });
+  }
+  const seen: string[] = [];
+  const limited = new FecApiError("slow down", 429, true, 0);
+  const fec = {
+    async getCandidateTotals(id: string) {
+      seen.push(id);
+      if (id === "S6KY00002") throw limited;
+      return { candidate_id: id, cycle: 2026, receipts: 1, disbursements: 1, cash_on_hand_end_period: 1, debts_owed_by_committee: 0 };
+    },
+    async getCandidateCommittees() {
+      return [];
+    },
+    async *iterateCommitteeReports() {
+      yield [];
+    },
+    async getScheduleEByCandidate() {
+      return [];
+    },
+  };
+  const first = await runTotalsIngest({ repo, fec, cycles: [2026] });
+  assert.equal(first.status, "rate_limited");
+  assert.equal(first.httpStatus, 429);
+  assert.equal(first.retryAfterMs, 0);
+  assert.equal(first.cursorCandidateId, "S6KY00001");
+  const mark = await repo.getTotalsWatermark();
+  assert.equal(mark?.lastStatus, "rate_limited");
+  assert.equal(mark?.httpStatus, 429);
+  assert.match(mark?.lastError ?? "", /HTTP 429/);
+  const second = await runTotalsIngest({
+    repo,
+    fec: { ...fec, async getCandidateTotals(id: string) {
+      seen.push(id);
+      return { candidate_id: id, cycle: 2026, receipts: 2, disbursements: 1, cash_on_hand_end_period: 1, debts_owed_by_committee: 0 };
+    } },
+    cycles: [2026],
+  });
+  assert.equal(second.status, "success");
+  assert.deepEqual(seen, ["S6KY00001", "S6KY00002", "S6KY00002"]);
 });
 
 test("finance alerts use the coverage date as the event time", () => {

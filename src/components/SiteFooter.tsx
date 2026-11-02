@@ -5,6 +5,7 @@ import { loadSiteCopy } from "@/lib/content/store";
 const LINKS = [
   { href: "/sources", label: "About this data" },
   { href: "/about", label: "About Us" },
+  { href: "/measures", label: "Ballot measures" },
   { href: "/contact#corrections", label: "Feedback and corrections" },
   { href: "/contact", label: "Contact" },
   { href: "/accessibility", label: "Accessibility" },

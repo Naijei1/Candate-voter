@@ -381,6 +381,8 @@ class DynamoVoterRepository implements VoterRepository {
       lastRunAt: watermark.lastRunAt,
       lastStatus: watermark.lastStatus,
       lastError: watermark.lastError,
+      httpStatus: watermark.httpStatus,
+      retryAfterMs: watermark.retryAfterMs,
       candidatesSeen: watermark.candidatesSeen,
       directUpserted: watermark.directUpserted,
       periodsUpserted: watermark.periodsUpserted,

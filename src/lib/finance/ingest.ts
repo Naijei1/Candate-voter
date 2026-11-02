@@ -1,5 +1,5 @@
 import type { VoterRepository } from "../data/repository";
-import type { FecClient } from "../fec/client";
+import { FecApiError, type FecClient } from "../fec/client";
 import { mapCandidateCycleTotal, mapCommitteeReport, mapScheduleEByCandidate, principalCommittee } from "./map";
 import type { TotalsWatermark } from "./model";
 
@@ -11,8 +11,10 @@ export type TotalsIngestSummary = {
   periodsUpserted: number;
   outsideUpserted: number;
   skipped: number;
-  status: "success" | "partial" | "error";
+  status: "success" | "partial" | "error" | "rate_limited";
   error: string | null;
+  httpStatus: number | null;
+  retryAfterMs: number | null;
   cursorCycle: number | null;
   cursorCandidateId: string | null;
 };
@@ -44,23 +46,31 @@ export async function runTotalsIngest(options: {
   let outsideUpserted = 0;
   let skipped = 0;
   const prior = await options.repo.getTotalsWatermark();
-  const resume = prior?.lastStatus === "partial" || prior?.lastStatus === "error";
+  const resume = prior?.lastStatus === "partial" || prior?.lastStatus === "error" || prior?.lastStatus === "rate_limited";
   let cursorCycle = resume ? prior?.cursorCycle ?? null : null;
   let cursorCandidateId = resume ? prior?.cursorCandidateId ?? null : null;
 
-  const save = async (status: TotalsIngestSummary["status"], error: string | null) => {
+  const save = async (
+    status: TotalsIngestSummary["status"],
+    error: string | null,
+    httpStatus: number | null = null,
+    retryAfterMs: number | null = null,
+  ) => {
     const updatedAt = now().toISOString();
+    const keepCursor = status !== "success";
     await options.repo.saveTotalsWatermark(
       watermark({
         updatedAt,
         status,
         error,
+        httpStatus,
+        retryAfterMs,
         candidatesSeen,
         directUpserted,
         periodsUpserted,
         outsideUpserted,
-        cursorCycle: status === "success" ? null : cursorCycle,
-        cursorCandidateId: status === "success" ? null : cursorCandidateId,
+        cursorCycle: keepCursor ? cursorCycle : null,
+        cursorCandidateId: keepCursor ? cursorCandidateId : null,
       }),
     );
     return {
@@ -73,8 +83,10 @@ export async function runTotalsIngest(options: {
       skipped,
       status,
       error,
-      cursorCycle: status === "success" ? null : cursorCycle,
-      cursorCandidateId: status === "success" ? null : cursorCandidateId,
+      httpStatus,
+      retryAfterMs,
+      cursorCycle: keepCursor ? cursorCycle : null,
+      cursorCandidateId: keepCursor ? cursorCandidateId : null,
     };
   };
 
@@ -139,9 +151,23 @@ export async function runTotalsIngest(options: {
     }
     return save("success", null);
   } catch (error) {
-    const message = error instanceof Error ? error.name : "Error";
+    const fec = error instanceof FecApiError ? error : null;
+    if (fec) {
+      console.error("fec totals request failed", { status: fec.status, retryAfterMs: fec.retryAfterMs });
+    }
+    const httpStatus = fec?.status ?? null;
+    const retryAfterMs = fec?.retryAfterMs ?? null;
+    const message = fec
+      ? `FecApiError HTTP ${fec.status}${retryAfterMs != null ? ` retry-after ${retryAfterMs}ms` : ""}`
+      : error instanceof Error
+        ? error.name
+        : "Error";
+    if (fec?.status === 429 && retryAfterMs != null && retryAfterMs > 0 && retryAfterMs <= 60_000 && shouldContinue()) {
+      await delay(retryAfterMs);
+    }
+    const status = fec?.status === 429 ? "rate_limited" : "error";
     try {
-      return await save("error", message);
+      return await save(status, message, httpStatus, retryAfterMs);
     } catch {
       return {
         startedAt,
@@ -151,13 +177,21 @@ export async function runTotalsIngest(options: {
         periodsUpserted,
         outsideUpserted,
         skipped,
-        status: "error",
+        status,
         error: message,
+        httpStatus,
+        retryAfterMs,
         cursorCycle,
         cursorCandidateId,
       };
     }
   }
+}
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
 }
 
 async function listWork(repo: VoterRepository, cycles: number[]): Promise<WorkItem[]> {
@@ -193,6 +227,8 @@ function watermark(input: {
   updatedAt: string;
   status: TotalsWatermark["lastStatus"];
   error: string | null;
+  httpStatus: number | null;
+  retryAfterMs: number | null;
   candidatesSeen: number;
   directUpserted: number;
   periodsUpserted: number;
@@ -205,6 +241,8 @@ function watermark(input: {
     lastRunAt: input.updatedAt,
     lastStatus: input.status,
     lastError: input.error,
+    httpStatus: input.httpStatus,
+    retryAfterMs: input.retryAfterMs,
     candidatesSeen: input.candidatesSeen,
     directUpserted: input.directUpserted,
     periodsUpserted: input.periodsUpserted,

@@ -12,12 +12,14 @@ const MAX_BACKOFF_MS = 120_000;
 export class FecApiError extends Error {
   readonly status: number;
   readonly retryable: boolean;
+  readonly retryAfterMs: number | null;
 
-  constructor(message: string, status: number, retryable: boolean) {
+  constructor(message: string, status: number, retryable: boolean, retryAfterMs: number | null = null) {
     super(message);
     this.name = "FecApiError";
     this.status = status;
     this.retryable = retryable;
+    this.retryAfterMs = retryAfterMs;
   }
 }
 
@@ -200,6 +202,7 @@ export class FecClient {
   }> {
     const path = `${url.pathname}${redactQuery(url)}`;
 
+    let lastRetryAfter: number | null = null;
     for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt += 1) {
       let response: Response;
       try {
@@ -227,24 +230,23 @@ export class FecClient {
 
       const detail = await readErrorDetail(response);
       const retryable = response.status === 429 || response.status >= 500;
+      lastRetryAfter = retryAfterMs(response.headers.get("retry-after"), this.now());
       if (!retryable || attempt === MAX_ATTEMPTS - 1) {
         throw new FecApiError(
           `FEC request failed with HTTP ${response.status} (${path})${detail}`,
           response.status,
           retryable,
+          lastRetryAfter,
         );
       }
 
-      const retryAfter = retryAfterMs(
-        response.headers.get("retry-after"),
-        this.now(),
-      );
-      const wait = this.backoffMs(attempt, retryAfter);
+      const wait = this.backoffMs(attempt, lastRetryAfter);
       if (wait > MAX_BACKOFF_MS) {
         throw new FecApiError(
           `FEC rate limit window is longer than ${MAX_BACKOFF_MS / 1000}s (HTTP ${response.status}, ${path}). The ingest cursor is saved; run again after the window resets.`,
           response.status,
           true,
+          lastRetryAfter,
         );
       }
       await this.sleepImpl(wait);
