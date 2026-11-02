@@ -35,9 +35,9 @@ Parameters:
     Default: ""
     AllowedPattern: "^$|[A-Za-z0-9+=,.@_-]{1,64}"
     Description: >
-      Optional name of the existing Amplify SSR compute role. When set, the
-      candate-voter-amplify-compute policy is attached to it. Leave empty to
-      create the policy and attach it in the Amplify console.
+      Optional name of the existing Amplify SSR compute role. When set, this
+      stack's compute policy is attached to it. The policy name is generated.
+      Leave empty and attach output AmplifyComputePolicyArn yourself.
 
 Conditions:
   AttachAmplifyPolicy: !Not [!Equals [!Ref AmplifyComputeRoleName, ""]]
@@ -326,7 +326,6 @@ Resources:
   AmplifyComputePolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
-      ManagedPolicyName: candate-voter-amplify-compute
       Description: >-
         Amplify SSR access for accounts, site copy, brand images, and correction review.
         Does not grant DeleteItem on filing rows.

@@ -163,6 +163,77 @@ test("totals ingest writes direct and outside rows without combining them", asyn
   const mark = await repo.getTotalsWatermark();
   assert.equal(mark?.source, "fec-totals");
   assert.equal(mark?.lastStatus, "success");
+  assert.equal(mark?.cursorCandidateId, null);
+});
+
+test("totals ingest stops before the time budget and the next run resumes", async () => {
+  const repo = new MemoryVoterRepository();
+  await repo.upsertRace({
+    raceId: "2026-senate-KY",
+    office: "senate",
+    cycle: 2026,
+    state: "KY",
+    district: null,
+    title: "U.S. Senate, Kentucky",
+    jurisdiction: "Kentucky",
+    sourceUrl: null,
+    updatedAt: "2026-11-02T00:00:00.000Z",
+  });
+  for (const id of ["S6KY00001", "S6KY00002"]) {
+    await repo.upsertCandidate({
+      candidateId: id,
+      raceId: "2026-senate-KY",
+      displayName: id,
+      nameAsFiled: id,
+      office: "senate",
+      partyAffiliation: null,
+      fecCandidateId: id,
+      sourceUrl: null,
+      sourceLoadedAt: null,
+      updatedAt: "2026-11-02T00:00:00.000Z",
+    });
+  }
+  const seen: string[] = [];
+  const fec = {
+    async getCandidateTotals(id: string) {
+      seen.push(id);
+      return { candidate_id: id, cycle: 2026, receipts: 1, disbursements: 1, cash_on_hand_end_period: 1, debts_owed_by_committee: 0 };
+    },
+    async getCandidateCommittees() {
+      return [];
+    },
+    async *iterateCommitteeReports() {
+      yield [];
+    },
+    async getScheduleEByCandidate() {
+      return [];
+    },
+  };
+  let allow = true;
+  const first = await runTotalsIngest({
+    repo,
+    fec,
+    cycles: [2026],
+    shouldContinue: () => {
+      const ok = allow;
+      allow = false;
+      return ok;
+    },
+  });
+  assert.equal(first.status, "partial");
+  assert.equal(first.cursorCandidateId, "S6KY00001");
+  const saved = await repo.getTotalsWatermark();
+  assert.equal(saved?.lastStatus, "partial");
+  assert.equal(saved?.cursorCandidateId, "S6KY00001");
+  const second = await runTotalsIngest({
+    repo,
+    fec,
+    cycles: [2026],
+    shouldContinue: () => true,
+  });
+  assert.equal(second.status, "success");
+  assert.deepEqual(seen, ["S6KY00001", "S6KY00002"]);
+  assert.equal((await repo.getTotalsWatermark())?.cursorCandidateId, null);
 });
 
 test("finance alerts use the coverage date as the event time", () => {
@@ -182,7 +253,8 @@ test("finance alerts use the coverage date as the event time", () => {
 
 test("totals worker is a second function and does not itemize Schedule E lines", () => {
   const template = readFileSync("infra/template.yaml", "utf8");
-  assert.match(template, /ManagedPolicyName: candate-voter-amplify-compute\n      Description: >-/);
+  assert.equal(template.includes("ManagedPolicyName:"), false);
+  assert.match(template, /Description: >-/);
   assert.match(template, /FunctionName: candate-voter-fec-totals/);
   assert.match(template, /workers\/fec-totals\/app\.ts/);
   assert.match(template, /FEC_API_KEY: !Ref FecApiKey/);

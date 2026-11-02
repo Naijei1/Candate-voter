@@ -9,6 +9,7 @@ const LABEL: Record<FollowType, string> = {
   candidate: "candidate",
   jurisdiction: "jurisdiction",
   measure: "measure",
+  issue: "issue",
 };
 
 export function FollowControl({ what, targetId }: { what: FollowType; targetId: string }) {

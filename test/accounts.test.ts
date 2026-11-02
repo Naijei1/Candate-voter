@@ -87,7 +87,8 @@ test("account infrastructure stays least privilege and separate from filings", (
   assert.match(template, /UsernameAttributes:\s*\n\s*- email/);
   assert.match(template, /ALLOW_USER_PASSWORD_AUTH/);
   assert.match(template, /GenerateSecret: false/);
-  assert.match(template, /ManagedPolicyName: candate-voter-amplify-compute/);
+  assert.match(template, /AmplifyComputePolicy:/);
+  assert.equal(template.includes("ManagedPolicyName:"), false);
   assert.match(template, /dynamodb:LeadingKeys:/);
   assert.match(template, /CORRECTION#\*/);
   assert.match(template, /- CORRECTIONS/);

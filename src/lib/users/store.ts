@@ -94,7 +94,8 @@ export async function listFollows(userId: string): Promise<Follow[]> {
       item.targetType !== "race" &&
       item.targetType !== "candidate" &&
       item.targetType !== "jurisdiction" &&
-      item.targetType !== "measure"
+      item.targetType !== "measure" &&
+      item.targetType !== "issue"
     ) {
       return [];
     }
@@ -150,4 +151,48 @@ function profileFromItem(userId: string, item: Record<string, unknown>): UserPro
     quietEnd: typeof item.quietEnd === "string" ? item.quietEnd : null,
     deliveryStatus: ALERT_DELIVERY_STATUS,
   };
+}
+
+export type NewsFeed = {
+  states: string[];
+  categories: string[];
+};
+
+export function emptyNewsFeed(): NewsFeed {
+  return { states: [], categories: [] };
+}
+
+export async function getNewsFeed(userId: string): Promise<NewsFeed> {
+  const result = await client().send(
+    new GetCommand({
+      TableName: usersTableName(),
+      Key: { pk: userPartition(userId), sk: "FEED" },
+    }),
+  );
+  return newsFeedFromItem(result.Item ?? null);
+}
+
+export async function saveNewsFeed(userId: string, feed: NewsFeed): Promise<void> {
+  await client().send(
+    new PutCommand({
+      TableName: usersTableName(),
+      Item: {
+        pk: userPartition(userId),
+        sk: "FEED",
+        states: feed.states,
+        categories: feed.categories,
+      },
+    }),
+  );
+}
+
+function newsFeedFromItem(item: Record<string, unknown> | null): NewsFeed {
+  if (!item) return emptyNewsFeed();
+  const states = Array.isArray(item.states)
+    ? item.states.filter((value): value is string => typeof value === "string" && /^[A-Z]{2}$/.test(value))
+    : [];
+  const categories = Array.isArray(item.categories)
+    ? item.categories.filter((value): value is string => typeof value === "string" && value.length > 0 && value.length < 80)
+    : [];
+  return { states, categories };
 }

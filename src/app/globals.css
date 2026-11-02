@@ -64,6 +64,10 @@ a {
   text-decoration: none;
 }
 
+.site-header :focus-visible {
+  outline-color: #fff;
+}
+
 .nav-bar,
 .wrap,
 .site-footer-inner {
@@ -372,6 +376,13 @@ a.contest-link h2 {
 }
 
 .card,
+.person-card,
+.notice,
+.finder {
+  min-width: 0;
+}
+
+.card,
 .race-card,
 .person-card {
   background: var(--color-card);
@@ -525,6 +536,11 @@ textarea {
   align-items: start;
 }
 
+.table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
@@ -616,23 +632,25 @@ td {
   fill: var(--color-navy);
 }
 
-.us-map:focus,
-.us-map:focus-visible,
-.us-map .us-state:focus,
 .us-map .us-state:focus-visible,
-.us-map .us-state:-moz-focusring,
-.us-map .us-hit:focus,
-.us-map .us-hit:focus-visible,
-.us-map .us-hit:-moz-focusring {
-  outline: none;
-  outline-offset: 0;
-  box-shadow: none;
+.us-map .us-hit:focus-visible {
+  stroke: var(--color-navy);
+  stroke-width: 3;
+  outline: 3px solid var(--color-navy);
+  outline-offset: 2px;
 }
 
 .us-map .us-hit {
   fill: transparent;
   stroke: none;
   cursor: pointer;
+}
+
+.us-map .us-state:focus,
+.us-map .us-state:-moz-focusring,
+.us-map .us-hit:focus,
+.us-map .us-hit:-moz-focusring {
+  outline: none;
 }
 
 .us-map .us-label,

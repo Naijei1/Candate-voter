@@ -1,7 +1,9 @@
 import type { Metadata, Viewport } from "next";
+import { Suspense } from "react";
 import { AskProvider } from "@/components/chat/AskProvider";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
+import { PlaceSync } from "@/components/site/PlaceSync";
 import { brand } from "@/content/brand";
 import { cyclesFromEnv } from "@/lib/data/cycles";
 import "./globals.css";
@@ -34,6 +36,9 @@ export default function RootLayout({
           Skip to content
         </a>
         <AskProvider cycles={cycles}>
+          <Suspense fallback={null}>
+            <PlaceSync />
+          </Suspense>
           <SiteHeader />
           <main id="main" className="page-main">
             {children}

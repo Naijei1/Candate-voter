@@ -4,8 +4,10 @@ import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import { StatusMark } from "@/components/site/StatusMark";
 import { stateName } from "@/lib/data/states";
+import { districtFromAddress } from "@/lib/geo/address-district";
 import { findRacesByZip } from "@/lib/lookup/find-races";
-import { settleZipLookup, type ZipLookupResult } from "@/lib/lookup/zip-view";
+import { settleZipLookup, type ZipLookupPayload, type ZipLookupResult } from "@/lib/lookup/zip-view";
+import { withPlace } from "@/lib/place/selection";
 
 const YEAR = 2026;
 
@@ -70,31 +72,85 @@ function ZipResult({ result }: { result: ZipLookupResult }) {
       </p>
     );
   }
-  const { payload } = result;
+  return <ZipMatches payload={result.payload} />;
+}
+
+function ZipMatches({ payload }: { payload: ZipLookupPayload }) {
+  const [picked, setPicked] = useState<string | null>(payload.districts.length === 1 ? payload.districts[0]?.district ?? null : null);
+  const [note, setNote] = useState<string | null>(null);
   const place = payload.state ? stateName(payload.state) : "";
+  const shown = picked ? payload.districts.filter((district) => district.district === picked) : payload.districts;
+  const location = {
+    state: payload.state,
+    year: payload.year,
+    zip: payload.zip,
+    district: picked,
+  };
+
+  async function onAddress(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const street = String(form.get("street") ?? "");
+    const city = String(form.get("city") ?? "");
+    event.currentTarget.reset();
+    const found = await districtFromAddress({
+      street,
+      city,
+      state: payload.state ?? "",
+      zip: payload.zip,
+    });
+    if (!found.ok) {
+      setNote(found.message);
+      return;
+    }
+    setPicked(found.district);
+    setNote(`District ${Number(found.district)}. The address was not saved.`);
+  }
+
   return (
     <div className="notice" role="status">
       <p>
         <StatusMark kind="preview" hint="Not a full personal ballot." />
         {payload.zip}
         {place ? ` · ${place}` : ""}
-        {payload.districts.length > 1 ? " · more than one district" : ""}
       </p>
+      {payload.districts.length > 1 ? (
+        <form className="finder" onSubmit={onAddress}>
+          <p>
+            This ZIP includes more than one congressional district because a ZIP area can cross district lines. A street
+            address can pick one. It is sent only to the Census geocoder and is not saved.
+          </p>
+          <label htmlFor="street">
+            Street
+            <input id="street" name="street" autoComplete="off" />
+          </label>
+          <label htmlFor="city">
+            City
+            <input id="city" name="city" autoComplete="off" />
+          </label>
+          <button className="btn btn-navy" type="submit">
+            Use this address once
+          </button>
+        </form>
+      ) : null}
+      {note ? <p>{note}</p> : null}
       <ul className="result-links">
         {payload.senateRaceId ? (
           <li>
-            <Link href={`/races/${payload.senateRaceId}`}>U.S. Senate</Link>
+            <Link href={withPlace(`/races/${payload.senateRaceId}`, location)}>U.S. Senate</Link>
           </li>
         ) : null}
-        {payload.districts.map((district) => (
+        {shown.map((district) => (
           <li key={district.raceId}>
-            <Link href={`/races/${district.raceId}`}>
+            <Link href={withPlace(`/races/${district.raceId}`, { ...location, district: district.district })}>
               House {district.district === "00" ? "at large" : Number(district.district)}
             </Link>
           </li>
         ))}
       </ul>
-      {payload.state ? <Link href={`/states/${payload.state.toLowerCase()}`}>All {place} contests</Link> : null}
+      {payload.state ? (
+        <Link href={withPlace(`/states/${payload.state.toLowerCase()}`, location)}>All {place} contests</Link>
+      ) : null}
     </div>
   );
 }
