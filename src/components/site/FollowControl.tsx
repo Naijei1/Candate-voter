@@ -4,24 +4,17 @@ import Link from "next/link";
 import { useState } from "react";
 import { StatusMark } from "@/components/site/StatusMark";
 
-export function FollowControl({
-  what,
-}: {
-  what: "race" | "candidate";
-}) {
+export function FollowControl({ what }: { what: "race" | "candidate" }) {
   const [open, setOpen] = useState(false);
-  const label = what === "race" ? "Follow race" : "Follow candidate";
   return (
     <div>
-      <button className="btn btn-navy" type="button" onClick={() => setOpen(true)}>
-        {label}
+      <button className="btn btn-ghost" type="button" onClick={() => setOpen(true)}>
+        Follow {what}
       </button>
       {open ? (
-        <p className="notice" role="status">
+        <p className="hint" role="status">
           <StatusMark kind="preview" />
-          Following needs an account, and accounts are not turned on. This choice is not saved on
-          the server. Refreshing clears it. No email or notification will be sent.{" "}
-          <Link href="/sign-in">Open the sign-in preview</Link>
+          Not saved. <Link href="/sign-in">Sign in</Link>
         </p>
       ) : null}
     </div>

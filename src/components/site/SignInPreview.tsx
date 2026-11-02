@@ -14,9 +14,7 @@ export function SignInPreview() {
   return (
     <form onSubmit={onSubmit} className="finder">
       <p>
-        <StatusMark kind="preview" />
-        Accounts are not turned on. This form does not create an account, and it does not send
-        what you type.
+        <StatusMark kind="preview" /> Nothing is sent.
       </p>
       <label htmlFor="email">
         Email
@@ -27,7 +25,7 @@ export function SignInPreview() {
       </button>
       {done ? (
         <p role="status">
-          Sign-in is a preview. No account was created, and no message was sent.
+          No account was created.
         </p>
       ) : null}
     </form>

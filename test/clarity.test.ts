@@ -284,7 +284,7 @@ test("home and ask copy stay plain and the map does not lead with Popular", () =
   assert.equal(header.includes("map-chrome-info"), false);
   assert.match(footer, /does not endorse/);
   assert.match(footer, /Privacy/);
-  assert.match(footer, /Sources and methodology/);
+  assert.match(footer, /About this data/);
   assert.equal(footer.includes("Agent API"), false);
   assert.match(landing, /<ZipLookup/);
   assert.match(landing, /searchWithoutState/);

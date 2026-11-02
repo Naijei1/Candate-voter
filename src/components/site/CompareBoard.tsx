@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { SAMPLE_PAC } from "@/content/pilot";
 import { StatusMark } from "@/components/site/StatusMark";
 
 export type CompareCandidate = {
@@ -47,9 +46,11 @@ export function CompareBoard({
           </button>
         ))}
       </div>
-      <p>Candidates are ordered A to Z by the name on the filing. That order is not a ranking.</p>
+      <p className="hint" title="Alphabetical by filing name. Not a ranking.">
+        A to Z
+      </p>
       {candidates.length === 0 ? (
-        <p>No candidates are stored for this contest, so there is nothing to compare.</p>
+        <p>No candidates stored.</p>
       ) : (
         <div className="compare-grid">
           {candidates.map((candidate) => (
@@ -58,83 +59,51 @@ export function CompareBoard({
                 <Link href={`/candidates/${candidate.candidateId}`}>{candidate.displayName}</Link>
               </h3>
               <p className="party">{candidate.partyLabel}</p>
-              <p>Photo: not on file. Incumbency: not in this record.</p>
-              <p>Filing: statement of candidacy when a Form 2 is stored. Ballot status is not verified.</p>
-              <p>Campaign website: not verified.</p>
-              <p>
-                <Link href={raceHref}>Back to the race</Link>
-              </p>
+              <p className="hint">Filing stored · Ballot not verified</p>
             </article>
           ))}
         </div>
       )}
       <div className="card" role="tabpanel">
-        <h3>{tab}</h3>
         <TabBody tab={tab} />
       </div>
+      <p>
+        <Link href={raceHref}>Back to race</Link>
+      </p>
       {candidates.length < 3 ? <SampleTrio /> : null}
     </div>
   );
 }
 
 function TabBody({ tab }: { tab: Tab }) {
-  if (tab === "Overview") {
-    return (
-      <p>
-        Each card lists the same fields: name, party as text, photo, incumbency, filing status,
-        and campaign website. Missing fields stay missing.
-      </p>
-    );
-  }
+  if (tab === "Overview") return <p>Same fields on every card.</p>;
   if (tab === "Campaign Finance") {
     return (
-      <>
-        <p>Reported fundraising for this person is not loaded. Form 2 is not a fundraising report.</p>
-        <p>
-          <StatusMark kind="sample" />
-          The sample amounts live on the{" "}
-          <Link href="/finance">campaign finance page</Link>, separate from these names.
-        </p>
-      </>
-    );
-  }
-  if (tab === "Polls") {
-    return <p>No qualifying polls available.</p>;
-  }
-  if (tab === "Voting Record") {
-    return (
       <p>
-        No legislative votes are in this record. An empty voting record is not a score, and it does
-        not mean the person has never held office.
+        <StatusMark kind="sample" /> Not loaded. <Link href="/finance">Sample finance</Link>
       </p>
     );
   }
-  if (tab === "Updates") {
-    return <p>No sourced updates beyond the stored filing are available.</p>;
-  }
-  return <p>Not available. This tab is not filled with generated positions or quotations.</p>;
+  if (tab === "Polls") return <p>No qualifying polls available.</p>;
+  if (tab === "Voting Record") return <p>No votes in this record.</p>;
+  if (tab === "Updates") return <p>No updates beyond the filing.</p>;
+  return <p>Not available.</p>;
 }
 
 function SampleTrio() {
   return (
-    <section className="section" aria-labelledby="sample-trio">
-      <h2 id="sample-trio">
-        <StatusMark kind="sample" />
-        Layout for more than two candidates
-      </h2>
-      <p>
-        These three cards are a demonstration of the layout. They are not people in the contest
-        above. {SAMPLE_PAC.name} is not a real committee.
-      </p>
+    <details className="fold">
+      <summary>
+        <StatusMark kind="sample" /> 3-candidate layout
+      </summary>
       <div className="compare-grid">
         {["Sample candidate A", "Sample candidate B", "Sample candidate C"].map((name) => (
           <article className="person-card" key={name}>
             <h3>{name}</h3>
             <p className="party">Party label</p>
-            <p>Same fields as a live card. All of this text is sample copy.</p>
           </article>
         ))}
       </div>
-    </section>
+    </details>
   );
 }

@@ -60,6 +60,7 @@ test("explore and district maps still use the pan gesture", () => {
   const national = readFileSync(new URL("../src/components/UsMap.tsx", import.meta.url), "utf8");
   const district = readFileSync(new URL("../src/components/DistrictMap.tsx", import.meta.url), "utf8");
   const explore = readFileSync(new URL("../src/app/states/page.tsx", import.meta.url), "utf8");
+  const sources = readFileSync(new URL("../src/app/sources/page.tsx", import.meta.url), "utf8");
   const note = readFileSync(new URL("../src/components/site/DistrictVintageNote.tsx", import.meta.url), "utf8");
   assert.match(national, /<MapGesture/);
   assert.match(district, /<MapGesture/);
@@ -67,7 +68,7 @@ test("explore and district maps still use the pan gesture", () => {
   assert.match(national, /onPanActive/);
   assert.match(national, /preserveAspectRatio="xMidYMin meet"/);
   assert.match(explore, /StateExplore/);
-  assert.match(explore, /DistrictVintageNote/);
+  assert.match(sources, /DistrictVintageNote/);
   assert.match(note, /CD119_CONGRESS/);
   assert.match(note, /120th/);
 });

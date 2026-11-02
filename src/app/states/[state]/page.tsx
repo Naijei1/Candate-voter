@@ -3,13 +3,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { DistrictMap } from "@/components/DistrictMap";
 import { DataRefreshedBanner } from "@/components/DataRefreshedBanner";
-import { DistrictVintageNote } from "@/components/site/DistrictVintageNote";
+import { Crumbs } from "@/components/site/Crumbs";
+import { StatusMark } from "@/components/site/StatusMark";
 import { isPostalState, stateName } from "@/lib/data/states";
 import { generalElectionLabel } from "@/lib/copy";
-import { leadSentences } from "@/lib/data/calendar";
-import { senateSeatUp } from "@/lib/data/senate-classes";
 import { PILOT_YEAR, contestsForState, loadPilotIndex } from "@/lib/site/contest";
-import { SAMPLE_MEASURE } from "@/content/pilot";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -47,26 +45,15 @@ export default async function StatePage({ params, searchParams }: PageProps) {
 
   return (
     <article className="wrap">
-      <p>
-        <Link href="/states">All states</Link>
-      </p>
+      <Crumbs items={[{ href: "/", label: "Home" }, { label: name }]} />
       <h1>{name}</h1>
-      <p>{leadSentences(year)[0]}</p>
-      <p>
-        Selected election: {year}. Federal general election day: {generalElectionLabel(year)}. This
-        page lists the general-election federal contests
-        {senateSeatUp(postal, year) ? ", including the U.S. Senate seat that is up," : ""} and every
-        U.S. House district. Primary dates are not loaded. A special or runoff appears only when a
-        stored filing uses this year.
+      <p className="lede">
+        {year} general · {generalElectionLabel(year)}
       </p>
       <DataRefreshedBanner refreshedAt={loaded.refreshedAt} />
-      {loaded.filingsLoaded ? (
-        <p>Last checked is the Form 2 ingest time above, when a run has stored one. A Form 2 is not the printed ballot.</p>
-      ) : (
+      {loaded.filingsLoaded ? null : (
         <p className="notice notice-error" role="status">
-          Stored filings could not be loaded. The contests below are the regular federal ballot
-          structure, not a live roster. Candidate names are hidden so an outage is not shown as an
-          empty field.
+          Filings could not be loaded. <Link href="/sources">About this data</Link>
         </p>
       )}
 
@@ -83,66 +70,50 @@ export default async function StatePage({ params, searchParams }: PageProps) {
       </nav>
 
       {category === "federal" ? (
-        <>
-          <h2>Federal contests</h2>
-          {contests.length === 0 ? (
-            <p>No regular federal House or Senate contest is on the ballot in {name} for {year}.</p>
-          ) : (
-            <ul className="card-grid">
-              {contests.map((race) => (
-                <li className="card" key={race.raceId}>
-                  <h3>
-                    <Link href={`/races/${race.raceId}`}>{race.title}</Link>
-                  </h3>
-                  <p>{race.jurisdiction}</p>
-                  <p>
-                    {loaded.filingsLoaded
-                      ? race.empty || race.hasCandidates === false
-                        ? "No Form 2 filing is stored yet."
-                        : "At least one Form 2 filing is stored."
-                      : "Filing status was not loaded."}
-                  </p>
-                  <p>Stage: general election. Ballot qualification: not verified.</p>
-                </li>
-              ))}
-            </ul>
-          )}
-          {loaded.filingsLoaded && contests.some((race) => race.office === "house") ? (
-            <section className="section" aria-labelledby="districts">
-              <h2 id="districts">House districts</h2>
-              <DistrictVintageNote />
-              <DistrictMap
-                postal={postal}
-                races={contests}
-                year={year}
-                context={{ year, state: postal, zip: null }}
-              />
-            </section>
-          ) : (
-            <DistrictVintageNote />
-          )}
-        </>
+        contests.length === 0 ? (
+          <p>No federal contest for {year}.</p>
+        ) : (
+          <ul className="card-grid">
+            {contests.map((race) => (
+              <li key={race.raceId}>
+                <Link className="card contest-link" href={`/races/${race.raceId}`}>
+                  <h2>{race.title}</h2>
+                  <p>{filingLine(loaded.filingsLoaded, race.empty === true || race.hasCandidates === false)}</p>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )
       ) : (
-        <div className="notice" role="status">
-          <h2>{labelFor(category)} contests</h2>
-          <p>
-            {name} {category} contests are not covered. No source for this category is connected, so
-            this page does not list any. Federal contests remain available from the Federal filter.
-          </p>
-        </div>
+        <p className="notice" role="status">
+          <StatusMark kind="gap" /> {labelFor(category)} contests are not connected.
+        </p>
       )}
 
+      {loaded.filingsLoaded && category === "federal" && contests.some((race) => race.office === "house") ? (
+        <section className="section" aria-labelledby="districts">
+          <h2 id="districts">Districts</h2>
+          <DistrictMap
+            postal={postal}
+            races={contests}
+            year={year}
+            context={{ year, state: postal, zip: null }}
+          />
+        </section>
+      ) : null}
+
       <p>
-        <Link href={SAMPLE_MEASURE.path}>{SAMPLE_MEASURE.title}</Link>
-        {" — "}
-        {SAMPLE_MEASURE.eyebrow}
-      </p>
-      <p>
-        <Link href="/officeholders">Current officeholders</Link> are a separate directory and are not
-        loaded.
+        <Link href="/measures/example-kentucky">
+          <StatusMark kind="sample" /> Ballot measure
+        </Link>
       </p>
     </article>
   );
+}
+
+function filingLine(loaded: boolean, empty: boolean): string {
+  if (!loaded) return "Not loaded";
+  return empty ? "No filing yet" : "Filing stored";
 }
 
 function parseYear(value: string | undefined): number {
@@ -152,8 +123,7 @@ function parseYear(value: string | undefined): number {
 }
 
 function parseCategory(value: string | undefined): Category {
-  const found = CATEGORIES.find((item) => item.id === value);
-  return found?.id ?? "federal";
+  return CATEGORIES.find((item) => item.id === value)?.id ?? "federal";
 }
 
 function labelFor(category: Category): string {
