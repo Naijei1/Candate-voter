@@ -38,9 +38,22 @@ Parameters:
       Optional name of the existing Amplify SSR compute role. When set, this
       stack's compute policy is attached to it. The policy name is generated.
       Leave empty and attach output AmplifyComputePolicyArn yourself.
+  GoogleClientId:
+    Type: String
+    Default: ""
+    NoEcho: true
+    Description: Google OAuth client id. Leave empty to deploy without Google sign-in.
+  GoogleClientSecret:
+    Type: String
+    Default: ""
+    NoEcho: true
+    Description: Google OAuth client secret. Leave empty to deploy without Google sign-in.
 
 Conditions:
   AttachAmplifyPolicy: !Not [!Equals [!Ref AmplifyComputeRoleName, ""]]
+  HasGoogle: !And
+    - !Not [!Equals [!Ref GoogleClientId, ""]]
+    - !Not [!Equals [!Ref GoogleClientSecret, ""]]
 
 Resources:
   VoterTable:
@@ -258,8 +271,33 @@ Resources:
         Project: candate
         Component: accounts
 
+  UserPoolDomain:
+    Type: AWS::Cognito::UserPoolDomain
+    Properties:
+      Domain: candate-voter-402275401617
+      UserPoolId: !Ref UserPool
+
+  GoogleProvider:
+    Type: AWS::Cognito::UserPoolIdentityProvider
+    Condition: HasGoogle
+    Properties:
+      ProviderName: Google
+      ProviderType: Google
+      UserPoolId: !Ref UserPool
+      ProviderDetails:
+        client_id: !Ref GoogleClientId
+        client_secret: !Ref GoogleClientSecret
+        authorize_scopes: email openid profile
+      AttributeMapping:
+        email: email
+        username: sub
+
   UserPoolClient:
     Type: AWS::Cognito::UserPoolClient
+    DependsOn: !If
+      - HasGoogle
+      - GoogleProvider
+      - !Ref AWS::NoValue
     Properties:
       ClientName: candate-voter-web
       UserPoolId: !Ref UserPool
@@ -269,18 +307,24 @@ Resources:
         - ALLOW_USER_PASSWORD_AUTH
         - ALLOW_REFRESH_TOKEN_AUTH
         - ALLOW_USER_SRP_AUTH
-      SupportedIdentityProviders:
-        - COGNITO
+      SupportedIdentityProviders: !If
+        - HasGoogle
+        - - COGNITO
+          - Google
+        - - COGNITO
       AllowedOAuthFlowsUserPoolClient: true
       AllowedOAuthFlows:
         - code
       AllowedOAuthScopes:
         - email
         - openid
+        - profile
       CallbackURLs:
-        - https://voter.naijei.com/sign-in
-        - http://localhost:3000/sign-in
+        - https://main.d253xhq1uabld3.amplifyapp.com/sign-in/google
+        - https://voter.naijei.com/sign-in/google
+        - http://localhost:3000/sign-in/google
       LogoutURLs:
+        - https://main.d253xhq1uabld3.amplifyapp.com/
         - https://voter.naijei.com/
         - http://localhost:3000/
       IdTokenValidity: 1
@@ -402,6 +446,9 @@ Outputs:
   UserPoolClientId:
     Description: Public app client id. Set this as COGNITO_CLIENT_ID. There is no client secret.
     Value: !Ref UserPoolClient
+  CognitoHostedDomain:
+    Description: Set COGNITO_DOMAIN to this host, without https, after Google is configured.
+    Value: candate-voter-402275401617.auth.us-east-1.amazoncognito.com
   AmplifyComputePolicyArn:
     Description: Attach to the Amplify SSR compute role when AmplifyComputeRoleName was left empty.
     Value: !Ref AmplifyComputePolicy

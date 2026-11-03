@@ -1,7 +1,7 @@
 import { houseContestJurisdiction, houseContestTitle } from "@/lib/data/at-large";
 import { stateName } from "@/lib/data/states";
 import type { FinanceDirect } from "@/lib/finance/model";
-import { candidateTotalsUrl } from "@/lib/finance/model";
+import { candidateTotalsUrl, formatMoney } from "@/lib/finance/model";
 import type { Candidate, Race } from "@/lib/types";
 
 /** Kentucky November 3, 2026 federal ballot. Checked November 3, 2026. */
@@ -242,6 +242,36 @@ function writeIn(id: string, name: string): KyPerson {
 }
 
 const RACES = [SENATE, ...HOUSE];
+
+export type BallotCard = {
+  raceId: string;
+  title: string;
+  office: "senate" | "house";
+  district: string | null;
+  people: Array<{ id: string; name: string; party: string; line: string; raised: string | null }>;
+};
+
+export function ballotCards(): BallotCard[] {
+  return RACES.map((race) => {
+    const senate = race.raceId.includes("-senate-");
+    const district = senate ? null : race.raceId.slice(-2);
+    return {
+      raceId: race.raceId,
+      title: senate ? "U.S. Senate" : `U.S. House District ${Number(district)}`,
+      office: senate ? "senate" : "house",
+      district,
+      people: [...race.people]
+        .sort((a, b) => a.name.localeCompare(b.name))
+        .map((person) => ({
+          id: person.id,
+          name: person.name,
+          party: person.party,
+          line: person.role === "write-in" ? "Write-in" : person.holdsOffice ? "Holds this office now" : "On the November ballot",
+          raised: person.finance ? formatMoney(person.finance.receipts) : null,
+        })),
+    };
+  });
+}
 
 export function kyBallot(raceId: string): KyRace | null {
   return RACES.find((race) => race.raceId === raceId) ?? null;

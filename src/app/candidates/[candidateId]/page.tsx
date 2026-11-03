@@ -8,6 +8,7 @@ import { DirectList, orgLabel, OutsideList } from "@/components/site/FinanceList
 import { FollowControl } from "@/components/site/FollowControl";
 import { RosterMoney } from "@/components/site/RosterMoney";
 import { formatInstant, httpsUrl, partyCue, partyLabel } from "@/lib/format";
+import { formatMoney } from "@/lib/finance/model";
 import { financeForCandidate, loadFinance } from "@/lib/finance/load";
 import { selectDirect, selectOutside } from "@/lib/finance/present";
 import { loadChecks } from "@/lib/content/store";
@@ -75,14 +76,25 @@ export default async function CandidatePage({ params }: PageProps) {
       {ballot?.person.holdsOffice ? <p>Holds this office now.</p> : null}
       {ballot?.person.role === "write-in" ? <p>Write-in on the November filing list.</p> : null}
       {race ? <p>{race.title}</p> : ballot ? <p>{ballotTitle(ballot.race.raceId)}</p> : snap ? <p>U.S. Senate, Kentucky · 2026</p> : null}
-      <div className="actions">
+      <div className="actions sticky-mobile">
         {raceHref ? (
           <Link className="btn btn-navy" href={`${raceHref}/compare`}>
-            Compare candidates
+            Compare
           </Link>
         ) : null}
-        <FollowControl what="candidate" targetId={loaded.ok ? loaded.candidate.candidateId : id} />
+        <Link className="btn btn-ghost" href="/">
+          Your ballot
+        </Link>
       </div>
+      <ul className="plain-list">
+        <li>Party: {party || "Not listed"}</li>
+        {ballot?.person.holdsOffice ? <li>Holds this office now.</li> : null}
+        {ballot?.person.role === "write-in" ? <li>Write-in on the November filing list.</li> : null}
+        {ballot?.person.finance ? <li>Raised {formatMoney(ballot.person.finance.receipts)}</li> : null}
+      </ul>
+      <details>
+        <summary>More details</summary>
+        <FollowControl what="candidate" targetId={ballot?.person.fecCandidateId ?? (loaded.ok ? loaded.candidate.candidateId : id)} />
 
       <h2>Verified</h2>
       <ul className="plain-list">
@@ -156,7 +168,8 @@ export default async function CandidatePage({ params }: PageProps) {
           Ballot name checked {calendarDay(KY_BALLOT_CHECKED)} against the Kentucky Secretary of State general-election filings.
         </p>
       ) : null}
-      <p className="hint">Biography, issue positions, and endorsements are not loaded yet.</p>
+      <p className="hint">Issue positions are not loaded. Nothing is guessed.</p>
+      </details>
     </article>
   );
 }

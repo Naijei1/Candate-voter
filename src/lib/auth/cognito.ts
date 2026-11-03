@@ -12,6 +12,29 @@ export type CognitoSettings = {
   region: string;
 };
 
+export function googleSignInConfigured(
+  env: Record<string, string | undefined> = process.env,
+): boolean {
+  return env.COGNITO_GOOGLE === "true" && Boolean(env.COGNITO_DOMAIN?.trim()) && cognitoSettings(env) !== null;
+}
+
+export function googleAuthorizeUrl(
+  origin: string,
+  env: Record<string, string | undefined> = process.env,
+): string | null {
+  const settings = cognitoSettings(env);
+  const domain = env.COGNITO_DOMAIN?.trim().replace(/^https:\/\//, "") ?? "";
+  if (!settings || env.COGNITO_GOOGLE !== "true" || !domain) return null;
+  const redirect = `${origin.replace(/\/$/, "")}/sign-in/google`;
+  const url = new URL(`https://${domain}/oauth2/authorize`);
+  url.searchParams.set("identity_provider", "Google");
+  url.searchParams.set("response_type", "code");
+  url.searchParams.set("client_id", settings.clientId);
+  url.searchParams.set("redirect_uri", redirect);
+  url.searchParams.set("scope", "openid email profile");
+  return url.toString();
+}
+
 export function cognitoSettings(
   env: Record<string, string | undefined> = process.env,
 ): CognitoSettings | null {

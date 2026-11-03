@@ -4,7 +4,7 @@ import { useState, type FormEvent } from "react";
 
 type Mode = "sign-in" | "create" | "confirm";
 
-export function SignInForm({ configured }: { configured: boolean }) {
+export function SignInForm({ configured, googleUrl = null }: { configured: boolean; googleUrl?: string | null }) {
   const [mode, setMode] = useState<Mode>("sign-in");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -73,6 +73,13 @@ export function SignInForm({ configured }: { configured: boolean }) {
 
   return (
     <form className="finder" onSubmit={onSubmit}>
+      {googleUrl ? (
+        <p>
+          <a className="btn btn-navy" href={googleUrl}>
+            Continue with Google
+          </a>
+        </p>
+      ) : null}
       <p>Use your email and a password.</p>
       <label htmlFor="email">
         Email

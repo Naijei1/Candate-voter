@@ -39,6 +39,7 @@ export function DistrictMap({
   const router = useRouter();
   const [shapes, setShapes] = useState<ProjectedDistrict[] | null>(null);
   const [failed, setFailed] = useState(false);
+  const [hover, setHover] = useState<string | null>(null);
   const covered = HOUSE_SEATS[postal] != null;
   const yours = new Set(yourDistricts.map((code) => code.padStart(2, "0")));
   const here = youAreHere(postal, yourDistricts);
@@ -122,6 +123,10 @@ export function DistrictMap({
                   role="link"
                   tabIndex={0}
                   aria-label={label}
+                  onMouseEnter={() => setHover(label)}
+                  onMouseLeave={() => setHover(null)}
+                  onFocus={() => setHover(label)}
+                  onBlur={() => setHover(null)}
                   onClick={() => openRace(race.raceId)}
                   onKeyDown={(event: KeyboardEvent<SVGPathElement>) => {
                     if (event.key === "Enter" || event.key === " ") {
@@ -134,10 +139,16 @@ export function DistrictMap({
                 </path>
               );
             })}
+            {shapes.map((shape) => (
+              <text key={`label-${shape.district}`} className="cd-label" x={shape.labelX} y={shape.labelY} textAnchor="middle">
+                {Number(shape.district)}
+              </text>
+            ))}
           </svg>
           </MapGesture>
         )}
       </div>
+      {hover ? <p className="cd-hover-label">{hover}</p> : null}
       {here ? (
         <p className="you-are-here" data-testid="you-are-here">
           {here}

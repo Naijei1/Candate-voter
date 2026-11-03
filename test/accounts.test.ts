@@ -94,7 +94,9 @@ test("account infrastructure stays least privilege and separate from filings", (
   assert.match(template, /- CORRECTIONS/);
   assert.match(template, /dynamodb:PutItem/);
   assert.match(template, /dynamodb:UpdateItem/);
-  assert.equal(template.includes("Google"), false);
+  assert.match(template, /GoogleClientId:/);
+  assert.match(template, /Condition: HasGoogle/);
+  assert.match(template, /Default: ""/);
   assert.equal(template.includes("AWS::SES"), false);
   const script = readFileSync("scripts/write-amplify-server-env.mjs", "utf8");
   for (const key of ["CANDATE_USERS_TABLE", "COGNITO_USER_POOL_ID", "COGNITO_CLIENT_ID", "ADMIN_EMAILS"]) {
