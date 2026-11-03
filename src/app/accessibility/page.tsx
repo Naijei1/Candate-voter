@@ -12,6 +12,9 @@ export default function AccessibilityPage() {
         <li>Buttons and navigation items are at least 44 pixels tall.</li>
         <li>You can pick a state without using the map.</li>
         <li>Nothing plays automatically.</li>
+        <li>Keyboard focus uses a visible outline. Compare topics are buttons.</li>
+        <li>Text is set in rem and pixels that grow when the browser zoom changes. Photos are capped so they do not stretch the page.</li>
+        <li>Form fields for ZIP, finance filters, and news follow a state have visible labels.</li>
       </ul>
       <p>A public contact method will be listed once it is approved.</p>
     </article>

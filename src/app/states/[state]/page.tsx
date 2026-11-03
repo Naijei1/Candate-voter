@@ -92,7 +92,7 @@ export default async function StatePage({ params, searchParams }: PageProps) {
         <LocalTemplate postal={postal} kind={category} />
       ) : (
         <p className="notice" role="status">
-          {labelFor(category)} races are not loaded yet. Federal races are ready.
+          {labelFor(category)} races are not covered yet. Federal races are ready.
         </p>
       )}
 
@@ -142,7 +142,7 @@ function LocalTemplate({ postal, kind }: { postal: string; kind: "judicial" | "s
   return (
     <section className="card" aria-labelledby={`${kind}-template`}>
       <h2 id={`${kind}-template`}>{title}</h2>
-      <p>These races are not loaded yet. No names were copied from the state election office.</p>
+      <p>Not covered yet. No names were copied from the state election office.</p>
       <p>
         <Link className="btn btn-navy" href={`/states/${postal.toLowerCase()}`}>
           See federal races

@@ -452,6 +452,37 @@ a.contest-link h2 {
   padding: 1rem 1.1rem;
 }
 
+.person-photo {
+  width: 4rem;
+  height: 4rem;
+  max-width: 4rem;
+  border-radius: 999px;
+  object-fit: cover;
+}
+
+.person-card h3 {
+  margin: 0.35rem 0 0.15rem;
+  font-size: 1.25rem;
+}
+
+.person-initials {
+  display: inline-grid;
+  place-items: center;
+  width: 4rem;
+  height: 4rem;
+  border-radius: 999px;
+  background: var(--color-line);
+  color: var(--color-ink);
+  font-weight: 700;
+}
+
+select {
+  min-height: 44px;
+  font: inherit;
+  color: var(--color-ink);
+  background: #fff;
+}
+
 .card-grid,
 .person-grid {
   grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));

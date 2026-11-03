@@ -19,6 +19,7 @@ import {
   rateLimitSettings,
 } from "./config";
 import { definitionAnswer } from "./definitions";
+import { notesAnswer } from "./notes";
 import { alignSourceAsOf } from "./freshness";
 import { CHAT_TIMEOUT_MESSAGE, ChatUnavailableError, isAbortError, unavailableBody } from "./errors";
 import { createBedrockConverse } from "./converse";
@@ -130,6 +131,12 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
   }
 
   const asked = await withZipState(parsed.value, deps);
+
+  const notes = await notesAnswer(asked);
+  if (notes) {
+    logOutcome({ refused: false, tools: ["notes"], latencyMs: Date.now() - started, mode: "factual" });
+    return json(chatBody(notes, threadId, asked.message, asked));
+  }
 
   if (isAlignmentRequest(asked.message)) {
     if (!alignmentEnabled(deps.env)) {
