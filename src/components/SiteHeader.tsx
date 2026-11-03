@@ -5,10 +5,15 @@ import { loadSiteCopy } from "@/lib/content/store";
 import { signOutAction } from "@/lib/auth/actions";
 import { currentUser } from "@/lib/auth/session";
 
-const PRIMARY = [
-  { href: "/", label: "Ballot" },
+const PRIMARY = [{ href: "/", label: "Ballot" }] as const;
+
+const EXPLORE = [
   { href: "/map", label: "Map" },
   { href: "/ask", label: "Ask" },
+  { href: "/news", label: "News" },
+  { href: "/finance", label: "Money" },
+  { href: "/polls", label: "Polls" },
+  { href: "/sources", label: "Sources" },
 ] as const;
 
 export async function SiteHeader() {
@@ -27,6 +32,16 @@ export async function SiteHeader() {
               {item.label}
             </Link>
           ))}
+          <details>
+            <summary>Explore</summary>
+            <div>
+              {EXPLORE.map((item) => (
+                <Link key={item.href} href={item.href}>
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+          </details>
         </nav>
         {user ? (
           <details className="account-menu">
@@ -48,6 +63,11 @@ export async function SiteHeader() {
           <summary>Menu</summary>
           <div>
             {PRIMARY.map((item) => (
+              <Link key={item.href} href={item.href}>
+                {item.label}
+              </Link>
+            ))}
+            {EXPLORE.map((item) => (
               <Link key={item.href} href={item.href}>
                 {item.label}
               </Link>

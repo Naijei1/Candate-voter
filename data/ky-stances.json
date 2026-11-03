@@ -1,0 +1,59 @@
+{
+  "checkedOn": "2026-11-03",
+  "note": "Short restatements of what the candidate published. Empty lists mean no sourced stance was stored. Opponent descriptions are not included.",
+  "issues": [
+    { "id": "immigration", "label": "Immigration and the border" },
+    { "id": "debt", "label": "The national debt" },
+    { "id": "cost", "label": "Cost of living" },
+    { "id": "health", "label": "Health care costs" },
+    { "id": "data", "label": "Data centers and utility bills" }
+  ],
+  "candidates": {
+    "S6KY00286": [
+      {
+        "issueId": "immigration",
+        "text": "Says he wants a border wall, more immigration enforcement, and deportation of people he describes as being in the country illegally.",
+        "sourceName": "Lexington Herald-Leader, Andy Barr written answers",
+        "sourceUrl": "https://www.kentucky.com/news/politics-government/article315725113.html",
+        "sourceDate": "2026-05-20"
+      },
+      {
+        "issueId": "debt",
+        "text": "Says he shares concern about the national debt and that he voted for the 2025 tax and spending law, which he describes as reducing the deficit.",
+        "sourceName": "Lexington Herald-Leader, Andy Barr written answers",
+        "sourceUrl": "https://www.kentucky.com/news/politics-government/article315725113.html",
+        "sourceDate": "2026-05-20"
+      },
+      {
+        "issueId": "cost",
+        "text": "Says bringing down the cost of living, especially fuel prices, is a Senate priority.",
+        "sourceName": "Lexington Herald-Leader, Andy Barr written answers",
+        "sourceUrl": "https://www.kentucky.com/news/politics-government/article315725113.html",
+        "sourceDate": "2026-05-20"
+      }
+    ],
+    "S6KY00385": [
+      {
+        "issueId": "health",
+        "text": "Says he would restore Affordable Care Act subsidies, support a Kentucky public insurance option, and lower prescription prices tied to Medicare negotiations.",
+        "sourceName": "Charles Booker campaign, health care policy",
+        "sourceUrl": "https://charlesbookerky.org/policies/healthcare",
+        "sourceDate": "2026-11-03"
+      },
+      {
+        "issueId": "data",
+        "text": "Says he supports a national pause on new AI data centers until their effect on water, utility bills, and the environment is known.",
+        "sourceName": "Charles Booker campaign, data centers policy",
+        "sourceUrl": "https://charlesbookerky.org/policies/data-centers",
+        "sourceDate": "2026-11-03"
+      },
+      {
+        "issueId": "cost",
+        "text": "Says he would rein in tariffs and end cuts to Medicaid that he says raised health costs.",
+        "sourceName": "Charles Booker campaign, Courier-Journal op-ed",
+        "sourceUrl": "https://charlesbookerky.org/press-releases/booker-courier-journal-op-ed",
+        "sourceDate": "2026-10-19"
+      }
+    ]
+  }
+}

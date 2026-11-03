@@ -279,7 +279,7 @@ test("home and ask copy stay plain and the map does not lead with Popular", () =
   assert.equal(landing.includes("1 candidate so far"), false);
   assert.equal(landing.includes("candidates so far"), false);
   assert.equal(looking.includes("What am I looking at"), false);
-  assert.match(header, /Ballot/);
+  assert.match(header, /Explore/);
   assert.match(header, /Sign in/);
   assert.equal(header.includes("map-chrome-info"), false);
   assert.match(footer, /does not endorse/);
