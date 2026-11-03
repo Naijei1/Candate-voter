@@ -1,5 +1,8 @@
+import { houseContestJurisdiction, houseContestTitle } from "@/lib/data/at-large";
+import { stateName } from "@/lib/data/states";
 import type { FinanceDirect } from "@/lib/finance/model";
 import { candidateTotalsUrl } from "@/lib/finance/model";
+import type { Candidate, Race } from "@/lib/types";
 
 /** Kentucky November 3, 2026 federal ballot. Checked November 3, 2026. */
 export const KY_BALLOT_CHECKED = "2026-11-03";
@@ -282,6 +285,74 @@ export function rosterMoney(raceId: string, person: KyPerson): FinanceDirect | n
     sourceLabel: row.sourceLabel,
     updatedAt: `${KY_BALLOT_CHECKED}T00:00:00Z`,
   };
+}
+
+const BALLOT_LOADED_AT = "2026-11-03 23:59:59";
+const BALLOT_UPDATED_AT = "2026-11-03T23:59:59.000Z";
+
+/** Races and people to write into `candate-voter`. Does not invent filings. */
+export function kyBallotSeed(): { races: Race[]; candidates: Candidate[] } {
+  const races = RACES.map((ballot) => raceRecord(ballot.raceId));
+  const candidates = RACES.flatMap((ballot) =>
+    ballot.people.map((person) => candidateRecord(ballot.raceId, person)),
+  );
+  return { races, candidates };
+}
+
+export function missingKyBallotCandidates(
+  raceId: string,
+  presentIds: ReadonlySet<string>,
+): Candidate[] {
+  return kyBallotSeed().candidates.filter((candidate) => {
+    if (candidate.raceId !== raceId) return false;
+    if (presentIds.has(candidate.candidateId)) return false;
+    if (candidate.fecCandidateId && presentIds.has(candidate.fecCandidateId)) return false;
+    return true;
+  });
+}
+
+function raceRecord(raceId: string): Race {
+  const senate = raceId.includes("-senate-");
+  const district = senate ? null : raceId.slice(-2);
+  return {
+    raceId,
+    office: senate ? "senate" : "house",
+    cycle: 2026,
+    state: "KY",
+    district,
+    title: senate ? `U.S. Senate, ${stateName("KY")}` : houseContestTitle("KY", district ?? "00"),
+    jurisdiction: senate ? stateName("KY") : houseContestJurisdiction("KY", district ?? "00"),
+    sourceUrl: KY_BALLOT_SOURCES[0].url,
+    updatedAt: BALLOT_UPDATED_AT,
+    electionStage: "general",
+  };
+}
+
+function candidateRecord(raceId: string, person: KyPerson): Candidate {
+  return {
+    candidateId: person.id,
+    raceId,
+    displayName: person.name,
+    nameAsFiled: person.name,
+    office: raceId.includes("-senate-") ? "senate" : "house",
+    partyAffiliation: affiliation(person.party),
+    partyLabel: person.party,
+    fecCandidateId: person.fecCandidateId,
+    sourceUrl: person.fecCandidateId
+      ? `https://www.fec.gov/data/candidate/${person.fecCandidateId}/`
+      : KY_BALLOT_SOURCES[0].url,
+    sourceLoadedAt: BALLOT_LOADED_AT,
+    updatedAt: BALLOT_UPDATED_AT,
+  };
+}
+
+function affiliation(party: string): string {
+  if (party === "Republican Party") return "REP";
+  if (party === "Democratic Party") return "DEM";
+  if (party === "Independent") return "IND";
+  if (party === "Libertarian Party") return "LIB";
+  if (party === "Write-in") return "WRI";
+  return "OTH";
 }
 
 export function calendarDay(value: string): string {

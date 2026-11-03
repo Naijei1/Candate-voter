@@ -398,6 +398,10 @@ a.contest-link h2 {
   margin: 0.35rem 0;
 }
 
+.results-note {
+  margin: 0.5rem 0 1rem;
+}
+
 .sr-only {
   position: absolute;
   width: 1px;

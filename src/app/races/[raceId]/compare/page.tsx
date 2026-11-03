@@ -7,6 +7,7 @@ import { Crumbs } from "@/components/site/Crumbs";
 import { loadFinance } from "@/lib/finance/load";
 import { selectDirect, selectOutside } from "@/lib/finance/present";
 import { ElectionDayBanner } from "@/components/site/ElectionDayBanner";
+import { ResultsNote } from "@/components/site/ResultsNote";
 import { kyBallot, rosterMoney } from "@/lib/site/ky-ballot";
 import { cardsForRace } from "@/lib/site/showcase";
 import { loadContest } from "@/lib/site/contest";
@@ -59,6 +60,7 @@ export default async function ComparePage({ params }: PageProps) {
       <h1>Compare</h1>
       {ballot ? <ElectionDayBanner /> : null}
       <p className="lede">{race.title}</p>
+      {ballot ? <ResultsNote /> : null}
       {ballot || loaded.filingsLoaded ? null : roster.fecList ? (
         <p className="notice" role="status">
           Live filings could not be loaded. Names below are from the election commission candidate list.
