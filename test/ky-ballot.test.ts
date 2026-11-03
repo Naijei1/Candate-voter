@@ -1,0 +1,36 @@
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import test from "node:test";
+import { KY_BALLOT_SOURCES, kyBallot, kyPerson } from "../src/lib/site/ky-ballot";
+
+test("Kentucky November ballot matches the Secretary of State filing list", () => {
+  const senate = kyBallot("2026-senate-KY");
+  assert.ok(senate);
+  assert.deepEqual(
+    senate.people.map((person) => person.name),
+    ["Andy Barr", "Charles Booker", "Christopher Campbell", "Thomas Michael Murphy"],
+  );
+  assert.equal(senate.people.find((person) => person.name === "Thomas Michael Murphy")?.role, "write-in");
+  assert.equal(senate.people.some((person) => /Morris|McConnell|McGrath/.test(person.name)), false);
+
+  const counts = ["01", "02", "03", "04", "05", "06"].map((district) => kyBallot(`2026-house-KY-${district}`)?.people.length);
+  assert.deepEqual(counts, [2, 3, 2, 4, 5, 5]);
+  assert.equal(kyPerson("H6KY01110")?.person.holdsOffice, true);
+  assert.equal(kyPerson("S6KY00286")?.person.holdsOffice, false);
+  assert.equal(kyPerson("H2KY04121"), null);
+  assert.equal(kyBallot("2026-house-KY-04")?.note?.includes("Thomas Massie"), true);
+  assert.equal(kyPerson("H6KY04213")?.person.name, "Jeremy Todd");
+  assert.ok(KY_BALLOT_SOURCES[0].url.includes("web.sos.ky.gov"));
+  assert.ok(KY_BALLOT_SOURCES[1].url.includes("clerk.house.gov"));
+
+  const header = readFileSync("src/components/SiteHeader.tsx", "utf8");
+  const footer = readFileSync("src/components/SiteFooter.tsx", "utf8");
+  const home = readFileSync("src/app/page.tsx", "utf8");
+  const about = readFileSync("src/app/about/page.tsx", "utf8");
+  const signIn = readFileSync("src/components/site/SignInForm.tsx", "utf8");
+  assert.equal(header.includes("/about"), false);
+  assert.equal(footer.includes("/about"), false);
+  assert.equal(home.includes("founder"), false);
+  assert.match(about, /redirect\("\/"\)/);
+  assert.equal(/google/i.test(signIn), false);
+});

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { DataRefreshedBanner } from "@/components/DataRefreshedBanner";
 import { StateExplore } from "@/components/site/StateExplore";
 import { ZipSearch } from "@/components/site/ZipSearch";
-import { CopyText } from "@/components/site/CopyText";
+import { ElectionDayBanner } from "@/components/site/ElectionDayBanner";
 import { brand } from "@/content/brand";
 import { loadSiteCopy } from "@/lib/content/store";
 import { generalElectionLabel } from "@/lib/copy";
@@ -38,6 +38,7 @@ export default async function HomePage() {
         </div>
       </section>
       <div className="wrap">
+        <ElectionDayBanner />
         <DataRefreshedBanner refreshedAt={loaded.refreshedAt} />
         {loaded.filingsLoaded ? null : (
           <p className="notice notice-error" role="status">
@@ -107,18 +108,6 @@ export default async function HomePage() {
           <StateExplore statesWithRaces={statesWithRaces(loaded.races)} />
         </section>
 
-        <section className="section" aria-labelledby="trust">
-          <h2 id="trust">Who runs this</h2>
-          <p>
-            {brand.founderName}, {brand.founderRole}.
-          </p>
-          {copy.mission ? <CopyText text={copy.mission} /> : <p>A longer introduction is still being written.</p>}
-          <p>
-            <Link href="/about">About Us</Link>
-            {" · "}
-            <Link href="/sources">About this data</Link>
-          </p>
-        </section>
       </div>
     </>
   );

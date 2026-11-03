@@ -13,6 +13,12 @@ export default function SourcesPage() {
         Names on federal races come from candidacy paperwork filed with the election commission. Filing that paperwork
         is not the same as being printed on the ballot.
       </p>
+      <h2>Kentucky, November 3, 2026</h2>
+      <p>
+        Federal names on the Kentucky pages are the Secretary of State general-election filings, checked Nov 3, 2026.
+        They also match the Clerk of the House nominee list published Oct 8, 2026. People who only filed for the primary
+        are not on that list. Money figures are FEC totals retrieved the same day, through Oct 14, 2026.
+      </p>
       <h2>What you can use now</h2>
       <ul className="plain-list">
         <li>U.S. Senate and U.S. House contests, including Kentucky in 2026.</li>
