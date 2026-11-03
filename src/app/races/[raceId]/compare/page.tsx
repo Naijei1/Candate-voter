@@ -7,8 +7,11 @@ import { Crumbs } from "@/components/site/Crumbs";
 import { loadFinance } from "@/lib/finance/load";
 import { selectDirect, selectOutside } from "@/lib/finance/present";
 import { ElectionDayBanner } from "@/components/site/ElectionDayBanner";
-import { ResultsNote } from "@/components/site/ResultsNote";
+import { formatMoney } from "@/lib/finance/model";
 import { kyBallot, rosterMoney } from "@/lib/site/ky-ballot";
+import { newsForNames } from "@/lib/site/ky-news";
+import { linkLabel, profileFor } from "@/lib/site/profiles";
+import { portraitFor, stanceIssues, stancesFor } from "@/lib/site/stances";
 import { cardsForRace } from "@/lib/site/showcase";
 import { loadContest } from "@/lib/site/contest";
 import type { Race } from "@/lib/types";
@@ -46,6 +49,7 @@ export default async function ComparePage({ params }: PageProps) {
     : [];
   const direct = [...liveDirect, ...rosterDirect];
   const outside = selectOutside(finance.outside, null).filter((row) => ids.has(row.candidateId));
+  const stories = ballot ? await newsForNames(ballot.people.map((person) => person.name)) : [];
   const stateHref = race.state ? `/states/${race.state.toLowerCase()}` : "/states";
 
   return (
@@ -60,7 +64,6 @@ export default async function ComparePage({ params }: PageProps) {
       <h1>Compare</h1>
       {ballot ? <ElectionDayBanner /> : null}
       <p className="lede">{race.title}</p>
-      {ballot ? <ResultsNote /> : null}
       {ballot || loaded.filingsLoaded ? null : roster.fecList ? (
         <p className="notice" role="status">
           Live filings could not be loaded. Names below are from the election commission candidate list.
@@ -77,14 +80,34 @@ export default async function ComparePage({ params }: PageProps) {
           summary={ballot ? "On the November 3, 2026 ballot." : roster.summary}
           statusLine={ballot ? "A to Z. On the November ballot." : undefined}
           finance={{ notice: ballot ? null : finance.notice, direct, outside }}
+          issues={stanceIssues()}
+          updates={stories}
           candidates={
             ballot
-              ? [...ballot.people].sort((a, b) => a.name.localeCompare(b.name)).map((person) => ({
-                  candidateId: person.id,
-                  displayName: person.name,
-                  partyLabel: person.party,
-                  note: person.role === "write-in" ? "Write-in" : person.holdsOffice ? "Holds this office now" : null,
-                }))
+              ? [...ballot.people].sort((a, b) => a.name.localeCompare(b.name)).map((person) => {
+                  const profile = profileFor(person.id);
+                  const photo = portraitFor(person.id);
+                  return {
+                    candidateId: person.id,
+                    displayName: person.name,
+                    partyLabel: person.party,
+                    note: person.role === "write-in" ? "Write-in" : person.holdsOffice ? "Holds this office now" : null,
+                    photo: photo?.src ?? null,
+                    photoCredit: photo?.credit ?? null,
+                    website: profile.website ? { url: profile.website.url, label: linkLabel(profile.website) } : null,
+                    stances: stancesFor(person.id).map((stance) => ({
+                      issueId: stance.issueId,
+                      issue: stanceIssues().find((issue) => issue.id === stance.issueId)?.label ?? stance.issueId,
+                      text: stance.text,
+                      sourceName: stance.sourceName,
+                      sourceUrl: stance.sourceUrl,
+                      sourceDate: stance.sourceDate,
+                    })),
+                    votes: profile.votes,
+                    raised: person.finance ? formatMoney(person.finance.receipts) : null,
+                    moneyIds: [person.id, person.fecCandidateId, ...person.alsoFecIds].filter((id): id is string => Boolean(id)),
+                  };
+                })
               : roster.cards.map((candidate) => ({
                   candidateId: candidate.id,
                   displayName: candidate.name,

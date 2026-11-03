@@ -1,0 +1,365 @@
+{
+  "checkedOn": "2026-11-03",
+  "note": "Short restatements only. Empty website, bio, endorsement, or vote lists mean nothing sourced was stored.",
+  "candidates": {
+    "S6KY00286": {
+      "website": {
+        "url": "https://barrforsenate.com",
+        "kind": "campaign",
+        "sourceName": "FEC candidate record, committee website",
+        "sourceUrl": "https://www.fec.gov/data/candidate/S6KY00286/",
+        "sourceDate": "2026-11-03"
+      },
+      "bio": {
+        "text": "The Sept. 16, 2026 House roll call lists him as a Kentucky member. He is on the November Senate ballot, not the House ballot.",
+        "sourceName": "Office of the Clerk, House roll call 312",
+        "sourceUrl": "https://clerk.house.gov/Votes/2026312",
+        "sourceDate": "2026-09-16"
+      },
+      "endorsements": [],
+      "votes": [
+        {
+          "bill": "H.R. 9340, Ratepayer Protection Act",
+          "date": "2026-09-16",
+          "vote": "Yes",
+          "sourceName": "Office of the Clerk, House roll call 312",
+          "sourceUrl": "https://clerk.house.gov/Votes/2026312"
+        }
+      ]
+    },
+    "S6KY00385": {
+      "website": {
+        "url": "https://charlesbooker.org",
+        "kind": "campaign",
+        "sourceName": "FEC candidate record, committee website",
+        "sourceUrl": "https://www.fec.gov/data/candidate/S6KY00385/",
+        "sourceDate": "2026-11-03"
+      },
+      "bio": null,
+      "endorsements": [],
+      "votes": []
+    },
+    "S6KY00377": {
+      "website": {
+        "url": "https://campbell4congress.info",
+        "kind": "campaign",
+        "sourceName": "FEC candidate record, committee website",
+        "sourceUrl": "https://www.fec.gov/data/candidate/S6KY00377/",
+        "sourceDate": "2026-11-03"
+      },
+      "bio": null,
+      "endorsements": [],
+      "votes": []
+    },
+    "H6KY01110": {
+      "website": {
+        "url": "https://comer.house.gov/",
+        "kind": "office",
+        "sourceName": "Official House website",
+        "sourceUrl": "https://comer.house.gov/",
+        "sourceDate": "2026-11-03"
+      },
+      "bio": {
+        "text": "Elected to the House in 2016. Grew up in Monroe County, studied agriculture at Western Kentucky University, and previously served as Kentucky agriculture commissioner.",
+        "sourceName": "House Oversight Committee, chairman biography",
+        "sourceUrl": "https://oversight.house.gov/chairman-james-comer/",
+        "sourceDate": "2026-11-03"
+      },
+      "endorsements": [],
+      "votes": [
+        {
+          "bill": "H.R. 9340, Ratepayer Protection Act",
+          "date": "2026-09-16",
+          "vote": "Yes",
+          "sourceName": "Office of the Clerk, House roll call 312",
+          "sourceUrl": "https://clerk.house.gov/Votes/2026312"
+        }
+      ]
+    },
+    "H6KY01169": {
+      "website": {
+        "url": "https://williamsforky.com",
+        "kind": "campaign",
+        "sourceName": "Louisville Courier Journal questionnaire",
+        "sourceUrl": "https://www.courier-journal.com/story/news/politics/elections/2026/10/08/kentucky-candidates-congress-2026-midterm-election/92074952007/",
+        "sourceDate": "2026-10-29"
+      },
+      "bio": {
+        "text": "Says he is a construction worker and community organizer.",
+        "sourceName": "Louisville Courier Journal questionnaire",
+        "sourceUrl": "https://www.courier-journal.com/story/news/politics/elections/2026/10/08/kentucky-candidates-congress-2026-midterm-election/92074952007/",
+        "sourceDate": "2026-10-29"
+      },
+      "endorsements": [],
+      "votes": []
+    },
+    "H8KY02031": {
+      "website": {
+        "url": "https://guthrie.house.gov/",
+        "kind": "office",
+        "sourceName": "Official House website",
+        "sourceUrl": "https://guthrie.house.gov/about/",
+        "sourceDate": "2026-11-03"
+      },
+      "bio": {
+        "text": "Represents the Second District, graduated from West Point in 1987, served in the Army, and chairs the House Energy and Commerce Committee.",
+        "sourceName": "Official House website, biography",
+        "sourceUrl": "https://guthrie.house.gov/about/",
+        "sourceDate": "2026-11-03"
+      },
+      "endorsements": [],
+      "votes": [
+        {
+          "bill": "H.R. 9340, Ratepayer Protection Act",
+          "date": "2026-09-16",
+          "vote": "Yes",
+          "sourceName": "Office of the Clerk, House roll call 312",
+          "sourceUrl": "https://clerk.house.gov/Votes/2026312"
+        },
+        {
+          "bill": "S. 2, Secure America Act",
+          "date": "2026-06-09",
+          "vote": "Yes",
+          "sourceName": "Official House website, vote statement",
+          "sourceUrl": "https://guthrie.house.gov/news/documentsingle.aspx?DocumentID=391088"
+        }
+      ]
+    },
+    "H6KY02068": {
+      "website": {
+        "url": "https://wingfieldforcongress.com",
+        "kind": "campaign",
+        "sourceName": "Louisville Courier Journal questionnaire",
+        "sourceUrl": "https://www.courier-journal.com/story/news/politics/elections/2026/10/08/kentucky-candidates-congress-2026-midterm-election/92074952007/",
+        "sourceDate": "2026-10-29"
+      },
+      "bio": {
+        "text": "Says she is a mechanic, caregiver, and grassroots organizer.",
+        "sourceName": "Louisville Courier Journal questionnaire",
+        "sourceUrl": "https://www.courier-journal.com/story/news/politics/elections/2026/10/08/kentucky-candidates-congress-2026-midterm-election/92074952007/",
+        "sourceDate": "2026-10-29"
+      },
+      "endorsements": [],
+      "votes": []
+    },
+    "H2KY03206": {
+      "website": {
+        "url": "https://morganmcgarvey.com",
+        "kind": "campaign",
+        "sourceName": "Louisville Courier Journal questionnaire",
+        "sourceUrl": "https://www.courier-journal.com/story/news/politics/elections/2026/10/08/kentucky-candidates-congress-2026-midterm-election/92074952007/",
+        "sourceDate": "2026-10-29"
+      },
+      "bio": {
+        "text": "Says he is a lifelong Louisvillian who served ten years in the Kentucky Senate and has represented the Third District in Congress.",
+        "sourceName": "Louisville Courier Journal questionnaire",
+        "sourceUrl": "https://www.courier-journal.com/story/news/politics/elections/2026/10/08/kentucky-candidates-congress-2026-midterm-election/92074952007/",
+        "sourceDate": "2026-10-29"
+      },
+      "endorsements": [],
+      "votes": [
+        {
+          "bill": "H.R. 9340, Ratepayer Protection Act",
+          "date": "2026-09-16",
+          "vote": "Yes",
+          "sourceName": "Office of the Clerk, House roll call 312",
+          "sourceUrl": "https://clerk.house.gov/Votes/2026312"
+        }
+      ]
+    },
+    "H6KY03223": {
+      "website": {
+        "url": "https://mariaforuscongress.com",
+        "kind": "campaign",
+        "sourceName": "Louisville Courier Journal questionnaire",
+        "sourceUrl": "https://www.courier-journal.com/story/news/politics/elections/2026/10/08/kentucky-candidates-congress-2026-midterm-election/92074952007/",
+        "sourceDate": "2026-10-29"
+      },
+      "bio": {
+        "text": "Says she is a trauma nurse and small-business owner, and that she became a U.S. citizen in 2017.",
+        "sourceName": "Louisville Courier Journal questionnaire",
+        "sourceUrl": "https://www.courier-journal.com/story/news/politics/elections/2026/10/08/kentucky-candidates-congress-2026-midterm-election/92074952007/",
+        "sourceDate": "2026-10-29"
+      },
+      "endorsements": [],
+      "votes": []
+    },
+    "H6KY04171": {
+      "website": {
+        "url": "https://edgallrein.com",
+        "kind": "campaign",
+        "sourceName": "Louisville Courier Journal questionnaire",
+        "sourceUrl": "https://www.courier-journal.com/story/news/politics/elections/2026/10/08/kentucky-candidates-congress-2026-midterm-election/92074952007/",
+        "sourceDate": "2026-10-29"
+      },
+      "bio": {
+        "text": "Says he is a farmer and a retired Navy SEAL officer.",
+        "sourceName": "Louisville Courier Journal questionnaire",
+        "sourceUrl": "https://www.courier-journal.com/story/news/politics/elections/2026/10/08/kentucky-candidates-congress-2026-midterm-election/92074952007/",
+        "sourceDate": "2026-10-29"
+      },
+      "endorsements": [],
+      "votes": []
+    },
+    "H6KY04189": {
+      "website": {
+        "url": "https://strangeforky.com",
+        "kind": "campaign",
+        "sourceName": "Louisville Courier Journal questionnaire",
+        "sourceUrl": "https://www.courier-journal.com/story/news/politics/elections/2026/10/08/kentucky-candidates-congress-2026-midterm-election/92074952007/",
+        "sourceDate": "2026-10-29"
+      },
+      "bio": {
+        "text": "Says she is a supply-chain director who has worked in food manufacturing in Northern Kentucky.",
+        "sourceName": "Louisville Courier Journal questionnaire",
+        "sourceUrl": "https://www.courier-journal.com/story/news/politics/elections/2026/10/08/kentucky-candidates-congress-2026-midterm-election/92074952007/",
+        "sourceDate": "2026-10-29"
+      },
+      "endorsements": [],
+      "votes": []
+    },
+    "H0KY05015": {
+      "website": {
+        "url": "https://halrogers.house.gov/",
+        "kind": "office",
+        "sourceName": "Official House website",
+        "sourceUrl": "https://halrogers.house.gov/biography",
+        "sourceDate": "2026-11-03"
+      },
+      "bio": {
+        "text": "Has represented southern and eastern Kentucky in the House since 1981 and is the longest-serving member from Kentucky.",
+        "sourceName": "Official House website, biography",
+        "sourceUrl": "https://halrogers.house.gov/biography",
+        "sourceDate": "2026-11-03"
+      },
+      "endorsements": [],
+      "votes": [
+        {
+          "bill": "H.R. 9340, Ratepayer Protection Act",
+          "date": "2026-09-16",
+          "vote": "Yes",
+          "sourceName": "Office of the Clerk, House roll call 312",
+          "sourceUrl": "https://clerk.house.gov/Votes/2026312"
+        }
+      ]
+    },
+    "H6KY05152": {
+      "website": {
+        "url": "https://nedforcongress.com",
+        "kind": "campaign",
+        "sourceName": "Louisville Courier Journal questionnaire",
+        "sourceUrl": "https://www.courier-journal.com/story/news/politics/elections/2026/10/08/kentucky-candidates-congress-2026-midterm-election/92074952007/",
+        "sourceDate": "2026-10-29"
+      },
+      "bio": {
+        "text": "Says he has practiced poverty law in Floyd County for 45 years and leads The David School.",
+        "sourceName": "Louisville Courier Journal questionnaire",
+        "sourceUrl": "https://www.courier-journal.com/story/news/politics/elections/2026/10/08/kentucky-candidates-congress-2026-midterm-election/92074952007/",
+        "sourceDate": "2026-10-29"
+      },
+      "endorsements": [],
+      "votes": []
+    },
+    "H6KY05202": {
+      "website": {
+        "url": "https://weinforky5.com",
+        "kind": "campaign",
+        "sourceName": "Louisville Courier Journal questionnaire",
+        "sourceUrl": "https://www.courier-journal.com/story/news/politics/elections/2026/10/08/kentucky-candidates-congress-2026-midterm-election/92074952007/",
+        "sourceDate": "2026-10-29"
+      },
+      "bio": {
+        "text": "Says he is a contract archaeologist.",
+        "sourceName": "Louisville Courier Journal questionnaire",
+        "sourceUrl": "https://www.courier-journal.com/story/news/politics/elections/2026/10/08/kentucky-candidates-congress-2026-midterm-election/92074952007/",
+        "sourceDate": "2026-10-29"
+      },
+      "endorsements": [],
+      "votes": []
+    },
+    "H2KY05136": {
+      "website": null,
+      "bio": {
+        "text": "Says he is retired from the Air Force and the Office of Personnel Management.",
+        "sourceName": "Louisville Courier Journal questionnaire",
+        "sourceUrl": "https://www.courier-journal.com/story/news/politics/elections/2026/10/08/kentucky-candidates-congress-2026-midterm-election/92074952007/",
+        "sourceDate": "2026-10-29"
+      },
+      "endorsements": [],
+      "votes": []
+    },
+    "H6KY06192": {
+      "website": null,
+      "bio": {
+        "text": "The Herald-Leader described him as a Winchester doctor and former state senator.",
+        "sourceName": "Lexington Herald-Leader, data center article",
+        "sourceUrl": "https://www.kentucky.com/news/politics-government/election/article317445176.html",
+        "sourceDate": "2026-10-02"
+      },
+      "endorsements": [],
+      "votes": []
+    },
+    "H6KY06184": {
+      "website": null,
+      "bio": {
+        "text": "Says he is a former federal prosecutor and a former Navy lawyer.",
+        "sourceName": "Lexington Herald-Leader, Zach Dembo written answers",
+        "sourceUrl": "https://www.kentucky.com/news/politics-government/article315712907.html",
+        "sourceDate": "2026-05-20"
+      },
+      "endorsements": [],
+      "votes": []
+    },
+    "H6KY06234": {
+      "website": {
+        "url": "https://bowman2026.com",
+        "kind": "campaign",
+        "sourceName": "Louisville Courier Journal questionnaire",
+        "sourceUrl": "https://www.courier-journal.com/story/news/politics/elections/2026/10/08/kentucky-candidates-congress-2026-midterm-election/92074952007/",
+        "sourceDate": "2026-10-29"
+      },
+      "bio": {
+        "text": "Says he is self-employed and is running without a party.",
+        "sourceName": "Louisville Courier Journal questionnaire",
+        "sourceUrl": "https://www.courier-journal.com/story/news/politics/elections/2026/10/08/kentucky-candidates-congress-2026-midterm-election/92074952007/",
+        "sourceDate": "2026-10-29"
+      },
+      "endorsements": [],
+      "votes": []
+    },
+    "H6KY06242": {
+      "website": {
+        "url": "https://petelynchforkentucky.com",
+        "kind": "campaign",
+        "sourceName": "Louisville Courier Journal questionnaire",
+        "sourceUrl": "https://www.courier-journal.com/story/news/politics/elections/2026/10/08/kentucky-candidates-congress-2026-midterm-election/92074952007/",
+        "sourceDate": "2026-10-29"
+      },
+      "bio": {
+        "text": "Says he teaches political science at the University of Kentucky.",
+        "sourceName": "Louisville Courier Journal questionnaire",
+        "sourceUrl": "https://www.courier-journal.com/story/news/politics/elections/2026/10/08/kentucky-candidates-congress-2026-midterm-election/92074952007/",
+        "sourceDate": "2026-10-29"
+      },
+      "endorsements": [],
+      "votes": []
+    },
+    "H6KY06283": {
+      "website": {
+        "url": "https://robertquigleyforcongress.com",
+        "kind": "campaign",
+        "sourceName": "Louisville Courier Journal questionnaire",
+        "sourceUrl": "https://www.courier-journal.com/story/news/politics/elections/2026/10/08/kentucky-candidates-congress-2026-midterm-election/92074952007/",
+        "sourceDate": "2026-10-29"
+      },
+      "bio": {
+        "text": "Says he is a business owner, investor, and author.",
+        "sourceName": "Louisville Courier Journal questionnaire",
+        "sourceUrl": "https://www.courier-journal.com/story/news/politics/elections/2026/10/08/kentucky-candidates-congress-2026-midterm-election/92074952007/",
+        "sourceDate": "2026-10-29"
+      },
+      "endorsements": [],
+      "votes": []
+    }
+  }
+}

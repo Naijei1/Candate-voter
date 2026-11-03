@@ -2,7 +2,8 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import test from "node:test";
 import { KY_BALLOT_SOURCES, kyBallot, kyBallotSeed, kyPerson } from "../src/lib/site/ky-ballot";
-import { kentuckyPollsClosed } from "../src/lib/site/ky-results";
+import { kentuckyEasternPollsClosed, kentuckyPollsClosed, kentuckyResultsPhase } from "../src/lib/site/ky-results";
+import { linkLabel, profileFor } from "../src/lib/site/profiles";
 import { matchScore, portraitFor, stanceIssues, stancesFor } from "../src/lib/site/stances";
 
 test("Kentucky November ballot matches the Secretary of State filing list", () => {
@@ -46,7 +47,8 @@ test("the November seed covers every federal race and does not add primary loser
   assert.equal(seed.candidates.filter((candidate) => candidate.raceId === "2026-house-KY-01").length, 2);
   const page = readFileSync("src/app/races/[raceId]/page.tsx", "utf8");
   assert.match(page, /ballot\.people/);
-  assert.match(page, /ResultsNote/);
+  assert.match(page, /ElectionDayBanner/);
+  assert.match(readFileSync("src/components/site/ElectionDayBanner.tsx", "utf8"), /ResultsNote/);
   const script = readFileSync("scripts/seed-ky-ballot.ts", "utf8");
   assert.match(script, /AWS_REGION=us-east-1 CANDATE_TABLE_NAME=candate-voter npm run seed:ky/);
 });
@@ -73,10 +75,18 @@ test("only sourced stances count, and missing candidates are not enough info", (
     assert.equal(existsSync(`public${portraitFor(id)?.src}`), true, id);
   }
   assert.equal(portraitFor("H6KY01169"), null);
+  assert.equal(profileFor("H6KY01169").website?.url, "https://williamsforky.com");
+  assert.equal(linkLabel(profileFor("H6KY01110").website!), "Official site");
+  assert.equal(profileFor("H8KY02106").votes.length, 0);
+  assert.equal(profileFor("H6KY01110").votes[0]?.vote, "Yes");
+  assert.equal(profileFor("H6KY06184").website, null);
 });
 
 test("Kentucky results stay closed until 6 p.m. Central", () => {
   assert.equal(kentuckyPollsClosed(new Date("2026-11-03T22:59:00Z")), false);
   assert.equal(kentuckyPollsClosed(new Date("2026-11-03T23:30:00Z")), false);
   assert.equal(kentuckyPollsClosed(new Date("2026-11-04T00:00:00Z")), true);
+  assert.equal(kentuckyEasternPollsClosed(new Date("2026-11-03T22:59:00Z")), false);
+  assert.equal(kentuckyResultsPhase(new Date("2026-11-03T23:28:00Z")), "partial");
+  assert.equal(kentuckyResultsPhase(new Date("2026-11-04T00:00:00Z")), "closed");
 });

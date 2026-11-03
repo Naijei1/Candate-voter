@@ -8,9 +8,11 @@ import { CheckHistory } from "@/components/site/CheckHistory";
 import { Crumbs } from "@/components/site/Crumbs";
 import { FollowControl } from "@/components/site/FollowControl";
 import { ElectionDayBanner } from "@/components/site/ElectionDayBanner";
-import { ResultsNote } from "@/components/site/ResultsNote";
+import { PersonMark } from "@/components/site/PersonMark";
 import { KY_BALLOT_CHECKED, KY_BALLOT_SOURCES, calendarDay, kyBallot, kyBallotIds } from "@/lib/site/ky-ballot";
 import { newsForNames } from "@/lib/site/ky-news";
+import { linkLabel, profileFor } from "@/lib/site/profiles";
+import { portraitFor, stancesFor } from "@/lib/site/stances";
 import { cardsForRace } from "@/lib/site/showcase";
 import { personFilingNote } from "@/lib/data/filing-note";
 import { generalElectionLabel } from "@/lib/copy";
@@ -90,25 +92,49 @@ export default async function RacePage({ params }: PageProps) {
           <>
             <div className="actions sticky-mobile">
               <Link className="btn btn-navy" href={`/races/${race.raceId}/compare`}>
-                Compare
+                Compare candidates
               </Link>
               <Link className="btn btn-ghost" href="/">
                 Your ballot
               </Link>
             </div>
             {ballot.note ? <p>{ballot.note}</p> : null}
-            <ResultsNote />
             <ul className="person-grid">
-              {[...ballot.people].sort((a, b) => a.name.localeCompare(b.name)).map((person) => (
+              {[...ballot.people].sort((a, b) => a.name.localeCompare(b.name)).map((person) => {
+                const photo = portraitFor(person.id);
+                const profile = profileFor(person.id);
+                const notes = stancesFor(person.id);
+                return (
                 <li className="person-card" key={person.id}>
+                  <PersonMark name={person.name} photo={photo?.src ?? null} />
+                  {photo ? <p className="hint">{photo.credit}</p> : null}
                   <h3>
                     <Link href={`/candidates/${person.id}`}>{person.name}</Link>
                   </h3>
                   <p className="party">{person.party}</p>
                   {person.holdsOffice ? <p className="hint">Holds this office now</p> : null}
+                  {person.role === "write-in" ? <p className="hint">Write-in</p> : null}
                   {person.finance ? <p className="hint">Raised {formatRaceMoney(person.finance.receipts)}</p> : null}
+                  {profile.website ? (
+                    <p>
+                      <a href={profile.website.url}>{linkLabel(profile.website)}</a>
+                    </p>
+                  ) : (
+                    <p className="hint">No campaign site is stored.</p>
+                  )}
+                  <ul className="plain-list">
+                    {notes.length === 0 ? <li>No public stance found.</li> : null}
+                    {notes.map((stance) => (
+                      <li key={stance.issueId}>
+                        {stance.text}{" "}
+                        <a href={stance.sourceUrl}>{stance.sourceName}</a>
+                        <span className="hint"> · {stance.sourceDate}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </li>
-              ))}
+                );
+              })}
             </ul>
             <p className="hint">
               Kentucky Secretary of State general-election filings, checked {calendarDay(KY_BALLOT_CHECKED)}. Nominees also
