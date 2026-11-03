@@ -55,7 +55,7 @@ export default async function StatePage({ params, searchParams }: PageProps) {
       </p>
       <FollowControl what="jurisdiction" targetId={postal} />
       <DataRefreshedBanner refreshedAt={loaded.refreshedAt} />
-      {loaded.filingsLoaded ? null : (
+      {loaded.filingsLoaded || (postal === "KY" && year === PILOT_YEAR) ? null : (
         <p className="notice notice-error" role="status">
           Filings could not be loaded. <Link href="/sources">About this data</Link>
         </p>
@@ -96,12 +96,16 @@ export default async function StatePage({ params, searchParams }: PageProps) {
         </p>
       )}
 
-      {loaded.filingsLoaded && category === "federal" && contests.some((race) => race.office === "house") ? (
+      {(loaded.filingsLoaded || (postal === "KY" && year === PILOT_YEAR)) &&
+      category === "federal" &&
+      contests.some((race) => race.office === "house") ? (
         <section className="section" aria-labelledby="districts">
           <h2 id="districts">Districts</h2>
           <DistrictMap
             postal={postal}
-            races={contests}
+            races={contests.map((race) =>
+              kyBallot(race.raceId) ? { ...race, empty: false, hasCandidates: true } : race,
+            )}
             year={year}
             context={{ year, state: postal, zip: null }}
           />

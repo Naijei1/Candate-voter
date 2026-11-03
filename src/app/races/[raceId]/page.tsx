@@ -8,6 +8,7 @@ import { CheckHistory } from "@/components/site/CheckHistory";
 import { Crumbs } from "@/components/site/Crumbs";
 import { FollowControl } from "@/components/site/FollowControl";
 import { ElectionDayBanner } from "@/components/site/ElectionDayBanner";
+import { ResultsNote } from "@/components/site/ResultsNote";
 import { KY_BALLOT_CHECKED, KY_BALLOT_SOURCES, calendarDay, kyBallot, kyBallotIds } from "@/lib/site/ky-ballot";
 import { cardsForRace } from "@/lib/site/showcase";
 import { personFilingNote } from "@/lib/data/filing-note";
@@ -91,6 +92,7 @@ export default async function RacePage({ params }: PageProps) {
               <FollowControl what="race" targetId={race.raceId} />
             </div>
             {ballot.note ? <p>{ballot.note}</p> : null}
+            <ResultsNote />
             <ul className="person-grid">
               {[...ballot.people].sort((a, b) => a.name.localeCompare(b.name)).map((person) => (
                 <li className="person-card" key={person.id}>

@@ -9,7 +9,8 @@ import {
   readRacesForCycle,
   readWatermark,
 } from "@/lib/data/read";
-import type { PublicCandidate } from "@/lib/data/view";
+import { presentCandidate, type PublicCandidate } from "@/lib/data/view";
+import { missingKyBallotCandidates } from "@/lib/site/ky-ballot";
 import type { Filing, Race } from "@/lib/types";
 
 /** Kentucky pilot cycle from the October 30, 2026 brief. */
@@ -57,15 +58,22 @@ export async function loadContest(raceId: string): Promise<ContestLoad> {
     return { race: null, candidates: [], refreshedAt: null, filingsLoaded };
   }
   if (!filingsLoaded) {
-    return { race, candidates: [], refreshedAt: null, filingsLoaded: false };
+    return { race, candidates: ballotFallback(race.raceId), refreshedAt: null, filingsLoaded: false };
   }
   try {
     const candidates = await readCandidatesForRace(race.raceId);
     return { race, candidates, refreshedAt: await safeWatermark(), filingsLoaded: true };
   } catch (error) {
     logReadError("listCandidatesForRace", error);
-    return { race, candidates: [], refreshedAt: null, filingsLoaded: false };
+    return { race, candidates: ballotFallback(race.raceId), refreshedAt: null, filingsLoaded: false };
   }
+}
+
+function ballotFallback(raceId: string): PublicCandidate[] {
+  return missingKyBallotCandidates(raceId, new Set()).flatMap((candidate) => {
+    const row = presentCandidate(candidate);
+    return row ? [row] : [];
+  });
 }
 
 export type ProfileLoad =

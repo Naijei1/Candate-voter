@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
-import { KY_BALLOT_SOURCES, kyBallot, kyPerson } from "../src/lib/site/ky-ballot";
+import { KY_BALLOT_SOURCES, kyBallot, kyBallotSeed, kyPerson } from "../src/lib/site/ky-ballot";
+import { kentuckyPollsClosed } from "../src/lib/site/ky-results";
 
 test("Kentucky November ballot matches the Secretary of State filing list", () => {
   const senate = kyBallot("2026-senate-KY");
@@ -33,4 +34,23 @@ test("Kentucky November ballot matches the Secretary of State filing list", () =
   assert.equal(home.includes("founder"), false);
   assert.match(about, /redirect\("\/"\)/);
   assert.equal(/google/i.test(signIn), false);
+});
+
+test("the November seed covers every federal race and does not add primary losers", () => {
+  const seed = kyBallotSeed();
+  assert.equal(seed.races.length, 7);
+  assert.equal(seed.candidates.length, 25);
+  assert.equal(seed.candidates.some((candidate) => candidate.displayName === "Nate Morris"), false);
+  assert.equal(seed.candidates.filter((candidate) => candidate.raceId === "2026-house-KY-01").length, 2);
+  const page = readFileSync("src/app/races/[raceId]/page.tsx", "utf8");
+  assert.match(page, /ballot\.people/);
+  assert.match(page, /ResultsNote/);
+  const script = readFileSync("scripts/seed-ky-ballot.ts", "utf8");
+  assert.match(script, /AWS_REGION=us-east-1 CANDATE_TABLE_NAME=candate-voter npm run seed:ky/);
+});
+
+test("Kentucky results stay closed until 6 p.m. Central", () => {
+  assert.equal(kentuckyPollsClosed(new Date("2026-11-03T22:59:00Z")), false);
+  assert.equal(kentuckyPollsClosed(new Date("2026-11-03T23:30:00Z")), false);
+  assert.equal(kentuckyPollsClosed(new Date("2026-11-04T00:00:00Z")), true);
 });
