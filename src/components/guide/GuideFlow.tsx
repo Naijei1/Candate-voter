@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronLeft, ChevronRight, Landmark, MapPin, Printer, Share2 } from "lucide-react";
+import { ChevronLeft, Landmark, MapPin, Printer, Share2 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +23,8 @@ export type GuidePerson = {
   holds: boolean;
   writeIn: boolean;
   raised: string | null;
+  photo: string | null;
+  photoCredit: string | null;
 };
 
 export type GuideRace = {
@@ -53,7 +55,6 @@ export function GuideFlow({ races, signedIn }: { races: GuideRace[]; signedIn: b
   const [choices, setChoices] = useState<Record<string, Choice>>({});
   const [issues, setIssues] = useState<string[]>([]);
   const [raceIndex, setRaceIndex] = useState(0);
-  const [slide, setSlide] = useState(0);
   const [sheet, setSheet] = useState<GuidePerson | null>(null);
 
   useEffect(() => {
@@ -81,7 +82,6 @@ export function GuideFlow({ races, signedIn }: { races: GuideRace[]; signedIn: b
   );
   const decided = ballot.filter((race) => choices[race.id]).length;
   const current = ballot[raceIndex] ?? ballot[0];
-  const person = current?.people[slide];
 
   async function lookupZip() {
     setBusy(true);
@@ -221,60 +221,45 @@ export function GuideFlow({ races, signedIn }: { races: GuideRace[]; signedIn: b
               </div>
               <div className="mt-6 flex gap-3">
                 <Button variant="ghost" onClick={() => setStep(1)}><ChevronLeft className="size-5" /> Back</Button>
-                <Button className="flex-1" disabled={!district} onClick={() => { setRaceIndex(0); setSlide(0); setStep(3); }}>Start</Button>
+                <Button className="flex-1" disabled={!district} onClick={() => { setRaceIndex(0); setStep(3); }}>Start</Button>
               </div>
             </section>
           ) : null}
 
-          {step === 3 && current && person ? (
+          {step === 3 && current ? (
             <section>
               <h1 className="mb-1 text-3xl font-semibold">{current.title}</h1>
-              <p className="mb-4 text-slate-600">{current.job}</p>
-              <Card>
-                <div className="mb-4 flex items-center justify-between">
-                  <button type="button" aria-label="Previous candidate" onClick={() => setSlide((value) => Math.max(0, value - 1))}><ChevronLeft /></button>
-                  <p className="text-sm text-slate-500">{slide + 1} of {current.people.length}</p>
-                  <button type="button" aria-label="Next candidate" onClick={() => setSlide((value) => Math.min(current.people.length - 1, value + 1))}><ChevronRight /></button>
-                </div>
-                <div className="mb-4 flex items-center gap-4">
-                  <div className="flex size-16 items-center justify-center rounded-full bg-slate-200 text-xl font-semibold text-slate-800" aria-hidden>
-                    {initials(person.name)}
-                  </div>
-                  <div>
-                    <h2 className="text-2xl font-semibold">{person.name}</h2>
-                    <div className="mt-1 flex flex-wrap gap-2">
-                      <Badge tone={partyTone(person.party)}>{person.party}</Badge>
-                      {person.holds ? <Badge>Holds this office</Badge> : null}
-                      {person.writeIn ? <Badge>Write-in</Badge> : null}
+              <p className="mb-4 text-slate-600">{current.job} The same topics are listed on every card.</p>
+              <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 md:grid md:grid-cols-2 md:overflow-visible">
+                {current.people.map((row) => {
+                  const choice = choices[current.id];
+                  const leaned = choice?.kind === "lean" && choice.candidateId === row.id;
+                  return (
+                  <Card key={row.id} className={`min-w-[88%] snap-center md:min-w-0 ${leaned ? "ring-2 ring-[#1e3a8a]" : ""}`}>
+                    <PersonFace person={row} />
+                    <ul className="mt-4 space-y-3">
+                      {stanceIssues().map((issue) => {
+                        const stance = stancesFor(row.id).find((item) => item.issueId === issue.id);
+                        return (
+                          <li key={issue.id}>
+                            <p className="font-medium">{issue.label}</p>
+                            <p className="text-sm text-slate-700">{stance ? stance.text : "No public stance found"}</p>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                    <button className="mt-4 font-semibold text-[#1e3a8a]" type="button" onClick={() => setSheet(row)}>More</button>
+                    <div className="mt-5 grid gap-3">
+                      <Button onClick={() => choose(current.id, { kind: "lean", candidateId: row.id })}>{leaned ? "Your lean" : "Leaning toward"}</Button>
+                      <Button variant="ghost" onClick={() => choose(current.id, { kind: "skip" })}>Skip</Button>
                     </div>
-                  </div>
-                </div>
-                <ul className="space-y-3">
-                  {stanceIssues().slice(0, 4).map((issue) => {
-                    const stance = stancesFor(person.id).find((row) => row.issueId === issue.id);
-                    return (
-                      <li key={issue.id}>
-                        <p className="font-medium">{issue.label}</p>
-                        <p className="text-slate-700">{stance ? stance.text : "No public stance found"}</p>
-                      </li>
-                    );
-                  })}
-                </ul>
-                <button className="mt-4 font-semibold text-[#1e3a8a]" type="button" onClick={() => setSheet(person)}>More</button>
-                <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                  <Button onClick={() => choose(current.id, { kind: "lean", candidateId: person.id })}>Leaning toward</Button>
-                  <Button variant="ghost" onClick={() => choose(current.id, { kind: "skip" })}>Skip</Button>
-                </div>
-              </Card>
-              <div className="mt-4 hidden gap-4 md:grid md:grid-cols-2">
-                {current.people.slice(0, 2).map((row) => (
-                  <Card key={row.id} className="text-sm text-slate-600">{row.name} · {row.party}</Card>
-                ))}
+                  </Card>
+                  );
+                })}
               </div>
               <Button className="mt-6 w-full" disabled={!choices[current.id]} onClick={() => {
                 if (raceIndex < ballot.length - 1) {
                   setRaceIndex((value) => value + 1);
-                  setSlide(0);
                   return;
                 }
                 setStep(4);
@@ -298,6 +283,14 @@ export function GuideFlow({ races, signedIn }: { races: GuideRace[]; signedIn: b
                   );
                 })}
               </div>
+              <ul className="mt-4 space-y-1 text-sm text-slate-600">
+                {issues.map((issueId) => {
+                  const label = stanceIssues().find((issue) => issue.id === issueId)?.label ?? issueId;
+                  const withNotes = ballot.reduce((count, race) => count + race.people.filter((row) => stancesFor(row.id).some((stance) => stance.issueId === issueId)).length, 0);
+                  const total = ballot.reduce((count, race) => count + race.people.length, 0);
+                  return <li key={issueId}>{label}: {withNotes} of {total} people on your ballot have a sourced note.</li>;
+                })}
+              </ul>
               <Button className="mt-6 w-full" onClick={() => setStep(5)}>See my picks</Button>
             </section>
           ) : null}
@@ -345,7 +338,8 @@ export function GuideFlow({ races, signedIn }: { races: GuideRace[]; signedIn: b
       <Sheet open={sheet != null} onOpenChange={(open) => { if (!open) setSheet(null); }}>
         {sheet ? (
           <SheetContent title={sheet.name}>
-            <p>{sheet.party}</p>
+            <PersonFace person={sheet} />
+            <p className="mt-3">{sheet.party}</p>
             <p className="mt-3">{sheet.raised ? `Raised ${sheet.raised}` : "No money total is stored."}</p>
             <ul className="mt-4 space-y-3">
               {stancesFor(sheet.id).map((stance) => (
@@ -372,6 +366,29 @@ function StanceLine({ stance }: { stance: Stance }) {
       <a className="text-[#1e3a8a]" href={stance.sourceUrl}>{stance.sourceName}</a>
       <span className="text-slate-500"> · {stance.sourceDate}</span>
     </p>
+  );
+}
+
+function PersonFace({ person }: { person: GuidePerson }) {
+  return (
+    <div className="flex items-center gap-4">
+      {person.photo ? (
+        <img src={person.photo} alt="" width={64} height={64} className="size-16 rounded-full object-cover" />
+      ) : (
+        <div className="flex size-16 items-center justify-center rounded-full bg-slate-200 text-xl font-semibold text-slate-800" aria-hidden>
+          {initials(person.name)}
+        </div>
+      )}
+      <div>
+        <h2 className="text-2xl font-semibold">{person.name}</h2>
+        <div className="mt-1 flex flex-wrap gap-2">
+          <Badge tone={partyTone(person.party)}>{person.party}</Badge>
+          {person.holds ? <Badge>Holds this office</Badge> : null}
+          {person.writeIn ? <Badge>Write-in</Badge> : null}
+        </div>
+        {person.photoCredit ? <p className="mt-1 text-xs text-slate-500">{person.photoCredit}</p> : null}
+      </div>
+    </div>
   );
 }
 

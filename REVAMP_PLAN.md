@@ -2,7 +2,7 @@
 
 ## Guided ballot (November 3, 2026)
 
-Homepage is five steps: where you vote, your two federal races, meet the candidates, optional issues, then your picks. One primary action per step. Explore holds the map, ask, news, money, polls, and sources. Stances live in `data/ky-stances.json` and only where a source URL was checked. Everyone else shows “No public stance found.” The issue match is labeled not a recommendation.
+Homepage is five steps: where you vote, your two federal races, meet the candidates, optional issues, then your picks. One primary action per step. Explore holds the map, ask, news, money, polls, and sources. Stances live in `data/ky-stances.json` on the same five issue ids, and only where a source URL was checked. A missing note shows “No public stance found.” Official House photographs are stored for five members. Everyone else stays on initials. The issue match is labeled not a recommendation.
 
 ## Ballot hub (November 3, 2026)
 

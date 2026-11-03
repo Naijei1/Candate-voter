@@ -2,6 +2,7 @@ import { GuideFlow, type GuideRace } from "@/components/guide/GuideFlow";
 import { formatMoney } from "@/lib/finance/model";
 import { currentUser } from "@/lib/auth/session";
 import { kyBallot, kyBallotSeed } from "@/lib/site/ky-ballot";
+import { portraitFor } from "@/lib/site/stances";
 
 export const dynamic = "force-dynamic";
 
@@ -32,6 +33,8 @@ export default async function HomePage() {
       holds: person.holdsOffice,
       writeIn: person.role === "write-in",
       raised: person.finance ? formatMoney(person.finance.receipts) : null,
+      photo: portraitFor(person.id)?.src ?? null,
+      photoCredit: portraitFor(person.id)?.credit ?? null,
     }));
   }
   return (

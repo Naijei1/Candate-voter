@@ -1,15 +1,29 @@
 {
   "checkedOn": "2026-11-03",
-  "note": "Short restatements of what the candidate published. Empty lists mean no sourced stance was stored. Opponent descriptions are not included.",
+  "note": "Short restatements of what the candidate or their official office published. Empty lists mean no sourced stance was stored. Opponent descriptions are not included. The same issue ids are used for every candidate.",
   "issues": [
-    { "id": "immigration", "label": "Immigration and the border" },
-    { "id": "debt", "label": "The national debt" },
     { "id": "cost", "label": "Cost of living" },
     { "id": "health", "label": "Health care costs" },
-    { "id": "data", "label": "Data centers and utility bills" }
+    { "id": "data", "label": "Data centers and utility bills" },
+    { "id": "immigration", "label": "Immigration and the border" },
+    { "id": "debt", "label": "The national debt" }
   ],
   "candidates": {
     "S6KY00286": [
+      {
+        "issueId": "cost",
+        "text": "Says bringing down the cost of living, especially fuel prices, is a Senate priority.",
+        "sourceName": "Lexington Herald-Leader, Andy Barr written answers",
+        "sourceUrl": "https://www.kentucky.com/news/politics-government/article315725113.html",
+        "sourceDate": "2026-05-20"
+      },
+      {
+        "issueId": "data",
+        "text": "As a House member, voted yes on the Ratepayer Protection Act, which asks states to consider making large data centers pay the added cost of the power they use.",
+        "sourceName": "Office of the Clerk, House roll call 312",
+        "sourceUrl": "https://clerk.house.gov/Votes/2026312",
+        "sourceDate": "2026-09-16"
+      },
       {
         "issueId": "immigration",
         "text": "Says he wants a border wall, more immigration enforcement, and deportation of people he describes as being in the country illegally.",
@@ -23,16 +37,16 @@
         "sourceName": "Lexington Herald-Leader, Andy Barr written answers",
         "sourceUrl": "https://www.kentucky.com/news/politics-government/article315725113.html",
         "sourceDate": "2026-05-20"
-      },
-      {
-        "issueId": "cost",
-        "text": "Says bringing down the cost of living, especially fuel prices, is a Senate priority.",
-        "sourceName": "Lexington Herald-Leader, Andy Barr written answers",
-        "sourceUrl": "https://www.kentucky.com/news/politics-government/article315725113.html",
-        "sourceDate": "2026-05-20"
       }
     ],
     "S6KY00385": [
+      {
+        "issueId": "cost",
+        "text": "Says he would rein in tariffs and end cuts to Medicaid that he says raised health costs.",
+        "sourceName": "Charles Booker campaign, Courier-Journal op-ed",
+        "sourceUrl": "https://charlesbookerky.org/press-releases/booker-courier-journal-op-ed",
+        "sourceDate": "2026-10-19"
+      },
       {
         "issueId": "health",
         "text": "Says he would restore Affordable Care Act subsidies, support a Kentucky public insurance option, and lower prescription prices tied to Medicare negotiations.",
@@ -46,13 +60,392 @@
         "sourceName": "Charles Booker campaign, data centers policy",
         "sourceUrl": "https://charlesbookerky.org/policies/data-centers",
         "sourceDate": "2026-11-03"
-      },
+      }
+    ],
+    "S6KY00377": [
+      {
+        "issueId": "health",
+        "text": "Says health care is a right and that he supports Medicare for All.",
+        "sourceName": "Ballotpedia Candidate Connection survey",
+        "sourceUrl": "https://ballotpedia.org/United_States_Senate_election_in_Kentucky,_2026",
+        "sourceDate": "2026-11-03"
+      }
+    ],
+    "H6KY01110": [
       {
         "issueId": "cost",
-        "text": "Says he would rein in tariffs and end cuts to Medicaid that he says raised health costs.",
-        "sourceName": "Charles Booker campaign, Courier-Journal op-ed",
-        "sourceUrl": "https://charlesbookerky.org/press-releases/booker-courier-journal-op-ed",
-        "sourceDate": "2026-10-19"
+        "text": "His House office says he supports lower taxes, affordable energy, and responsible federal spending.",
+        "sourceName": "Official House website, issues",
+        "sourceUrl": "https://comer.house.gov/issues/",
+        "sourceDate": "2026-11-03"
+      },
+      {
+        "issueId": "health",
+        "text": "His House office says he supports protecting rural health providers, strengthening Medicare, and giving patients more control over care decisions.",
+        "sourceName": "Official House website, issues",
+        "sourceUrl": "https://comer.house.gov/issues/",
+        "sourceDate": "2026-11-03"
+      },
+      {
+        "issueId": "data",
+        "text": "Voted yes on the Ratepayer Protection Act, which asks states to consider making large data centers pay the added cost of the power they use.",
+        "sourceName": "Office of the Clerk, House roll call 312",
+        "sourceUrl": "https://clerk.house.gov/Votes/2026312",
+        "sourceDate": "2026-09-16"
+      }
+    ],
+    "H6KY01169": [
+      {
+        "issueId": "health",
+        "text": "Says Medicaid should move with a person who relocates, cover free preventive care, and pay providers enough to expand access.",
+        "sourceName": "Louisville Courier Journal questionnaire",
+        "sourceUrl": "https://www.courier-journal.com/story/news/politics/elections/2026/10/08/kentucky-candidates-congress-2026-midterm-election/92074952007/",
+        "sourceDate": "2026-10-29"
+      },
+      {
+        "issueId": "data",
+        "text": "Says he has published proposals on data centers and AI, and names community health, community dividends, and environmental protection as priorities.",
+        "sourceName": "Louisville Courier Journal questionnaire",
+        "sourceUrl": "https://www.courier-journal.com/story/news/politics/elections/2026/10/08/kentucky-candidates-congress-2026-midterm-election/92074952007/",
+        "sourceDate": "2026-10-29"
+      }
+    ],
+    "H8KY02031": [
+      {
+        "issueId": "health",
+        "text": "Says he works to lower health costs through competition and price transparency, and to expand care in rural communities.",
+        "sourceName": "Official House website, health care",
+        "sourceUrl": "https://guthrie.house.gov/issues/issue/?IssueID=72000",
+        "sourceDate": "2026-11-03"
+      },
+      {
+        "issueId": "data",
+        "text": "Says companies building data centers, not families and small businesses, should pay for the electricity those centers use.",
+        "sourceName": "Official House website, Ratepayer Protection Act statement",
+        "sourceUrl": "https://guthrie.house.gov/news/documentsingle.aspx?DocumentID=391166",
+        "sourceDate": "2026-09-16"
+      },
+      {
+        "issueId": "immigration",
+        "text": "Says he voted to fund immigration enforcement and border security through September 2029, and opposes what he calls a return to open borders.",
+        "sourceName": "Official House website, Secure America Act statement",
+        "sourceUrl": "https://guthrie.house.gov/news/documentsingle.aspx?DocumentID=391088",
+        "sourceDate": "2026-06-09"
+      }
+    ],
+    "H6KY02068": [
+      {
+        "issueId": "cost",
+        "text": "Says her first priority is lowering the cost of living, including health care, drugs, housing, and wages, and protecting Social Security and Medicare.",
+        "sourceName": "Louisville Courier Journal questionnaire",
+        "sourceUrl": "https://www.courier-journal.com/story/news/politics/elections/2026/10/08/kentucky-candidates-congress-2026-midterm-election/92074952007/",
+        "sourceDate": "2026-10-29"
+      },
+      {
+        "issueId": "health",
+        "text": "Says she would protect and expand Medicaid, cut paperwork that drops eligible families, and strengthen rural hospitals, mental health, and maternal care.",
+        "sourceName": "Louisville Courier Journal questionnaire",
+        "sourceUrl": "https://www.courier-journal.com/story/news/politics/elections/2026/10/08/kentucky-candidates-congress-2026-midterm-election/92074952007/",
+        "sourceDate": "2026-10-29"
+      },
+      {
+        "issueId": "data",
+        "text": "Says data centers should move forward only with community oversight and public information on energy, water, tax breaks, and local infrastructure.",
+        "sourceName": "Louisville Courier Journal questionnaire",
+        "sourceUrl": "https://www.courier-journal.com/story/news/politics/elections/2026/10/08/kentucky-candidates-congress-2026-midterm-election/92074952007/",
+        "sourceDate": "2026-10-29"
+      }
+    ],
+    "H2KY03206": [
+      {
+        "issueId": "cost",
+        "text": "Says food, gas, utilities, and housing cost too much, and that he would reverse Medicaid cuts he says are raising those costs.",
+        "sourceName": "Louisville Courier Journal questionnaire",
+        "sourceUrl": "https://www.courier-journal.com/story/news/politics/elections/2026/10/08/kentucky-candidates-congress-2026-midterm-election/92074952007/",
+        "sourceDate": "2026-10-29"
+      },
+      {
+        "issueId": "health",
+        "text": "Says he will keep fighting health-coverage cuts and wants people to see a doctor without risking bankruptcy.",
+        "sourceName": "Louisville Courier Journal questionnaire",
+        "sourceUrl": "https://www.courier-journal.com/story/news/politics/elections/2026/10/08/kentucky-candidates-congress-2026-midterm-election/92074952007/",
+        "sourceDate": "2026-10-29"
+      },
+      {
+        "issueId": "data",
+        "text": "Says new data centers should pause until the companies show they will not hurt Kentucky families, and that the community decides what is built nearby.",
+        "sourceName": "Louisville Courier Journal questionnaire",
+        "sourceUrl": "https://www.courier-journal.com/story/news/politics/elections/2026/10/08/kentucky-candidates-congress-2026-midterm-election/92074952007/",
+        "sourceDate": "2026-10-29"
+      },
+      {
+        "issueId": "immigration",
+        "text": "Says Louisvillians want Washington to stop what he describes as terrorizing immigrant neighbors.",
+        "sourceName": "Louisville Courier Journal questionnaire",
+        "sourceUrl": "https://www.courier-journal.com/story/news/politics/elections/2026/10/08/kentucky-candidates-congress-2026-midterm-election/92074952007/",
+        "sourceDate": "2026-10-29"
+      }
+    ],
+    "H6KY03223": [
+      {
+        "issueId": "cost",
+        "text": "Says families pay too much for housing, energy, and health care, and that she would back more housing, energy supply, tax relief, and fewer regulations.",
+        "sourceName": "Louisville Courier Journal questionnaire",
+        "sourceUrl": "https://www.courier-journal.com/story/news/politics/elections/2026/10/08/kentucky-candidates-congress-2026-midterm-election/92074952007/",
+        "sourceDate": "2026-10-29"
+      },
+      {
+        "issueId": "health",
+        "text": "Says Medicaid should stay in place for people who need it, with stronger checks on fraud and help for people who can work to move into jobs.",
+        "sourceName": "Louisville Courier Journal questionnaire",
+        "sourceUrl": "https://www.courier-journal.com/story/news/politics/elections/2026/10/08/kentucky-candidates-congress-2026-midterm-election/92074952007/",
+        "sourceDate": "2026-10-29"
+      },
+      {
+        "issueId": "data",
+        "text": "Says data centers should pay for the power infrastructure they require, with local input, instead of shifting those costs onto other customers.",
+        "sourceName": "Louisville Courier Journal questionnaire",
+        "sourceUrl": "https://www.courier-journal.com/story/news/politics/elections/2026/10/08/kentucky-candidates-congress-2026-midterm-election/92074952007/",
+        "sourceDate": "2026-10-29"
+      }
+    ],
+    "H6KY04171": [
+      {
+        "issueId": "health",
+        "text": "Says Medicaid should remain a safety net for children, seniors, and people with disabilities, with eligibility checks and penalties for fraud.",
+        "sourceName": "Louisville Courier Journal questionnaire",
+        "sourceUrl": "https://www.courier-journal.com/story/news/politics/elections/2026/10/08/kentucky-candidates-congress-2026-midterm-election/92074952007/",
+        "sourceDate": "2026-10-29"
+      },
+      {
+        "issueId": "data",
+        "text": "Says a new data center should not add costs for the community, local zoning should decide the site, and utility bills for families should not rise to pay for it.",
+        "sourceName": "Louisville Courier Journal questionnaire",
+        "sourceUrl": "https://www.courier-journal.com/story/news/politics/elections/2026/10/08/kentucky-candidates-congress-2026-midterm-election/92074952007/",
+        "sourceDate": "2026-10-29"
+      },
+      {
+        "issueId": "debt",
+        "text": "Says his first priority is fiscal discipline, citing a national debt above $37 trillion, and that he would balance the budget and cut waste.",
+        "sourceName": "Louisville Courier Journal questionnaire",
+        "sourceUrl": "https://www.courier-journal.com/story/news/politics/elections/2026/10/08/kentucky-candidates-congress-2026-midterm-election/92074952007/",
+        "sourceDate": "2026-10-29"
+      }
+    ],
+    "H6KY04189": [
+      {
+        "issueId": "cost",
+        "text": "Says her first priority is lowering costs, including support for small business, manufacturing, and pensions for first responders and teachers.",
+        "sourceName": "Louisville Courier Journal questionnaire",
+        "sourceUrl": "https://www.courier-journal.com/story/news/politics/elections/2026/10/08/kentucky-candidates-congress-2026-midterm-election/92074952007/",
+        "sourceDate": "2026-10-29"
+      },
+      {
+        "issueId": "health",
+        "text": "Says she would move over time toward universal care, restore Affordable Care Act subsidies, add a public option, and protect Medicaid, Medicare, and CHIP.",
+        "sourceName": "Louisville Courier Journal questionnaire",
+        "sourceUrl": "https://www.courier-journal.com/story/news/politics/elections/2026/10/08/kentucky-candidates-congress-2026-midterm-election/92074952007/",
+        "sourceDate": "2026-10-29"
+      },
+      {
+        "issueId": "data",
+        "text": "Says data centers should not be built without community approval, and that the cost should not be passed on to taxpayers.",
+        "sourceName": "Louisville Courier Journal questionnaire",
+        "sourceUrl": "https://www.courier-journal.com/story/news/politics/elections/2026/10/08/kentucky-candidates-congress-2026-midterm-election/92074952007/",
+        "sourceDate": "2026-10-29"
+      }
+    ],
+    "H0KY05015": [
+      {
+        "issueId": "cost",
+        "text": "Says he supports an all-of-the-above energy policy so household electricity costs stay as low as possible.",
+        "sourceName": "Official House website, energy",
+        "sourceUrl": "https://halrogers.house.gov/energy",
+        "sourceDate": "2026-11-03"
+      },
+      {
+        "issueId": "health",
+        "text": "Says he supports patient-focused changes aimed at more choice and lower costs, and protecting Medicare for seniors and people with disabilities.",
+        "sourceName": "Official House website, health care",
+        "sourceUrl": "https://halrogers.house.gov/health-care",
+        "sourceDate": "2026-11-03"
+      },
+      {
+        "issueId": "data",
+        "text": "Says he voted for the Ratepayer Protection Act so data centers pay for their own electricity and those costs are not added to rural utility bills.",
+        "sourceName": "Official House website, data center vote statement",
+        "sourceUrl": "https://halrogers.house.gov/2026/9/congressman-rogers-votes-to-protect-ratepayers-implement-guardrails-for-data-centers",
+        "sourceDate": "2026-09-16"
+      }
+    ],
+    "H6KY05152": [
+      {
+        "issueId": "health",
+        "text": "Says he would expand Medicaid eligibility and restore cuts he calls the big ugly bill.",
+        "sourceName": "Louisville Courier Journal questionnaire",
+        "sourceUrl": "https://www.courier-journal.com/story/news/politics/elections/2026/10/08/kentucky-candidates-congress-2026-midterm-election/92074952007/",
+        "sourceDate": "2026-10-29"
+      },
+      {
+        "issueId": "data",
+        "text": "Says he would propose a moratorium on data centers because of concern about collateral impacts.",
+        "sourceName": "Louisville Courier Journal questionnaire",
+        "sourceUrl": "https://www.courier-journal.com/story/news/politics/elections/2026/10/08/kentucky-candidates-congress-2026-midterm-election/92074952007/",
+        "sourceDate": "2026-10-29"
+      }
+    ],
+    "H6KY05202": [
+      {
+        "issueId": "cost",
+        "text": "Says his first priority is shoring up the safety net, including child care, education, food, housing, and utility help, and promoting renewable energy to lower bills.",
+        "sourceName": "Louisville Courier Journal questionnaire",
+        "sourceUrl": "https://www.courier-journal.com/story/news/politics/elections/2026/10/08/kentucky-candidates-congress-2026-midterm-election/92074952007/",
+        "sourceDate": "2026-10-29"
+      },
+      {
+        "issueId": "health",
+        "text": "Says he would undo Medicaid cuts and supports Medicare for All, including vision, dental, and mental health.",
+        "sourceName": "Louisville Courier Journal questionnaire",
+        "sourceUrl": "https://www.courier-journal.com/story/news/politics/elections/2026/10/08/kentucky-candidates-congress-2026-midterm-election/92074952007/",
+        "sourceDate": "2026-10-29"
+      },
+      {
+        "issueId": "data",
+        "text": "Says he supports an indefinite federal moratorium on private AI data centers until Congress regulates AI development.",
+        "sourceName": "Louisville Courier Journal questionnaire",
+        "sourceUrl": "https://www.courier-journal.com/story/news/politics/elections/2026/10/08/kentucky-candidates-congress-2026-midterm-election/92074952007/",
+        "sourceDate": "2026-10-29"
+      }
+    ],
+    "H2KY05136": [
+      {
+        "issueId": "cost",
+        "text": "Says pay should cover the cost of owning a home and raising a family.",
+        "sourceName": "Louisville Courier Journal questionnaire",
+        "sourceUrl": "https://www.courier-journal.com/story/news/politics/elections/2026/10/08/kentucky-candidates-congress-2026-midterm-election/92074952007/",
+        "sourceDate": "2026-10-29"
+      },
+      {
+        "issueId": "data",
+        "text": "Says data centers should not be installed.",
+        "sourceName": "Louisville Courier Journal questionnaire",
+        "sourceUrl": "https://www.courier-journal.com/story/news/politics/elections/2026/10/08/kentucky-candidates-congress-2026-midterm-election/92074952007/",
+        "sourceDate": "2026-10-29"
+      }
+    ],
+    "H6KY06192": [
+      {
+        "issueId": "cost",
+        "text": "At a July 7, 2026 Commerce Lexington forum, said Congress should support an all-of-the-above energy policy so electricity stays affordable as demand from manufacturing and AI data centers grows.",
+        "sourceName": "Lexington Herald-Leader, Commerce Lexington forum",
+        "sourceUrl": "https://www.kentucky.com/news/politics-government/election/article317445176.html",
+        "sourceDate": "2026-10-02"
+      },
+      {
+        "issueId": "data",
+        "text": "At that forum, said the federal government should not decide where data centers are built, and that local leaders and residents should.",
+        "sourceName": "Lexington Herald-Leader, Commerce Lexington forum",
+        "sourceUrl": "https://www.kentucky.com/news/politics-government/election/article317445176.html",
+        "sourceDate": "2026-10-02"
+      }
+    ],
+    "H6KY06184": [
+      {
+        "issueId": "cost",
+        "text": "Says he would raise the minimum wage, let Medicare negotiate drug prices, limit corporate purchases of starter homes, and cut child-care costs.",
+        "sourceName": "Lexington Herald-Leader, Zach Dembo written answers",
+        "sourceUrl": "https://www.kentucky.com/news/politics-government/article315712907.html",
+        "sourceDate": "2026-05-20"
+      },
+      {
+        "issueId": "health",
+        "text": "Says he would require U.S. drug prices to match prices charged overseas, restore Medicaid, expand Affordable Care Act tax credits, and add a public option.",
+        "sourceName": "Lexington Herald-Leader, Zach Dembo written answers",
+        "sourceUrl": "https://www.kentucky.com/news/politics-government/article315712907.html",
+        "sourceDate": "2026-05-20"
+      },
+      {
+        "issueId": "data",
+        "text": "Says Congress should require local hearings before a data center is built and require tech companies to pay their own energy costs.",
+        "sourceName": "Lexington Herald-Leader, data center questionnaire",
+        "sourceUrl": "https://www.kentucky.com/news/politics-government/election/article317445176.html",
+        "sourceDate": "2026-10-02"
+      },
+      {
+        "issueId": "immigration",
+        "text": "Says he would secure the border, focus enforcement on people he describes as public-safety threats, fix legal-immigration backlogs, and create a path to citizenship. He says the goal is neither open borders nor mass deportation.",
+        "sourceName": "Lexington Herald-Leader, Zach Dembo written answers",
+        "sourceUrl": "https://www.kentucky.com/news/politics-government/article315712907.html",
+        "sourceDate": "2026-05-20"
+      }
+    ],
+    "H6KY06234": [
+      {
+        "issueId": "cost",
+        "text": "Says his first priority is no federal income tax on the first $100,000 of earnings.",
+        "sourceName": "Louisville Courier Journal questionnaire",
+        "sourceUrl": "https://www.courier-journal.com/story/news/politics/elections/2026/10/08/kentucky-candidates-congress-2026-midterm-election/92074952007/",
+        "sourceDate": "2026-10-29"
+      },
+      {
+        "issueId": "health",
+        "text": "Says he supports universal coverage through a public option, nonprofit insurers, or a hybrid, and that private insurance could remain.",
+        "sourceName": "Louisville Courier Journal questionnaire",
+        "sourceUrl": "https://www.courier-journal.com/story/news/politics/elections/2026/10/08/kentucky-candidates-congress-2026-midterm-election/92074952007/",
+        "sourceDate": "2026-10-29"
+      },
+      {
+        "issueId": "data",
+        "text": "Says a community's no on a data center should be final, with no state override.",
+        "sourceName": "Louisville Courier Journal questionnaire",
+        "sourceUrl": "https://www.courier-journal.com/story/news/politics/elections/2026/10/08/kentucky-candidates-congress-2026-midterm-election/92074952007/",
+        "sourceDate": "2026-10-29"
+      }
+    ],
+    "H6KY06242": [
+      {
+        "issueId": "cost",
+        "text": "Says he would seek funding for poor and middle-class families, higher taxes on billionaires, and would not direct that money to AI data centers.",
+        "sourceName": "Louisville Courier Journal questionnaire",
+        "sourceUrl": "https://www.courier-journal.com/story/news/politics/elections/2026/10/08/kentucky-candidates-congress-2026-midterm-election/92074952007/",
+        "sourceDate": "2026-10-29"
+      },
+      {
+        "issueId": "health",
+        "text": "Says he supports Medicare for All and tying U.S. drug prices to prices in other wealthy countries.",
+        "sourceName": "Louisville Courier Journal questionnaire",
+        "sourceUrl": "https://www.courier-journal.com/story/news/politics/elections/2026/10/08/kentucky-candidates-congress-2026-midterm-election/92074952007/",
+        "sourceDate": "2026-10-29"
+      },
+      {
+        "issueId": "data",
+        "text": "Says his first priority is passing the AI Data Center Moratorium Act.",
+        "sourceName": "Louisville Courier Journal questionnaire",
+        "sourceUrl": "https://www.courier-journal.com/story/news/politics/elections/2026/10/08/kentucky-candidates-congress-2026-midterm-election/92074952007/",
+        "sourceDate": "2026-10-29"
+      }
+    ],
+    "H6KY06283": [
+      {
+        "issueId": "cost",
+        "text": "Says he would back many small new homes, about 250 to 750 square feet, to add entry-level and senior housing.",
+        "sourceName": "Louisville Courier Journal questionnaire",
+        "sourceUrl": "https://www.courier-journal.com/story/news/politics/elections/2026/10/08/kentucky-candidates-congress-2026-midterm-election/92074952007/",
+        "sourceDate": "2026-10-29"
+      },
+      {
+        "issueId": "health",
+        "text": "Says he would provide a free preventive evaluation so problems are found before later care becomes more expensive.",
+        "sourceName": "Louisville Courier Journal questionnaire",
+        "sourceUrl": "https://www.courier-journal.com/story/news/politics/elections/2026/10/08/kentucky-candidates-congress-2026-midterm-election/92074952007/",
+        "sourceDate": "2026-10-29"
+      },
+      {
+        "issueId": "data",
+        "text": "Says current data centers are too big, employ few local people, and make basic utilities unaffordable.",
+        "sourceName": "Louisville Courier Journal questionnaire",
+        "sourceUrl": "https://www.courier-journal.com/story/news/politics/elections/2026/10/08/kentucky-candidates-congress-2026-midterm-election/92074952007/",
+        "sourceDate": "2026-10-29"
       }
     ]
   }
