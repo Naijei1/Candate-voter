@@ -40,6 +40,8 @@ export type CdFeatureCollection = {
 export type ProjectedDistrict = {
   district: string;
   d: string;
+  labelX: number;
+  labelY: number;
 };
 
 /** Two-digit district drawn on the map, or null when this state does not use that code. */
@@ -133,6 +135,9 @@ export function projectCollection(
 
   return prepared.map((item) => {
     const commands: string[] = [];
+    let sumX = 0;
+    let sumY = 0;
+    let count = 0;
     for (const polygon of item.polygons) {
       for (const ring of polygon) {
         let moved = false;
@@ -140,15 +145,23 @@ export function projectCollection(
           const lon = pair[0];
           const lat = pair[1];
           if (lon == null || lat == null) continue;
-          const x = (offsetX + (lon - minX) * scale).toFixed(1);
-          const y = (offsetY + (maxY - lat) * scale).toFixed(1);
-          commands.push(`${moved ? "L" : "M"}${x} ${y}`);
+          const x = offsetX + (lon - minX) * scale;
+          const y = offsetY + (maxY - lat) * scale;
+          commands.push(`${moved ? "L" : "M"}${x.toFixed(1)} ${y.toFixed(1)}`);
+          sumX += x;
+          sumY += y;
+          count += 1;
           moved = true;
         }
         if (moved) commands.push("Z");
       }
     }
-    return { district: item.district, d: commands.join("") };
+    return {
+      district: item.district,
+      d: commands.join(""),
+      labelX: count > 0 ? sumX / count : offsetX,
+      labelY: count > 0 ? sumY / count : offsetY,
+    };
   });
 }
 

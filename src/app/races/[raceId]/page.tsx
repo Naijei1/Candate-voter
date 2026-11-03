@@ -10,9 +10,11 @@ import { FollowControl } from "@/components/site/FollowControl";
 import { ElectionDayBanner } from "@/components/site/ElectionDayBanner";
 import { ResultsNote } from "@/components/site/ResultsNote";
 import { KY_BALLOT_CHECKED, KY_BALLOT_SOURCES, calendarDay, kyBallot, kyBallotIds } from "@/lib/site/ky-ballot";
+import { newsForNames } from "@/lib/site/ky-news";
 import { cardsForRace } from "@/lib/site/showcase";
 import { personFilingNote } from "@/lib/data/filing-note";
 import { generalElectionLabel } from "@/lib/copy";
+import { formatMoney } from "@/lib/finance/model";
 import { httpsUrl } from "@/lib/format";
 import { loadChecks } from "@/lib/content/store";
 import { loadContest } from "@/lib/site/contest";
@@ -37,6 +39,7 @@ export default async function RacePage({ params }: PageProps) {
   const roster = cardsForRace(race.raceId, loaded.candidates, loaded.filingsLoaded);
   const checks = await loadChecks("race", race.raceId);
   const ballotIds = ballot ? kyBallotIds(ballot) : null;
+  const stories = ballot ? await newsForNames(ballot.people.map((person) => person.name)) : [];
   const others = ballotIds
     ? loaded.candidates.filter((candidate) => !ballotIds.has(candidate.candidateId) && !ballotIds.has(candidate.fecCandidateId ?? ""))
     : [];
@@ -85,11 +88,13 @@ export default async function RacePage({ params }: PageProps) {
         </h2>
         {ballot ? (
           <>
-            <div className="actions">
+            <div className="actions sticky-mobile">
               <Link className="btn btn-navy" href={`/races/${race.raceId}/compare`}>
-                Compare candidates
+                Compare
               </Link>
-              <FollowControl what="race" targetId={race.raceId} />
+              <Link className="btn btn-ghost" href="/">
+                Your ballot
+              </Link>
             </div>
             {ballot.note ? <p>{ballot.note}</p> : null}
             <ResultsNote />
@@ -101,6 +106,7 @@ export default async function RacePage({ params }: PageProps) {
                   </h3>
                   <p className="party">{person.party}</p>
                   {person.holdsOffice ? <p className="hint">Holds this office now</p> : null}
+                  {person.finance ? <p className="hint">Raised {formatRaceMoney(person.finance.receipts)}</p> : null}
                 </li>
               ))}
             </ul>
@@ -109,6 +115,23 @@ export default async function RacePage({ params }: PageProps) {
               match the Clerk of the House list published Oct 8, 2026.{" "}
               <a href={KY_BALLOT_SOURCES[0].url}>Filing list</a>
             </p>
+            {stories.length > 0 ? (
+              <section aria-labelledby="news-heading">
+                <h2 id="news-heading">News</h2>
+                <ul className="plain-list">
+                  {stories.map((story) => (
+                    <li key={story.url}>
+                      <a href={story.url}>{story.title}</a>
+                      <span className="hint">
+                        {" "}
+                        {story.source}
+                        {story.date ? ` · ${story.date}` : ""}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ) : null}
             {others.length > 0 ? (
               <details>
                 <summary>Filed earlier, not on the November list ({others.length})</summary>
@@ -163,6 +186,10 @@ export default async function RacePage({ params }: PageProps) {
       </div>
     </article>
   );
+}
+
+function formatRaceMoney(value: number): string {
+  return formatMoney(value);
 }
 
 function publicFilingNote(note: string | null): string | null {

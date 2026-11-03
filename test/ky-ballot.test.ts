@@ -33,7 +33,8 @@ test("Kentucky November ballot matches the Secretary of State filing list", () =
   assert.equal(footer.includes("/about"), false);
   assert.equal(home.includes("founder"), false);
   assert.match(about, /redirect\("\/"\)/);
-  assert.equal(/google/i.test(signIn), false);
+  assert.match(signIn, /googleUrl/);
+  assert.match(signIn, /Continue with Google/);
 });
 
 test("the November seed covers every federal race and does not add primary losers", () => {

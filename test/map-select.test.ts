@@ -39,11 +39,11 @@ test("homepage is a document in the navy and red palette, not a map shell", () =
   const page = readFileSync(new URL("../src/app/page.tsx", import.meta.url), "utf8");
   const brand = readFileSync(new URL("../src/content/brand.ts", import.meta.url), "utf8");
   const css = readFileSync(new URL("../src/app/globals.css", import.meta.url), "utf8");
-  assert.match(page, /brand\.headline/);
+  assert.match(page, /Your ballot/);
+  assert.match(page, /BallotHub/);
   assert.match(brand, /Your elections\. All in one place\./);
-  assert.match(page, /Explore by state/);
   assert.equal(page.includes("Landing"), false);
-  assert.equal(page.includes("your ballot"), false);
+  assert.equal(page.includes("Explore by state"), false);
   assert.match(css, /--color-navy:\s*#142b49/);
   assert.match(css, /--color-cta:\s*#b32635/);
   assert.match(css, /--color-paper:\s*#f4f6f8/);

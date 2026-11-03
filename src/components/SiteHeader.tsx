@@ -6,14 +6,9 @@ import { signOutAction } from "@/lib/auth/actions";
 import { currentUser } from "@/lib/auth/session";
 
 const PRIMARY = [
-  { href: "/#find", label: "Find My Races" },
-  { href: "/candidates", label: "Candidates" },
-  { href: "/news", label: "News and Updates" },
-] as const;
-
-const MORE = [
-  { href: "/polls", label: "Polls and Analysis" },
-  { href: "/finance", label: "Campaign Finance" },
+  { href: "/", label: "Ballot" },
+  { href: "/map", label: "Map" },
+  { href: "/ask", label: "Ask" },
 ] as const;
 
 export async function SiteHeader() {
@@ -32,16 +27,6 @@ export async function SiteHeader() {
               {item.label}
             </Link>
           ))}
-          <details>
-            <summary>More</summary>
-            <div>
-              {MORE.map((item) => (
-                <Link key={item.href} href={item.href}>
-                  {item.label}
-                </Link>
-              ))}
-            </div>
-          </details>
         </nav>
         {user ? (
           <details className="account-menu">
@@ -63,11 +48,6 @@ export async function SiteHeader() {
           <summary>Menu</summary>
           <div>
             {PRIMARY.map((item) => (
-              <Link key={item.href} href={item.href}>
-                {item.label}
-              </Link>
-            ))}
-            {MORE.map((item) => (
               <Link key={item.href} href={item.href}>
                 {item.label}
               </Link>

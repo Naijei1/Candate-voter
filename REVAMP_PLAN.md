@@ -1,5 +1,17 @@
 # Candate revamp review
 
+## Ballot hub (November 3, 2026)
+
+Kentucky only. No About page. No alert email. No copied vote totals.
+
+Flows:
+
+1. Land on Your ballot. Enter a Kentucky ZIP, or tap a numbered district on the map. The map works with no ZIP.
+2. The page keeps the U.S. Senate race and, after a ZIP or a tap, that U.S. House district. Each card lists the November nominees and a Compare button.
+3. Compare shows the same people, A to Z. A candidate card shows party, whether they hold the office, and money raised when a Federal Election Commission total exists. Filings and spending by other groups sit under More details.
+4. Ask is a separate page. Sign in stays email and password. Continue with Google appears only after Cognito Google is configured.
+5. News appears on a race only when a Kentucky Lantern story names someone in that race. Polls stay hidden until a published poll with a source exists. State legislative names stay off this ballot because a ZIP does not identify those districts. The Secretary of State filing list is linked.
+
 ## Still needs Naijei (November 3, 2026)
 
 These stay off the public pages until he supplies them. Do not invent the text or the photos.
