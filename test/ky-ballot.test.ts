@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 import { KY_BALLOT_SOURCES, kyBallot, kyBallotSeed, kyPerson } from "../src/lib/site/ky-ballot";
 import { kentuckyPollsClosed } from "../src/lib/site/ky-results";
+import { matchScore, stancesFor } from "../src/lib/site/stances";
 
 test("Kentucky November ballot matches the Secretary of State filing list", () => {
   const senate = kyBallot("2026-senate-KY");
@@ -48,6 +49,14 @@ test("the November seed covers every federal race and does not add primary loser
   assert.match(page, /ResultsNote/);
   const script = readFileSync("scripts/seed-ky-ballot.ts", "utf8");
   assert.match(script, /AWS_REGION=us-east-1 CANDATE_TABLE_NAME=candate-voter npm run seed:ky/);
+});
+
+test("only sourced stances count, and missing candidates are not enough info", () => {
+  assert.ok(stancesFor("S6KY00286").every((row) => row.sourceUrl.startsWith("https://")));
+  assert.ok(stancesFor("S6KY00385").length > 0);
+  assert.equal(stancesFor("H6KY01110").length, 0);
+  assert.equal(matchScore("H6KY01110", ["health"]).enough, false);
+  assert.equal(stancesFor("S6KY00385").some((row) => /socialist/i.test(row.text)), false);
 });
 
 test("Kentucky results stay closed until 6 p.m. Central", () => {

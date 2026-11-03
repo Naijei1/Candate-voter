@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { Inter } from "next/font/google";
 import { Suspense } from "react";
 import { AskProvider } from "@/components/chat/AskProvider";
 import { SiteFooter } from "@/components/SiteFooter";
@@ -7,6 +8,8 @@ import { PlaceSync } from "@/components/site/PlaceSync";
 import { brand } from "@/content/brand";
 import { cyclesFromEnv } from "@/lib/data/cycles";
 import "./globals.css";
+
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -31,7 +34,7 @@ export default function RootLayout({
   const cycles = cyclesFromEnv();
   return (
     <html lang="en">
-      <body>
+      <body className={inter.variable}>
         <a className="skip-link" href="#main">
           Skip to content
         </a>
