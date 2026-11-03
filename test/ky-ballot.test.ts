@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import test from "node:test";
 import { KY_BALLOT_SOURCES, kyBallot, kyBallotSeed, kyPerson } from "../src/lib/site/ky-ballot";
 import { kentuckyPollsClosed } from "../src/lib/site/ky-results";
-import { matchScore, stancesFor } from "../src/lib/site/stances";
+import { matchScore, portraitFor, stanceIssues, stancesFor } from "../src/lib/site/stances";
 
 test("Kentucky November ballot matches the Secretary of State filing list", () => {
   const senate = kyBallot("2026-senate-KY");
@@ -52,11 +52,27 @@ test("the November seed covers every federal race and does not add primary loser
 });
 
 test("only sourced stances count, and missing candidates are not enough info", () => {
-  assert.ok(stancesFor("S6KY00286").every((row) => row.sourceUrl.startsWith("https://")));
-  assert.ok(stancesFor("S6KY00385").length > 0);
-  assert.equal(stancesFor("H6KY01110").length, 0);
-  assert.equal(matchScore("H6KY01110", ["health"]).enough, false);
+  const issueIds = new Set(stanceIssues().map((issue) => issue.id));
+  assert.deepEqual(
+    stanceIssues().map((issue) => issue.id),
+    ["cost", "health", "data", "immigration", "debt"],
+  );
+  const covered = ["S6KY00286", "S6KY00385", "S6KY00377", "H6KY01110", "H6KY01169", "H8KY02031", "H6KY02068", "H2KY03206", "H6KY03223", "H6KY04171", "H6KY04189", "H0KY05015", "H6KY05152", "H6KY05202", "H2KY05136", "H6KY06192", "H6KY06184", "H6KY06234", "H6KY06242", "H6KY06283"];
+  for (const id of covered) {
+    const rows = stancesFor(id);
+    assert.ok(rows.length > 0 && rows.length <= 4, id);
+    assert.ok(rows.every((row) => row.sourceUrl.startsWith("https://") && /^\d{4}-\d{2}-\d{2}$/.test(row.sourceDate) && issueIds.has(row.issueId)), id);
+  }
+  for (const id of ["sos-ky-2026-murphy", "H8KY02106", "H6KY04205", "sos-ky-2026-peter-williams", "H2KY05185"]) {
+    assert.equal(stancesFor(id).length, 0, id);
+    assert.equal(matchScore(id, ["health"]).enough, false);
+  }
   assert.equal(stancesFor("S6KY00385").some((row) => /socialist/i.test(row.text)), false);
+  assert.equal(stancesFor("H2KY04121").length, 0);
+  for (const id of ["S6KY00286", "H6KY01110", "H8KY02031", "H2KY03206", "H0KY05015"]) {
+    assert.equal(existsSync(`public${portraitFor(id)?.src}`), true, id);
+  }
+  assert.equal(portraitFor("H6KY01169"), null);
 });
 
 test("Kentucky results stay closed until 6 p.m. Central", () => {

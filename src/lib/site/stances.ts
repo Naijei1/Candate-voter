@@ -13,8 +13,23 @@ export type Issue = { id: string; label: string };
 const issues = data.issues as Issue[];
 const byCandidate = data.candidates as Record<string, Stance[]>;
 
+const CLERK = "Official U.S. House photograph";
+
+/** Official Clerk portraits only. Everyone else stays on initials. */
+const portraits: Record<string, { src: string; credit: string }> = {
+  S6KY00286: { src: "/photos/ky/S6KY00286.jpg", credit: CLERK },
+  H6KY01110: { src: "/photos/ky/H6KY01110.jpg", credit: CLERK },
+  H8KY02031: { src: "/photos/ky/H8KY02031.jpg", credit: CLERK },
+  H2KY03206: { src: "/photos/ky/H2KY03206.jpg", credit: CLERK },
+  H0KY05015: { src: "/photos/ky/H0KY05015.jpg", credit: CLERK },
+};
+
 export function stanceIssues(): Issue[] {
   return issues;
+}
+
+export function portraitFor(candidateId: string): { src: string; credit: string } | null {
+  return portraits[candidateId] ?? null;
 }
 
 export function stancesFor(candidateId: string): Stance[] {
