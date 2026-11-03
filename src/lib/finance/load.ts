@@ -1,4 +1,5 @@
 import { createDynamoRepository } from "../data/repository";
+import { formatInstant } from "../format";
 import type { FinanceDirect, FinanceOutside } from "./model";
 import { FINANCE_SNAPSHOT_CYCLE, FINANCE_SNAPSHOT_RETRIEVED_AT, snapshotFinance } from "./snapshot";
 
@@ -15,7 +16,7 @@ export async function loadFinance(cycle: number): Promise<FinanceBundle> {
   try {
     const rows = await createDynamoRepository().listFinance(cycle);
     if (rows.direct.length === 0 && rows.outside.length === 0) {
-      return { cycle, origin: "empty", notice: "No totals stored for this cycle.", retrievedAt: null, direct: [], outside: [] };
+      return { cycle, origin: "empty", notice: "No money totals are stored for this year.", retrievedAt: null, direct: [], outside: [] };
     }
     return { cycle, origin: "table", notice: null, retrievedAt: null, direct: rows.direct, outside: rows.outside };
   } catch (error) {
@@ -25,7 +26,7 @@ export async function loadFinance(cycle: number): Promise<FinanceBundle> {
       return {
         cycle,
         origin: "snapshot",
-        notice: `Totals table unavailable. Figures below are the FEC snapshot retrieved ${FINANCE_SNAPSHOT_RETRIEVED_AT}.`,
+        notice: `Live money totals could not be loaded. Figures below are from the election commission snapshot retrieved ${formatInstant(FINANCE_SNAPSHOT_RETRIEVED_AT) ?? FINANCE_SNAPSHOT_RETRIEVED_AT}.`,
         retrievedAt: FINANCE_SNAPSHOT_RETRIEVED_AT,
         direct: snap.direct,
         outside: snap.outside,

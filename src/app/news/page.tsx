@@ -7,7 +7,7 @@ export default function NewsPage() {
   return (
     <article className="wrap">
       <h1>News</h1>
-      <p className="lede">What you follow here is the feed. Alerts are a separate choice.</p>
+      <p className="lede">Choose what you want to see later. This does not turn on email alerts.</p>
       <NewsFeed />
     </article>
   );

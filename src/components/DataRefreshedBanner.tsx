@@ -25,7 +25,7 @@ export function DataRefreshedBanner({
           : "rounded-lg border border-line bg-card px-3 py-2 text-sm text-muted"
       }
     >
-      Data refreshed {dateTime ? <time dateTime={dateTime}>{text}</time> : text}
+      Filings checked {dateTime ? <time dateTime={dateTime}>{text}</time> : text}
     </p>
   );
 }

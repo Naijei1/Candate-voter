@@ -20,7 +20,7 @@ export default async function BrandAdminPage() {
         <Link href="/admin">Admin</Link>
       </p>
       <h1>Branding and copy</h1>
-      <p>Empty fields stay “Awaiting content” on the public site. Do not invent a biography.</p>
+      <p>Empty fields stay off the public site. Do not invent a biography.</p>
       <BrandTools initial={copy} />
     </article>
   );

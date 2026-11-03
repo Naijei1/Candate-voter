@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { DataRefreshedBanner } from "@/components/DataRefreshedBanner";
 import { StateExplore } from "@/components/site/StateExplore";
-import { StatusMark } from "@/components/site/StatusMark";
 import { ZipSearch } from "@/components/site/ZipSearch";
 import { CopyText } from "@/components/site/CopyText";
 import { brand } from "@/content/brand";
@@ -31,15 +30,11 @@ export default async function HomePage() {
             <p className="lede">{brand.lede}</p>
             <ZipSearch />
           </div>
-          <figure>
-            {copy.heroKey ? (
+          {copy.heroKey ? (
+            <figure>
               <img src="/media/hero" alt={brand.heroImageAlt} />
-            ) : (
-              <div className="photo-slot" role="img" aria-label={brand.heroImageAlt}>
-                <StatusMark kind="awaiting" /> Photo placeholder
-              </div>
-            )}
-          </figure>
+            </figure>
+          ) : null}
         </div>
       </section>
       <div className="wrap">
@@ -66,22 +61,15 @@ export default async function HomePage() {
             <li className="card">
               <span className="step-no">3</span>
               <h3>Follow</h3>
-              <p>
-                <StatusMark kind="preview" /> Not sent yet.
-              </p>
+              <p>Save a race after you sign in. Email alerts are not on yet.</p>
             </li>
           </ol>
-          <div className="compare-grid">
-            {["Sample candidate A", "Sample candidate B"].map((name) => (
-              <article className="person-card" key={name}>
-                <p>
-                  <StatusMark kind="sample" /> Not a real race.
-                </p>
-                <h3>{name}</h3>
-                <p className="party">Party label</p>
-              </article>
-            ))}
-          </div>
+          <p>
+            <Link className="btn btn-navy" href="/races/2026-senate-KY/compare">
+              See a real comparison
+            </Link>
+          </p>
+          <p className="hint">Kentucky Senate, 2026. People who have filed to run. Not a ranking.</p>
         </section>
 
         <section className="section" aria-labelledby="featured">
@@ -104,20 +92,12 @@ export default async function HomePage() {
                   {recent.map((race) => (
                     <li key={race.raceId}>
                       <Link href={`/races/${race.raceId}`}>{race.title}</Link>
-                      <span className="hint"> {formatInstant(race.updatedAt)} · FEC Form 2</span>
+                      <span className="hint"> {formatInstant(race.updatedAt)} · official filing</span>
                     </li>
                   ))}
                 </ul>
               )}
-              <p className="hint">Source: FEC Form 2.</p>
-            </li>
-            <li className="card">
-              <h3>Ballot measure</h3>
-              <p>
-                <StatusMark kind="sample" /> October 30, 2026
-              </p>
-              <p className="hint">Source: sample layout.</p>
-              <Link href="/measures/example-kentucky">Open sample</Link>
+              <p className="hint">Source: federal candidacy filings.</p>
             </li>
           </ul>
         </section>
@@ -132,7 +112,7 @@ export default async function HomePage() {
           <p>
             {brand.founderName}, {brand.founderRole}.
           </p>
-          <CopyText text={copy.mission} />
+          {copy.mission ? <CopyText text={copy.mission} /> : <p>A longer introduction is still being written.</p>}
           <p>
             <Link href="/about">About Us</Link>
             {" · "}

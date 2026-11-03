@@ -33,6 +33,33 @@ a {
   color: var(--color-navy);
 }
 
+.term {
+  border-bottom: 1px dotted var(--color-muted);
+  cursor: help;
+  position: relative;
+}
+
+.term-tip {
+  display: none;
+  position: absolute;
+  z-index: 30;
+  left: 0;
+  top: calc(100% + 0.35rem);
+  width: min(18rem, 80vw);
+  padding: 0.55rem 0.75rem;
+  background: var(--color-navy);
+  color: #fff;
+  border-radius: 0.45rem;
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.term:hover .term-tip,
+.term:focus .term-tip,
+.term:focus-visible .term-tip {
+  display: block;
+}
+
 :focus-visible {
   outline: 3px solid var(--color-cta);
   outline-offset: 2px;
@@ -515,6 +542,14 @@ textarea {
   flex-wrap: wrap;
   gap: 0.4rem;
   margin: 0.5rem 0 1rem;
+}
+
+.tabs .btn {
+  white-space: nowrap;
+}
+
+.plain-list li p {
+  margin: 0.15rem 0;
 }
 
 .tabs button[aria-selected="true"] {

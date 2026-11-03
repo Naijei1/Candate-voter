@@ -73,7 +73,7 @@ export function SignInForm({ configured }: { configured: boolean }) {
 
   return (
     <form className="finder" onSubmit={onSubmit}>
-      <p>Email and a password. Google sign-in is not offered.</p>
+      <p>Use your email and a password.</p>
       <label htmlFor="email">
         Email
         <input

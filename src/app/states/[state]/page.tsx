@@ -5,7 +5,6 @@ import { DistrictMap } from "@/components/DistrictMap";
 import { DataRefreshedBanner } from "@/components/DataRefreshedBanner";
 import { Crumbs } from "@/components/site/Crumbs";
 import { FollowControl } from "@/components/site/FollowControl";
-import { StatusMark } from "@/components/site/StatusMark";
 import { isPostalState, stateName } from "@/lib/data/states";
 import { generalElectionLabel } from "@/lib/copy";
 import { PILOT_YEAR, contestsForState, loadPilotIndex } from "@/lib/site/contest";
@@ -90,7 +89,7 @@ export default async function StatePage({ params, searchParams }: PageProps) {
         <LocalTemplate postal={postal} kind={category} />
       ) : (
         <p className="notice" role="status">
-          <StatusMark kind="gap" /> {labelFor(category)} contests are not connected.
+          {labelFor(category)} races are not loaded yet. Federal races are ready.
         </p>
       )}
 
@@ -116,8 +115,8 @@ export default async function StatePage({ params, searchParams }: PageProps) {
 }
 
 function filingLine(loaded: boolean, empty: boolean): string {
-  if (!loaded) return "Not loaded";
-  return empty ? "No filing yet" : "Filing stored";
+  if (!loaded) return "Open to see who filed";
+  return empty ? "No one has filed yet" : "People have filed";
 }
 
 function parseYear(value: string | undefined): number {
@@ -131,34 +130,16 @@ function parseCategory(value: string | undefined): Category {
 }
 
 function LocalTemplate({ postal, kind }: { postal: string; kind: "judicial" | "school" }) {
-  const title = kind === "judicial" ? "Judicial" : "School board";
+  const title = kind === "judicial" ? "Judges" : "School board";
   return (
     <section className="card" aria-labelledby={`${kind}-template`}>
       <h2 id={`${kind}-template`}>{title}</h2>
+      <p>These races are not loaded yet. No names were copied from the state election office.</p>
       <p>
-        <StatusMark kind="awaiting" /> No official list is loaded.
+        <Link className="btn btn-navy" href={`/states/${postal.toLowerCase()}`}>
+          See federal races
+        </Link>
       </p>
-      <p>
-        Kentucky State Board of Elections (elect.ky.gov) did not return a readable file from this server, so no
-        names or districts were copied.
-      </p>
-      <ul className="plain-list">
-        {kind === "judicial" ? (
-          <>
-            <li>Court: Awaiting content</li>
-            <li>Seat: Awaiting content</li>
-            <li>Contested or retention: Awaiting content</li>
-          </>
-        ) : (
-          <>
-            <li>District: Awaiting content</li>
-            <li>Seats: Awaiting content</li>
-            <li>Term: Awaiting content</li>
-          </>
-        )}
-        <li>Candidates: Awaiting content</li>
-      </ul>
-      <FollowControl what="jurisdiction" targetId={`${postal}-${kind}`} />
     </section>
   );
 }

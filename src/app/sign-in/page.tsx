@@ -9,6 +9,7 @@ export default function SignInPage() {
   return (
     <article className="wrap">
       <h1>Sign in</h1>
+      <p className="lede">Save races you want to come back to. Email alerts are not on yet.</p>
       <SignInForm configured={cognitoSettings() !== null} />
     </article>
   );

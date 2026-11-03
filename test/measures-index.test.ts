@@ -10,7 +10,7 @@ test("the measures index links to states and kinds", () => {
   assert.match(kinds, /referendum/);
   assert.match(kinds, /retention/);
   assert.match(page, /\/measures\/\$\{state\.postal\.toLowerCase\(\)\}/);
-  assert.match(page, /kind="awaiting"/);
+  assert.match(page, /No certified question is loaded yet/);
 });
 
 test("header and footer links have pages", () => {

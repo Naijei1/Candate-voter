@@ -11,7 +11,6 @@ import { cardsForRace } from "@/lib/site/showcase";
 import { personFilingNote } from "@/lib/data/filing-note";
 import { generalElectionLabel } from "@/lib/copy";
 import { httpsUrl } from "@/lib/format";
-import { stateName } from "@/lib/data/states";
 import { loadChecks } from "@/lib/content/store";
 import { loadContest } from "@/lib/site/contest";
 import type { Race } from "@/lib/types";
@@ -32,7 +31,6 @@ export default async function RacePage({ params }: PageProps) {
   const race = loaded.race;
   const sourceHref = httpsUrl(race.sourceUrl);
   const roster = cardsForRace(race.raceId, loaded.candidates, loaded.filingsLoaded);
-  const place = race.state ? stateName(race.state) : "States";
   const checks = await loadChecks("race", race.raceId);
   const stateHref = race.state ? `/states/${race.state.toLowerCase()}` : "/states";
 
@@ -40,8 +38,7 @@ export default async function RacePage({ params }: PageProps) {
     <article className="wrap">
       <Crumbs
         items={[
-          { href: "/", label: "Home" },
-          { href: stateHref, label: place },
+          { href: stateHref, label: "My races" },
           { label: shortRace(race) },
         ]}
       />
@@ -50,18 +47,20 @@ export default async function RacePage({ params }: PageProps) {
         {race.cycle != null ? `${generalElectionLabel(race.cycle)} · General` : "General"}
       </p>
       <p className="hint" title="Alphabetical by filing name. Not a ranking. A Form 2 is not the printed ballot.">
-        A to Z
+        Listed A to Z. Not a ranking.
         {sourceHref ? (
           <>
             {" · "}
-            <a href={sourceHref}>FEC filing</a>
+            <a href={sourceHref} title="FEC filing, Form 2">
+              Official filing
+            </a>
           </>
         ) : null}
       </p>
       <DataRefreshedBanner refreshedAt={loaded.refreshedAt} />
       {loaded.filingsLoaded ? null : roster.fecList ? (
         <p className="notice" role="status">
-          Form 2 table unavailable. Names below are the FEC candidate list.
+          Live filings could not be loaded. Names below are from the election commission candidate list.
         </p>
       ) : (
         <p className="notice notice-error" role="status">
@@ -76,7 +75,7 @@ export default async function RacePage({ params }: PageProps) {
           Candidates
         </h2>
         {loaded.filingsLoaded && loaded.candidates.length === 0 && roster.cards.length === 0 ? (
-          <p>No filing stored.</p>
+          <p>No one has filed for this race yet.</p>
         ) : null}
         {roster.summary ? <p>{roster.summary}</p> : null}
         {race.electionStage ? <p>Stage: {race.electionStage}</p> : null}
@@ -84,7 +83,7 @@ export default async function RacePage({ params }: PageProps) {
           {roster.cards.map((candidate) => {
             const live = loaded.candidates.find((row) => row.candidateId === candidate.id);
             const filingCount = live ? live.alternateFilings.length + 1 : 1;
-            const note = live ? personFilingNote(live.filings) : null;
+            const note = live ? publicFilingNote(personFilingNote(live.filings)) : null;
             return (
               <li className="person-card" key={candidate.id}>
                 <h3>
@@ -110,6 +109,12 @@ export default async function RacePage({ params }: PageProps) {
       </div>
     </article>
   );
+}
+
+function publicFilingNote(note: string | null): string | null {
+  if (!note) return null;
+  const cleaned = note.replace(/\s*FEC\s+[A-Z0-9, ]+\./g, "").trim();
+  return cleaned.length > 0 ? cleaned : null;
 }
 
 function shortRace(race: Race): string {

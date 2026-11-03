@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { FollowControl } from "@/components/site/FollowControl";
-import { StatusMark } from "@/components/site/StatusMark";
 import { isPostalState, stateName } from "@/lib/data/states";
 
 export const dynamic = "force-dynamic";
@@ -23,9 +22,7 @@ export default async function IssuesPage({ params }: PageProps) {
         <Link href={`/states/${postal.toLowerCase()}`}>{stateName(postal)}</Link>
       </p>
       <h1>Issues</h1>
-      <p>
-        <StatusMark kind="awaiting" /> No issue list is loaded.
-      </p>
+      <p>Issue pages are not loaded yet. You can follow the topic and look at races now.</p>
       <FollowControl what="issue" targetId={postal} />
     </article>
   );

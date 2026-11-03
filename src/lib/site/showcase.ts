@@ -95,7 +95,7 @@ export function cardsForRace(
         id: candidate.candidateId,
         name: candidate.displayName,
         party: candidate.partyLabel,
-        line: incumbency ? `Filing stored · ${incumbency}` : "Filing stored · Ballot not verified",
+        line: seatLine(incumbency),
       };
     });
     return { cards, summary: null, fecList: false };
@@ -103,12 +103,12 @@ export function cardsForRace(
   if (!showcase) return { cards: [], summary: null, fecList: false };
   return {
     fecList: true,
-    summary: `${showcase.candidates.length} on the FEC candidate list.`,
+    summary: `${showcase.candidates.length} people on the official candidate list.`,
     cards: showcase.candidates.map((candidate) => ({
       id: candidate.fecCandidateId,
       name: candidate.displayName,
       party: candidate.partyLabel,
-      line: [candidate.statusLabel, candidate.incumbentLabel].filter(Boolean).join(" · "),
+      line: seatLine(candidate.incumbentLabel),
     })),
   };
 }
@@ -135,6 +135,14 @@ function presentShowcase(row: (typeof raw.candidates)[number]): ShowcaseCandidat
       ? `https://www.fec.gov/data/committee/${row.committeeId}/`
       : null,
   };
+}
+
+function seatLine(label: string | null | undefined): string {
+  if (!label) return "Filed to run. Not confirmed on the ballot.";
+  if (/open seat/i.test(label)) return "Filed to run. No one currently holds this seat.";
+  if (/incumbent/i.test(label)) return "Filed to run. Currently holds this office.";
+  if (/challenger/i.test(label)) return "Filed to run. Running against the current officeholder.";
+  return "Filed to run. Not confirmed on the ballot.";
 }
 
 function displayFromFec(name: string): string {

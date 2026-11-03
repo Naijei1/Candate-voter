@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { CopyText } from "@/components/site/CopyText";
 import { loadSiteCopy } from "@/lib/content/store";
 
 const LINKS = [
@@ -27,7 +26,7 @@ export async function SiteFooter() {
           ))}
         </nav>
         <p>This site does not endorse candidates.</p>
-        {detail ? <p>{detail}</p> : <CopyText text={null} />}
+        {detail ? <p>{detail}</p> : null}
       </div>
     </footer>
   );

@@ -2,8 +2,17 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { NEWS_CATEGORIES, SAMPLE_NEWS } from "@/content/pilot";
-import { StatusMark } from "@/components/site/StatusMark";
+import { NEWS_CATEGORIES } from "@/content/pilot";
+
+const FEED_LABEL: Record<(typeof NEWS_CATEGORIES)[number], string> = {
+  "Candidate statements": "What candidates say",
+  "Campaign finance": "Campaign money",
+  "PAC activity": "Spending by other groups",
+  Polls: "Polls",
+  Debates: "Debates",
+  "Ballot measures": "Ballot questions",
+  "Election deadlines": "Election deadlines",
+};
 
 export function NewsFeed() {
   const [categories, setCategories] = useState<string[]>([...NEWS_CATEGORIES]);
@@ -47,8 +56,6 @@ export function NewsFeed() {
     setMessage(response.ok ? "Feed saved. Notifications are unchanged." : "Feed choices were not saved.");
   }
 
-  const items = SAMPLE_NEWS.filter((item) => categories.includes(item.category));
-
   return (
     <div>
       <p>
@@ -69,7 +76,7 @@ export function NewsFeed() {
                   void save(next, states);
                 }}
               />{" "}
-              {category}
+              {FEED_LABEL[category] ?? category}
             </label>
           ))}
         </div>
@@ -94,7 +101,7 @@ export function NewsFeed() {
           <input id="news-state" value={stateInput} onChange={(event) => setStateInput(event.target.value)} maxLength={2} />
         </label>
         <button className="btn btn-navy" type="submit">
-          Follow area
+          Add state
         </button>
       </form>
       {states.length > 0 ? <p>Following {states.join(", ")}.</p> : <p>No followed states yet.</p>}
@@ -104,25 +111,13 @@ export function NewsFeed() {
           <Link href="/sign-in">Sign in</Link> to save this feed.
         </p>
       ) : null}
-      <h2>Items</h2>
+      <h2>Stories</h2>
+      <p>No news source is connected yet. Follow a race now, and stories you pick will show here later.</p>
       <p>
-        <StatusMark kind="sample" /> No verified news feed is connected. These cards are samples.
+        <Link className="btn btn-navy" href="/states/ky">
+          See Kentucky races
+        </Link>
       </p>
-      {items.length === 0 ? <p>No sample cards in the selected feed.</p> : null}
-      <ul className="card-grid">
-        {items.map((item) => (
-          <li className="card" key={item.id}>
-            <p>
-              <StatusMark kind="sample" /> {item.kind}
-            </p>
-            <h3>{item.headline}</h3>
-            <p className="hint">
-              {item.publisher} · {item.date}
-            </p>
-            <p>{item.race}</p>
-          </li>
-        ))}
-      </ul>
     </div>
   );
 }
