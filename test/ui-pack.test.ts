@@ -12,7 +12,7 @@ test("data refreshed banner uses the index timestamp and stays quiet when it is 
   const shown = renderToStaticMarkup(
     React.createElement(DataRefreshedBanner, { refreshedAt: "2026-10-26T18:48:47.307Z" }),
   );
-  assert.match(shown, /Data refreshed/);
+  assert.match(shown, /Filings checked/);
   assert.match(shown, /Oct 26, 2026, 2:48\sPM ET/);
   assert.match(shown, /dateTime="2026-10-26T18:48:47.307Z"/);
   assert.equal(renderToStaticMarkup(React.createElement(DataRefreshedBanner, { refreshedAt: null })), "");

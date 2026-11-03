@@ -5,11 +5,11 @@ import { useEffect, useState } from "react";
 import type { FollowType } from "@/lib/users/alerts";
 
 const LABEL: Record<FollowType, string> = {
-  race: "race",
-  candidate: "candidate",
-  jurisdiction: "jurisdiction",
-  measure: "measure",
-  issue: "issue",
+  race: "this race",
+  candidate: "this person",
+  jurisdiction: "this place",
+  measure: "this question",
+  issue: "this topic",
 };
 
 export function FollowControl({ what, targetId }: { what: FollowType; targetId: string }) {

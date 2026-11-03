@@ -3,10 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CheckHistory } from "@/components/site/CheckHistory";
 import { Crumbs } from "@/components/site/Crumbs";
-import { DirectList, OutsideList } from "@/components/site/FinanceLists";
+import { DirectList, orgLabel, OutsideList } from "@/components/site/FinanceLists";
 import { FollowControl } from "@/components/site/FollowControl";
-import { StatusMark } from "@/components/site/StatusMark";
-import { stateName } from "@/lib/data/states";
 import { formatInstant, httpsUrl, partyCue, partyLabel } from "@/lib/format";
 import { financeForCandidate, loadFinance } from "@/lib/finance/load";
 import { selectDirect, selectOutside } from "@/lib/finance/present";
@@ -17,8 +15,6 @@ import type { Filing, Race } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
-
-const AWAITING = ["Biography", "Issues", "Public service", "Endorsements", "Speeches"] as const;
 
 type PageProps = { params: Promise<{ candidateId: string }> };
 
@@ -48,7 +44,6 @@ export default async function CandidatePage({ params }: PageProps) {
   const race = loaded.ok ? loaded.race : null;
   const name = snap?.displayName ?? (loaded.ok ? loaded.candidate.displayName : "Candidate");
   const party = snap?.partyLabel ?? (loaded.ok ? partyCue([partyLabel(loaded.candidate.partyAffiliation, loaded.candidate.partyLabel)]) : "");
-  const place = race?.state ? stateName(race.state) : snap ? "Kentucky" : "States";
   const stateHref = race?.state ? `/states/${race.state.toLowerCase()}` : snap ? "/states/ky" : "/states";
   const raceHref = race ? `/races/${race.raceId}` : snap ? `/races/${showcaseRace()?.raceId}` : null;
   const raceLabel = race ? shortRace(race) : snap ? "Senate" : "Race";
@@ -62,8 +57,7 @@ export default async function CandidatePage({ params }: PageProps) {
     <article className="wrap">
       <Crumbs
         items={[
-          { href: "/", label: "Home" },
-          { href: stateHref, label: place },
+          { href: stateHref, label: "My races" },
           ...(raceHref ? [{ href: raceHref, label: raceLabel }] : []),
           { label: name },
         ]}
@@ -74,7 +68,7 @@ export default async function CandidatePage({ params }: PageProps) {
       <div className="actions">
         {raceHref ? (
           <Link className="btn btn-navy" href={`${raceHref}/compare`}>
-            Compare
+            Compare candidates
           </Link>
         ) : null}
         <FollowControl what="candidate" targetId={loaded.ok ? loaded.candidate.candidateId : id} />
@@ -84,32 +78,32 @@ export default async function CandidatePage({ params }: PageProps) {
       <ul className="plain-list">
         {snap?.incumbentLabel && retrieved ? (
           <Fact
-            label="Incumbency"
-            value={snap.incumbentLabel}
+            label="Running status"
+            value={plainSeat(snap.incumbentLabel)}
             href={snap.profileUrl}
-            source="FEC candidate record"
+            source="Official candidate record"
             date={retrieved}
           />
         ) : (
           <li>
-            Incumbency <StatusMark kind="awaiting" />
+            Running status is not in this record.
           </li>
         )}
         {snap?.statusLabel && retrieved ? (
           <Fact
-            label="FEC status"
-            value={snap.statusLabel}
+            label="Filing status"
+            value={plainStatus(snap.statusLabel)}
             href={showcaseRace()?.dictionary ?? snap.profileUrl}
-            source="FEC candidate master dictionary"
+            source="Official candidate list"
             date={retrieved}
           />
         ) : null}
         {snap?.committeeName && snap.committeeUrl && retrieved ? (
           <Fact
-            label="Committee"
-            value={snap.committeeName}
+            label="Campaign fund"
+            value={orgLabel(snap.committeeName) ?? snap.committeeName}
             href={snap.committeeUrl}
-            source="FEC committee record"
+            source="Official campaign record"
             date={retrieved}
           />
         ) : null}
@@ -123,40 +117,32 @@ export default async function CandidatePage({ params }: PageProps) {
             label="Campaign site"
             value={snap.committeeWebsite}
             href={snap.committeeWebsite}
-            source="Reported on the FEC committee record"
+            source="Listed on the official campaign record"
             date={retrieved}
           />
         </ul>
       ) : (
         <p>
-          <StatusMark kind="awaiting" /> No campaign statement is on file.
+          No campaign website is on the filing.
         </p>
       )}
 
       <h2>Campaign finance</h2>
       {finance.notice ? <p className="notice">{finance.notice}</p> : null}
       <p>
-        <Link href="/finance#direct-and-outside">Direct money and outside spending are not added together.</Link>
+        <Link href="/finance#direct-and-outside">Money a campaign reports is separate from money other groups spend.</Link>
       </p>
-      {direct.length === 0 && outside.length === 0 ? <p>No FEC totals stored for this candidate.</p> : null}
       {direct.length > 0 ? <DirectList rows={direct} /> : null}
       {outside.length > 0 ? (
         <>
-          <h3>Outside spending</h3>
+          <h3>Spending by other groups</h3>
           <OutsideList rows={outside} />
         </>
       ) : null}
 
       <CheckHistory checks={checks} />
 
-      <h2>Not on file</h2>
-      <p>
-        {AWAITING.map((item) => (
-          <span key={item}>
-            <StatusMark kind="awaiting" /> {item}{" "}
-          </span>
-        ))}
-      </p>
+      <p className="hint">Biography, issue positions, and endorsements are not loaded yet.</p>
     </article>
   );
 }
@@ -177,8 +163,12 @@ function Fact({
   const shown = formatInstant(date) ?? date.slice(0, 10);
   return (
     <li>
-      {label}: {href ? <a href={href}>{value}</a> : value}
-      <span className="hint"> {source} · {shown}</span>
+      <p>
+        {label}: {href ? <a href={href}>{value}</a> : value}
+      </p>
+      <p className="hint">
+        {source} · {shown}
+      </p>
     </li>
   );
 }
@@ -198,13 +188,13 @@ function FilingFacts({
           const when = formatInstant(filing.fecLoadTimestamp) ?? formatInstant(filing.updatedAt) ?? "date not stored";
           return (
             <li key={filing.filingId}>
-              Form 2
+              Statement of candidacy
               {href ? (
                 <>
-                  : <a href={href}>FEC filing</a>
+                  : <a href={href} title="FEC filing, Form 2">Official filing</a>
                 </>
               ) : null}
-              <span className="hint"> FEC load · {when}</span>
+              <span className="hint"> Checked {when}</span>
             </li>
           );
         })}
@@ -214,16 +204,43 @@ function FilingFacts({
   if (snap?.filingPdf && snap.filingDate) {
     return (
       <li>
-        Form 2: <a href={snap.filingPdf}>FEC filing</a>
-        <span className="hint"> FEC receipt · {snap.filingDate.slice(0, 10)}</span>
+        Statement of candidacy: <a href={snap.filingPdf} title="FEC filing, Form 2">Official filing</a>
+        <span className="hint"> Filed {calendarDate(snap.filingDate)}</span>
       </li>
     );
   }
   return (
     <li>
-      Form 2 <StatusMark kind="awaiting" />
+      No filing link yet.
     </li>
   );
+}
+
+function calendarDate(value: string): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
+  if (!match) return value.slice(0, 10);
+  const date = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])));
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(date);
+}
+
+function plainSeat(label: string): string {
+  if (/open seat/i.test(label)) return "No one currently holds this seat";
+  if (/incumbent/i.test(label)) return "Currently holds this office";
+  if (/challenger/i.test(label)) return "Running against the current officeholder";
+  return label;
+}
+
+function plainStatus(label: string): string {
+  if (/not yet/i.test(label)) return "Paperwork started, not finished";
+  if (/future/i.test(label)) return "Filed for a later election";
+  if (/prior/i.test(label)) return "Filed in an earlier election";
+  if (/statutory/i.test(label)) return "Filed the required paperwork";
+  return label;
 }
 
 function shortRace(race: Race): string {

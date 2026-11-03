@@ -1,48 +1,53 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Term } from "@/components/site/Term";
 import { DistrictVintageNote } from "@/components/site/DistrictVintageNote";
 
-export const metadata: Metadata = { title: "About this data" };
-
-const ROWS = [
-  ["FEC Form 2 name, party, filing", "Working", "OpenFEC, about every 6 hours."],
-  ["House and Senate contest list", "Working", "Even-year structure plus stored filings."],
-  ["ZIP to House district", "Limited", "Census. Not a full ballot."],
-  ["District shapes and ZIP", "Working", "Both use Census 120th districts, January 1, 2026."],
-  ["Ballot qualification", "Planned", "A filing is not a place on the ballot."],
-  ["State, county, city, judicial, school", "Awaiting", "Templates only. elect.ky.gov was not readable, so no names were copied."],
-  ["Ballot measures", "Sample", "Layout only."],
-  ["Photos, biography, issues", "Awaiting", "Not invented."],
-  ["Polls and fundraising", "Polls: sample. Fundraising: FEC totals.", "OpenFEC candidate totals and Schedule E aggregates. Direct and outside spending are not added."],
-  ["Alerts", "Planned", "Saved per account after sign-in. Email delivery is planned."],
-] as const;
+export const metadata: Metadata = { title: "Where this comes from" };
 
 export default function SourcesPage() {
   return (
     <article className="wrap">
-      <h1>About this data</h1>
-      <p className="lede">Federal names are FEC Form 2 filings. Gaps stay empty.</p>
+      <h1>Where this comes from</h1>
+      <p className="lede">
+        Names on federal races come from candidacy paperwork filed with the election commission. Filing that paperwork
+        is not the same as being printed on the ballot.
+      </p>
+      <h2>What you can use now</h2>
+      <ul className="plain-list">
+        <li>U.S. Senate and U.S. House contests, including Kentucky in 2026.</li>
+        <li>A ZIP code finds those federal districts. It is not your full local ballot.</li>
+        <li>Money raised and spent, when a campaign has filed a report.</li>
+      </ul>
+      <h2>Not here yet</h2>
+      <ul className="plain-list">
+        <li>State, county, city, judicial, and school-board races.</li>
+        <li>Ballot questions.</li>
+        <li>Polls, news stories, biographies, and photos.</li>
+        <li>Email alerts. You can save a race, but nothing is emailed yet.</li>
+      </ul>
+      <h2>Words you may see</h2>
+      <ul className="plain-list">
+        <li>
+          <Term tip="The Federal Election Commission. Campaigns file paperwork there.">Election commission</Term> keeps
+          the federal filings.
+        </li>
+        <li>
+          <Term tip="The person who holds the office now is not running again.">Open seat</Term> means no current
+          officeholder is on the list.
+        </li>
+        <li>
+          <Term tip="Money other groups spend on their own ads. It is not a donation to the campaign.">
+            Outside spending
+          </Term>{" "}
+          is separate from money the campaign raised.
+        </li>
+      </ul>
       <DistrictVintageNote />
-      <table>
-        <thead>
-          <tr>
-            <th>What</th>
-            <th>Status</th>
-            <th>Source</th>
-          </tr>
-        </thead>
-        <tbody>
-          {ROWS.map((row) => (
-            <tr key={row[0]}>
-              <td>{row[0]}</td>
-              <td>{row[1]}</td>
-              <td>{row[2]}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
       <p>
-        <Link href="/chat">Ask about stored filings</Link>
+        <Link className="btn btn-navy" href="/states/ky">
+          See Kentucky races
+        </Link>
       </p>
     </article>
   );

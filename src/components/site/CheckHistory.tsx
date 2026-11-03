@@ -3,17 +3,12 @@ import type { RecordCheck } from "@/lib/content/checks";
 
 export function CheckHistory({ checks }: { checks: readonly RecordCheck[] }) {
   const latest = checks[0] ?? null;
+  if (!latest) return null;
   return (
     <section aria-labelledby="last-checked">
       <h2 id="last-checked">Last checked</h2>
-      {latest ? (
-        <>
-          <p>{formatInstant(latest.checkedAt) ?? latest.checkedAt}</p>
-          {latest.note ? <p>{latest.note}</p> : null}
-        </>
-      ) : (
-        <p>Not recorded.</p>
-      )}
+      <p>Last looked at {formatInstant(latest.checkedAt) ?? latest.checkedAt}.</p>
+      {latest.note ? <p>{latest.note}</p> : null}
       {checks.length > 1 ? (
         <>
           <h3>Update history</h3>

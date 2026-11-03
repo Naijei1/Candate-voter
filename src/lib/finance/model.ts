@@ -57,7 +57,7 @@ export type TotalsWatermark = {
 
 /** Shown once, on /finance. Other pages link here instead of repeating it. */
 export const FINANCE_EXPLANATION =
-  "Direct figures are the candidate committee's own FEC reports. Outside spending is money other committees reported as independent expenditures (Schedule E). Those amounts are not added together.";
+  "Money raised and spent by a campaign is separate from money other groups spend on their own. Those amounts are not added together.";
 
 export function formatMoney(value: number | null): string {
   if (value == null) return "Not reported";

@@ -2,12 +2,14 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { orgLabel } from "@/components/site/FinanceLists";
 import { coverageLabel, formatMoney, type FinanceDirect, type FinanceOutside } from "@/lib/finance/model";
 
 export type CompareCandidate = {
   candidateId: string;
   displayName: string;
   partyLabel: string;
+  note?: string | null;
 };
 
 const TABS = [
@@ -57,7 +59,7 @@ export function CompareBoard({
         ))}
       </div>
       <p className="hint" title="Alphabetical by filing name. Not a ranking.">
-        A to Z
+        A to Z. Filed to run. Not confirmed on the ballot.
       </p>
       {summary ? <p>{summary}</p> : filingsLoaded ? <p>{filedLine(candidates.length)}</p> : null}
       {candidates.length === 0 ? null : (
@@ -68,7 +70,7 @@ export function CompareBoard({
                 <Link href={`/candidates/${candidate.candidateId}`}>{candidate.displayName}</Link>
               </h3>
               <p className="party">{candidate.partyLabel}</p>
-              <p className="hint">Filing stored · Ballot not verified</p>
+              {candidate.note ? <p className="hint">{candidate.note}</p> : null}
             </article>
           ))}
         </div>
@@ -83,10 +85,17 @@ export function CompareBoard({
   );
 }
 
+function plainSource(label: string): string {
+  if (label === "FEC filing") return "Official filing";
+  if (label === "FEC committee report") return "Official report";
+  if (label === "FEC independent expenditures") return "Outside spending record";
+  return "Election commission totals";
+}
+
 function filedLine(count: number): string {
-  if (count === 0) return "No one has filed.";
-  if (count === 1) return "Uncontested — only 1 filed.";
-  return `Only ${count} filed.`;
+  if (count === 0) return "No one has filed to run.";
+  if (count === 1) return "One person has filed to run.";
+  return `${count} people have filed to run.`;
 }
 
 function TabBody({
@@ -100,28 +109,28 @@ function TabBody({
     outside: readonly FinanceOutside[];
   } | null;
 }) {
-  if (tab === "Overview") return <p>Same fields on every card.</p>;
+  if (tab === "Overview") return <p>Everyone is compared on the same facts.</p>;
   if (tab === "Campaign Finance") {
     if (!finance || (finance.direct.length === 0 && finance.outside.length === 0)) {
-      return <p>No FEC totals stored for this race.</p>;
+      return <p>Money totals are not loaded for this race yet.</p>;
     }
     return (
       <div>
         {finance.notice ? <p>{finance.notice}</p> : null}
         <p>
-          <Link href="/finance#direct-and-outside">Direct money and outside spending are not added together.</Link>
+          <Link href="/finance#direct-and-outside">Money a campaign reports is separate from money other groups spend.</Link>
         </p>
         <ul className="plain-list">
           {finance.direct.map((row) => (
             <li key={row.candidateId}>
               <Link href={`/candidates/${row.candidateId}`}>{row.name ?? row.candidateId}</Link>
               {": "}
-              receipts {formatMoney(row.receipts)}, disbursements {formatMoney(row.disbursements)}, cash{" "}
+              raised {formatMoney(row.receipts)}, spent {formatMoney(row.disbursements)}, cash left{" "}
               {formatMoney(row.cashOnHand)}, debts {formatMoney(row.debts)}. {coverageLabel(row.coverageStart, row.coverageEnd)}
               {row.sourceUrl ? (
                 <>
                   {" "}
-                  <a href={row.sourceUrl}>{row.sourceLabel}</a>
+                  <a href={row.sourceUrl}>{plainSource(row.sourceLabel)}</a>
                 </>
               ) : null}
             </li>
@@ -131,12 +140,12 @@ function TabBody({
           <ul className="plain-list">
             {finance.outside.map((row) => (
               <li key={`${row.candidateId}-${row.committeeId}-${row.support}`}>
-                {row.committeeName ?? row.committeeId} {row.support === "support" ? "supports" : "opposes"}{" "}
-                {row.candidateName ?? row.candidateId}: {formatMoney(row.total)}. Not a receipt.
+                {orgLabel(row.committeeName) ?? row.committeeId} {row.support === "support" ? "supports" : "opposes"}{" "}
+                {row.candidateName ?? "this person"}: {formatMoney(row.total)}. This is not money the campaign received.
                 {row.sourceUrl ? (
                   <>
                     {" "}
-                    <a href={row.sourceUrl}>{row.sourceLabel}</a>
+                    <a href={row.sourceUrl}>{plainSource(row.sourceLabel)}</a>
                   </>
                 ) : null}
               </li>
@@ -146,8 +155,8 @@ function TabBody({
       </div>
     );
   }
-  if (tab === "Polls") return <p>No qualifying polls available.</p>;
-  if (tab === "Voting Record") return <p>Not available.</p>;
+  if (tab === "Polls") return <p>No qualifying polls. A real poll would name who ran it, when, and how many people were asked.</p>;
+  if (tab === "Voting Record") return <p>No voting record is loaded. That does not mean the person voted against something.</p>;
   if (tab === "Updates") return <p>No updates beyond the filing.</p>;
-  return <p>Not available.</p>;
+  return <p>Not loaded yet.</p>;
 }

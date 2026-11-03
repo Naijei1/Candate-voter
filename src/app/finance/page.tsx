@@ -23,12 +23,12 @@ export default async function FinancePage({ searchParams }: PageProps) {
   return (
     <article className="wrap">
       <h1>Campaign finance</h1>
-      <p className="lede">Cycle {cycle}. Committee reports and independent expenditures.</p>
+      <p className="lede">Election year {cycle}. Money campaigns report, kept separate from spending by other groups.</p>
       {bundle.notice ? <p className="notice">{bundle.notice}</p> : null}
       <FinanceExplanation />
       <nav className="filters" aria-label="Cycle and coverage">
         <Link href="/finance?cycle=2026" aria-current={cycle === 2026 && !coverage ? "page" : undefined}>
-          2026 cycle total
+          Full 2026 reports
         </Link>
         {choices.map((key) => (
           <Link
@@ -40,14 +40,14 @@ export default async function FinancePage({ searchParams }: PageProps) {
           </Link>
         ))}
       </nav>
-      <h2>Direct contributions</h2>
-      <p>Money reported by the candidate committee.</p>
+      <h2>Money reported by campaigns</h2>
+      <p>Raised, spent, cash left, and debts from each campaign report.</p>
       <DirectList rows={direct} />
-      <h2>Outside spending</h2>
+      <h2>Spending by other groups</h2>
       {coverage ? (
-        <p>Outside spending here is a cycle total, so it is hidden for a single coverage period.</p>
+        <p>That spending is totaled for the whole year, so it is hidden for one reporting period.</p>
       ) : (
-        <p>Independent expenditures about a candidate. Not added to the receipts above.</p>
+        <p>Money other groups spent on their own. It is not added to the money campaigns raised.</p>
       )}
       <OutsideList rows={outside} />
     </article>

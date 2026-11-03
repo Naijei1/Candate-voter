@@ -1,5 +1,24 @@
 # Candate revamp review
 
+## Still needs Naijei (November 3, 2026)
+
+These stay off the public pages until he supplies them. Do not invent the text or the photos.
+
+- Founder biography, mission statement, and founder photograph.
+- Ownership, funding, affiliations, and an independence statement beyond “this site does not endorse candidates.”
+- Editorial standards and a corrections policy.
+- A public contact method.
+- Approved privacy, terms, and accessibility statements.
+- Logo and homepage photograph.
+- State, county, city, judicial, and school-board candidate lists. elect.ky.gov was not readable (HTTP 403).
+- Certified ballot-question text.
+- A news source feed.
+- A polling vendor, inclusion rules, and any speech or debate archive.
+- Email delivery (no SES setup).
+
+Public pages now say what a visitor can do today and hide empty scaffolding. Internal status labels stay on `/admin/features`.
+
+
 Review only. This document does not change the product UI, the data plane, or AWS.
 
 Decision requested: approve **approach B** (strip the map-first site and rebuild the public shell in this repo, keeping the federal filing pipeline), or reject it before any UI work starts.

@@ -26,7 +26,7 @@ test("census district codes are read without the matched address", () => {
   const source = readFileSync("src/lib/geo/address-district.ts", "utf8");
   assert.equal(source.includes("localStorage"), false);
   assert.equal(source.includes("PutCommand"), false);
-  assert.match(readFileSync("src/components/site/ZipSearch.tsx", "utf8"), /is not saved/);
+  assert.match(readFileSync("src/components/site/ZipSearch.tsx", "utf8"), /do not save it/);
 });
 
 test("poll averages stay empty until polls exist", () => {
@@ -59,9 +59,9 @@ test("news feed choices are not alert categories, and issue follows are allowed"
   assert.match(store, /sk: "FEED"/);
   const news = readFileSync("src/components/site/NewsFeed.tsx", "utf8");
   assert.match(news, /separate from/);
-  assert.match(news, /StatusMark kind="sample"/);
+  assert.match(news, /No news source is connected yet/);
   const judicial = readFileSync("src/app/states/[state]/page.tsx", "utf8");
-  assert.match(judicial, /Awaiting content/);
+  assert.match(judicial, /not loaded yet/);
   assert.equal(judicial.includes("Jane Doe"), false);
 });
 

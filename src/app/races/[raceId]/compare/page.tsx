@@ -7,7 +7,6 @@ import { Crumbs } from "@/components/site/Crumbs";
 import { loadFinance } from "@/lib/finance/load";
 import { selectDirect, selectOutside } from "@/lib/finance/present";
 import { cardsForRace } from "@/lib/site/showcase";
-import { stateName } from "@/lib/data/states";
 import { loadContest } from "@/lib/site/contest";
 import type { Race } from "@/lib/types";
 
@@ -30,15 +29,13 @@ export default async function ComparePage({ params }: PageProps) {
   const ids = new Set(roster.cards.map((candidate) => candidate.id));
   const direct = selectDirect(finance.direct, null).filter((row) => ids.has(row.candidateId));
   const outside = selectOutside(finance.outside, null).filter((row) => ids.has(row.candidateId));
-  const place = race.state ? stateName(race.state) : "States";
   const stateHref = race.state ? `/states/${race.state.toLowerCase()}` : "/states";
 
   return (
     <article className="wrap">
       <Crumbs
         items={[
-          { href: "/", label: "Home" },
-          { href: stateHref, label: place },
+          { href: stateHref, label: "My races" },
           { href: `/races/${race.raceId}`, label: shortRace(race) },
           { label: "Compare" },
         ]}
@@ -47,7 +44,7 @@ export default async function ComparePage({ params }: PageProps) {
       <p className="lede">{race.title}</p>
       {loaded.filingsLoaded ? null : roster.fecList ? (
         <p className="notice" role="status">
-          Form 2 table unavailable. Names below are the FEC candidate list.
+          Live filings could not be loaded. Names below are from the election commission candidate list.
         </p>
       ) : (
         <p className="notice notice-error" role="status">
@@ -64,12 +61,19 @@ export default async function ComparePage({ params }: PageProps) {
             candidateId: candidate.id,
             displayName: candidate.name,
             partyLabel: candidate.party,
+            note: compareNote(candidate.line),
           }))}
         />
         <AskPanel raceId={race.raceId} cycle={race.cycle} state={race.state} />
       </div>
     </article>
   );
+}
+
+function compareNote(line: string): string | null {
+  if (line.includes("Currently holds this office")) return "Holds this office now";
+  if (line.includes("Running against the current officeholder")) return "Running against the officeholder";
+  return null;
 }
 
 function shortRace(race: Race): string {

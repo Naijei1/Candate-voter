@@ -1,28 +1,29 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { ALERT_CATEGORIES, type AlertDelivery, type AlertPreferences, type Follow } from "@/lib/users/alerts";
 
 const CATEGORY_LABEL: Record<(typeof ALERT_CATEGORIES)[number], string> = {
-  filings: "Filings",
-  ballot: "Ballot",
+  filings: "New filings",
+  ballot: "Ballot changes",
   statements: "Statements",
   polls: "Polls",
   debates: "Debates",
   deadlines: "Deadlines",
-  "finance-receipts": "Receipts",
-  "finance-disbursements": "Disbursements",
-  "finance-cash": "Cash on hand",
+  "finance-receipts": "Money raised",
+  "finance-disbursements": "Money spent",
+  "finance-cash": "Cash left",
   "finance-debts": "Debts",
-  "finance-outside": "Outside spending",
+  "finance-outside": "Spending by other groups",
 };
 
 const FOLLOW_LABEL = {
   race: "Race",
-  candidate: "Candidate",
-  jurisdiction: "Jurisdiction",
-  measure: "Measure",
-  issue: "Issue",
+  candidate: "Person",
+  jurisdiction: "Place",
+  measure: "Ballot question",
+  issue: "Topic",
 } as const;
 
 export function AccountPanel({
@@ -60,7 +61,7 @@ export function AccountPanel({
         }),
       });
       const body = await readJson(response);
-      setMessage(response.ok ? "Saved. Email delivery is planned." : (body.message ?? "Not saved."));
+      setMessage(response.ok ? "Saved. Email alerts are not on yet." : (body.message ?? "Not saved."));
     } catch {
       setMessage("Not saved.");
     } finally {
@@ -86,25 +87,31 @@ export function AccountPanel({
   return (
     <div>
       <p>{email}</p>
-      <p>
-        <span className="status-mark" title="Nothing is emailed.">
-          planned
-        </span>{" "}
-        Email delivery is planned. Nothing is sent.
-      </p>
+      <p>Email alerts are not on yet. Saved races stay on this account.</p>
       <h2>Saved</h2>
       {saved.length === 0 ? (
-        <p>No saved races.</p>
+        <p>
+          Nothing saved yet. <Link href="/states/ky">See Kentucky races</Link> and follow one.
+        </p>
       ) : (
         <ul className="plain-list">
-          {saved.map((follow) => (
-            <li key={`${follow.targetType}:${follow.targetId}`}>
-              {FOLLOW_LABEL[follow.targetType]} · {follow.targetId}{" "}
-              <button className="btn btn-ghost" type="button" onClick={() => unfollow(follow)}>
-                Remove
-              </button>
-            </li>
-          ))}
+          {saved.map((follow) => {
+            const href = followHref(follow);
+            return (
+              <li key={`${follow.targetType}:${follow.targetId}`}>
+                {FOLLOW_LABEL[follow.targetType]}
+                {href ? (
+                  <>
+                    {" · "}
+                    <Link href={href}>Open</Link>
+                  </>
+                ) : null}{" "}
+                <button className="btn btn-ghost" type="button" onClick={() => unfollow(follow)}>
+                  Remove
+                </button>
+              </li>
+            );
+          })}
         </ul>
       )}
       <form className="finder" onSubmit={save}>
@@ -130,7 +137,7 @@ export function AccountPanel({
           </div>
         </fieldset>
         <fieldset>
-          <legend>Digest</legend>
+          <legend>How often, once email is on</legend>
           {(
             [
               ["immediate", "Immediate"],
@@ -173,6 +180,16 @@ export function AccountPanel({
       </form>
     </div>
   );
+}
+
+function followHref(follow: Follow): string | null {
+  if (follow.targetType === "race") return `/races/${follow.targetId}`;
+  if (follow.targetType === "candidate") return `/candidates/${follow.targetId}`;
+  if (follow.targetType === "jurisdiction" && /^[A-Za-z]{2}$/.test(follow.targetId)) {
+    return `/states/${follow.targetId.toLowerCase()}`;
+  }
+  if (follow.targetType === "measure") return "/measures";
+  return null;
 }
 
 async function readJson(response: Response): Promise<{ message?: string }> {

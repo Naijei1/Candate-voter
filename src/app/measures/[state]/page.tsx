@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { FollowControl } from "@/components/site/FollowControl";
-import { StatusMark } from "@/components/site/StatusMark";
 import { isPostalState, stateName } from "@/lib/data/states";
 import { MEASURE_KINDS } from "@/lib/site/measure-kinds";
 
@@ -25,9 +24,7 @@ export default async function MeasuresPage({ params }: PageProps) {
         <Link href="/measures">All states</Link>
       </p>
       <h1>{name} ballot measures</h1>
-      <p>
-        <StatusMark kind="awaiting" /> No certified question is loaded.
-      </p>
+      <p>No certified question is loaded. You can look at federal races instead.</p>
       <p>
         {postal === "KY"
           ? "The Kentucky State Board of Elections site did not return a readable file, so these are empty templates."
@@ -37,8 +34,7 @@ export default async function MeasuresPage({ params }: PageProps) {
         {MEASURE_KINDS.map((kind) => (
           <li className="card" key={kind.id}>
             <h2>{kind.label}</h2>
-            <p>Official title: Awaiting content</p>
-            <p>Yes / no text: Awaiting content</p>
+            <p>The official question is not loaded yet.</p>
             <FollowControl what="measure" targetId={`${postal.toLowerCase()}-${kind.id}`} />
             <p>
               <Link href={`/measures/${postal.toLowerCase()}/${kind.id}`}>Open template</Link>

@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { FollowControl } from "@/components/site/FollowControl";
-import { StatusMark } from "@/components/site/StatusMark";
 import { isPostalState, stateName } from "@/lib/data/states";
 
 export const dynamic = "force-dynamic";
@@ -30,19 +29,14 @@ export default async function MeasureTemplatePage({ params }: PageProps) {
       <p>
         <Link href={`/measures/${postal.toLowerCase()}`}>{stateName(postal)} measures</Link>
       </p>
-      <p>
-        <StatusMark kind="awaiting" /> Template. Not a certified question.
-      </p>
       <h1>{title}</h1>
+      <p>This page will show the official question, a short explanation, and what a yes or no vote means. Nothing is loaded yet.</p>
       <FollowControl what="measure" targetId={`${postal.toLowerCase()}-${kind}`} />
-      <ul className="plain-list">
-        <li>Official title: Awaiting content</li>
-        <li>Plain-language summary: Awaiting content</li>
-        <li>Yes: Awaiting content</li>
-        <li>No: Awaiting content</li>
-        <li>Fiscal note: Awaiting content</li>
-        <li>Source: Awaiting content</li>
-      </ul>
+      <p>
+        <Link className="btn btn-navy" href={`/states/${postal.toLowerCase()}`}>
+          Back to {stateName(postal)} races
+        </Link>
+      </p>
     </article>
   );
 }

@@ -6,7 +6,7 @@ import { formatInstant } from "@/lib/format";
 import type { ChatSource } from "@/lib/chat/types";
 
 const PROMPTS = [
-  "Who has a Form 2 filing in this race?",
+  "Who has filed to run?",
   "What is the latest filing?",
   "What did they say in the latest debate?",
 ] as const;
@@ -85,14 +85,14 @@ function AskBody({
     if (!result.ok) {
       setAnswer({
         state: "error",
-        text: result.kind === "timeout" ? "The assistant timed out." : "Filings assistant is unavailable.",
+        text: result.kind === "timeout" ? "That took too long. Try again." : "Could not look that up. Try again.",
       });
       return;
     }
     const noEvidence = result.refused || result.sources.length === 0;
     setAnswer({
       state: "answer",
-      text: noEvidence ? "No evidence found." : plain(result.answer_markdown),
+      text: noEvidence ? "Nothing stored answers that. Try who has filed to run." : plain(result.answer_markdown),
       sources: result.sources,
       noEvidence,
     });
@@ -114,7 +114,7 @@ function AskBody({
   return (
     <section data-testid="ai-prototype">
       <h2>Ask about this race</h2>
-      <p className="hint">Answers use stored FEC filings only.</p>
+      <p className="hint">Answers use stored candidacy filings only. If there is no filing, it will say so.</p>
       <div className="actions">
         {PROMPTS.map((prompt) => (
           <button key={prompt} className="btn btn-ghost" type="button" onClick={() => ask(prompt)}>

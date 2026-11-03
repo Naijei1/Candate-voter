@@ -19,12 +19,7 @@ export default async function AccountPage() {
             Sign in
           </Link>
         </p>
-        <p>
-          <span className="status-mark" title="Nothing is emailed.">
-            planned
-          </span>{" "}
-          Email delivery is planned. Nothing is sent.
-        </p>
+        <p>Email alerts are not on yet. You can still save a race after you sign in.</p>
       </article>
     );
   }

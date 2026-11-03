@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { averagePolls, type Poll } from "@/lib/polls/model";
 
 export const metadata: Metadata = { title: "Polls and analysis" };
@@ -10,30 +11,7 @@ export default function PollsPage() {
   return (
     <article className="wrap">
       <h1>Polls</h1>
-      <p className="lede">No qualifying polls.</p>
-      <div className="table-scroll">
-      <table>
-        <caption>Poll fields. No rows until a source is connected.</caption>
-        <thead>
-          <tr>
-            <th>Pollster</th>
-            <th>Field dates</th>
-            <th>Sample</th>
-            <th>Margin</th>
-            <th>Population</th>
-            <th>Source</th>
-          </tr>
-        </thead>
-        <tbody>
-          {LOADED.length === 0 ? (
-            <tr>
-              <td colSpan={6}>No qualifying polls.</td>
-            </tr>
-          ) : null}
-        </tbody>
-      </table>
-      </div>
-      <h2>Average</h2>
+      <p className="lede">No qualifying polls. A real poll would name who ran it, when, and how many people were asked.</p>
       {average ? (
         <ul className="plain-list">
           {average.map((row) => (
@@ -43,14 +21,14 @@ export default function PollsPage() {
           ))}
         </ul>
       ) : (
-        <p>No average. No qualifying polls.</p>
+        <p>No average until those polls exist.</p>
       )}
-      <h2>Speech analysis</h2>
+      <h2>Speeches and debates</h2>
+      <p>A speech archive is planned. None are loaded, so nothing is summarized here.</p>
       <p>
-        <span className="status-mark" title="No speeches are loaded.">
-          planned
-        </span>{" "}
-        Speech analysis is planned. No speeches are loaded.
+        <Link className="btn btn-navy" href="/states/ky">
+          See Kentucky races
+        </Link>
       </p>
     </article>
   );

@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
-import { StatusMark } from "@/components/site/StatusMark";
 import { stateName } from "@/lib/data/states";
 import { districtFromAddress } from "@/lib/geo/address-district";
 import { findRacesByZip } from "@/lib/lookup/find-races";
@@ -43,13 +42,10 @@ export function ZipSearch() {
           />
         </label>
         <button className="btn btn-cta" type="submit" disabled={pending}>
-          {pending ? "Looking up…" : "Find races"}
+          {pending ? "Looking up…" : "Find my races"}
         </button>
       </div>
-      <p className="hint">
-        <StatusMark kind="preview" hint="A ZIP shows congressional districts, not a full ballot." />
-        Congressional districts only.
-      </p>
+      <p className="hint">A ZIP finds U.S. House and Senate races. It is not your full local ballot.</p>
       {pending ? <p role="status">Looking up…</p> : null}
       {result ? <ZipResult result={result} /> : null}
     </form>
@@ -110,15 +106,14 @@ function ZipMatches({ payload }: { payload: ZipLookupPayload }) {
   return (
     <div className="notice" role="status">
       <p>
-        <StatusMark kind="preview" hint="Not a full personal ballot." />
         {payload.zip}
         {place ? ` · ${place}` : ""}
       </p>
       {payload.districts.length > 1 ? (
         <form className="finder" onSubmit={onAddress}>
           <p>
-            This ZIP includes more than one congressional district because a ZIP area can cross district lines. A street
-            address can pick one. It is sent only to the Census geocoder and is not saved.
+            This ZIP covers more than one U.S. House district. A street address can pick the right one. We send it
+            once to look up the district and do not save it.
           </p>
           <label htmlFor="street">
             Street
