@@ -59,9 +59,9 @@ test("news feed choices are not alert categories, and issue follows are allowed"
   assert.match(store, /sk: "FEED"/);
   const news = readFileSync("src/components/site/NewsFeed.tsx", "utf8");
   assert.match(news, /separate from/);
-  assert.match(news, /No news source is connected yet/);
+  assert.match(news, /Kentucky Lantern feed/);
   const judicial = readFileSync("src/app/states/[state]/page.tsx", "utf8");
-  assert.match(judicial, /not loaded yet/);
+  assert.match(judicial, /Not covered yet/);
   assert.equal(judicial.includes("Jane Doe"), false);
 });
 

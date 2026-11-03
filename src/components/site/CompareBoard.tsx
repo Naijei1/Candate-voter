@@ -2,14 +2,39 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { PersonMark } from "@/components/site/PersonMark";
 import { orgLabel } from "@/components/site/FinanceLists";
 import { coverageLabel, formatMoney, type FinanceDirect, type FinanceOutside } from "@/lib/finance/model";
+
+export type CompareStance = {
+  issueId: string;
+  issue: string;
+  text: string;
+  sourceName: string;
+  sourceUrl: string;
+  sourceDate: string;
+};
+
+export type CompareVote = {
+  bill: string;
+  date: string;
+  vote: string;
+  sourceName: string;
+  sourceUrl: string;
+};
 
 export type CompareCandidate = {
   candidateId: string;
   displayName: string;
   partyLabel: string;
   note?: string | null;
+  photo?: string | null;
+  photoCredit?: string | null;
+  website?: { url: string; label: string } | null;
+  stances?: CompareStance[];
+  votes?: CompareVote[];
+  raised?: string | null;
+  moneyIds?: string[];
 };
 
 const TABS = [
@@ -31,6 +56,8 @@ export function CompareBoard({
   summary = null,
   statusLine = "A to Z. Filed to run. Not confirmed on the ballot.",
   finance = null,
+  issues = [],
+  updates = [],
 }: {
   candidates: readonly CompareCandidate[];
   raceHref: string;
@@ -42,6 +69,8 @@ export function CompareBoard({
     direct: readonly FinanceDirect[];
     outside: readonly FinanceOutside[];
   } | null;
+  issues?: readonly { id: string; label: string }[];
+  updates?: readonly { title: string; url: string; date: string | null; source: string }[];
 }) {
   const [tab, setTab] = useState<Tab>("Overview");
   return (
@@ -53,38 +82,44 @@ export function CompareBoard({
             className="btn btn-ghost"
             type="button"
             role="tab"
+            id={`compare-tab-${item.replace(/\s+/g, "-").toLowerCase()}`}
             aria-selected={tab === item}
+            aria-controls="compare-panel"
             onClick={() => setTab(item)}
           >
             {item}
           </button>
         ))}
       </div>
-      <p className="hint" title="Alphabetical by filing name. Not a ranking.">
+      <p className="hint" title="Alphabetical by name. Not a ranking.">
         {statusLine}
       </p>
       {summary ? <p>{summary}</p> : filingsLoaded ? <p>{filedLine(candidates.length)}</p> : null}
-      {candidates.length === 0 ? null : (
-        <div className="compare-grid">
-          {candidates.map((candidate) => (
-            <article className="person-card" key={candidate.candidateId}>
-              <h3>
-                <Link href={`/candidates/${candidate.candidateId}`}>{candidate.displayName}</Link>
-              </h3>
-              <p className="party">{candidate.partyLabel}</p>
-              {candidate.note ? <p className="hint">{candidate.note}</p> : null}
-            </article>
-          ))}
-        </div>
-      )}
-      <div className="card" role="tabpanel">
-        <TabBody tab={tab} finance={finance} />
+      <div className="compare-grid" id="compare-panel" role="tabpanel">
+        {candidates.map((candidate) => (
+          <article className="person-card" key={candidate.candidateId}>
+            <PersonMark name={candidate.displayName} photo={candidate.photo ?? null} />
+            {candidate.photoCredit ? <p className="hint">{candidate.photoCredit}</p> : null}
+            <h3>
+              <Link href={`/candidates/${candidate.candidateId}`}>{candidate.displayName}</Link>
+            </h3>
+            <p className="party">{candidate.partyLabel}</p>
+            {candidate.note ? <p className="hint">{candidate.note}</p> : null}
+            <TabBody tab={tab} candidate={candidate} finance={finance} issues={issues} updates={updates} />
+          </article>
+        ))}
       </div>
       <p>
         <Link href={raceHref}>Back to race</Link>
       </p>
     </div>
   );
+}
+
+function filedLine(count: number): string {
+  if (count === 0) return "No one has filed to run.";
+  if (count === 1) return "One person has filed to run.";
+  return `${count} people have filed to run.`;
 }
 
 function plainSource(label: string): string {
@@ -94,71 +129,125 @@ function plainSource(label: string): string {
   return "Election commission totals";
 }
 
-function filedLine(count: number): string {
-  if (count === 0) return "No one has filed to run.";
-  if (count === 1) return "One person has filed to run.";
-  return `${count} people have filed to run.`;
-}
-
 function TabBody({
   tab,
+  candidate,
   finance,
+  issues,
+  updates,
 }: {
   tab: Tab;
+  candidate: CompareCandidate;
   finance: {
     notice: string | null;
     direct: readonly FinanceDirect[];
     outside: readonly FinanceOutside[];
   } | null;
+  issues: readonly { id: string; label: string }[];
+  updates: readonly { title: string; url: string; date: string | null; source: string }[];
 }) {
-  if (tab === "Overview") return <p>Everyone is compared on the same facts.</p>;
-  if (tab === "Campaign Finance") {
-    if (!finance || (finance.direct.length === 0 && finance.outside.length === 0)) {
-      return <p>Money totals are not loaded for this race yet.</p>;
-    }
+  const notes = candidate.stances ?? [];
+  if (tab === "Overview") {
     return (
       <div>
-        {finance.notice ? <p>{finance.notice}</p> : null}
-        <p>
-          <Link href="/finance#direct-and-outside">Money a campaign reports is separate from money other groups spend.</Link>
-        </p>
-        <ul className="plain-list">
-          {finance.direct.map((row) => (
-            <li key={row.candidateId}>
-              <Link href={`/candidates/${row.candidateId}`}>{row.name ?? row.candidateId}</Link>
-              {": "}
-              raised {formatMoney(row.receipts)}, spent {formatMoney(row.disbursements)}, cash left{" "}
-              {formatMoney(row.cashOnHand)}, debts {formatMoney(row.debts)}. {coverageLabel(row.coverageStart, row.coverageEnd)}
-              {row.sourceUrl ? (
-                <>
-                  {" "}
-                  <a href={row.sourceUrl}>{plainSource(row.sourceLabel)}</a>
-                </>
-              ) : null}
-            </li>
-          ))}
-        </ul>
-        {finance.outside.length > 0 ? (
-          <ul className="plain-list">
-            {finance.outside.map((row) => (
-              <li key={`${row.candidateId}-${row.committeeId}-${row.support}`}>
-                {orgLabel(row.committeeName) ?? row.committeeId} {row.support === "support" ? "supports" : "opposes"}{" "}
-                {row.candidateName ?? "this person"}: {formatMoney(row.total)}. This is not money the campaign received.
-                {row.sourceUrl ? (
-                  <>
-                    {" "}
-                    <a href={row.sourceUrl}>{plainSource(row.sourceLabel)}</a>
-                  </>
-                ) : null}
-              </li>
-            ))}
-          </ul>
-        ) : null}
+        {candidate.website ? (
+          <p>
+            <a href={candidate.website.url}>{candidate.website.label}</a>
+          </p>
+        ) : (
+          <p>No campaign site is stored.</p>
+        )}
+        <p>{candidate.raised ? `Raised ${candidate.raised}` : "No money total is stored."}</p>
       </div>
     );
   }
-  if (tab === "Polls") return <p>No qualifying polls. A real poll would name who ran it, when, and how many people were asked.</p>;
-  if (tab === "Voting Record") return <p>No voting record is loaded. That does not mean the person voted against something.</p>;
-  if (tab === "Updates") return <p>No updates beyond the filing.</p>;
-  return <p>Not loaded yet.</p>;
+  if (tab === "Issues") {
+    const rows = issues.length > 0 ? issues : notes.map((note) => ({ id: note.issueId, label: note.issue }));
+    return (
+      <ul className="plain-list">
+        {rows.map((issue) => {
+          const stance = notes.find((note) => note.issueId === issue.id);
+          return (
+            <li key={issue.id}>
+              <p>{issue.label}</p>
+              <p>{stance ? stance.text : "No public stance found."}</p>
+            </li>
+          );
+        })}
+        {rows.length === 0 ? <li>No public stance found.</li> : null}
+      </ul>
+    );
+  }
+  if (tab === "Statements") {
+    if (notes.length === 0) return <p>No statement is stored.</p>;
+    return (
+      <ul className="plain-list">
+        {notes.map((note) => (
+          <li key={note.issueId}>
+            <p>{note.text}</p>
+            <p className="hint">
+              <a href={note.sourceUrl}>{note.sourceName}</a> · {note.sourceDate}
+            </p>
+          </li>
+        ))}
+      </ul>
+    );
+  }
+  if (tab === "Voting Record") {
+    const votes = candidate.votes ?? [];
+    if (votes.length === 0) return <p>No legislative record.</p>;
+    return (
+      <ul className="plain-list">
+        {votes.map((vote) => (
+          <li key={`${vote.bill}-${vote.date}`}>
+            {vote.date}: {vote.vote} on {vote.bill}. <a href={vote.sourceUrl}>{vote.sourceName}</a>
+          </li>
+        ))}
+      </ul>
+    );
+  }
+  if (tab === "Polls") return <p>No qualifying polls.</p>;
+  if (tab === "Updates") {
+    if (updates.length === 0) return <p>No matching Kentucky Lantern story.</p>;
+    return (
+      <ul className="plain-list">
+        {updates.map((story) => (
+          <li key={story.url}>
+            <a href={story.url}>{story.title}</a>
+            <span className="hint">
+              {" "}
+              {story.source}
+              {story.date ? ` · ${story.date}` : ""}
+            </span>
+          </li>
+        ))}
+      </ul>
+    );
+  }
+  const ids = new Set(candidate.moneyIds ?? [candidate.candidateId]);
+  const direct = finance?.direct.filter((row) => ids.has(row.candidateId)) ?? [];
+  const outside = finance?.outside.filter((row) => ids.has(row.candidateId)) ?? [];
+  if (direct.length === 0 && outside.length === 0) return <p>No money total is stored.</p>;
+  return (
+    <div>
+      <ul className="plain-list">
+        {direct.map((row) => (
+          <li key={`${row.candidateId}-${row.coverageEnd}`}>
+            Raised {formatMoney(row.receipts)}, spent {formatMoney(row.disbursements)}, cash left {formatMoney(row.cashOnHand)}, debts {formatMoney(row.debts)}. {coverageLabel(row.coverageStart, row.coverageEnd)}
+            {row.sourceUrl ? (
+              <>
+                {" "}
+                <a href={row.sourceUrl}>{plainSource(row.sourceLabel)}</a>
+              </>
+            ) : null}
+          </li>
+        ))}
+        {outside.map((row) => (
+          <li key={`${row.committeeId}-${row.support}`}>
+            {orgLabel(row.committeeName) ?? row.committeeId} {row.support === "support" ? "supports" : "opposes"} this person: {formatMoney(row.total)}. This is not money the campaign received.
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
 }

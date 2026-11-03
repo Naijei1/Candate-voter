@@ -25,6 +25,7 @@ export type GuidePerson = {
   raised: string | null;
   photo: string | null;
   photoCredit: string | null;
+  website: { href: string; label: string } | null;
 };
 
 export type GuideRace = {
@@ -386,7 +387,12 @@ function PersonFace({ person }: { person: GuidePerson }) {
           {person.holds ? <Badge>Holds this office</Badge> : null}
           {person.writeIn ? <Badge>Write-in</Badge> : null}
         </div>
-        {person.photoCredit ? <p className="mt-1 text-xs text-slate-500">{person.photoCredit}</p> : null}
+        {person.photoCredit ? <p className="mt-1 text-sm text-slate-600">{person.photoCredit}</p> : null}
+        {person.website ? (
+          <a className="mt-1 inline-block text-sm font-semibold text-[#1e3a8a]" href={person.website.href}>
+            {person.website.label}
+          </a>
+        ) : null}
       </div>
     </div>
   );

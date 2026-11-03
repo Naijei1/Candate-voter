@@ -17,7 +17,10 @@ export default function MeasuresIndexPage() {
         </Link>
       </p>
       <h2>Kentucky</h2>
-      <p>Proposition, referendum, and retention pages are ready. No question text is loaded.</p>
+      <p>Proposition, referendum, and retention pages are ready. No certified question text is loaded.</p>
+      <p>
+        <Link href="/measures/example-kentucky">Example question</Link> is a labeled sample, not a Kentucky ballot question.
+      </p>
       <ul className="plain-list">
         {MEASURE_KINDS.map((kind) => (
           <li key={kind.id}>

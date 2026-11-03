@@ -20,6 +20,12 @@ export async function newsForNames(names: readonly string[]): Promise<NewsItem[]
     .slice(0, 3);
 }
 
+/** Latest Kentucky Lantern items, not filtered to a person. Empty when the feed is down. */
+export async function latestNews(limit = 8): Promise<NewsItem[]> {
+  const items = await loadFeed();
+  return items.slice(0, limit);
+}
+
 function lastNames(names: readonly string[]): string[] {
   const found: string[] = [];
   for (const name of names) {

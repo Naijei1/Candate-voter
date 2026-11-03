@@ -111,8 +111,8 @@ export function NewsFeed() {
           <Link href="/sign-in">Sign in</Link> to save this feed.
         </p>
       ) : null}
-      <h2>Stories</h2>
-      <p>No news source is connected yet. Follow a race now, and stories you pick will show here later.</p>
+      <h2>Feed choices</h2>
+      <p>The list above is the Kentucky Lantern feed. Saving a category does not turn on email alerts.</p>
       <p>
         <Link className="btn btn-navy" href="/states/ky">
           See Kentucky races

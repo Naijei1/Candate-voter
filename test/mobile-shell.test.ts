@@ -34,7 +34,8 @@ test("race and candidate pages return to the state journey", () => {
   assert.equal(compare.includes("Sample candidate"), false);
   assert.match(candidate, /FollowControl/);
   assert.match(candidate, /FEC filing/);
-  assert.equal(candidate.includes("Voting record"), false);
+  assert.match(candidate, /No legislative record/);
+  assert.match(candidate, /Campaign site/);
   assert.equal(candidate.includes(">Website<"), false);
   assert.equal(candidate.includes("Form {filing.formType}"), false);
   assert.equal(race.includes("Back to map"), false);

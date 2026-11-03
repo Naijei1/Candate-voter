@@ -26,20 +26,31 @@ export default async function FinancePage({ searchParams }: PageProps) {
       <p className="lede">Election year {cycle}. Money campaigns report, kept separate from spending by other groups.</p>
       {bundle.notice ? <p className="notice">{bundle.notice}</p> : null}
       <FinanceExplanation />
-      <nav className="filters" aria-label="Cycle and coverage">
-        <Link href="/finance?cycle=2026" aria-current={cycle === 2026 && !coverage ? "page" : undefined}>
-          Full 2026 reports
-        </Link>
-        {choices.map((key) => (
-          <Link
-            key={key}
-            href={`/finance?cycle=${cycle}&coverage=${encodeURIComponent(key)}`}
-            aria-current={coverage === key ? "page" : undefined}
-          >
-            {labelFor(bundle.direct, key)}
-          </Link>
-        ))}
-      </nav>
+      <form className="finder-row" method="get" action="/finance">
+        <label htmlFor="finance-cycle">
+          Election cycle
+          <select id="finance-cycle" name="cycle" defaultValue={String(cycle)}>
+            <option value="2026">2026</option>
+          </select>
+        </label>
+        <label htmlFor="finance-period">
+          Reporting period
+          <select id="finance-period" name="coverage" defaultValue={coverage ?? ""}>
+            <option value="">All reports in the cycle</option>
+            {choices.map((key) => (
+              <option key={key} value={key}>
+                {labelFor(bundle.direct, key)}
+              </option>
+            ))}
+          </select>
+        </label>
+        <button className="btn btn-navy" type="submit">
+          Apply
+        </button>
+      </form>
+      <p>
+        <Link href="/finance/example">Example PAC profile</Link>
+      </p>
       <h2>Money reported by campaigns</h2>
       <p>Raised, spent, cash left, and debts from each campaign report.</p>
       <DirectList rows={direct} />

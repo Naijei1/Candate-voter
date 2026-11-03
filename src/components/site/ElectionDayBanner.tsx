@@ -1,4 +1,5 @@
 import { KY_BALLOT_CHECKED, KY_POLLS, calendarDay } from "@/lib/site/ky-ballot";
+import { ResultsNote } from "@/components/site/ResultsNote";
 
 export function ElectionDayBanner() {
   return (
@@ -14,8 +15,8 @@ export function ElectionDayBanner() {
       </p>
       <p className="hint">
         Hours and the lookup link are from the Kentucky State Board of Elections, checked {calendarDay(KY_BALLOT_CHECKED)}.
-        Results are not linked here yet.
       </p>
+      <ResultsNote />
     </aside>
   );
 }
