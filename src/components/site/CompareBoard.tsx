@@ -29,12 +29,14 @@ export function CompareBoard({
   raceHref,
   filingsLoaded = true,
   summary = null,
+  statusLine = "A to Z. Filed to run. Not confirmed on the ballot.",
   finance = null,
 }: {
   candidates: readonly CompareCandidate[];
   raceHref: string;
   filingsLoaded?: boolean;
   summary?: string | null;
+  statusLine?: string;
   finance?: {
     notice: string | null;
     direct: readonly FinanceDirect[];
@@ -59,7 +61,7 @@ export function CompareBoard({
         ))}
       </div>
       <p className="hint" title="Alphabetical by filing name. Not a ranking.">
-        A to Z. Filed to run. Not confirmed on the ballot.
+        {statusLine}
       </p>
       {summary ? <p>{summary}</p> : filingsLoaded ? <p>{filedLine(candidates.length)}</p> : null}
       {candidates.length === 0 ? null : (

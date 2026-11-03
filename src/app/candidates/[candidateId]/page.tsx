@@ -3,13 +3,16 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CheckHistory } from "@/components/site/CheckHistory";
 import { Crumbs } from "@/components/site/Crumbs";
+import { ElectionDayBanner } from "@/components/site/ElectionDayBanner";
 import { DirectList, orgLabel, OutsideList } from "@/components/site/FinanceLists";
 import { FollowControl } from "@/components/site/FollowControl";
+import { RosterMoney } from "@/components/site/RosterMoney";
 import { formatInstant, httpsUrl, partyCue, partyLabel } from "@/lib/format";
 import { financeForCandidate, loadFinance } from "@/lib/finance/load";
 import { selectDirect, selectOutside } from "@/lib/finance/present";
 import { loadChecks } from "@/lib/content/store";
 import { loadProfile } from "@/lib/site/contest";
+import { KY_BALLOT_CHECKED, calendarDay, kyPerson } from "@/lib/site/ky-ballot";
 import { showcaseCandidate, showcaseRace, type ShowcaseCandidate } from "@/lib/site/showcase";
 import type { Filing, Race } from "@/lib/types";
 
@@ -20,7 +23,9 @@ type PageProps = { params: Promise<{ candidateId: string }> };
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const id = (await params).candidateId;
-  const snap = showcaseCandidate(id);
+  const ballot = kyPerson(id);
+  const snap = showcaseCandidate(ballot?.person.fecCandidateId ?? id);
+  if (ballot) return { title: ballot.person.name };
   if (snap) return { title: snap.displayName };
   const loaded = await loadProfile(id);
   return { title: loaded.ok ? loaded.candidate.displayName : "Candidate" };
@@ -28,10 +33,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function CandidatePage({ params }: PageProps) {
   const id = (await params).candidateId;
-  const snap = showcaseCandidate(id);
-  const loaded = await loadProfile(id);
-  if (!loaded.ok && loaded.missing && !snap) notFound();
-  if (!loaded.ok && !loaded.missing && !snap) {
+  const ballot = kyPerson(id);
+  const snap = showcaseCandidate(ballot?.person.fecCandidateId ?? id);
+  const loaded = await loadProfile(ballot?.person.fecCandidateId ?? id);
+  if (!loaded.ok && loaded.missing && !snap && !ballot) notFound();
+  if (!loaded.ok && !loaded.missing && !snap && !ballot) {
     return (
       <article className="wrap">
         <h1>Candidate</h1>
@@ -42,13 +48,14 @@ export default async function CandidatePage({ params }: PageProps) {
   }
 
   const race = loaded.ok ? loaded.race : null;
-  const name = snap?.displayName ?? (loaded.ok ? loaded.candidate.displayName : "Candidate");
-  const party = snap?.partyLabel ?? (loaded.ok ? partyCue([partyLabel(loaded.candidate.partyAffiliation, loaded.candidate.partyLabel)]) : "");
-  const stateHref = race?.state ? `/states/${race.state.toLowerCase()}` : snap ? "/states/ky" : "/states";
-  const raceHref = race ? `/races/${race.raceId}` : snap ? `/races/${showcaseRace()?.raceId}` : null;
-  const raceLabel = race ? shortRace(race) : snap ? "Senate" : "Race";
+  const name = ballot?.person.name ?? snap?.displayName ?? (loaded.ok ? loaded.candidate.displayName : "Candidate");
+  const party = ballot?.person.party ?? snap?.partyLabel ?? (loaded.ok ? partyCue([partyLabel(loaded.candidate.partyAffiliation, loaded.candidate.partyLabel)]) : "");
+  const stateHref = race?.state ? `/states/${race.state.toLowerCase()}` : ballot || snap ? "/states/ky" : "/states";
+  const raceHref = ballot ? `/races/${ballot.race.raceId}` : race ? `/races/${race.raceId}` : snap ? `/races/${showcaseRace()?.raceId}` : null;
+  const raceLabel = ballot ? shortBallot(ballot.race.raceId) : race ? shortRace(race) : snap ? "Senate" : "Race";
   const retrieved = showcaseRace()?.retrievedAt ?? null;
-  const finance = financeForCandidate(await loadFinance(race?.cycle ?? 2026), id);
+  const financeKey = ballot?.person.fecCandidateId ?? id;
+  const finance = financeForCandidate(await loadFinance(race?.cycle ?? 2026), financeKey);
   const checks = await loadChecks("candidate", id);
   const direct = selectDirect(finance.direct, null);
   const outside = selectOutside(finance.outside, null);
@@ -63,8 +70,11 @@ export default async function CandidatePage({ params }: PageProps) {
         ]}
       />
       <h1>{name}</h1>
+      {ballot ? <ElectionDayBanner /> : null}
       <p className="lede">{party}</p>
-      {race ? <p>{race.title}</p> : snap ? <p>U.S. Senate, Kentucky · 2026</p> : null}
+      {ballot?.person.holdsOffice ? <p>Holds this office now.</p> : null}
+      {ballot?.person.role === "write-in" ? <p>Write-in on the November filing list.</p> : null}
+      {race ? <p>{race.title}</p> : ballot ? <p>{ballotTitle(ballot.race.raceId)}</p> : snap ? <p>U.S. Senate, Kentucky · 2026</p> : null}
       <div className="actions">
         {raceHref ? (
           <Link className="btn btn-navy" href={`${raceHref}/compare`}>
@@ -84,7 +94,7 @@ export default async function CandidatePage({ params }: PageProps) {
             source="Official candidate record"
             date={retrieved}
           />
-        ) : (
+        ) : ballot ? null : (
           <li>
             Running status is not in this record.
           </li>
@@ -110,8 +120,9 @@ export default async function CandidatePage({ params }: PageProps) {
         <FilingFacts filings={loaded.ok ? loaded.filings : []} snap={snap} />
       </ul>
 
-      <h2>Candidate says</h2>
       {snap?.committeeWebsite && snap.committeeUrl && retrieved ? (
+        <>
+      <h2>Candidate says</h2>
         <ul className="plain-list">
           <Fact
             label="Campaign site"
@@ -121,14 +132,12 @@ export default async function CandidatePage({ params }: PageProps) {
             date={retrieved}
           />
         </ul>
-      ) : (
-        <p>
-          No campaign website is on the filing.
-        </p>
-      )}
+        </>
+      ) : null}
 
       <h2>Campaign finance</h2>
-      {finance.notice ? <p className="notice">{finance.notice}</p> : null}
+      {direct.length > 0 ? null : ballot?.person.finance ? <RosterMoney finance={ballot.person.finance} /> : null}
+      {finance.notice && direct.length === 0 && !ballot?.person.finance ? <p className="notice">{finance.notice}</p> : null}
       <p>
         <Link href="/finance#direct-and-outside">Money a campaign reports is separate from money other groups spend.</Link>
       </p>
@@ -142,6 +151,11 @@ export default async function CandidatePage({ params }: PageProps) {
 
       <CheckHistory checks={checks} />
 
+      {ballot ? (
+        <p className="hint">
+          Ballot name checked {calendarDay(KY_BALLOT_CHECKED)} against the Kentucky Secretary of State general-election filings.
+        </p>
+      ) : null}
       <p className="hint">Biography, issue positions, and endorsements are not loaded yet.</p>
     </article>
   );
@@ -241,6 +255,18 @@ function plainStatus(label: string): string {
   if (/prior/i.test(label)) return "Filed in an earlier election";
   if (/statutory/i.test(label)) return "Filed the required paperwork";
   return label;
+}
+
+function ballotTitle(raceId: string): string {
+  if (raceId.includes("senate")) return "U.S. Senate, Kentucky · 2026";
+  const district = Number(raceId.split("-").at(-1));
+  return `U.S. House, Kentucky District ${district} · 2026`;
+}
+
+function shortBallot(raceId: string): string {
+  if (raceId.includes("senate")) return "Senate";
+  const district = raceId.split("-").at(-1);
+  return district ? `District ${Number(district)}` : "House";
 }
 
 function shortRace(race: Race): string {

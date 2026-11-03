@@ -7,7 +7,9 @@ import { Crumbs } from "@/components/site/Crumbs";
 import { FollowControl } from "@/components/site/FollowControl";
 import { isPostalState, stateName } from "@/lib/data/states";
 import { generalElectionLabel } from "@/lib/copy";
+import { ElectionDayBanner } from "@/components/site/ElectionDayBanner";
 import { PILOT_YEAR, contestsForState, loadPilotIndex } from "@/lib/site/contest";
+import { kyBallot } from "@/lib/site/ky-ballot";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -47,6 +49,7 @@ export default async function StatePage({ params, searchParams }: PageProps) {
     <article className="wrap">
       <Crumbs items={[{ href: "/", label: "Home" }, { label: name }]} />
       <h1>{name}</h1>
+      {postal === "KY" && year === PILOT_YEAR ? <ElectionDayBanner /> : null}
       <p className="lede">
         {year} general · {generalElectionLabel(year)}
       </p>
@@ -79,7 +82,7 @@ export default async function StatePage({ params, searchParams }: PageProps) {
               <li key={race.raceId}>
                 <Link className="card contest-link" href={`/races/${race.raceId}`}>
                   <h2>{race.title}</h2>
-                  <p>{filingLine(loaded.filingsLoaded, race.empty === true || race.hasCandidates === false)}</p>
+                  <p>{filingLine(race.raceId, loaded.filingsLoaded, race.empty === true || race.hasCandidates === false)}</p>
                 </Link>
               </li>
             ))}
@@ -114,7 +117,8 @@ export default async function StatePage({ params, searchParams }: PageProps) {
   );
 }
 
-function filingLine(loaded: boolean, empty: boolean): string {
+function filingLine(raceId: string, loaded: boolean, empty: boolean): string {
+  if (kyBallot(raceId)) return "November ballot";
   if (!loaded) return "Open to see who filed";
   return empty ? "No one has filed yet" : "People have filed";
 }

@@ -14,7 +14,6 @@ const PRIMARY = [
 const MORE = [
   { href: "/polls", label: "Polls and Analysis" },
   { href: "/finance", label: "Campaign Finance" },
-  { href: "/about", label: "About Us" },
 ] as const;
 
 export async function SiteHeader() {

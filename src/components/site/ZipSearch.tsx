@@ -129,6 +129,13 @@ function ZipMatches({ payload }: { payload: ZipLookupPayload }) {
         </form>
       ) : null}
       {note ? <p>{note}</p> : null}
+      {payload.state ? (
+        <p>
+          <Link className="btn btn-navy" href={withPlace(`/states/${payload.state.toLowerCase()}`, location)}>
+            See my races
+          </Link>
+        </p>
+      ) : null}
       <ul className="result-links">
         {payload.senateRaceId ? (
           <li>
@@ -143,9 +150,6 @@ function ZipMatches({ payload }: { payload: ZipLookupPayload }) {
           </li>
         ))}
       </ul>
-      {payload.state ? (
-        <Link href={withPlace(`/states/${payload.state.toLowerCase()}`, location)}>All {place} contests</Link>
-      ) : null}
     </div>
   );
 }

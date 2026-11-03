@@ -386,6 +386,18 @@ a.contest-link h2 {
   box-shadow: 0 -8px 24px rgb(20 43 73 / 12%);
 }
 
+.election-banner {
+  background: #fff;
+  border: 2px solid var(--color-navy);
+  border-radius: 0.6rem;
+  padding: 0.9rem 1rem;
+  margin: 0 0 1.25rem;
+}
+
+.election-banner p {
+  margin: 0.35rem 0;
+}
+
 .sr-only {
   position: absolute;
   width: 1px;

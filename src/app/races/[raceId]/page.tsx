@@ -7,6 +7,8 @@ import { AskPanel } from "@/components/site/AskPanel";
 import { CheckHistory } from "@/components/site/CheckHistory";
 import { Crumbs } from "@/components/site/Crumbs";
 import { FollowControl } from "@/components/site/FollowControl";
+import { ElectionDayBanner } from "@/components/site/ElectionDayBanner";
+import { KY_BALLOT_CHECKED, KY_BALLOT_SOURCES, calendarDay, kyBallot, kyBallotIds } from "@/lib/site/ky-ballot";
 import { cardsForRace } from "@/lib/site/showcase";
 import { personFilingNote } from "@/lib/data/filing-note";
 import { generalElectionLabel } from "@/lib/copy";
@@ -30,8 +32,13 @@ export default async function RacePage({ params }: PageProps) {
   if (!loaded.race) notFound();
   const race = loaded.race;
   const sourceHref = httpsUrl(race.sourceUrl);
+  const ballot = kyBallot(race.raceId);
   const roster = cardsForRace(race.raceId, loaded.candidates, loaded.filingsLoaded);
   const checks = await loadChecks("race", race.raceId);
+  const ballotIds = ballot ? kyBallotIds(ballot) : null;
+  const others = ballotIds
+    ? loaded.candidates.filter((candidate) => !ballotIds.has(candidate.candidateId) && !ballotIds.has(candidate.fecCandidateId ?? ""))
+    : [];
   const stateHref = race.state ? `/states/${race.state.toLowerCase()}` : "/states";
 
   return (
@@ -43,11 +50,12 @@ export default async function RacePage({ params }: PageProps) {
         ]}
       />
       <h1>{race.title}</h1>
+      {ballot ? <ElectionDayBanner /> : null}
       <p className="lede">
         {race.cycle != null ? `${generalElectionLabel(race.cycle)} · General` : "General"}
       </p>
-      <p className="hint" title="Alphabetical by filing name. Not a ranking. A Form 2 is not the printed ballot.">
-        Listed A to Z. Not a ranking.
+      <p className="hint" title="Alphabetical by name. Not a ranking. A filing is not the printed ballot.">
+        {ballot ? "November 3, 2026 ballot, A to Z" : "Listed A to Z. Not a ranking."}
         {sourceHref ? (
           <>
             {" · "}
@@ -58,7 +66,7 @@ export default async function RacePage({ params }: PageProps) {
         ) : null}
       </p>
       <DataRefreshedBanner refreshedAt={loaded.refreshedAt} />
-      {loaded.filingsLoaded ? null : roster.fecList ? (
+      {ballot || loaded.filingsLoaded ? null : roster.fecList ? (
         <p className="notice" role="status">
           Live filings could not be loaded. Names below are from the election commission candidate list.
         </p>
@@ -74,6 +82,48 @@ export default async function RacePage({ params }: PageProps) {
         <h2 id="candidates-heading" className="sr-only">
           Candidates
         </h2>
+        {ballot ? (
+          <>
+            <div className="actions">
+              <Link className="btn btn-navy" href={`/races/${race.raceId}/compare`}>
+                Compare candidates
+              </Link>
+              <FollowControl what="race" targetId={race.raceId} />
+            </div>
+            {ballot.note ? <p>{ballot.note}</p> : null}
+            <ul className="person-grid">
+              {[...ballot.people].sort((a, b) => a.name.localeCompare(b.name)).map((person) => (
+                <li className="person-card" key={person.id}>
+                  <h3>
+                    <Link href={`/candidates/${person.id}`}>{person.name}</Link>
+                  </h3>
+                  <p className="party">{person.party}</p>
+                  {person.holdsOffice ? <p className="hint">Holds this office now</p> : null}
+                </li>
+              ))}
+            </ul>
+            <p className="hint">
+              Kentucky Secretary of State general-election filings, checked {calendarDay(KY_BALLOT_CHECKED)}. Nominees also
+              match the Clerk of the House list published Oct 8, 2026.{" "}
+              <a href={KY_BALLOT_SOURCES[0].url}>Filing list</a>
+            </p>
+            {others.length > 0 ? (
+              <details>
+                <summary>Filed earlier, not on the November list ({others.length})</summary>
+                <ul className="plain-list">
+                  {others.map((candidate) => (
+                    <li key={candidate.candidateId}>
+                      <Link href={`/candidates/${candidate.candidateId}`}>{candidate.displayName}</Link>
+                      {" · "}
+                      {candidate.partyLabel}
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            ) : null}
+          </>
+        ) : (
+          <>
         {loaded.filingsLoaded && loaded.candidates.length === 0 && roster.cards.length === 0 ? (
           <p>No one has filed for this race yet.</p>
         ) : null}
@@ -104,6 +154,8 @@ export default async function RacePage({ params }: PageProps) {
           </Link>
           <FollowControl what="race" targetId={race.raceId} />
         </div>
+          </>
+        )}
       </section>
       <AskPanel raceId={race.raceId} cycle={race.cycle} state={race.state} />
       </div>
