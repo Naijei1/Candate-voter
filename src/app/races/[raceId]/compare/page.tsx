@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { BallotBar } from "@/components/site/BallotBar";
 import { AskPanel } from "@/components/site/AskPanel";
 import { CompareBoard } from "@/components/site/CompareBoard";
 import { Crumbs } from "@/components/site/Crumbs";
@@ -118,6 +119,7 @@ export default async function ComparePage({ params }: PageProps) {
         />
         <AskPanel raceId={race.raceId} cycle={race.cycle} state={race.state} />
       </div>
+      <BallotBar place="candidate" backHref={`/races/${race.raceId}`} nextHref="/" nextLabel="Your ballot" />
     </article>
   );
 }

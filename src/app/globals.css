@@ -243,6 +243,11 @@ a {
   color: #fff;
 }
 
+.btn-navy::after {
+  content: "→";
+  margin-left: 0.45rem;
+}
+
 .btn-cta {
   background: var(--color-cta);
   color: #fff;
@@ -256,7 +261,85 @@ a {
 }
 
 .page-main {
-  padding-bottom: 3rem;
+  padding-bottom: 6.5rem;
+}
+
+.page-main a:not(.btn):not(.choice-card),
+.site-footer a {
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+.choice-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+  min-height: 44px;
+  padding: 1rem 1.1rem;
+  border: 2px solid var(--color-navy);
+  border-radius: 1rem;
+  background: #fff;
+  color: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  font: inherit;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.choice-card:hover,
+.choice-card:focus-visible {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(20, 43, 73, 0.12);
+}
+
+a.choice-card,
+button.choice-card {
+  text-decoration: none;
+}
+
+.person-choice {
+  align-items: stretch;
+  flex-direction: column;
+}
+
+.view-label {
+  align-self: flex-start;
+  font-weight: 700;
+  color: var(--color-navy);
+}
+
+.ballot-bar {
+  position: fixed;
+  z-index: 40;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.7rem 1rem calc(0.7rem + env(safe-area-inset-bottom));
+  background: #fff;
+  border-top: 1px solid var(--color-line);
+}
+
+.ballot-crumbs {
+  margin: 0;
+  font-weight: 650;
+}
+
+.ballot-crumbs .is-here {
+  text-decoration: underline;
+}
+
+.ballot-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
 @media (max-width: 760px) {
@@ -453,11 +536,18 @@ a.contest-link h2 {
 }
 
 .person-photo {
-  width: 4rem;
-  height: 4rem;
-  max-width: 4rem;
+  width: 6rem;
+  height: 6rem;
+  max-width: 6rem;
   border-radius: 999px;
   object-fit: cover;
+  object-position: center top;
+}
+
+.person-photo.lg {
+  width: 10rem;
+  height: 10rem;
+  max-width: 10rem;
 }
 
 .person-card h3 {
@@ -468,12 +558,59 @@ a.contest-link h2 {
 .person-initials {
   display: inline-grid;
   place-items: center;
-  width: 4rem;
-  height: 4rem;
+  width: 6rem;
+  height: 6rem;
+  border-radius: 999px;
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+
+.person-initials.lg {
+  width: 10rem;
+  height: 10rem;
+  font-size: 2.5rem;
+}
+
+.person-initials.rep { background: #fecaca; color: #7f1d1d; }
+.person-initials.dem { background: #dbeafe; color: #1e3a8a; }
+.person-initials.lib { background: #fef3c7; color: #92400e; }
+.person-initials.ind { background: #e2e8f0; color: #0f172a; }
+.person-initials.oth { background: #e7e5e4; color: #44403c; }
+
+.fact-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+.fact-grid div {
+  border: 1px solid var(--color-line);
+  border-radius: 0.75rem;
+  padding: 0.75rem 0.9rem;
+  background: #fff;
+}
+
+.cash-bar {
+  height: 0.45rem;
+  margin-top: 0.4rem;
   border-radius: 999px;
   background: var(--color-line);
-  color: var(--color-ink);
-  font-weight: 700;
+  overflow: hidden;
+}
+
+.cash-bar > span {
+  display: block;
+  height: 100%;
+  background: var(--color-navy);
+}
+
+.stance-table th,
+.stance-table td {
+  text-align: left;
+  vertical-align: top;
+  padding: 0.65rem 0.4rem;
+  border-bottom: 1px solid var(--color-line);
 }
 
 select {

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { PersonMark } from "@/components/site/PersonMark";
+import { partyMark, PersonMark } from "@/components/site/PersonMark";
 import { orgLabel } from "@/components/site/FinanceLists";
 import { coverageLabel, formatMoney, type FinanceDirect, type FinanceOutside } from "@/lib/finance/model";
 
@@ -98,12 +98,12 @@ export function CompareBoard({
       <div className="compare-grid" id="compare-panel" role="tabpanel">
         {candidates.map((candidate) => (
           <article className="person-card" key={candidate.candidateId}>
-            <PersonMark name={candidate.displayName} photo={candidate.photo ?? null} />
+            <PersonMark name={candidate.displayName} photo={candidate.photo ?? null} party={candidate.partyLabel} size="lg" />
             {candidate.photoCredit ? <p className="hint">{candidate.photoCredit}</p> : null}
             <h3>
               <Link href={`/candidates/${candidate.candidateId}`}>{candidate.displayName}</Link>
             </h3>
-            <p className="party">{candidate.partyLabel}</p>
+            <p className="party">{partyMark(candidate.partyLabel).letter} · {candidate.partyLabel}</p>
             {candidate.note ? <p className="hint">{candidate.note}</p> : null}
             <TabBody tab={tab} candidate={candidate} finance={finance} issues={issues} updates={updates} />
           </article>

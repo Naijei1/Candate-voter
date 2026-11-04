@@ -1,9 +1,29 @@
-export function PersonMark({ name, photo }: { name: string; photo: string | null }) {
+export function partyMark(party: string): { letter: string; tone: "rep" | "dem" | "lib" | "ind" | "oth" } {
+  if (/republican/i.test(party)) return { letter: "R", tone: "rep" };
+  if (/democrat/i.test(party)) return { letter: "D", tone: "dem" };
+  if (/libertarian/i.test(party)) return { letter: "L", tone: "lib" };
+  if (/independent|kentucky/i.test(party)) return { letter: "I", tone: "ind" };
+  if (/write-in/i.test(party)) return { letter: "W", tone: "oth" };
+  return { letter: "·", tone: "oth" };
+}
+
+export function PersonMark({
+  name,
+  photo,
+  party = "",
+  size = "md",
+}: {
+  name: string;
+  photo: string | null;
+  party?: string;
+  size?: "md" | "lg";
+}) {
+  const mark = partyMark(party);
   if (photo) {
-    return <img className="person-photo" src={photo} alt="" width={64} height={64} />;
+    return <img className={`person-photo ${size}`} src={photo} alt="" width={size === "lg" ? 160 : 96} height={size === "lg" ? 160 : 96} />;
   }
   return (
-    <span className="person-initials" aria-hidden>
+    <span className={`person-initials ${mark.tone} ${size}`} aria-hidden>
       {initials(name)}
     </span>
   );
