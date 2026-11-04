@@ -97,11 +97,23 @@ test("account infrastructure stays least privilege and separate from filings", (
   assert.match(template, /GoogleClientId:/);
   assert.match(template, /Condition: HasGoogle/);
   assert.match(template, /Default: ""/);
+  assert.match(template, /!Ref GoogleProvider/);
+  assert.equal(template.includes("DependsOn: !If"), false);
   assert.equal(template.includes("AWS::SES"), false);
   const script = readFileSync("scripts/write-amplify-server-env.mjs", "utf8");
-  for (const key of ["CANDATE_USERS_TABLE", "COGNITO_USER_POOL_ID", "COGNITO_CLIENT_ID", "ADMIN_EMAILS"]) {
+  for (const key of ["CANDATE_USERS_TABLE", "COGNITO_USER_POOL_ID", "COGNITO_CLIENT_ID", "COGNITO_DOMAIN", "COGNITO_GOOGLE", "ADMIN_EMAILS"]) {
     assert.equal(script.includes(key), true, key);
   }
+  const googleRoute = readFileSync("src/app/sign-in/google/route.ts", "utf8");
+  assert.match(googleRoute, /originFromRequest/);
+  assert.equal(googleRoute.includes("url.origin"), false);
+  const privacy = readFileSync("src/app/privacy/page.tsx", "utf8");
+  const terms = readFileSync("src/app/terms/page.tsx", "utf8");
+  const footer = readFileSync("src/components/SiteFooter.tsx", "utf8");
+  assert.match(privacy, /do not sell/);
+  assert.match(terms, /privacy policy/);
+  assert.match(footer, /href: "\/privacy"/);
+  assert.match(footer, /href: "\/terms"/);
   const store = readFileSync("src/lib/users/store.ts", "utf8");
   assert.match(store, /deliveryStatus: ALERT_DELIVERY_STATUS/);
   const admin = readFileSync("src/app/admin/corrections/page.tsx", "utf8");
