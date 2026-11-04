@@ -294,10 +294,6 @@ Resources:
 
   UserPoolClient:
     Type: AWS::Cognito::UserPoolClient
-    DependsOn: !If
-      - HasGoogle
-      - GoogleProvider
-      - !Ref AWS::NoValue
     Properties:
       ClientName: candate-voter-web
       UserPoolId: !Ref UserPool
@@ -310,7 +306,7 @@ Resources:
       SupportedIdentityProviders: !If
         - HasGoogle
         - - COGNITO
-          - Google
+          - !Ref GoogleProvider
         - - COGNITO
       AllowedOAuthFlowsUserPoolClient: true
       AllowedOAuthFlows:
