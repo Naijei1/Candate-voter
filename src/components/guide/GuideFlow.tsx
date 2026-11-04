@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronLeft, Landmark, MapPin, Printer, Share2 } from "lucide-react";
+import { ChevronRight, MapPin, Printer, Share2 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +12,7 @@ import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { districtFromPoint } from "@/lib/geo/address-district";
 import { findRacesByZip } from "@/lib/lookup/find-races";
 import { settleZipLookup } from "@/lib/lookup/zip-view";
+import { partyMark } from "@/components/site/PersonMark";
 import { matchScore, stanceIssues, stancesFor, type Stance } from "@/lib/site/stances";
 
 const STORAGE = "candate-guide-v1";
@@ -26,6 +27,7 @@ export type GuidePerson = {
   photo: string | null;
   photoCredit: string | null;
   website: { href: string; label: string } | null;
+  job: string | null;
 };
 
 export type GuideRace = {
@@ -81,7 +83,6 @@ export function GuideFlow({ races, signedIn }: { races: GuideRace[]; signedIn: b
     () => races.filter((race) => race.office === "senate" || race.district === district),
     [races, district],
   );
-  const decided = ballot.filter((race) => choices[race.id]).length;
   const current = ballot[raceIndex] ?? ballot[0];
 
   async function lookupZip() {
@@ -170,6 +171,9 @@ export function GuideFlow({ races, signedIn }: { races: GuideRace[]; signedIn: b
     <div className="mx-auto w-full max-w-3xl pb-28">
       <div className="sticky top-0 z-30 -mx-4 mb-6 border-b border-slate-200 bg-slate-50/95 px-4 py-3 backdrop-blur">
         <p className="mb-2 text-sm font-semibold text-slate-700">Step {step} of 5</p>
+        <p className="mb-2 font-semibold">
+          {district ? `KY-${district.padStart(2, "0")}` : "Your district"} <span aria-hidden="true">›</span> Races <span aria-hidden="true">›</span> Candidate
+        </p>
         <Progress value={(step / 5) * 100} />
       </div>
       <AnimatePresence mode="wait">
@@ -190,14 +194,14 @@ export function GuideFlow({ races, signedIn }: { races: GuideRace[]; signedIn: b
                   <MapPin className="size-5" /> Use my location
                 </Button>
                 <p className="text-center">
-                  <Link className="font-semibold text-[#1e3a8a]" href="/map">Pick on the map</Link>
+                  <Link href="/map">Pick on the map</Link>
                 </p>
                 {note ? <p className="text-slate-700">{note}</p> : null}
               </Card>
               <Card className="mt-4">
                 <p className="font-semibold">Election Day · Nov 3, 2026</p>
                 <p className="mt-1 text-slate-700">Kentucky polls are open 6:00 a.m. to 6:00 p.m. local time.</p>
-                <a className="mt-3 inline-block font-semibold text-[#1e3a8a]" href="https://www.govote.ky.gov">Find your polling place</a>
+                <a className="mt-3 inline-block" href="https://www.govote.ky.gov">Find your polling place</a>
               </Card>
             </section>
           ) : null}
@@ -205,24 +209,21 @@ export function GuideFlow({ races, signedIn }: { races: GuideRace[]; signedIn: b
           {step === 2 ? (
             <section>
               <h1 className="mb-2 text-4xl font-semibold tracking-tight">Your ballot</h1>
-              <p className="mb-4 text-lg text-slate-600">{decided} of {ballot.length} decided{district ? ` · District ${Number(district)}` : ""}</p>
-              {!district ? <p className="mb-4">Go back and add a ZIP so this list is your U.S. House district plus the Senate race.</p> : null}
+              {district ? (
+                <p className="mb-4 text-lg text-slate-700">{`You're in KY-${district.padStart(2, "0")}. You'll vote on ${ballot.length} races.`}</p>
+              ) : (
+                <p className="mb-4">Go back and add a ZIP so this list is your U.S. House district plus the Senate race.</p>
+              )}
               <div className="space-y-4">
-                {ballot.map((race) => (
-                  <Card key={race.id}>
-                    <div className="mb-2 flex items-center gap-3">
-                      <Landmark className="size-6 text-[#1e3a8a]" />
-                      <h2 className="text-2xl font-semibold">{race.title}</h2>
-                    </div>
-                    <p className="text-slate-700">{race.job}</p>
-                    <p className="mt-2 text-slate-600">{race.people.length} people on the November list.</p>
-                    <p className="mt-1 text-sm text-slate-500">{choices[race.id] ? "Marked" : "Not decided"}</p>
-                  </Card>
+                {ballot.map((race, index) => (
+                  <button key={race.id} className="choice-card" type="button" disabled={!district} onClick={() => { setRaceIndex(index); setStep(3); }}>
+                    <span>
+                      <span className="block text-2xl font-semibold">{race.title}</span>
+                      <span className="mt-1 block text-slate-700">{race.people.length} people on the November list. {choices[race.id] ? "Marked." : "Not decided."}</span>
+                    </span>
+                    <span className="view-label">See the candidates <ChevronRight className="inline size-5" aria-hidden /></span>
+                  </button>
                 ))}
-              </div>
-              <div className="mt-6 flex gap-3">
-                <Button variant="ghost" onClick={() => setStep(1)}><ChevronLeft className="size-5" /> Back</Button>
-                <Button className="flex-1" disabled={!district} onClick={() => { setRaceIndex(0); setStep(3); }}>Start</Button>
               </div>
             </section>
           ) : null}
@@ -238,18 +239,16 @@ export function GuideFlow({ races, signedIn }: { races: GuideRace[]; signedIn: b
                   return (
                   <Card key={row.id} className={`min-w-[88%] snap-center md:min-w-0 ${leaned ? "ring-2 ring-[#1e3a8a]" : ""}`}>
                     <PersonFace person={row} />
-                    <ul className="mt-4 space-y-3">
-                      {stanceIssues().map((issue) => {
-                        const stance = stancesFor(row.id).find((item) => item.issueId === issue.id);
-                        return (
-                          <li key={issue.id}>
-                            <p className="font-medium">{issue.label}</p>
-                            <p className="text-sm text-slate-700">{stance ? stance.text : "No public stance found"}</p>
-                          </li>
-                        );
-                      })}
+                    <p className="mt-3 text-slate-800">{row.job ?? "No job line is stored."}</p>
+                    <ul className="mt-3 space-y-2 text-slate-800">
+                      <li>{row.raised ? `Raised ${row.raised}` : "No money total is stored."}</li>
+                      <li>{topFact(row.id)}</li>
                     </ul>
-                    <button className="mt-4 font-semibold text-[#1e3a8a]" type="button" onClick={() => setSheet(row)}>More</button>
+                    <p className="mt-3">
+                      <Link href={`/candidates/${row.id}`}>View</Link>
+                      {" · "}
+                      <button className="underline" type="button" onClick={() => setSheet(row)}>More</button>
+                    </p>
                     <div className="mt-5 grid gap-3">
                       <Button onClick={() => choose(current.id, { kind: "lean", candidateId: row.id })}>{leaned ? "Your lean" : "Leaning toward"}</Button>
                       <Button variant="ghost" onClick={() => choose(current.id, { kind: "skip" })}>Skip</Button>
@@ -356,8 +355,29 @@ export function GuideFlow({ races, signedIn }: { races: GuideRace[]; signedIn: b
           </SheetContent>
         ) : null}
       </Sheet>
+      {step > 1 ? (
+        <div className="ballot-bar">
+          <p className="ballot-crumbs">Step {step} of 5 · Your district › Races › Candidate</p>
+          <div className="ballot-actions">
+            <Button variant="ghost" onClick={() => setStep((value) => Math.max(1, value - 1))}>Back</Button>
+            <Button onClick={() => {
+              if (step === 2) { setRaceIndex(0); setStep(3); return; }
+              if (step === 3 && current && raceIndex < ballot.length - 1) { setRaceIndex((value) => value + 1); return; }
+              if (step < 5) setStep((value) => value + 1);
+            }}>Next</Button>
+            <Button variant="ghost" onClick={() => setStep(1)}>Change ZIP</Button>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
+}
+
+function topFact(id: string): string {
+  const stance = stancesFor(id)[0];
+  if (!stance) return "No public stance found.";
+  const label = stanceIssues().find((issue) => issue.id === stance.issueId)?.label ?? "Issue";
+  return `${label}: ${stance.text}`;
 }
 
 function StanceLine({ stance }: { stance: Stance }) {
@@ -371,29 +391,23 @@ function StanceLine({ stance }: { stance: Stance }) {
 }
 
 function PersonFace({ person }: { person: GuidePerson }) {
+  const mark = partyMark(person.party);
   return (
-    <div className="flex items-center gap-4">
+    <div>
       {person.photo ? (
-        <img src={person.photo} alt="" width={64} height={64} className="size-16 rounded-full object-cover" />
+        <img src={person.photo} alt="" width={160} height={160} className="size-40 rounded-full object-cover object-top" />
       ) : (
-        <div className="flex size-16 items-center justify-center rounded-full bg-slate-200 text-xl font-semibold text-slate-800" aria-hidden>
+        <div className={`person-initials lg ${mark.tone}`} aria-hidden>
           {initials(person.name)}
         </div>
       )}
-      <div>
-        <h2 className="text-2xl font-semibold">{person.name}</h2>
-        <div className="mt-1 flex flex-wrap gap-2">
-          <Badge tone={partyTone(person.party)}>{person.party}</Badge>
-          {person.holds ? <Badge>Holds this office</Badge> : null}
-          {person.writeIn ? <Badge>Write-in</Badge> : null}
-        </div>
-        {person.photoCredit ? <p className="mt-1 text-sm text-slate-600">{person.photoCredit}</p> : null}
-        {person.website ? (
-          <a className="mt-1 inline-block text-sm font-semibold text-[#1e3a8a]" href={person.website.href}>
-            {person.website.label}
-          </a>
-        ) : null}
+      <h2 className="mt-3 text-2xl font-semibold">{person.name}</h2>
+      <div className="mt-1 flex flex-wrap gap-2">
+        <Badge tone={partyTone(person.party)}>{mark.letter} · {person.party}</Badge>
+        {person.holds ? <Badge>Incumbent</Badge> : person.writeIn ? <Badge>Write-in</Badge> : <Badge>Challenger</Badge>}
       </div>
+      {person.photoCredit ? <p className="mt-1 text-sm text-slate-600">{person.photoCredit}</p> : null}
+      {person.website ? <p className="mt-1"><a href={person.website.href}>{person.website.label}</a></p> : null}
     </div>
   );
 }

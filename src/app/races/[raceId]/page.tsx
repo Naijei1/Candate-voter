@@ -8,10 +8,11 @@ import { CheckHistory } from "@/components/site/CheckHistory";
 import { Crumbs } from "@/components/site/Crumbs";
 import { FollowControl } from "@/components/site/FollowControl";
 import { ElectionDayBanner } from "@/components/site/ElectionDayBanner";
-import { PersonMark } from "@/components/site/PersonMark";
+import { BallotBar } from "@/components/site/BallotBar";
+import { partyMark, PersonMark } from "@/components/site/PersonMark";
 import { KY_BALLOT_CHECKED, KY_BALLOT_SOURCES, calendarDay, kyBallot, kyBallotIds } from "@/lib/site/ky-ballot";
 import { newsForNames } from "@/lib/site/ky-news";
-import { linkLabel, profileFor } from "@/lib/site/profiles";
+import { jobLine } from "@/lib/site/profiles";
 import { portraitFor, stancesFor } from "@/lib/site/stances";
 import { cardsForRace } from "@/lib/site/showcase";
 import { personFilingNote } from "@/lib/data/filing-note";
@@ -102,36 +103,22 @@ export default async function RacePage({ params }: PageProps) {
             <ul className="person-grid">
               {[...ballot.people].sort((a, b) => a.name.localeCompare(b.name)).map((person) => {
                 const photo = portraitFor(person.id);
-                const profile = profileFor(person.id);
                 const notes = stancesFor(person.id);
                 return (
-                <li className="person-card" key={person.id}>
-                  <PersonMark name={person.name} photo={photo?.src ?? null} />
-                  {photo ? <p className="hint">{photo.credit}</p> : null}
-                  <h3>
-                    <Link href={`/candidates/${person.id}`}>{person.name}</Link>
-                  </h3>
-                  <p className="party">{person.party}</p>
-                  {person.holdsOffice ? <p className="hint">Holds this office now</p> : null}
-                  {person.role === "write-in" ? <p className="hint">Write-in</p> : null}
-                  {person.finance ? <p className="hint">Raised {formatRaceMoney(person.finance.receipts)}</p> : null}
-                  {profile.website ? (
-                    <p>
-                      <a href={profile.website.url}>{linkLabel(profile.website)}</a>
-                    </p>
-                  ) : (
-                    <p className="hint">No campaign site is stored.</p>
-                  )}
-                  <ul className="plain-list">
-                    {notes.length === 0 ? <li>No public stance found.</li> : null}
-                    {notes.map((stance) => (
-                      <li key={stance.issueId}>
-                        {stance.text}{" "}
-                        <a href={stance.sourceUrl}>{stance.sourceName}</a>
-                        <span className="hint"> · {stance.sourceDate}</span>
-                      </li>
-                    ))}
-                  </ul>
+                <li key={person.id}>
+                  <Link className="choice-card person-choice" href={`/candidates/${person.id}`}>
+                    <PersonMark name={person.name} photo={photo?.src ?? null} party={person.party} size="lg" />
+                    <span>
+                      <span className="block text-2xl font-semibold">{person.name}</span>
+                      <span className="party">{partyMark(person.party).letter} · {person.party}</span>
+                      <span className="mt-1 block">{person.holdsOffice ? "Incumbent" : person.role === "write-in" ? "Write-in" : "Challenger"}</span>
+                      <span className="mt-2 block">{jobLine(person.id) ?? "No job line is stored."}</span>
+                      <span className="mt-2 block">{person.finance ? `Raised ${formatRaceMoney(person.finance.receipts)}` : "No money total is stored."}</span>
+                      <span className="mt-1 block">{notes[0] ? notes[0].text : "No public stance found."}</span>
+                      {photo ? <span className="hint mt-2 block">{photo.credit}</span> : null}
+                    </span>
+                    <span className="view-label">View ›</span>
+                  </Link>
                 </li>
                 );
               })}
@@ -210,6 +197,9 @@ export default async function RacePage({ params }: PageProps) {
       </section>
       <AskPanel raceId={race.raceId} cycle={race.cycle} state={race.state} />
       </div>
+      {ballot ? (
+        <BallotBar place="races" backHref="/" nextHref={`/races/${race.raceId}/compare`} nextLabel="Compare candidates" />
+      ) : null}
     </article>
   );
 }

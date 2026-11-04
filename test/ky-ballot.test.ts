@@ -74,7 +74,9 @@ test("only sourced stances count, and missing candidates are not enough info", (
   for (const id of ["S6KY00286", "H6KY01110", "H8KY02031", "H2KY03206", "H0KY05015"]) {
     assert.equal(existsSync(`public${portraitFor(id)?.src}`), true, id);
   }
-  assert.equal(portraitFor("H6KY01169"), null);
+  assert.equal(portraitFor("H6KY01169")?.credit, "Photo: campaign website");
+  assert.equal(portraitFor("S6KY00377"), null);
+  assert.match(portraitFor("S6KY00385")?.sourceUrl ?? "", /^https:\/\/commons\.wikimedia\.org\//);
   assert.equal(profileFor("H6KY01169").website?.url, "https://williamsforky.com");
   assert.equal(linkLabel(profileFor("H6KY01110").website!), "Official site");
   assert.equal(profileFor("H8KY02106").votes.length, 0);

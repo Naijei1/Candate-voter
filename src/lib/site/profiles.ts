@@ -40,3 +40,11 @@ export function profileFor(candidateId: string): KyProfile {
 export function linkLabel(link: ProfileLink): string {
   return link.kind === "office" ? "Official site" : "Campaign site";
 }
+
+/** First sourced sentence. Null when no biography is stored. */
+export function jobLine(candidateId: string): string | null {
+  const text = profileFor(candidateId).bio?.text?.trim();
+  if (!text) return null;
+  const sentence = text.split(/(?<=\.)\s/)[0] ?? text;
+  return sentence.length > 160 ? `${sentence.slice(0, 157)}…` : sentence;
+}

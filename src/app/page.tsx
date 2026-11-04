@@ -2,7 +2,7 @@ import { GuideFlow, type GuideRace } from "@/components/guide/GuideFlow";
 import { formatMoney } from "@/lib/finance/model";
 import { currentUser } from "@/lib/auth/session";
 import { kyBallot, kyBallotSeed } from "@/lib/site/ky-ballot";
-import { linkLabel, profileFor } from "@/lib/site/profiles";
+import { jobLine, linkLabel, profileFor } from "@/lib/site/profiles";
 import { portraitFor } from "@/lib/site/stances";
 import { KY_BALLOT_SOURCES } from "@/lib/site/ky-ballot";
 
@@ -41,6 +41,7 @@ export default async function HomePage() {
         photo: photo?.src ?? null,
         photoCredit: photo?.credit ?? null,
         website: link ? { href: link.url, label: linkLabel(link) } : null,
+        job: jobLine(person.id),
       };
     });
   }

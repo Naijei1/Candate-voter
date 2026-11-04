@@ -1,0 +1,111 @@
+{
+  "checkedOn": "2026-11-04",
+  "note": "Local copies only. Credit and source URL are required. Missing ids use a party-tinted initial.",
+  "photos": {
+    "S6KY00286": {
+      "src": "/photos/ky/S6KY00286.jpg",
+      "credit": "Official U.S. House photograph",
+      "sourceUrl": "https://clerk.house.gov/members/B001282",
+      "license": "Public domain",
+      "author": "Office of the Clerk, U.S. House of Representatives"
+    },
+    "H6KY01110": {
+      "src": "/photos/ky/H6KY01110.jpg",
+      "credit": "Official U.S. House photograph",
+      "sourceUrl": "https://clerk.house.gov/members/C001108",
+      "license": "Public domain",
+      "author": "Office of the Clerk, U.S. House of Representatives"
+    },
+    "H8KY02031": {
+      "src": "/photos/ky/H8KY02031.jpg",
+      "credit": "Official U.S. House photograph",
+      "sourceUrl": "https://clerk.house.gov/members/G000558",
+      "license": "Public domain",
+      "author": "Office of the Clerk, U.S. House of Representatives"
+    },
+    "H2KY03206": {
+      "src": "/photos/ky/H2KY03206.jpg",
+      "credit": "Official U.S. House photograph",
+      "sourceUrl": "https://clerk.house.gov/members/M001220",
+      "license": "Public domain",
+      "author": "Office of the Clerk, U.S. House of Representatives"
+    },
+    "H0KY05015": {
+      "src": "/photos/ky/H0KY05015.jpg",
+      "credit": "Official U.S. House photograph",
+      "sourceUrl": "https://clerk.house.gov/members/R000395",
+      "license": "Public domain",
+      "author": "Office of the Clerk, U.S. House of Representatives"
+    },
+    "S6KY00385": {
+      "src": "/photos/ky/S6KY00385.jpg",
+      "credit": "Breadwin, CC BY-SA 4.0, via Wikimedia Commons",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Charles_solar_panels_(cropped).jpg",
+      "license": "CC BY-SA 4.0",
+      "author": "Breadwin"
+    },
+    "H6KY06192": {
+      "src": "/photos/ky/H6KY06192.jpg",
+      "credit": "Gage Skidmore, CC BY-SA 3.0, via Wikimedia Commons",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Ralph_Alvarado_by_Gage_Skidmore.jpg",
+      "license": "CC BY-SA 3.0",
+      "author": "Gage Skidmore"
+    },
+    "H6KY04171": {
+      "src": "/photos/ky/H6KY04171.jpg",
+      "credit": "Gage Skidmore, CC BY-SA 4.0, via Wikimedia Commons",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Ed_Gallrein_(55505179851)_(cropped).jpg",
+      "license": "CC BY-SA 4.0",
+      "author": "Gage Skidmore"
+    },
+    "H6KY06184": {
+      "src": "/photos/ky/H6KY06184.jpg",
+      "credit": "U.S. Navy, public domain, via Wikimedia Commons",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Zach_Dembo_(cropped).jpg",
+      "license": "Public domain",
+      "author": "U.S. Navy"
+    },
+    "H6KY01169": {
+      "src": "/photos/ky/H6KY01169.jpg",
+      "credit": "Photo: campaign website",
+      "sourceUrl": "https://williamsforky.com",
+      "license": "Campaign website",
+      "author": "williamsforky.com"
+    },
+    "H6KY02068": {
+      "src": "/photos/ky/H6KY02068.jpg",
+      "credit": "Photo: campaign website",
+      "sourceUrl": "https://wingfieldforcongress.com",
+      "license": "Campaign website",
+      "author": "wingfieldforcongress.com"
+    },
+    "H6KY03223": {
+      "src": "/photos/ky/H6KY03223.jpg",
+      "credit": "Photo: campaign website",
+      "sourceUrl": "https://mariaforuscongress.com",
+      "license": "Campaign website",
+      "author": "mariaforuscongress.com"
+    },
+    "H6KY04189": {
+      "src": "/photos/ky/H6KY04189.jpg",
+      "credit": "Photo: campaign website",
+      "sourceUrl": "https://strangeforky.com",
+      "license": "Campaign website",
+      "author": "strangeforky.com"
+    },
+    "H6KY05202": {
+      "src": "/photos/ky/H6KY05202.jpg",
+      "credit": "Photo: campaign website",
+      "sourceUrl": "https://weinforky5.com",
+      "license": "Campaign website",
+      "author": "weinforky5.com"
+    },
+    "H6KY06234": {
+      "src": "/photos/ky/H6KY06234.jpg",
+      "credit": "Photo: campaign website",
+      "sourceUrl": "https://bowman2026.com",
+      "license": "Campaign website",
+      "author": "bowman2026.com"
+    }
+  }
+}
