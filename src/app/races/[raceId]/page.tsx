@@ -10,6 +10,7 @@ import { FollowControl } from "@/components/site/FollowControl";
 import { ElectionDayBanner } from "@/components/site/ElectionDayBanner";
 import { BallotBar } from "@/components/site/BallotBar";
 import { partyMark, PersonMark } from "@/components/site/PersonMark";
+import { seatStatus } from "@/lib/site/seat";
 import { KY_BALLOT_CHECKED, KY_BALLOT_SOURCES, calendarDay, kyBallot, kyBallotIds } from "@/lib/site/ky-ballot";
 import { newsForNames } from "@/lib/site/ky-news";
 import { jobLine } from "@/lib/site/profiles";
@@ -57,7 +58,7 @@ export default async function RacePage({ params }: PageProps) {
         ]}
       />
       <h1>{race.title}</h1>
-      {ballot ? <ElectionDayBanner /> : null}
+      {ballot ? null : <ElectionDayBanner />}
       <p className="lede">
         {race.cycle != null ? `${generalElectionLabel(race.cycle)} · General` : "General"}
       </p>
@@ -84,7 +85,7 @@ export default async function RacePage({ params }: PageProps) {
       )}
 
       <CheckHistory checks={checks} />
-      <div className="race-layout">
+      <div className="race-layout stack">
       <section aria-labelledby="candidates-heading">
         <h2 id="candidates-heading" className="sr-only">
           Candidates
@@ -111,7 +112,7 @@ export default async function RacePage({ params }: PageProps) {
                     <span>
                       <span className="block text-2xl font-semibold">{person.name}</span>
                       <span className="party">{partyMark(person.party).letter} · {person.party}</span>
-                      <span className="mt-1 block">{person.holdsOffice ? "Incumbent" : person.role === "write-in" ? "Write-in" : "Challenger"}</span>
+                      <span className="mt-1 block">{seatStatus({ holds: person.holdsOffice, writeIn: person.role === "write-in", openSeat: !ballot.people.some((row) => row.holdsOffice) }) ?? "On the November ballot"}</span>
                       <span className="mt-2 block">{jobLine(person.id) ?? "No job line is stored."}</span>
                       <span className="mt-2 block">{person.finance ? `Raised ${formatRaceMoney(person.finance.receipts)}` : "No money total is stored."}</span>
                       <span className="mt-1 block">{notes[0] ? notes[0].text : "No public stance found."}</span>
@@ -159,6 +160,7 @@ export default async function RacePage({ params }: PageProps) {
                 </ul>
               </details>
             ) : null}
+            {ballot ? <ElectionDayBanner compact /> : null}
           </>
         ) : (
           <>

@@ -1,28 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 
 export function BallotBar({
   place,
   backHref,
   nextHref,
   nextLabel,
+  district = null,
 }: {
   place: "races" | "candidate";
   backHref: string;
   nextHref: string;
   nextLabel: string;
+  district?: string | null;
 }) {
-  const [district, setDistrict] = useState<string | null>(null);
-  useEffect(() => {
-    try {
-      const saved = JSON.parse(localStorage.getItem("candate-guide-v1") ?? "null") as { district?: string } | null;
-      setDistrict(saved?.district ?? null);
-    } catch {
-      setDistrict(null);
-    }
-  }, []);
 
   function changeZip() {
     try {
@@ -39,14 +31,14 @@ export function BallotBar({
       <p className="ballot-crumbs">
         <Link href="/">{districtLabel}</Link>
         <span aria-hidden="true"> › </span>
-        <span className={place === "races" ? "is-here" : undefined}>Races</span>
+        <span className={place === "races" ? "is-here" : undefined}>Your races</span>
         <span aria-hidden="true"> › </span>
-        <span className={place === "candidate" ? "is-here" : undefined}>Candidate</span>
+        <span className={place === "candidate" ? "is-here" : undefined}>Compare</span>
       </p>
       <div className="ballot-actions">
         <Link className="btn btn-ghost" href={backHref}>Back</Link>
         <Link className="btn btn-navy" href={nextHref}>{nextLabel}</Link>
-        <Link className="btn btn-ghost" href="/" onClick={changeZip}>Change ZIP</Link>
+        <Link className="btn btn-ghost hide-narrow" href="/" onClick={changeZip}>Change ZIP</Link>
       </div>
     </nav>
   );

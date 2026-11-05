@@ -41,7 +41,7 @@ test("homepage is a document in the navy and red palette, not a map shell", () =
   const brand = readFileSync(new URL("../src/content/brand.ts", import.meta.url), "utf8");
   const css = readFileSync(new URL("../src/app/globals.css", import.meta.url), "utf8");
   assert.match(page, /GuideFlow/);
-  assert.match(guide, /Step \{step\} of 5/);
+  assert.match(guide, /Step \{stepNumber\} of 3/);
   assert.match(brand, /Your elections\. All in one place\./);
   assert.equal(page.includes("Landing"), false);
   assert.equal(page.includes("Explore by state"), false);

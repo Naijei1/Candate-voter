@@ -48,7 +48,7 @@ test("the November seed covers every federal race and does not add primary loser
   const page = readFileSync("src/app/races/[raceId]/page.tsx", "utf8");
   assert.match(page, /ballot\.people/);
   assert.match(page, /ElectionDayBanner/);
-  assert.match(readFileSync("src/components/site/ElectionDayBanner.tsx", "utf8"), /ResultsNote/);
+  assert.match(readFileSync("src/components/site/ElectionStatus.tsx", "utf8"), /See official results/);
   const script = readFileSync("scripts/seed-ky-ballot.ts", "utf8");
   assert.match(script, /AWS_REGION=us-east-1 CANDATE_TABLE_NAME=candate-voter npm run seed:ky/);
 });

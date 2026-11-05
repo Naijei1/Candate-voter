@@ -589,7 +589,7 @@ test("a vague who-is-running question asks for a race and does not call the mode
     };
     assert.equal(payload.refused, false);
     assert.equal(payload.mode, "factual");
-    assert.match(payload.answer_markdown, /which state or race/i);
+    assert.match(payload.answer_markdown, /which race/i);
     assert.equal(payload.answer_markdown.includes("Alabama"), false);
     assert.equal(/50 states/i.test(payload.answer_markdown), false);
     assert.equal(/every state/i.test(payload.answer_markdown), false);

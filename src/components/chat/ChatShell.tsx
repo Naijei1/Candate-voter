@@ -134,6 +134,16 @@ export function ChatShell({
         </div>
       ) : null}
       <div className="min-h-0 flex-1 overflow-y-auto">
+        {chat.turns.length === 0 ? (
+          <div className="flex flex-col items-start gap-2 px-4 py-4">
+            <p>Kentucky races. Pick a question, or type your own.</p>
+            {["Who is running for U.S. Senate in Kentucky?", "Who is running in District 3?", "What did Kentucky candidates say about health care?"].map((prompt) => (
+              <button key={prompt} className="btn btn-ghost" type="button" onClick={() => send(prompt)}>
+                {prompt}
+              </button>
+            ))}
+          </div>
+        ) : null}
         <ChatMessageList
           turns={chat.turns}
           pending={chat.pending}
