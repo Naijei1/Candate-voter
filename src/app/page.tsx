@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { GuideFlow, type GuideRace } from "@/components/guide/GuideFlow";
 import { formatMoney } from "@/lib/finance/model";
 import { currentUser } from "@/lib/auth/session";
@@ -48,13 +49,15 @@ export default async function HomePage() {
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-6">
       <p className="mb-4 text-3xl font-semibold tracking-tight text-slate-950">Your elections. All in one place.</p>
-      <GuideFlow races={races} signedIn={user != null} />
+      <Suspense fallback={<p>Loading your ballot…</p>}>
+        <GuideFlow races={races} signedIn={user != null} />
+      </Suspense>
       <section className="mt-10 border-t border-slate-200 pt-8" aria-labelledby="how-heading">
         <h2 id="how-heading" className="text-2xl font-semibold">How it works</h2>
         <ol className="mt-3 list-decimal space-y-2 pl-5 text-slate-800">
           <li>Find your election. A ZIP or the map picks a Kentucky U.S. House district. It is not a full local ballot.</li>
-          <li>Compare your options. The same topics are listed for each person, and only when a source is stored.</li>
-          <li>Follow updates. News and money totals stay on their own pages.</li>
+          <li>See who is running. Every candidate gets the same questions, with sources.</li>
+          <li>Want more? News and campaign money are on their own pages.</li>
         </ol>
       </section>
       <section className="mt-8" aria-labelledby="featured-heading">

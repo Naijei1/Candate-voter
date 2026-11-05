@@ -17,6 +17,7 @@ import { BallotBar } from "@/components/site/BallotBar";
 import { partyMark, PersonMark } from "@/components/site/PersonMark";
 import { KY_BALLOT_CHECKED, calendarDay, kyPerson } from "@/lib/site/ky-ballot";
 import { jobLine, linkLabel, profileFor } from "@/lib/site/profiles";
+import { seatStatus } from "@/lib/site/seat";
 import { portraitFor, stanceIssues, stancesFor } from "@/lib/site/stances";
 import { showcaseCandidate, showcaseRace, type ShowcaseCandidate } from "@/lib/site/showcase";
 import type { Filing, Race } from "@/lib/types";
@@ -85,9 +86,8 @@ export default async function CandidatePage({ params }: PageProps) {
         </p>
       ) : null}
       <h1>{name}</h1>
-      <p className="lede">{partyMark(party).letter} · {party || "Party not listed"} · {ballot?.person.holdsOffice ? "Incumbent" : ballot?.person.role === "write-in" ? "Write-in" : "Challenger"}</p>
+      <p className="lede">{partyMark(party).letter} · {party || "Party not listed"} · {seatStatus({ holds: Boolean(ballot?.person.holdsOffice), writeIn: ballot?.person.role === "write-in", openSeat: ballot ? !ballot.race.people.some((row) => row.holdsOffice) : false }) ?? "On the November ballot"}</p>
       <p>{race ? race.title : ballot ? ballotTitle(ballot.race.raceId) : snap ? "U.S. Senate, Kentucky · 2026" : "Office not listed"}</p>
-      {ballot ? <ElectionDayBanner /> : null}
       <div className="actions sticky-mobile">
         {raceHref ? (
           <Link className="btn btn-navy" href={`${raceHref}/compare`}>
@@ -124,14 +124,10 @@ export default async function CandidatePage({ params }: PageProps) {
         </div>
       </div>
       {profile.bio ? (
-        <p>
-          {profile.bio.text}{" "}
-          <a href={profile.bio.sourceUrl}>{profile.bio.sourceName}</a>
-          <span className="hint"> · {profile.bio.sourceDate}</span>
+        <p className="hint">
+          <a href={profile.bio.sourceUrl}>{profile.bio.sourceName}</a> · {profile.bio.sourceDate}
         </p>
-      ) : (
-        <p>No short biography is stored.</p>
-      )}
+      ) : null}
       <h2>Issue notes</h2>
       <table className="stance-table">
         <thead>
@@ -263,6 +259,7 @@ export default async function CandidatePage({ params }: PageProps) {
         </p>
       ) : null}
       </details>
+      {ballot ? <ElectionDayBanner compact /> : null}
       {raceHref ? (
         <BallotBar place="candidate" backHref={raceHref} nextHref={`${raceHref}/compare`} nextLabel="Compare candidates" />
       ) : null}

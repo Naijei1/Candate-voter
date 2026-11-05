@@ -230,11 +230,9 @@ export function isAlignmentRequest(message: string): boolean {
   return ALIGNMENT.some((pattern) => pattern.test(message));
 }
 
-export const CLARIFY_RACE_MARKDOWN = `Which state or race should I look at?
+export const CLARIFY_RACE_MARKDOWN = `This guide covers Kentucky. Which race should I look at?
 
-I can list **who has an FEC Form 2 filing** once I know the contest. For example, a state and office such as the California Senate or U.S. Senate, California.
-
-I won't guess a national list. Stored records are **Form 2 filings so far**, not a full ballot.`;
+I can list who officially filed to run. For example, U.S. Senate or U.S. House District 3.`;
 
 function mentionsState(message: string): boolean {
   return stateMentionedIn(message) != null;

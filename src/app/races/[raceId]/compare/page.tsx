@@ -63,7 +63,6 @@ export default async function ComparePage({ params }: PageProps) {
         ]}
       />
       <h1>Compare</h1>
-      {ballot ? <ElectionDayBanner /> : null}
       <p className="lede">{race.title}</p>
       {ballot || loaded.filingsLoaded ? null : roster.fecList ? (
         <p className="notice" role="status">
@@ -92,7 +91,7 @@ export default async function ComparePage({ params }: PageProps) {
                     candidateId: person.id,
                     displayName: person.name,
                     partyLabel: person.party,
-                    note: person.role === "write-in" ? "Write-in" : person.holdsOffice ? "Holds this office now" : null,
+                    note: person.role === "write-in" ? "Write-in" : person.holdsOffice ? "Current officeholder" : ballot.people.some((row) => row.holdsOffice) ? null : "Running for an open seat",
                     photo: photo?.src ?? null,
                     photoCredit: photo?.credit ?? null,
                     website: profile.website ? { url: profile.website.url, label: linkLabel(profile.website) } : null,
@@ -119,6 +118,7 @@ export default async function ComparePage({ params }: PageProps) {
         />
         <AskPanel raceId={race.raceId} cycle={race.cycle} state={race.state} />
       </div>
+      {ballot ? <ElectionDayBanner compact /> : null}
       <BallotBar place="candidate" backHref={`/races/${race.raceId}`} nextHref="/" nextLabel="Your ballot" />
     </article>
   );

@@ -55,7 +55,7 @@ export async function SiteHeader() {
             </div>
           </details>
         ) : (
-          <Link href="/sign-in" className="btn btn-cta">
+          <Link href="/sign-in" className="btn btn-ghost">
             Sign in
           </Link>
         )}

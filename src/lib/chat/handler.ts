@@ -19,6 +19,7 @@ import {
   rateLimitSettings,
 } from "./config";
 import { definitionAnswer } from "./definitions";
+import { kentuckyRunningAnswer } from "./kentucky";
 import { notesAnswer } from "./notes";
 import { alignSourceAsOf } from "./freshness";
 import { CHAT_TIMEOUT_MESSAGE, ChatUnavailableError, isAbortError, unavailableBody } from "./errors";
@@ -307,6 +308,12 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
     } catch (error) {
       return json(unavailableBody(error), 503);
     }
+  }
+
+  const kentucky = kentuckyRunningAnswer(asked.message);
+  if (kentucky) {
+    logOutcome({ refused: false, tools: ["kentucky"], latencyMs: Date.now() - started, mode: "factual" });
+    return json(chatBody(kentucky, threadId, asked.message, asked));
   }
 
   if (needsRaceClarification(asked)) {

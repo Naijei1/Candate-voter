@@ -226,10 +226,9 @@ export function suggestedPrompts(context: ChatContextInput): string[] {
     ];
   }
   return [
-    "Who filed in Alaska Senate?",
-    "Show sources for a Senate race",
-    "What was the last FEC update for a candidate?",
-    "List candidates in a race with filing dates",
+    "Who is running for U.S. Senate in Kentucky?",
+    "Who is running in District 3?",
+    "What did Kentucky candidates say about health care?",
   ];
 }
 
