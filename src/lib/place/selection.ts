@@ -37,6 +37,11 @@ export function hasPlace(place: PlaceSelection): boolean {
   return Boolean(place.state || place.year || place.zip || place.district);
 }
 
+/** A saved ZIP stays off the landing page so `/` does not bounce to `/ballot`. */
+export function restoresStoredPlace(pathname: string): boolean {
+  return pathname !== "/";
+}
+
 export function mergePlace(base: PlaceSelection, next: PlaceSelection): PlaceSelection {
   return {
     state: next.state ?? base.state,

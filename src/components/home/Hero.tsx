@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { homeHero } from "@/config/brand";
 import { districtFromPoint } from "@/lib/geo/address-district";
+import { shouldPlayFilm } from "@/lib/site/film";
 
 const MP4 = "/video/vote-hero.mp4";
 const WEBM = "/video/vote-hero.webm";
@@ -37,14 +38,16 @@ export function Hero() {
     const stage = stageRef.current;
     if (!video || !stage || !showVideo) return;
     video.muted = true;
+    let onScreen = false;
     const play = () => {
-      if (document.hidden) return;
+      if (!shouldPlayFilm({ tabHidden: document.hidden, heroOnScreen: onScreen })) return;
       void video.play().catch(() => undefined);
     };
     const pause = () => video.pause();
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry?.isIntersecting) play();
+        onScreen = Boolean(entry?.isIntersecting);
+        if (onScreen) play();
         else pause();
       },
       { threshold: 0.25 },

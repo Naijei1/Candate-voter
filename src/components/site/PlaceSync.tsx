@@ -8,6 +8,7 @@ import {
   hasPlace,
   mergePlace,
   readPlaceParams,
+  restoresStoredPlace,
   sanitizePlace,
 } from "@/lib/place/selection";
 
@@ -24,7 +25,7 @@ export function PlaceSync() {
     if (hasPlace(fromUrl) || pathState) {
       writeStored(mergePlace(stored, mergePlace(fromPath, fromUrl)));
     }
-    if (!hasPlace(fromUrl) && hasPlace(stored)) {
+    if (!hasPlace(fromUrl) && hasPlace(stored) && restoresStoredPlace(pathname)) {
       const next = new URLSearchParams(params.toString());
       const place = mergePlace(stored, fromPath);
       if (place.state) next.set("state", place.state);
