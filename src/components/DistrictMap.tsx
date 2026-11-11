@@ -107,43 +107,41 @@ export function DistrictMap({
               ]
                 .filter(Boolean)
                 .join(" ");
-              if (!race) {
-                return (
-                  <path key={shape.district} d={shape.d} className={className} fillRule="evenodd">
-                    <title>{label}</title>
-                  </path>
-                );
-              }
               return (
-                <path
-                  key={race.raceId}
-                  d={shape.d}
-                  className={className}
-                  fillRule="evenodd"
-                  role="link"
-                  tabIndex={0}
-                  aria-label={label}
-                  onMouseEnter={() => setHover(label)}
-                  onMouseLeave={() => setHover(null)}
-                  onFocus={() => setHover(label)}
-                  onBlur={() => setHover(null)}
-                  onClick={() => openRace(race.raceId)}
-                  onKeyDown={(event: KeyboardEvent<SVGPathElement>) => {
-                    if (event.key === "Enter" || event.key === " ") {
-                      event.preventDefault();
-                      openRace(race.raceId);
-                    }
-                  }}
-                >
-                  <title>{label}</title>
-                </path>
+                <g key={shape.district}>
+                  {race ? (
+                    <path
+                      d={shape.d}
+                      className={className}
+                      fillRule="evenodd"
+                      role="link"
+                      tabIndex={0}
+                      aria-label={label}
+                      onMouseEnter={() => setHover(label)}
+                      onMouseLeave={() => setHover(null)}
+                      onFocus={() => setHover(label)}
+                      onBlur={() => setHover(null)}
+                      onClick={() => openRace(race.raceId)}
+                      onKeyDown={(event: KeyboardEvent<SVGPathElement>) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          openRace(race.raceId);
+                        }
+                      }}
+                    >
+                      <title>{label}</title>
+                    </path>
+                  ) : (
+                    <path d={shape.d} className={className} fillRule="evenodd">
+                      <title>{label}</title>
+                    </path>
+                  )}
+                  <text className="cd-label" x={shape.labelX} y={shape.labelY} textAnchor="middle">
+                    {Number(shape.district)}
+                  </text>
+                </g>
               );
             })}
-            {shapes.map((shape) => (
-              <text key={`label-${shape.district}`} className="cd-label" x={shape.labelX} y={shape.labelY} textAnchor="middle">
-                {Number(shape.district)}
-              </text>
-            ))}
           </svg>
           </MapGesture>
         )}
@@ -175,7 +173,7 @@ function districtLabel(postal: string, district: string, has: boolean, yours: bo
       ? isSingleSeat(postal)
         ? `${stateName(postal)} at-large`
         : stateName(postal)
-      : `${stateName(postal)} District ${Number(district)}`;
+      : `U.S. House District ${Number(district)}`;
   const filing = has ? "has candidates" : "no one has filed yet";
   return yours ? `${place}, you are here, ${filing}` : `${place}, ${filing}`;
 }

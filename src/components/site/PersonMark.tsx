@@ -16,11 +16,12 @@ export function PersonMark({
   name: string;
   photo: string | null;
   party?: string;
-  size?: "md" | "lg";
+  size?: "sm" | "md" | "lg";
 }) {
   const mark = partyMark(party);
+  const px = size === "lg" ? 160 : size === "sm" ? 72 : 96;
   if (photo) {
-    return <img className={`person-photo ${size}`} src={photo} alt="" width={size === "lg" ? 160 : 96} height={size === "lg" ? 160 : 96} />;
+    return <img className={`person-photo ${size}`} src={photo} alt="" width={px} height={px} />;
   }
   return (
     <span className={`person-initials ${mark.tone} ${size}`} aria-hidden>

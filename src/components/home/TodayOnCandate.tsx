@@ -12,16 +12,19 @@ export async function TodayOnCandate() {
         <div>
           <h3>Posts on X</h3>
           {posts.length === 0 ? <p>No recent posts are on file.</p> : null}
-          <ul className="card-grid">
-            {posts.map((post) => (
-              <li className="card" key={post.id}>
+        <ul className="card-grid">
+          {posts.map((post) => (
+            <li key={post.id}>
+              <a className="feed-card" href={post.url}>
+                <h3>{post.name}</h3>
                 <p>{post.text}</p>
-                <p className="hint">
-                  {post.name} @{post.handle} · {post.createdAt} · <a href={post.url}>X</a>
+                <p className="meta">
+                  {post.createdAt} · X · @{post.handle}
                 </p>
-              </li>
-            ))}
-          </ul>
+              </a>
+            </li>
+          ))}
+        </ul>
         </div>
       ) : null}
       <div>
@@ -54,12 +57,14 @@ function CardList({ cards }: { cards: TodayCard[] }) {
   return (
     <ul className="card-grid">
       {cards.map((card) => (
-        <li className="card" key={card.id}>
-          <h4>{card.title}</h4>
-          <p>{card.text}</p>
-          <p className="hint">
-            {card.when} · <a href={card.sourceUrl}>{card.sourceName}</a>
-          </p>
+        <li key={card.id}>
+          <a className="feed-card" href={card.sourceUrl}>
+            <h3>{card.title}</h3>
+            <p>{card.text}</p>
+            <p className="meta">
+              {card.when} · {card.sourceName}
+            </p>
+          </a>
         </li>
       ))}
     </ul>

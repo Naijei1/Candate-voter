@@ -36,10 +36,17 @@ test("the home page leads with the hero, the Kentucky map, and stored records", 
   assert.match(page, /DistrictMap/);
   assert.match(page, /TodayOnCandate/);
   assert.equal(page.includes("Kentucky Lantern"), false);
+  assert.equal(page.includes("<input"), false);
+  assert.match(page, /redirect\(`\/ballot/);
   assert.equal(page.includes("latestNews"), false);
   assert.match(hero, /prefers-reduced-motion/);
-  assert.match(hero, /Pause video/);
+  assert.match(hero, /Find my races/);
+  assert.match(hero, /Use my location/);
+  assert.equal(hero.includes("Pause video"), false);
+  assert.equal(hero.includes("Play video"), false);
   assert.match(hero, /vote-hero\.mp4/);
+  assert.match(hero, /IntersectionObserver/);
+  assert.match(readFileSync("docs/sources.md", "utf8"), /2\.2\.2/);
   assert.match(readFileSync("src/config/brand.ts", "utf8"), /headline: "Vote\."/);
   assert.match(readFileSync("docs/sources.md", "utf8"), /X_BEARER_TOKEN/);
 });

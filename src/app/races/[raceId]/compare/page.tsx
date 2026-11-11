@@ -50,7 +50,9 @@ export default async function ComparePage({ params }: PageProps) {
     : [];
   const direct = [...liveDirect, ...rosterDirect];
   const outside = selectOutside(finance.outside, null).filter((row) => ids.has(row.candidateId));
-  const stories = ballot ? await newsForNames(ballot.people.map((person) => person.name)) : [];
+  const stories = (ballot ? await newsForNames(ballot.people.map((person) => person.name)) : []).filter(
+    (story) => !/\b(wins|won|elected|victory)\b/i.test(story.title),
+  );
   const stateHref = race.state ? `/states/${race.state.toLowerCase()}` : "/states";
 
   return (
@@ -91,7 +93,7 @@ export default async function ComparePage({ params }: PageProps) {
                     candidateId: person.id,
                     displayName: person.name,
                     partyLabel: person.party,
-                    note: person.role === "write-in" ? "Write-in" : person.holdsOffice ? "Current officeholder" : ballot.people.some((row) => row.holdsOffice) ? null : "Running for an open seat",
+                    note: person.role === "write-in" ? "Write-in" : person.holdsOffice ? "Current officeholder" : "On the November ballot",
                     photo: photo?.src ?? null,
                     photoCredit: photo?.credit ?? null,
                     website: profile.website ? { url: profile.website.url, label: linkLabel(profile.website) } : null,

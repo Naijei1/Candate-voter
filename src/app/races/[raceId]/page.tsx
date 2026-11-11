@@ -9,16 +9,13 @@ import { Crumbs } from "@/components/site/Crumbs";
 import { FollowControl } from "@/components/site/FollowControl";
 import { ElectionDayBanner } from "@/components/site/ElectionDayBanner";
 import { BallotBar } from "@/components/site/BallotBar";
-import { partyMark, PersonMark } from "@/components/site/PersonMark";
-import { seatStatus } from "@/lib/site/seat";
+import { PersonFace } from "@/components/site/PersonFace";
+import { openSeatLine } from "@/lib/site/seat";
 import { KY_BALLOT_CHECKED, KY_BALLOT_SOURCES, calendarDay, kyBallot, kyBallotIds } from "@/lib/site/ky-ballot";
-import { newsForNames } from "@/lib/site/ky-news";
-import { jobLine } from "@/lib/site/profiles";
-import { portraitFor, stancesFor } from "@/lib/site/stances";
+import { portraitFor } from "@/lib/site/stances";
 import { cardsForRace } from "@/lib/site/showcase";
 import { personFilingNote } from "@/lib/data/filing-note";
 import { generalElectionLabel } from "@/lib/copy";
-import { formatMoney } from "@/lib/finance/model";
 import { httpsUrl } from "@/lib/format";
 import { loadChecks } from "@/lib/content/store";
 import { loadContest } from "@/lib/site/contest";
@@ -43,7 +40,6 @@ export default async function RacePage({ params }: PageProps) {
   const roster = cardsForRace(race.raceId, loaded.candidates, loaded.filingsLoaded);
   const checks = await loadChecks("race", race.raceId);
   const ballotIds = ballot ? kyBallotIds(ballot) : null;
-  const stories = ballot ? await newsForNames(ballot.people.map((person) => person.name)) : [];
   const others = ballotIds
     ? loaded.candidates.filter((candidate) => !ballotIds.has(candidate.candidateId) && !ballotIds.has(candidate.fecCandidateId ?? ""))
     : [];
@@ -96,30 +92,26 @@ export default async function RacePage({ params }: PageProps) {
               <Link className="btn btn-navy" href={`/races/${race.raceId}/compare`}>
                 Compare candidates
               </Link>
-              <Link className="btn btn-ghost" href="/">
+              <Link className="btn btn-ghost" href="/ballot">
                 Your ballot
               </Link>
             </div>
+            {openSeatLine(ballot.people.some((person) => person.holdsOffice)) ? <p>{openSeatLine(ballot.people.some((person) => person.holdsOffice))}</p> : null}
             {ballot.note ? <p>{ballot.note}</p> : null}
-            <ul className="person-grid">
+            <ul className="person-list">
               {[...ballot.people].sort((a, b) => a.name.localeCompare(b.name)).map((person) => {
                 const photo = portraitFor(person.id);
-                const notes = stancesFor(person.id);
                 return (
                 <li key={person.id}>
-                  <Link className="choice-card person-choice" href={`/candidates/${person.id}`}>
-                    <PersonMark name={person.name} photo={photo?.src ?? null} party={person.party} size="lg" />
-                    <span>
-                      <span className="block text-2xl font-semibold">{person.name}</span>
-                      <span className="party">{partyMark(person.party).letter} · {person.party}</span>
-                      <span className="mt-1 block">{seatStatus({ holds: person.holdsOffice, writeIn: person.role === "write-in", openSeat: !ballot.people.some((row) => row.holdsOffice) }) ?? "On the November ballot"}</span>
-                      <span className="mt-2 block">{jobLine(person.id) ?? "No job line is stored."}</span>
-                      <span className="mt-2 block">{person.finance ? `Raised ${formatRaceMoney(person.finance.receipts)}` : "No money total is stored."}</span>
-                      <span className="mt-1 block">{notes[0] ? notes[0].text : "No public stance found."}</span>
-                      {photo ? <span className="hint mt-2 block">{photo.credit}</span> : null}
-                    </span>
-                    <span className="view-label">View ›</span>
-                  </Link>
+                  <PersonFace
+                    name={person.name}
+                    party={person.party}
+                    photo={photo?.src ?? null}
+                    holds={person.holdsOffice}
+                    writeIn={person.role === "write-in"}
+                    href={`/candidates/${person.id}`}
+                  />
+                  {photo ? <p className="hint">{photo.credit}</p> : null}
                 </li>
                 );
               })}
@@ -129,23 +121,6 @@ export default async function RacePage({ params }: PageProps) {
               match the Clerk of the House list published Oct 8, 2026.{" "}
               <a href={KY_BALLOT_SOURCES[0].url}>Filing list</a>
             </p>
-            {stories.length > 0 ? (
-              <section aria-labelledby="news-heading">
-                <h2 id="news-heading">News</h2>
-                <ul className="plain-list">
-                  {stories.map((story) => (
-                    <li key={story.url}>
-                      <a href={story.url}>{story.title}</a>
-                      <span className="hint">
-                        {" "}
-                        {story.source}
-                        {story.date ? ` · ${story.date}` : ""}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            ) : null}
             {others.length > 0 ? (
               <details>
                 <summary>Filed earlier, not on the November list ({others.length})</summary>
@@ -204,10 +179,6 @@ export default async function RacePage({ params }: PageProps) {
       ) : null}
     </article>
   );
-}
-
-function formatRaceMoney(value: number): string {
-  return formatMoney(value);
 }
 
 function publicFilingNote(note: string | null): string | null {

@@ -121,7 +121,7 @@ export function SignInForm({ configured, googleUrl = null }: { configured: boole
           />
         </label>
       )}
-      <button className="btn btn-cta" type="submit" disabled={busy}>
+      <button className="btn btn-navy" type="submit" disabled={busy}>
         {title}
       </button>
       {message ? (

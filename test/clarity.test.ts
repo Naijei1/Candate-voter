@@ -260,7 +260,7 @@ test("home and ask copy stay plain and the map does not lead with Popular", () =
   const looking = readFileSync(new URL("../src/components/StateScoreboard.tsx", import.meta.url), "utf8");
   const ask = readFileSync(new URL("../src/components/chat/ChatMessageList.tsx", import.meta.url), "utf8");
   const shell = readFileSync(new URL("../src/components/chat/ChatShell.tsx", import.meta.url), "utf8");
-  const header = readFileSync(new URL("../src/components/SiteHeader.tsx", import.meta.url), "utf8");
+  const header = `${readFileSync(new URL("../src/components/SiteHeader.tsx", import.meta.url), "utf8")}\n${readFileSync(new URL("../src/components/site/HeaderFrame.tsx", import.meta.url), "utf8")}`;
   const footer = readFileSync(new URL("../src/components/SiteFooter.tsx", import.meta.url), "utf8");
   assert.equal(landing.includes("WhatAmILookingAt"), false);
   assert.equal(landing.includes("ChromeInfo"), false);
@@ -279,8 +279,11 @@ test("home and ask copy stay plain and the map does not lead with Popular", () =
   assert.equal(landing.includes("1 candidate so far"), false);
   assert.equal(landing.includes("candidates so far"), false);
   assert.equal(looking.includes("What am I looking at"), false);
-  assert.match(header, /Explore/);
+  assert.match(header, /Find my races/);
+  assert.match(header, /Updates/);
   assert.match(header, /Sign in/);
+  assert.equal(header.includes("Polls"), false);
+  assert.equal(header.includes(">Explore<"), false);
   assert.equal(header.includes("map-chrome-info"), false);
   assert.match(footer, /does not endorse/);
   assert.match(footer, /Privacy/);
