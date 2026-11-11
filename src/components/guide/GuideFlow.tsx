@@ -70,6 +70,23 @@ export function GuideFlow({ races }: { races: GuideRace[]; signedIn: boolean }) 
   }, [zipParam]);
 
   useEffect(() => {
+    if (step === "zip" || district || !/^\d{5}$/.test(zipParam)) return;
+    let cancel = false;
+    void (async () => {
+      const result = await settleZipLookup(findRacesByZip(zipParam, 2026));
+      if (cancel || !result.ok || result.payload.state !== "KY" || result.payload.districts.length !== 1) return;
+      const found = result.payload.districts[0]?.district ?? null;
+      if (!found) return;
+      const query = new URLSearchParams({ zip: zipParam, district: found, step });
+      if (raceParam) query.set("race", raceParam);
+      router.push(`/ballot?${query.toString()}`);
+    })();
+    return () => {
+      cancel = true;
+    };
+  }, [district, raceParam, router, step, zipParam]);
+
+  useEffect(() => {
     try {
       const saved = JSON.parse(localStorage.getItem(STORAGE) ?? "null") as Saved | null;
       if (!saved) return;
@@ -99,7 +116,7 @@ export function GuideFlow({ races }: { races: GuideRace[]; signedIn: boolean }) 
     if (nextStep && nextStep !== "zip") query.set("step", nextStep);
     if (nextRace && nextStep !== "zip" && nextStep !== "races") query.set("race", nextRace);
     const text = query.toString();
-    router.push(text ? `/?${text}` : "/");
+    router.push(text ? `/ballot?${text}` : "/ballot");
   }
 
   const ballot = useMemo(
@@ -211,9 +228,9 @@ export function GuideFlow({ races }: { races: GuideRace[]; signedIn: boolean }) 
                   <MapPin className="size-5" /> Use my location
                 </Button>
                 <p className="text-center">
-                  <Link href="/map">Pick on the map</Link>
+                  <Link href="/#map">Pick a district on the map</Link>
                 </p>
-                {note ? <p id="zip-error" role="alert" className="font-semibold text-[#b32635]">{note}</p> : null}
+                {note ? <p id="zip-error" role="alert" className="font-semibold text-[#9b1c2e]">{note}</p> : null}
               </Card>
               <div className="mt-4">
                 <ElectionStatus />
@@ -225,7 +242,10 @@ export function GuideFlow({ races }: { races: GuideRace[]; signedIn: boolean }) 
             <section>
               <h1 ref={headingRef} tabIndex={-1} className="mb-2 text-4xl font-semibold tracking-tight">Your ballot</h1>
               {district ? (
-                <p className="mb-4 text-lg text-slate-700">{`You're in KY-${district.padStart(2, "0")}. You'll vote on ${ballot.length} races.`}</p>
+                <>
+                  <p className="mb-4 text-lg text-slate-700">{`You're in KY-${district.padStart(2, "0")}. You'll vote on ${ballot.length} federal races.`}</p>
+                  <p className="mb-4">It is not your full local ballot.</p>
+                </>
               ) : (
                 <p className="mb-4">Go back and add a ZIP so this list is your U.S. House district plus the Senate race.</p>
               )}
@@ -234,13 +254,16 @@ export function GuideFlow({ races }: { races: GuideRace[]; signedIn: boolean }) 
                   <button key={race.id} className="choice-card" type="button" disabled={!district} onClick={() => push({ step: "race", race: race.id })}>
                     <span>
                       <span className="block text-2xl font-semibold">{race.title}</span>
-                      <span className="mt-1 block text-slate-700">{race.people.length} people on the November list. Results: see official count</span>
+                      <span className="mt-1 block text-slate-700">
+                        {!race.people.some((person) => person.holds) ? "Open seat: no current officeholder is running. " : ""}
+                        {race.people.length} people on the November list
+                      </span>
                     </span>
                     <span className="view-label">See the candidates <ChevronRight className="inline size-5" aria-hidden /></span>
                   </button>
                 ))}
               </div>
-              <p className="mt-4"><a href={KY_RESULTS_LINKS[1].href}>Results: see official count</a></p>
+              <p className="mt-4"><a href={KY_RESULTS_LINKS[1].href}>See official results</a></p>
             </section>
           ) : null}
 
@@ -348,7 +371,6 @@ export function GuideFlow({ races }: { races: GuideRace[]; signedIn: boolean }) 
                 router.push(`/races/${current.id}/compare?zip=${zipParam}&district=${district ?? ""}`);
               }
             }}>{step === "race" && current && ballot.findIndex((race) => race.id === current.id) < ballot.length - 1 ? `Next race: ${ballot[ballot.findIndex((race) => race.id === current.id) + 1]?.title ?? "Next"}` : step === "race" ? "Compare side by side" : "Next"}</Button>
-            <Button className="hide-narrow" variant="ghost" onClick={() => push({ step: "zip", race: null })}>Change ZIP</Button>
           </div>
         </div>
       ) : null}

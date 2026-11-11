@@ -27,6 +27,7 @@ export const AMPLIFY_SERVER_ENV_KEYS = Object.freeze([
   "COGNITO_GOOGLE",
   "ADMIN_EMAILS",
   "CANDATE_MEDIA_BUCKET",
+  "X_BEARER_TOKEN",
 ]);
 
 /** Prefix copied in addition to the named keys. `FEC_API_KEY` does not match. */

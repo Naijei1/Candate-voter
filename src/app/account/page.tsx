@@ -15,7 +15,7 @@ export default async function AccountPage() {
         <h1>Saved races and alerts</h1>
         <p className="lede">Sign in to save follows and notification settings. The news feed is a separate choice.</p>
         <p>
-          <Link className="btn btn-cta" href="/sign-in">
+          <Link className="btn btn-navy" href="/sign-in">
             Sign in
           </Link>
         </p>
