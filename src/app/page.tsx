@@ -1,5 +1,9 @@
 import { Suspense } from "react";
+import { DistrictMap } from "@/components/DistrictMap";
 import { GuideFlow, type GuideRace } from "@/components/guide/GuideFlow";
+import { Hero } from "@/components/home/Hero";
+import { TodayOnCandate } from "@/components/home/TodayOnCandate";
+import { ElectionStatus } from "@/components/site/ElectionStatus";
 import { formatMoney } from "@/lib/finance/model";
 import { currentUser } from "@/lib/auth/session";
 import { kyBallot, kyBallotSeed } from "@/lib/site/ky-ballot";
@@ -14,7 +18,10 @@ const JOB = {
   house: "Writes and votes on federal laws for this district. The term is two years.",
 };
 
-export default async function HomePage() {
+type HomePageProps = { searchParams: Promise<{ step?: string }> };
+
+export default async function HomePage({ searchParams }: HomePageProps) {
+  const step = (await searchParams).step ?? "zip";
   const user = await currentUser();
   const races: GuideRace[] = kyBallotSeed().races.map((race) => {
     const ballot = race.office === "senate" ? "senate" : "house";
@@ -46,35 +53,33 @@ export default async function HomePage() {
       };
     });
   }
+  const house = kyBallotSeed().races.filter((race) => race.office === "house");
+  if (step !== "zip") {
+    return (
+      <div className="mx-auto w-full max-w-3xl px-4 py-6">
+        <Suspense fallback={<p>Loading your ballot…</p>}>
+          <GuideFlow races={races} signedIn={user != null} />
+        </Suspense>
+      </div>
+    );
+  }
   return (
-    <div className="mx-auto w-full max-w-3xl px-4 py-6">
-      <p className="mb-4 text-3xl font-semibold tracking-tight text-slate-950">Your elections. All in one place.</p>
-      <Suspense fallback={<p>Loading your ballot…</p>}>
-        <GuideFlow races={races} signedIn={user != null} />
-      </Suspense>
-      <section className="mt-10 border-t border-slate-200 pt-8" aria-labelledby="how-heading">
-        <h2 id="how-heading" className="text-2xl font-semibold">How it works</h2>
-        <ol className="mt-3 list-decimal space-y-2 pl-5 text-slate-800">
-          <li>Find your election. A ZIP or the map picks a Kentucky U.S. House district. It is not a full local ballot.</li>
-          <li>See who is running. Every candidate gets the same questions, with sources.</li>
-          <li>Want more? News and campaign money are on their own pages.</li>
-        </ol>
+    <>
+      <Hero />
+      <div className="wrap home-election">
+        <ElectionStatus />
+      </div>
+      <section className="wrap home-map" aria-labelledby="map-heading">
+        <h2 id="map-heading">Kentucky districts</h2>
+        <p>Tap a numbered district. The colored shape opens that U.S. House race. No ZIP required.</p>
+        <DistrictMap postal="KY" races={house} year={2026} />
       </section>
-      <section className="mt-8" aria-labelledby="featured-heading">
-        <h2 id="featured-heading" className="text-2xl font-semibold">November 3, 2026</h2>
-        <p className="mt-2 text-slate-700">Kentucky federal races on the general-election filing list.</p>
-        <ul className="mt-3 space-y-2">
-          {races.map((race) => (
-            <li key={race.id}>
-              <a className="font-semibold text-[#1e3a8a]" href={`/races/${race.id}`}>{race.title}</a>
-              <span className="text-slate-600"> · Nov 3, 2026 · {race.people.length} on the November list</span>
-            </li>
-          ))}
-        </ul>
-        <p className="mt-3 text-sm text-slate-600">
-          Source: <a href={KY_BALLOT_SOURCES[0].url}>{KY_BALLOT_SOURCES[0].name}</a>, checked 2026-11-03.
+      <div className="wrap">
+        <TodayOnCandate />
+        <p className="hint">
+          Ballot names: <a href={KY_BALLOT_SOURCES[0].url}>{KY_BALLOT_SOURCES[0].name}</a>, checked 2026-11-03.
         </p>
-      </section>
-    </div>
+      </div>
+    </>
   );
 }
