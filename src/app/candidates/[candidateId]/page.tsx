@@ -94,7 +94,7 @@ export default async function CandidatePage({ params }: PageProps) {
             Compare
           </Link>
         ) : null}
-        <Link className="btn btn-ghost" href="/">
+        <Link className="btn btn-ghost" href="/ballot">
           Your ballot
         </Link>
       </div>

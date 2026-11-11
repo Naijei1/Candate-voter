@@ -121,7 +121,7 @@ export default async function ComparePage({ params }: PageProps) {
         <AskPanel raceId={race.raceId} cycle={race.cycle} state={race.state} />
       </div>
       {ballot ? <ElectionDayBanner compact /> : null}
-      <BallotBar place="candidate" backHref={`/races/${race.raceId}`} nextHref="/" nextLabel="Your ballot" />
+      <BallotBar place="candidate" backHref={`/races/${race.raceId}`} nextHref="/ballot" nextLabel="Your ballot" />
     </article>
   );
 }

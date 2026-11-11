@@ -568,8 +568,7 @@ a {
   min-height: 24px;
 }
 
-.page-main a:not(.btn):not(.choice-card):not(.feed-card):not(.person-face),
-.site-footer a {
+.page-main a:not(.btn):not(.choice-card):not(.feed-card):not(.person-face) {
   text-decoration: underline;
   text-underline-offset: 0.18em;
 }
@@ -1138,6 +1137,17 @@ td {
   padding: 2rem 0 calc(2rem + env(safe-area-inset-bottom));
   color: var(--color-hero-sub);
   font-size: 1rem;
+}
+
+.site-footer a {
+  color: #fff;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+.site-footer a:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 2px;
 }
 
 .footer-links {
