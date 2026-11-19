@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, useState } from "react";
+import { targetLines } from "@/lib/site/money-chart-lines";
 import type { ChartCommittee, ChartRace, MoneyChartData } from "@/lib/site/money-charts";
 
 const FULL = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
@@ -64,7 +65,7 @@ function RaceChart({ race }: { race: ChartRace }) {
       ) : null}
       <details className="chart-table">
         <summary>Show these numbers as a table</summary>
-        <div className="table-scroll">
+        <div className="table-scroll" tabIndex={0} role="region" aria-label={`${race.title}: money each campaign reported, table`}>
           <table>
             <caption className="sr-only">{race.title}: money each campaign reported to the FEC</caption>
             <thead>
@@ -97,40 +98,54 @@ function RaceChart({ race }: { race: ChartRace }) {
 }
 
 function CommitteeChart({ committees, asOf }: { committees: readonly ChartCommittee[]; asOf: string }) {
-  const max = Math.max(1, ...committees.map((row) => row.total));
+  const max = Math.max(1, ...committees.flatMap((row) => targetLines(row).map((line) => line.amount)));
   return (
     <figure className="chart">
       <figcaption className="chart-title">Outside groups that spent the most on these races</figcaption>
       <p className="hint">Money groups spent on their own to support or oppose a candidate. It is not money the campaigns received.</p>
+      <ul className="chart-legend" aria-hidden="true">
+        <li>
+          <span className="chart-swatch s-support" />
+          Spent to support
+        </li>
+        <li>
+          <span className="chart-swatch s-oppose" />
+          Spent to oppose
+        </li>
+      </ul>
       {committees.length === 0 ? <p>No outside spending is stored for these candidates.</p> : null}
       <ul className="chart-rows">
         {committees.map((row) => (
           <li key={row.committeeId} className="chart-row">
             <p className="chart-label">
               <a href={`/finance/committees/${row.committeeId}`}>{row.name}</a>
-              <span className="chart-sub"> · {row.candidates.join(", ")}</span>
             </p>
-            <div className="chart-bar-line">
-              <span className="chart-bar-name">Total</span>
-              <span className="chart-track" aria-hidden="true">
-                <span className="chart-bar s-outside" style={{ width: pct(row.total, max) }} />
-              </span>
-              <span className="chart-value">{shortMoney(row.total)}</span>
-            </div>
+            {targetLines(row).map((line) => (
+              <div key={line.key} className="chart-target">
+                <span className="chart-target-label">{line.label}</span>
+                <div className="chart-bar-line chart-bar-line-wide">
+                  <span className="chart-track" aria-hidden="true">
+                    <span className={`chart-bar s-${line.direction}`} style={{ width: pct(line.amount, max) }} />
+                  </span>
+                  <span className="chart-value">{shortMoney(line.amount)}</span>
+                </div>
+              </div>
+            ))}
           </li>
         ))}
       </ul>
       {committees.length > 0 ? (
         <details className="chart-table">
           <summary>Show these numbers as a table</summary>
-          <div className="table-scroll">
+          <div className="table-scroll" tabIndex={0} role="region" aria-label="Outside spending by group, table">
             <table>
               <caption className="sr-only">Outside spending by group</caption>
               <thead>
                 <tr>
                   <th scope="col">Group</th>
-                  <th scope="col">Supporting</th>
-                  <th scope="col">Opposing</th>
+                  <th scope="col">Candidates</th>
+                  <th scope="col">Spent to support</th>
+                  <th scope="col">Spent to oppose</th>
                   <th scope="col">Total</th>
                   <th scope="col">Source</th>
                 </tr>
@@ -139,6 +154,15 @@ function CommitteeChart({ committees, asOf }: { committees: readonly ChartCommit
                 {committees.map((row) => (
                   <tr key={row.committeeId}>
                     <th scope="row">{row.name}</th>
+                    <td>
+                      {row.targets
+                        .map((target) =>
+                          [target.support > 0 ? `supported ${target.name}` : null, target.oppose > 0 ? `opposed ${target.name}` : null]
+                            .filter(Boolean)
+                            .join(", "),
+                        )
+                        .join("; ")}
+                    </td>
                     <td>{FULL.format(row.support)}</td>
                     <td>{FULL.format(row.oppose)}</td>
                     <td>{FULL.format(row.total)}</td>

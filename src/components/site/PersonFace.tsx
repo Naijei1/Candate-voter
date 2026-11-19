@@ -29,7 +29,9 @@ export function PersonFace({
   href?: string;
 }) {
   const badge = partyBadge(party);
-  const status = seatStatus({ holds, writeIn, openSeat: !holds });
+  const rawStatus = seatStatus({ holds, writeIn, openSeat: !holds });
+  /** The badge already says "Write-in"; don't repeat it. */
+  const status = rawStatus === badge.label ? null : rawStatus;
   const body = (
     <>
       <PersonMark name={name} photo={photo} party={party} size="sm" />

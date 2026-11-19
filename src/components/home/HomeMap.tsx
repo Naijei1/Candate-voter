@@ -5,8 +5,8 @@ import { useState, type KeyboardEvent, type ReactNode } from "react";
 import type { MapView } from "@/lib/site/map-view";
 
 const VIEWS: { id: MapView; label: string }[] = [
-  { id: "congressional", label: "Congressional districts" },
-  { id: "statewide", label: "Statewide" },
+  { id: "congressional", label: "District map" },
+  { id: "statewide", label: "Statewide officeholders" },
 ];
 
 /** Toggle between the House district map and the statewide officeholders. */

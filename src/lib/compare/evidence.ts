@@ -114,14 +114,30 @@ export function compareBasis(raceId: string): CompareBasis | null {
   return { raceId, title: compareTitle(raceId), people, evidence, know: know.filter((claim) => claim.cites.length > 0) };
 }
 
-/** Plain refusal text, used when a section has nothing it can cite. */
-export const REFUSALS = {
-  notEnough:
-    "We don't have cited statements or votes from at least two candidates in this race, so we can't say where they differ or agree.",
-  differ: "Our records don't show a clear difference we can cite.",
-  agree: "Our records don't show a point of agreement we can cite.",
-  unavailable: "The AI summary isn't available right now. Below is what each candidate said, with sources, so you can compare for yourself.",
-} as const;
+/** What the home page sends to the browser for one race: the title and ballot facts only. Candidate records load on demand. */
+export type CompareOption = {
+  raceId: string;
+  title: string;
+  know: Claim[];
+  /** The ballot-source rows the "what to know" claims cite. */
+  ballot: Evidence[];
+};
+
+export function compareOption(basis: CompareBasis): CompareOption {
+  return {
+    raceId: basis.raceId,
+    title: basis.title,
+    know: basis.know,
+    ballot: basis.evidence.filter((row) => !row.personId),
+  };
+}
+
+/** Candidate statement and vote rows for one race. Sent with each compare answer. */
+export function candidateEvidence(basis: CompareBasis): Evidence[] {
+  return basis.evidence.filter((row) => row.personId);
+}
+
+export { REFUSALS } from "./refusals";
 
 export function candidatesWithEvidence(basis: CompareBasis): number {
   return new Set(basis.evidence.filter((row) => row.personId).map((row) => row.personId)).size;

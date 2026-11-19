@@ -13,10 +13,13 @@ export type CardPerson = {
   photo: string | null;
 };
 
-/** One label per card. Open seats never use "Challenger". */
-export function seatLabel(person: Pick<CardPerson, "holdsOffice" | "openSeat" | "writeIn">): string | null {
-  if (person.holdsOffice) return "Incumbent";
-  if (person.writeIn) return "Write-in";
+/**
+ * One label per card, in plain words. Open seats never use "Challenger".
+ * Write-ins get no second label when the party badge already says "Write-in".
+ */
+export function seatLabel(person: Pick<CardPerson, "holdsOffice" | "openSeat" | "writeIn"> & { party?: string }): string | null {
+  if (person.holdsOffice) return "Current officeholder";
+  if (person.writeIn) return person.party && partyBadge(person.party).label === "Write-in" ? null : "Write-in";
   if (person.openSeat) return "Running for an open seat";
   return null;
 }
