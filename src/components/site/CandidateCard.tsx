@@ -1,0 +1,49 @@
+import Link from "next/link";
+import { PersonMark } from "@/components/site/PersonMark";
+import { partyBadge } from "@/components/site/PersonFace";
+
+export type CardPerson = {
+  id: string;
+  name: string;
+  party: string;
+  office: string;
+  holdsOffice: boolean;
+  openSeat: boolean;
+  writeIn: boolean;
+  photo: string | null;
+};
+
+/** One label per card. Open seats never use "Challenger". */
+export function seatLabel(person: Pick<CardPerson, "holdsOffice" | "openSeat" | "writeIn">): string | null {
+  if (person.holdsOffice) return "Incumbent";
+  if (person.writeIn) return "Write-in";
+  if (person.openSeat) return "Running for an open seat";
+  return null;
+}
+
+export function CandidateCard({ person }: { person: CardPerson }) {
+  const badge = partyBadge(person.party);
+  const label = seatLabel(person);
+  return (
+    <li className="cand-card">
+      <Link className="cand-link" href={`/candidates/${person.id}`}>
+        <span className="cand-photo">
+          {person.photo ? (
+            <img src={person.photo} alt="" width={320} height={240} loading="lazy" />
+          ) : (
+            <PersonMark name={person.name} photo={null} party={person.party} size="lg" />
+          )}
+          <span className={`cand-party ${badge.tone}`}>{badge.label}</span>
+        </span>
+        <span className="cand-body">
+          <span className="cand-name">{person.name}</span>
+          <span className="cand-office">{person.office}</span>
+          {label ? <span className={`cand-status${person.holdsOffice ? " is-incumbent" : ""}`}>{label}</span> : null}
+          <span className="cand-cta">
+            View profile <span aria-hidden="true">→</span>
+          </span>
+        </span>
+      </Link>
+    </li>
+  );
+}

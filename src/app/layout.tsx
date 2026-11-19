@@ -25,18 +25,37 @@ const display = localFont({
 });
 
 export const viewport: Viewport = {
+  themeColor: "#0b1a2a",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
 };
 
+/** Absolute base for social preview images. `SITE_ORIGIN` overrides the live Amplify address. */
+const siteOrigin = process.env.SITE_ORIGIN?.trim() || "https://main.d253xhq1uabld3.amplifyapp.com";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteOrigin),
   title: {
     default: brand.name,
     template: `%s · ${brand.name}`,
   },
-  description:
-    "Find a contest, compare candidates on the same fields, and see the source of each fact.",
+  description: brand.description,
+  applicationName: brand.name,
+  openGraph: {
+    type: "website",
+    siteName: brand.name,
+    title: brand.name,
+    description: brand.description,
+    locale: "en_US",
+    images: [{ url: "/video/vote-hero.jpg", alt: "People voting at a polling place." }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: brand.name,
+    description: brand.description,
+    images: ["/video/vote-hero.jpg"],
+  },
 };
 
 export default function RootLayout({

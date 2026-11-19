@@ -34,7 +34,7 @@ test("the home page leads with the hero, the Kentucky map, and stored records", 
   const hero = readFileSync("src/components/home/Hero.tsx", "utf8");
   assert.match(page, /Hero/);
   assert.match(page, /DistrictMap/);
-  assert.match(page, /TodayOnCandate/);
+  assert.match(page, /HomeNewsFeed/);
   assert.equal(page.includes("Kentucky Lantern"), false);
   assert.equal(page.includes("<input"), false);
   assert.match(page, /redirect\(`\/ballot/);

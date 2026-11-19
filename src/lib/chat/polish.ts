@@ -51,7 +51,7 @@ export function humanRaceTitle(race: {
     return fromId ?? (title || "U.S. presidential filings");
   }
   if (title && !isRaceSlug(title) && !isRawKey(title)) return title;
-  return fromId ?? (title || "Candate record");
+  return fromId ?? (title || "THE VOTE record");
 }
 
 export function labelForRaceId(raceId: string): string | null {
@@ -365,12 +365,12 @@ export function canonicalUrl(url: string): string {
 
 function humanSourceTitle(title: string, url: string): string {
   const cleaned = title.trim();
-  if (isRaceSlug(cleaned)) return labelForRaceId(cleaned) ?? "Candate record";
-  if (!isRawKey(cleaned)) return cleaned || "Candate record";
+  if (isRaceSlug(cleaned)) return labelForRaceId(cleaned) ?? "THE VOTE record";
+  if (!isRawKey(cleaned)) return cleaned || "THE VOTE record";
   const fromUrl = raceIdInText(url);
-  if (fromUrl) return labelForRaceId(fromUrl) ?? "Candate record";
+  if (fromUrl) return labelForRaceId(fromUrl) ?? "THE VOTE record";
   if (/form\s*2/i.test(cleaned)) return "FEC Form 2";
-  return "Candate record";
+  return "THE VOTE record";
 }
 
 function isRawKey(title: string): boolean {
@@ -384,7 +384,7 @@ function isRawKey(title: string): boolean {
 
 function titleScore(title: string): number {
   if (isRaceSlug(title) || isRawKey(title)) return 0;
-  if (title === "Candate record" || title === "FEC Form 2") return 1;
+  if (title === "THE VOTE record" || title === "FEC Form 2") return 1;
   return 2;
 }
 

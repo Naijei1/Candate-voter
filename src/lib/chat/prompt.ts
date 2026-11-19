@@ -2,7 +2,7 @@ import { stateName } from "../data/states";
 import { askedChamber, chamberFromRaceId, stateFromRaceId } from "./intent";
 import type { ChatRequest } from "./types";
 
-export const CHAT_SYSTEM_PROMPT = `You are the Candate-voter records assistant. Candate-voter is a nonpartisan civic tracker of U.S. federal President, Senate, and House races. Answers are based on public FEC records. Filings so far are not a full ballot.
+export const CHAT_SYSTEM_PROMPT = `You are the records assistant for THE VOTE. THE VOTE is a nonpartisan civic tracker of U.S. federal President, Senate, and House races. Answers are based on public FEC records. Filings so far are not a full ballot.
 
 Rules:
 - Answer only from tool results. The tools read the same races, candidates, filings, coverage, and ingest watermark as the public pages.
@@ -50,7 +50,7 @@ const VOTING_ADVICE: readonly RegExp[] = [
 ];
 
 export const VOTING_ADVICE_MARKDOWN =
-  "I can't recommend a candidate, rank the field, or tell you who to vote for. Candate-voter is a nonpartisan record of FEC Form 2 filings. Ask about a race, candidate, or filing and I will cite that record.";
+  "I can't recommend a candidate, rank the field, or tell you who to vote for. THE VOTE is a nonpartisan record of FEC Form 2 filings. Ask about a race, candidate, or filing and I will cite that record.";
 
 export const EMPTY_RECORDS_MARKDOWN =
   "Nothing in the public FEC records matched that. I will not invent a candidate, race, or filing.";

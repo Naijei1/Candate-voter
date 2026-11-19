@@ -509,7 +509,7 @@ async function getFreshness(
     }
     const sources: ChatSource[] = [
       {
-        title: "Candate Form 2 ingest watermark",
+        title: "THE VOTE Form 2 ingest watermark",
         url: `${ctx.root}/agent`,
         as_of: watermark.updatedAt,
       },
@@ -606,7 +606,7 @@ async function getCoverage(
     const sources: ChatSource[] = watermark
       ? [
           {
-            title: "Candate Form 2 ingest watermark",
+            title: "THE VOTE Form 2 ingest watermark",
             url: `${ctx.root}/agent`,
             as_of: watermark.updatedAt,
           },
@@ -698,7 +698,7 @@ function sourcesForFiling(filing: Filing, displayName: string, root: string): Ch
 
 function pageSource(title: string, url: string, asOf: string | null): ChatSource {
   return {
-    title: title.trim() || "Candate record",
+    title: title.trim() || "THE VOTE record",
     url,
     as_of: asOf?.trim() || "unknown",
   };

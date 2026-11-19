@@ -1,4 +1,4 @@
-# Candate revamp review
+# THE VOTE revamp review
 
 ## Guided ballot (November 3, 2026)
 

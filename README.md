@@ -1,4 +1,4 @@
-# Candate
+# THE VOTE
 
 Nonpartisan federal election tracker. This Next.js app lists U.S. President, Senate, and House races and candidate pages from stored FEC Form 2 filings, with sources and retrieval timestamps.
 

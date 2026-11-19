@@ -14,7 +14,7 @@ Those are the election stages. They are not the same as an FEC filing. ${OFFER}`
 
 const FILING = `A **statement of candidacy (Form 2)** is the form someone files with the FEC to say they intend to run for a federal office. It is not the final ballot and not an endorsement.
 
-Candate-voter stores those electronic filings. ${OFFER}`;
+THE VOTE stores those electronic filings. ${OFFER}`;
 
 const HOUSE_DISTRICT = `Each state is split into U.S. **House districts**. Voters in a district elect one representative. A few states have one **at-large** seat for the whole state instead of numbered districts.
 

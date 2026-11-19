@@ -196,7 +196,7 @@ test("markdown allows paragraphs, lists, bold, and safe links", () => {
   assert.equal(collectHrefs(nodes).includes("javascript:alert(1)"), false);
 });
 
-test("citations stay in-app for Candate paths and open FEC in a new tab", () => {
+test("citations stay in-app for THE VOTE paths and open FEC in a new tab", () => {
   assert.deepEqual(citationLink("/races/2026-senate-AK"), {
     href: "/races/2026-senate-AK",
     external: false,

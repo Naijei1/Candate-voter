@@ -5,7 +5,7 @@
  */
 export const OPENAPI_DOCUMENT = `openapi: 3.0.3
 info:
-  title: Candate read API
+  title: THE VOTE read API
   version: "1.4.1"
   description: |
     Read-only JSON for federal races, candidates, Form 2 filings, ZIP to

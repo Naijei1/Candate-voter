@@ -69,4 +69,6 @@ export type ConverseFn = (input: {
   maxTokens: number;
   /** Remaining request budget. The live client aborts Bedrock when it fires. */
   signal?: AbortSignal;
+  /** Send no tool list. Used by the home comparison, which answers from records in the prompt. */
+  noTools?: boolean;
 }) => Promise<ConverseResponse>;
