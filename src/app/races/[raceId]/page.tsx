@@ -112,8 +112,8 @@ export default async function RacePage({ params }: PageProps) {
                     holds={person.holdsOffice}
                     writeIn={person.role === "write-in"}
                     href={`/candidates/${person.id}`}
+                    credit={photo?.credit ?? null}
                   />
-                  {photo ? <p className="hint">{photo.credit}</p> : null}
                 </li>
                 );
               })}

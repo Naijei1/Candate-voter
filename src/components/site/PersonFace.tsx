@@ -21,6 +21,7 @@ export function PersonFace({
   office,
   writeIn,
   href,
+  credit,
 }: {
   name: string;
   party: string;
@@ -29,6 +30,8 @@ export function PersonFace({
   office: string;
   writeIn: boolean;
   href?: string;
+  /** Photo credit, shown inside the card so it stays with the photo. */
+  credit?: string | null;
 }) {
   const badge = partyBadge(party);
   const rawStatus = seatStatus({ holds, writeIn, openSeat: !holds });
@@ -44,6 +47,7 @@ export function PersonFace({
           <span className={`party-badge ${badge.tone}`}>{badge.label}</span>
           {status ? <span className="status-chip">{status}</span> : null}
         </span>
+        {credit ? <span className="hint person-face-credit">Photo: {credit.replace(/^Photo:\s*/i, "")}</span> : null}
       </span>
       {href ? <span className="view-label"><span className="mobile-profile-label">View profile </span><span aria-hidden="true">›</span></span> : null}
     </>
