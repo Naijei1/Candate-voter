@@ -238,6 +238,11 @@ test("claims without two candidates' citations, with unknown ids, or with predic
       { text: "Only one candidate cited.", cites: [barr, barr2] },
       { text: "Made-up id.", cites: ["E999", booker] },
       { text: "Barr will win this race.", cites: [barr, booker] },
+      { text: "Barr is the worst candidate; Booker is the strongest choice.", cites: [barr, booker] },
+      { text: "Booker is the better candidate on housing.", cites: [barr, booker] },
+      { text: "Barr is the front-runner and Booker the underdog.", cites: [barr, booker] },
+      { text: "Booker is rated higher than Barr by teachers.", cites: [barr, booker] },
+      { text: "Voters should choose Barr.", cites: [barr, booker] },
       { text: "Ballot ids do not count as candidate records.", cites: ["B1", booker] },
       "not an object",
     ],
@@ -245,6 +250,11 @@ test("claims without two candidates' citations, with unknown ids, or with predic
   );
   assert.deepEqual(kept.map((claim) => claim.text), ["Barr and Booker take different approaches on data centers."]);
   assert.deepEqual(validateClaims("nope", basis), []);
+  // Ordinary policy wording that happens to use comparison words still passes.
+  assert.equal(
+    validateClaims([{ text: "Barr backs stronger border security; Booker backs better pay for teachers.", cites: [barr, booker] }], basis).length,
+    1,
+  );
   assert.deepEqual(parseModelJson('```json\n{"differ":[],"agree":[]}\n```'), { differ: [], agree: [] });
   assert.equal(parseModelJson("no json here"), null);
 });
@@ -315,4 +325,29 @@ test("home order is film, map, compare, news feed, money; ZIP link stays and not
     assert.equal(/pause video|play video|aria-label="Pause|>Pause</i.test(readFileSync(file, "utf8")), false, file);
   }
   assert.match(readFileSync("src/components/home/Hero.tsx", "utf8"), /prefers-reduced-motion/);
+});
+
+test("comparison requests for the same race share one model call while it runs", async () => {
+  const { singleFlight } = await import("../src/lib/compare/single-flight");
+  const pending = new Map<string, Promise<number>>();
+  let calls = 0;
+  let release: (value: number) => void = () => {};
+  const work = () => {
+    calls += 1;
+    return new Promise<number>((resolve) => {
+      release = resolve;
+    });
+  };
+  const first = singleFlight(pending, "race", work);
+  const second = singleFlight(pending, "race", work);
+  assert.equal(first, second);
+  assert.equal(calls, 1);
+  release(7);
+  assert.deepEqual(await Promise.all([first, second]), [7, 7]);
+  assert.equal(pending.size, 0);
+  await singleFlight(pending, "race", async () => {
+    calls += 1;
+    return 8;
+  });
+  assert.equal(calls, 2);
 });
