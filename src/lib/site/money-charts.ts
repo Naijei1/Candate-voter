@@ -3,6 +3,10 @@ import type { FinanceOutside } from "@/lib/finance/model";
 import { loadFinance } from "@/lib/finance/load";
 import { FINANCE_SNAPSHOT_RETRIEVED_AT, snapshotFinance } from "@/lib/finance/snapshot";
 import { KY_BALLOT_CHECKED, KY_BALLOT_SOURCES, kyBallot } from "@/lib/site/ky-ballot";
+import type { ChartTarget } from "./money-chart-lines";
+
+export type { ChartTarget } from "./money-chart-lines";
+export { targetLines } from "./money-chart-lines";
 
 export const CHART_RACE_IDS = [
   "2026-senate-KY",
@@ -41,8 +45,11 @@ export type ChartCommittee = {
   support: number;
   oppose: number;
   candidates: string[];
+  /** Per candidate, how much this group spent for and against them. From FEC independent expenditures only. */
+  targets: ChartTarget[];
   sourceUrl: string | null;
 };
+
 
 export type MoneyChartData = {
   races: ChartRace[];
@@ -103,14 +110,23 @@ export function topCommittees(
       support: 0,
       oppose: 0,
       candidates: [],
+      targets: [],
       sourceUrl: `https://www.fec.gov/data/committee/${row.committeeId}/`,
     };
     entry.total += row.total;
     if (row.support === "support") entry.support += row.total;
     else entry.oppose += row.total;
     if (!entry.candidates.includes(who)) entry.candidates.push(who);
+    let target = entry.targets.find((item) => item.name === who);
+    if (!target) {
+      target = { name: who, support: 0, oppose: 0 };
+      entry.targets.push(target);
+    }
+    if (row.support === "support") target.support += row.total;
+    else target.oppose += row.total;
     byCommittee.set(row.committeeId, entry);
   }
+  for (const entry of byCommittee.values()) entry.targets.sort((a, b) => b.support + b.oppose - (a.support + a.oppose));
   return [...byCommittee.values()].sort((a, b) => b.total - a.total).slice(0, limit);
 }
 

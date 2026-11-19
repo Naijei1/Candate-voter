@@ -51,3 +51,21 @@ export function clientAddress(request: Request): string {
   if (!/^[A-Za-z0-9.:]+$/.test(candidate)) return "unknown";
   return candidate;
 }
+
+/**
+ * Address for rate limits that a visitor cannot pick. Proxies append the
+ * address they saw to the END of `X-Forwarded-For`, and anything before
+ * that came from the visitor's own request, so only the last hop is trusted.
+ * Behind a CDN this can be an edge address shared by several visitors, so
+ * use it for generous per-address caps, alongside a global cap.
+ */
+export function trustedClientAddress(request: Request): string {
+  const hops = (request.headers.get("x-forwarded-for") ?? "")
+    .split(",")
+    .map((hop) => hop.trim())
+    .filter(Boolean);
+  const candidate = hops.at(-1) ?? "";
+  if (!candidate || candidate.length > 128) return "unknown";
+  if (!/^[A-Za-z0-9.:]+$/.test(candidate)) return "unknown";
+  return candidate;
+}

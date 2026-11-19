@@ -1,5 +1,5 @@
 import type { ConverseFn } from "@/lib/chat/types";
-import { REFUSALS, candidatesWithEvidence, type Claim, type CompareBasis } from "./evidence";
+import { REFUSALS, candidateEvidence, candidatesWithEvidence, type Claim, type CompareBasis, type Evidence } from "./evidence";
 
 export type CompareSummary = {
   raceId: string;
@@ -12,6 +12,8 @@ export type CompareSummary = {
   differRefusal: string | null;
   agreeRefusal: string | null;
   notice: string | null;
+  /** The candidate records this answer could cite, for the side-by-side list and the source links. */
+  evidence: Evidence[];
 };
 
 export const COMPARE_PROMPT_VERSION = "2026-11-19.1";
@@ -88,6 +90,7 @@ export function recordsOnlySummary(basis: CompareBasis, notice: string | null): 
     differRefusal: enough ? REFUSALS.unavailable : REFUSALS.notEnough,
     agreeRefusal: enough ? REFUSALS.unavailable : REFUSALS.notEnough,
     notice,
+    evidence: candidateEvidence(basis),
   };
 }
 
@@ -127,6 +130,7 @@ export async function summarizeRace(
       differRefusal: differ.length > 0 ? null : REFUSALS.differ,
       agreeRefusal: agree.length > 0 ? null : REFUSALS.agree,
       notice: null,
+      evidence: candidateEvidence(basis),
     };
   } catch (error) {
     console.error("compare summary failed:", error instanceof Error ? error.name : "Error");

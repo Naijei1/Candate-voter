@@ -10,7 +10,7 @@ import { StatewidePanel } from "@/components/home/StatewidePanel";
 import { CandidateCard } from "@/components/site/CandidateCard";
 import { candidateCards } from "@/lib/site/candidate-cards";
 import { MoneyCharts } from "@/components/site/MoneyCharts";
-import { COMPARE_RACE_IDS, compareBasis } from "@/lib/compare/evidence";
+import { COMPARE_RACE_IDS, compareBasis, compareOption } from "@/lib/compare/evidence";
 import { kyBallotSeed, KY_BALLOT_SOURCES } from "@/lib/site/ky-ballot";
 import { kyStatewide } from "@/lib/site/ky-statewide";
 import { parseMapView } from "@/lib/site/map-view";
@@ -34,9 +34,10 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
   const house = kyBallotSeed().races.filter((race) => race.office === "house");
   const statewide = kyStatewide();
-  const bases = COMPARE_RACE_IDS.flatMap((id) => {
+  /** Titles and ballot facts only. Each race's candidate records load when it is picked. */
+  const compareOptions = COMPARE_RACE_IDS.flatMap((id) => {
     const basis = compareBasis(id);
-    return basis ? [basis] : [];
+    return basis ? [compareOption(basis)] : [];
   });
   const money = await loadMoneyCharts();
   return (
@@ -77,7 +78,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           <h2 id="compare-heading">Compare the candidates</h2>
         </div>
         <p className="lede">Pick a race. See what to know, where the candidates differ, and where they agree, with a source on every point.</p>
-        <CompareSection bases={bases} />
+        <CompareSection options={compareOptions} />
       </section>
       <div className="wrap">
         <HomeNewsFeed />
