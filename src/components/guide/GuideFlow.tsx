@@ -15,6 +15,7 @@ import { findRacesByZip } from "@/lib/lookup/find-races";
 import { settleZipLookup } from "@/lib/lookup/zip-view";
 import { ElectionStatus } from "@/components/site/ElectionStatus";
 import { partyMark } from "@/components/site/PersonMark";
+import { parseGuideQuery } from "@/lib/site/guide-query";
 import { KY_RESULTS_LINKS } from "@/lib/site/ky-results";
 import { seatStatus } from "@/lib/site/seat";
 import { stanceIssues, stancesFor, type Stance } from "@/lib/site/stances";
@@ -53,10 +54,7 @@ type Saved = {
 export function GuideFlow({ races }: { races: GuideRace[]; signedIn: boolean }) {
   const router = useRouter();
   const params = useSearchParams();
-  const step = params.get("step") || "zip";
-  const zipParam = params.get("zip") ?? "";
-  const district = params.get("district");
-  const raceParam = params.get("race");
+  const { step, zipParam, district, raceParam } = parseGuideQuery(params, races);
   const [zip, setZip] = useState(zipParam);
   const [note, setNote] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
