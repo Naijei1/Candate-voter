@@ -27,7 +27,15 @@ Reply with JSON only, no prose: {"differ":[{"text":"...","cites":["E1","E4"]}],"
 
 const MAX_CLAIMS = 4;
 const MAX_TEXT = 320;
-const BANNED = /\b(vote for|should vote|better candidate|best candidate|will win|likely to win|favored|toss-?up|lean[s]? (republican|democrat)|flip)\b/i;
+/** Endorsements, predictions and ratings. A claim that matches any of these is dropped, citations or not. */
+const BANNED: readonly RegExp[] = [
+  /\b(vote for|should vote|should (?:pick|choose|support)|we recommend|recommended)\b/i,
+  /\b(will win|likely to win|expected to win|going to win|favou?red|favou?rite to|toss-?up|lean[s]? (republican|democrat)|flip(s|ped)?|front-?runner|underdog|ahead in the polls)\b/i,
+  /\b(best|worst|strongest|weakest|better|worse|stronger|weaker|top|ideal|clear|right|wrong|smart|safe|obvious|superior|inferior)\s+(candidate|choice|pick|option|person|nominee)s?\b/i,
+  /\b(is|are|was|were) the (best|worst|strongest|weakest|better|worse|stronger|weaker|superior|inferior)\b/i,
+  /\b(rated|rating|ratings|ranked|ranking|grade[sd]?|scores? (higher|lower|better|worse))\b/i,
+];
+const banned = (text: string): boolean => BANNED.some((pattern) => pattern.test(text));
 
 export function compareUserMessage(basis: CompareBasis): string {
   const lines = basis.evidence
@@ -47,7 +55,7 @@ export function validateClaims(raw: unknown, basis: CompareBasis): Claim[] {
     const cites = Array.isArray((item as { cites?: unknown }).cites)
       ? [...new Set(((item as { cites: unknown[] }).cites).filter((id): id is string => typeof id === "string" && owner.has(id)))]
       : [];
-    if (!text || text.length > MAX_TEXT || BANNED.test(text)) continue;
+    if (!text || text.length > MAX_TEXT || banned(text)) continue;
     const people = new Set(cites.map((id) => owner.get(id)));
     if (cites.length === 0 || people.size < 2) continue;
     out.push({ text, cites });

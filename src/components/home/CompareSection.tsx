@@ -3,6 +3,7 @@
 import { useEffect, useId, useState } from "react";
 import type { Claim, CompareBasis, Evidence } from "@/lib/compare/evidence";
 import type { CompareSummary } from "@/lib/compare/summarize";
+import { withBasePath } from "@/lib/base-path";
 
 type State = { raceId: string; summary: CompareSummary | null; failed: boolean };
 
@@ -81,7 +82,7 @@ export function CompareSection({ bases }: { bases: readonly CompareBasis[] }) {
     if (!raceId) return;
     const controller = new AbortController();
     setState({ raceId, summary: null, failed: false });
-    fetch(`/api/compare?race=${encodeURIComponent(raceId)}`, { signal: controller.signal })
+    fetch(withBasePath(`/api/compare?race=${encodeURIComponent(raceId)}`), { signal: controller.signal })
       .then(async (response) => {
         const body = (await response.json()) as CompareSummary;
         if (!body || !Array.isArray(body.know)) throw new Error("shape");
