@@ -18,6 +18,7 @@ export function PersonFace({
   party,
   photo,
   holds,
+  office,
   writeIn,
   href,
 }: {
@@ -25,6 +26,7 @@ export function PersonFace({
   party: string;
   photo: string | null;
   holds: boolean;
+  office: string;
   writeIn: boolean;
   href?: string;
 }) {
@@ -35,12 +37,13 @@ export function PersonFace({
       <PersonMark name={name} photo={photo} party={party} size="sm" />
       <span className="person-face-copy">
         <span className="person-face-name">{name}</span>
+        <span className="mobile-profile-label cand-office">{office}</span>
         <span className="person-face-meta">
           <span className={`party-badge ${badge.tone}`}>{badge.label}</span>
           {status ? <span className="status-chip">{status}</span> : null}
         </span>
       </span>
-      {href ? <span className="view-label" aria-hidden="true">›</span> : null}
+      {href ? <span className="view-label"><span className="mobile-profile-label">View profile </span><span aria-hidden="true">›</span></span> : null}
     </>
   );
   if (!href) return <div className="person-face">{body}</div>;

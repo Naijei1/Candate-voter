@@ -2072,3 +2072,158 @@ td {
     flex: 0 0 auto;
   }
 }
+
+.mobile-tabs,
+.mobile-candidates,
+.mobile-profile-label {
+  display: none;
+}
+
+@media (max-width: 800px) {
+  html {
+    --tab-height: 3.75rem;
+    --tab-space: calc(var(--tab-height) + env(safe-area-inset-bottom, 0px));
+    scroll-padding-bottom: calc(var(--tab-space) + 1rem);
+  }
+
+  body { padding-bottom: var(--tab-space); }
+  .page-main { padding-bottom: 2rem; }
+  .page-main > article.wrap { padding-top: 1.25rem; }
+
+  .mobile-tabs {
+    position: fixed;
+    z-index: 41;
+    inset: auto 0 0;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    padding: 0 env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    background: var(--color-card);
+    border-top: 1px solid var(--color-line);
+    box-shadow: 0 -3px 14px rgb(11 26 42 / 7%);
+  }
+
+  .mobile-tabs a {
+    display: grid;
+    position: relative;
+    gap: 3px;
+    align-content: center;
+    justify-items: center;
+    min-height: var(--tab-height);
+    font-size: .8125rem;
+    font-weight: 650;
+    line-height: 1.2;
+    color: var(--color-muted);
+  }
+
+  .mobile-tabs a[aria-current] { color: var(--color-brand-red); }
+  .mobile-tabs a[aria-current]::before {
+    content: "";
+    position: absolute;
+    inset: 0 22% auto;
+    border-top: 3px solid currentColor;
+    border-radius: 0 0 3px 3px;
+  }
+  .mobile-tabs a:focus-visible { outline-offset: -4px; }
+
+  .site-header.is-overlay { position: relative; background: var(--color-navy-deep); }
+  .site-header:not(.is-overlay), .site-header.is-overlay { border-bottom: 2px solid var(--color-brand-red); }
+  .nav-bar { min-height: 52px; }
+  .nav-mobile { display: none; }
+  .nav-signin { display: inline-flex; align-items: center; min-height: 44px; font-size: .95rem; }
+  .account-menu summary { max-width: 45vw; }
+
+  .hero-stage { min-height: 0; gap: .85rem; padding: 2rem 1rem 1rem; }
+  .hero-shade { background: linear-gradient(95deg, rgb(11 26 42 / 95%), rgb(11 26 42 / 73%)); }
+  .hero-copy, .hero-credit { width: auto; margin: 0; }
+  .hero-copy h1 { font-size: clamp(4rem, 17vw, 6rem); }
+  .hero-sub { margin: .55rem 0 1rem; font-size: 1.125rem; }
+  .hero-actions { flex-direction: row; gap: .5rem; }
+  .hero-actions .btn { min-height: 44px; font-size: 1rem; }
+  .hero-note { font-size: .9375rem; line-height: 1.4; }
+  .hero-credit { font-size: .8125rem; }
+  .hero-error { color: white; }
+  .results-bar { gap: .25rem; padding: .75rem 1rem; }
+  .results-bar p, .results-bar a { font-size: .9375rem; }
+
+  .home-section, .race-cards { margin-top: 1.75rem; }
+  .section-head h2 { padding-left: .6rem; border-left-width: 4px; font-size: 1.65rem; }
+  .section-more { display: inline-flex; align-items: center; gap: .25rem; min-height: 44px; font-size: .9375rem; }
+  .home-map { padding-block: 0; }
+  .home-map .segmented {
+    display: grid;
+    grid-template-columns: 3fr 2fr;
+    margin: .75rem 0;
+    background: var(--color-line);
+  }
+  .segmented button { padding-inline: .4rem; color: var(--color-navy); font-size: 1rem; }
+  .segmented button[aria-selected="true"] { color: white; background: var(--color-navy); }
+  .segmented button:not([aria-selected="true"]):focus-visible { outline-color: var(--color-navy); }
+  .home-map .lede { font-size: 1rem; }
+  .map-frame { padding: .5rem; }
+  .home-map .cd-map .cd-label { font-size: 40px; }
+  .zip-link a { display: inline-flex; align-items: center; min-height: 44px; }
+  .zip-link { margin-top: .2rem; }
+
+  .mobile-candidates { display: block; }
+  .cand-grid, .person-list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .65rem; }
+  .mobile-candidates .section-head { gap: .25rem .5rem; }
+  .mobile-candidates .cand-grid {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: clamp(10.25rem, 46%, 14rem);
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    padding: .35rem;
+    margin-inline: -.35rem;
+  }
+  .mobile-candidates .cand-card { scroll-snap-align: center; }
+  .cand-photo { min-width: 0; overflow: hidden; }
+  .cand-photo img { position: absolute; inset: 0; }
+  .cand-photo .person-initials { width: 4rem; height: 4rem; font-size: 1.65rem; }
+  .cand-party { inset: auto auto .4rem .45rem; padding: .12rem .4rem; font-size: .75rem; }
+  .cand-body { gap: .35rem; padding: .65rem; }
+  .cand-name { font-size: 1.35rem; overflow-wrap: break-word; }
+  .cand-office { font-size: .875rem; }
+  .cand-status { line-height: 1.25; letter-spacing: normal; text-transform: none; }
+  .cand-cta, .person-face .view-label {
+    align-self: stretch;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .35rem;
+    min-height: 44px;
+    padding: .25rem;
+    border: 1px solid var(--color-line);
+    border-radius: .5rem;
+    font-size: .9375rem;
+    color: var(--color-navy);
+  }
+  .person-face { flex-direction: column; align-items: stretch; }
+  .person-face .person-photo, .person-face .person-initials { width: 100%; max-width: none; height: auto; aspect-ratio: 4 / 3; }
+  .mobile-profile-label { display: inline; }
+  .person-list .hint { font-size: .8125rem; }
+
+  .chart-grid, .money-charts, .feed-grid, .compare-cols { grid-template-columns: minmax(0, 1fr); }
+  .chart { min-width: 0; padding: .8rem; }
+  .chart-bar-line { grid-template-columns: 5rem minmax(0, 1fr) 4.75rem; gap: .35rem; }
+  .chart-picker select, .finder-row select { max-width: 100%; }
+  .feed-card { padding: .9rem; overflow-wrap: break-word; }
+  .feed-card.has-thumb { grid-template-columns: 3rem minmax(0, 1fr); gap: .75rem; }
+  .feed-thumb { width: 3rem; height: 3rem; }
+
+  .ballot-bar, .sticky-mobile {
+    position: static;
+    max-height: none;
+    flex-wrap: wrap;
+    padding: .75rem;
+    border: 1px solid var(--color-line);
+    border-radius: .75rem;
+  }
+  .ballot-page > div { padding-bottom: 1rem; }
+  .page-main:has(.sticky-mobile) { padding-bottom: 2rem; }
+}
+
+@media (max-width: 800px) and (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .mobile-candidates .cand-grid { scroll-snap-type: none; }
+}

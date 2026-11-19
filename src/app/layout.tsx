@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import { AskProvider } from "@/components/chat/AskProvider";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
+import { MobileNavigation } from "@/components/site/MobileNavigation";
 import { PlaceSync } from "@/components/site/PlaceSync";
 import { brand } from "@/content/brand";
 import { cyclesFromEnv } from "@/lib/data/cycles";
@@ -79,6 +80,7 @@ export default function RootLayout({
             {children}
           </main>
           <SiteFooter />
+          <MobileNavigation />
         </AskProvider>
       </body>
     </html>
