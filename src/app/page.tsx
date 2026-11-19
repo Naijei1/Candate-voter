@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { DistrictMap } from "@/components/DistrictMap";
 import { CompareSection } from "@/components/home/CompareSection";
@@ -6,6 +7,8 @@ import { HomeMap } from "@/components/home/HomeMap";
 import { HomeNewsFeed } from "@/components/home/HomeNewsFeed";
 import { ResultsBar } from "@/components/home/ResultsBar";
 import { StatewidePanel } from "@/components/home/StatewidePanel";
+import { CandidateCard } from "@/components/site/CandidateCard";
+import { candidateCards } from "@/lib/site/candidate-cards";
 import { MoneyCharts } from "@/components/site/MoneyCharts";
 import { COMPARE_RACE_IDS, compareBasis, compareOption } from "@/lib/compare/evidence";
 import { kyBallotSeed, KY_BALLOT_SOURCES } from "@/lib/site/ky-ballot";
@@ -60,6 +63,15 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         <p className="zip-link">
           <a href="/ballot">Or enter a ZIP code</a>
         </p>
+      </section>
+      <section className="wrap home-section mobile-candidates" aria-labelledby="senate-candidates">
+        <div className="section-head">
+          <h2 id="senate-candidates">U.S. Senate candidates</h2>
+          <Link className="section-more" href="/candidates">All candidates <span aria-hidden="true">→</span></Link>
+        </div>
+        <ul className="cand-grid">
+          {candidateCards("2026-senate-KY").map((person) => <CandidateCard key={person.id} person={person} />)}
+        </ul>
       </section>
       <section className="wrap home-section" id="compare" aria-labelledby="compare-heading">
         <div className="section-head">

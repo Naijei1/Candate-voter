@@ -10,6 +10,7 @@ import { FollowControl } from "@/components/site/FollowControl";
 import { ElectionDayBanner } from "@/components/site/ElectionDayBanner";
 import { BallotBar } from "@/components/site/BallotBar";
 import { PersonFace } from "@/components/site/PersonFace";
+import { raceCardTitle } from "@/lib/site/candidate-cards";
 import { openSeatLine } from "@/lib/site/seat";
 import { KY_BALLOT_CHECKED, KY_BALLOT_SOURCES, calendarDay, kyBallot, kyBallotIds } from "@/lib/site/ky-ballot";
 import { portraitFor } from "@/lib/site/stances";
@@ -104,14 +105,15 @@ export default async function RacePage({ params }: PageProps) {
                 return (
                 <li key={person.id}>
                   <PersonFace
+                    office={raceCardTitle(race.raceId)}
                     name={person.name}
                     party={person.party}
                     photo={photo?.src ?? null}
                     holds={person.holdsOffice}
                     writeIn={person.role === "write-in"}
                     href={`/candidates/${person.id}`}
+                    credit={photo?.credit ?? null}
                   />
-                  {photo ? <p className="hint">{photo.credit}</p> : null}
                 </li>
                 );
               })}
