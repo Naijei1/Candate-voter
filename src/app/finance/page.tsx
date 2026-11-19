@@ -4,8 +4,10 @@ import { DirectList, FinanceExplanation, OutsideList } from "@/components/site/F
 import { selectDirect, selectOutside } from "@/lib/finance/present";
 import { coverageKey } from "@/lib/finance/model";
 import { loadFinance } from "@/lib/finance/load";
+import { MoneyCharts } from "@/components/site/MoneyCharts";
+import { loadMoneyCharts } from "@/lib/site/money-charts";
 
-export const metadata: Metadata = { title: "Campaign finance" };
+export const metadata: Metadata = { title: "Candidates' Political Finances" };
 export const dynamic = "force-dynamic";
 
 type PageProps = { searchParams: Promise<{ cycle?: string; coverage?: string; page?: string }> };
@@ -20,7 +22,7 @@ export default async function FinancePage({ searchParams }: PageProps) {
   const query = await searchParams;
   const parsed = Number(query.cycle);
   const cycle = Number.isInteger(parsed) && parsed >= 2024 && parsed <= 2028 ? parsed : 2026;
-  const bundle = await loadFinance(cycle);
+  const [bundle, charts] = await Promise.all([loadFinance(cycle), loadMoneyCharts()]);
   const kentuckyDirect = bundle.direct.filter(isKentucky);
   const kentuckyOutside = bundle.outside.filter(isKentucky);
   const latestKey = [...kentuckyDirect]
@@ -37,10 +39,16 @@ export default async function FinancePage({ searchParams }: PageProps) {
 
   return (
     <article className="wrap">
-      <h1>Campaign finance</h1>
+      <h1>Candidates&apos; Political Finances</h1>
       <p className="lede">Kentucky, election year {cycle}. Money campaigns report, kept separate from spending by other groups.</p>
       {bundle.notice ? <p className="notice">{bundle.notice}</p> : null}
       <FinanceExplanation />
+      {cycle === 2026 ? (
+        <section className="home-section" aria-labelledby="charts-heading">
+          <h2 id="charts-heading">Charts: Kentucky&apos;s November 2026 candidates</h2>
+          <MoneyCharts data={charts} showAll />
+        </section>
+      ) : null}
       <form className="finder-row" method="get" action="/finance">
         <label htmlFor="finance-cycle">
           Election cycle

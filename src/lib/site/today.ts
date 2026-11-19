@@ -11,6 +11,11 @@ export type TodayCard = {
   when: string;
   sourceName: string;
   sourceUrl: string;
+  /** Ballot person id, for the headshot. */
+  personId: string | null;
+  personName: string;
+  /** Committee or group named on the record. Used for the mark when no photo is stored. */
+  group: string;
 };
 
 export type TodayMoney = {
@@ -18,6 +23,14 @@ export type TodayMoney = {
   receipts: TodayCard[];
   filings: TodayCard[];
 };
+
+function ballotPeople(): Map<string, string> {
+  return new Map(
+    kyBallotSeed().candidates.flatMap((candidate) =>
+      candidate.fecCandidateId ? [[candidate.fecCandidateId, candidate.candidateId] as const] : [],
+    ),
+  );
+}
 
 function ballotNames(): Map<string, string> {
   return new Map(
@@ -42,6 +55,7 @@ export function kentuckyMoneyCards(
   limit = 4,
 ): TodayMoney {
   const names = ballotNames();
+  const people = ballotPeople();
   const spending = bundle.outside
     .filter((row) => names.has(row.candidateId) && row.total != null && row.total > 0 && row.sourceUrl)
     .sort((a, b) => (b.total ?? 0) - (a.total ?? 0))
@@ -58,6 +72,9 @@ export function kentuckyMoneyCards(
         when: whenLabel(row.updatedAt, retrievedAt),
         sourceName: "FEC independent expenditures",
         sourceUrl: row.sourceUrl as string,
+        personId: people.get(row.candidateId) ?? null,
+        personName: who,
+        group,
       };
     });
   const cycle = bundle.direct.filter(
@@ -67,16 +84,21 @@ export function kentuckyMoneyCards(
     .filter((row) => row.sourceLabel !== "FEC filing")
     .sort((a, b) => (b.receipts ?? 0) - (a.receipts ?? 0))
     .slice(0, limit)
-    .map((row) => receiptCard(row, names, retrievedAt));
+    .map((row) => receiptCard(row, names, people, retrievedAt));
   const filings = cycle
     .filter((row) => row.sourceLabel === "FEC filing")
     .sort((a, b) => (b.coverageEnd ?? "").localeCompare(a.coverageEnd ?? ""))
     .slice(0, limit)
-    .map((row) => receiptCard(row, names, retrievedAt));
+    .map((row) => receiptCard(row, names, people, retrievedAt));
   return { spending, receipts, filings };
 }
 
-function receiptCard(row: FinanceDirect, names: Map<string, string>, retrievedAt: string): TodayCard {
+function receiptCard(
+  row: FinanceDirect,
+  names: Map<string, string>,
+  people: Map<string, string>,
+  retrievedAt: string,
+): TodayCard {
   const who = names.get(row.candidateId) ?? row.name ?? row.candidateId;
   const group = orgLabel(row.committeeName) ?? "The campaign";
   const filing = row.sourceLabel === "FEC filing";
@@ -87,6 +109,9 @@ function receiptCard(row: FinanceDirect, names: Map<string, string>, retrievedAt
     when: whenLabel(row.updatedAt, retrievedAt),
     sourceName: filing ? "FEC filing" : "FEC candidate totals",
     sourceUrl: row.sourceUrl as string,
+    personId: people.get(row.candidateId) ?? null,
+    personName: who,
+    group,
   };
 }
 

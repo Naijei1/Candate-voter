@@ -13,7 +13,7 @@ export const ALIGNMENT_NEEDS_RACE_MARKDOWN = `${INSUFFICIENT}
 Which state or race should I cite? For example, U.S. Senate, California.`;
 
 export const ALIGNMENT_DISABLED_MARKDOWN =
-  "I can't compare viewpoints or tell you who to support. Based on public FEC records, Candate-voter lists FEC Form 2 filings. Ask about a race, candidate, or filing and I will cite that record.";
+  "I can't compare viewpoints or tell you who to support. Based on public FEC records, THE VOTE lists FEC Form 2 filings. Ask about a race, candidate, or filing and I will cite that record.";
 
 /**
  * Viewpoint alignment is explicit-only. The table has no vote or position

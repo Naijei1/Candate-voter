@@ -5,7 +5,9 @@
  */
 
 export const brand = {
-  name: "Candate",
+  name: "THE VOTE",
+  shortName: "THE VOTE",
+  description: "Kentucky elections in plain language: find your races, compare candidates, and see the source of each fact.",
   headline: "Your elections. All in one place.",
   lede: "Find a contest. Compare candidates.",
   heroImageAlt: "Placeholder for an approved civic photograph. No image is available yet.",

@@ -14,8 +14,8 @@ export async function SiteHeader() {
       signedIn={user != null}
       wordmark={
         <Link href="/" className="brand">
-          {copy.logoKey ? <img src="/media/logo" alt="" width={28} height={28} /> : null}
-          {brand.name}
+          {copy.logoKey ? <img src="/media/logo" alt="" width={28} height={28} /> : <span className="brand-flag" aria-hidden="true" />}
+          <span className="brand-name">{brand.name}</span>
         </Link>
       }
       account={

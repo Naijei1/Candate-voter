@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { normalizePersonName } from "@/lib/data/names";
 import { httpsUrl } from "@/lib/format";
+import { formatOrgName } from "@/lib/site/org-name";
 import { coverageLabel, FINANCE_EXPLANATION, formatMoney, type FinanceDirect, type FinanceOutside } from "@/lib/finance/model";
 
 function personLabel(name: string | null, fallback: string): string {
@@ -12,14 +13,7 @@ function personLabel(name: string | null, fallback: string): string {
 
 export function orgLabel(name: string | null): string | null {
   if (!name) return null;
-  return name
-    .split(/\s+/)
-    .map((word) => {
-      if (word === "PAC" || word === "FEC" || word === "GOP" || word === "DNC" || word === "RNC") return word;
-      if (word === word.toUpperCase() && /[A-Z]/.test(word)) return `${word.charAt(0)}${word.slice(1).toLowerCase()}`;
-      return word;
-    })
-    .join(" ");
+  return formatOrgName(name);
 }
 
 function plainSource(label: string): string {

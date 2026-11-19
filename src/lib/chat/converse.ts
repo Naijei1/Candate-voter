@@ -36,7 +36,7 @@ export function createBedrockConverse(
         modelId: input.modelId,
         system: [{ text: input.system }],
         messages: input.messages.map(toSdkMessage),
-        toolConfig: { tools: bedrockTools },
+        ...(input.noTools ? {} : { toolConfig: { tools: bedrockTools } }),
         inferenceConfig: inferenceConfigFor(input.modelId, input.maxTokens),
       }),
       input.signal ? { abortSignal: input.signal } : {},
