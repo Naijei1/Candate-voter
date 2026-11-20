@@ -16,7 +16,6 @@ import {
   chatBudgetMs,
   chatEnabled,
   coldAskBudgetMs,
-  rateLimitSettings,
 } from "./config";
 import { definitionAnswer } from "./definitions";
 import { kentuckyRunningAnswer } from "./kentucky";
@@ -42,7 +41,8 @@ import {
 import { polishChatAnswer, type AnswerScope } from "./polish";
 import { answerUpcoming } from "./upcoming";
 import { isVotingAdvice, VOTING_ADVICE_MARKDOWN } from "./prompt";
-import { clientAddress, createRateLimiter, type RateLimiter } from "./rate-limit";
+import { trustedClientAddress, type RateLimiter } from "./rate-limit";
+import { createAiLimits, DAILY_LIMIT_MESSAGE } from "../limits/dynamo-limit";
 import { parseChatRequest } from "./request";
 import { isStateRosterQuestion, answerKnownPlace, answerScopedRace, answerStateRoster } from "./roster";
 import { limitAnswerToRaceScope } from "./scope";
@@ -55,6 +55,7 @@ export type ChatDeps = {
   repository: () => ApiRepository;
   converse?: ConverseFn;
   rateLimiter?: RateLimiter;
+  dailyLimiter?: RateLimiter;
   /** Origin plus base path. Tests set this; the route derives it from the request. */
   siteRoot?: string;
   /** Test override. Production uses `chatBudgetMs` (default 20s). */
@@ -66,8 +67,11 @@ export type ChatDeps = {
 export function liveChatDeps(
   env: Record<string, string | undefined> = process.env,
 ): ChatDeps {
+  const limits = createAiLimits(env);
   return {
     env,
+    rateLimiter: limits.perIp,
+    dailyLimiter: limits.daily,
     repository: () => createDynamoRepository(),
     converse: createBedrockConverse(env),
     lookupZip: censusZipDistricts,
@@ -98,9 +102,8 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
   }
 
   const now = deps.now ?? new Date();
-  const limiter =
-    deps.rateLimiter ?? createRateLimiter(rateLimitSettings(deps.env));
-  const decision = limiter.take(clientAddress(request), now.getTime());
+  const limiter = deps.rateLimiter ?? createAiLimits(deps.env).perIp;
+  const decision = await limiter.take(trustedClientAddress(request), now.getTime());
   if (!decision.ok) {
     return json(
       { error: "rate_limited", message: "Too many chat requests. Try again later." },
@@ -336,6 +339,14 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
   const siteRoot =
     deps.siteRoot ??
     `${originFromRequest(request)}${basePathFromEnv(deps.env)}`;
+  const daily = await (deps.dailyLimiter ?? createAiLimits(deps.env).daily).take("daily", deps.now?.getTime() ?? Date.now());
+  if (!daily.ok) {
+    return json(
+      { error: "rate_limited", message: DAILY_LIMIT_MESSAGE },
+      429,
+      { "Retry-After": String(daily.retryAfterSeconds) },
+    );
+  }
   const budget = budgetMs(deps);
   try {
     let answer = await withBudget(

@@ -113,13 +113,40 @@ test("compare service caches answers, caches failures briefly, and caps model ca
   assert.equal(calls, 4);
 });
 
-test("rate-limit address comes from the last proxy hop, not the visitor's own header", () => {
+test("compare shares one daily check for concurrent misses and skips cache hits", async () => {
+  let checks = 0;
+  const service = createCompareService({
+    limiter: createRateLimiter({ limit: 100, windowMs: 60_000 }),
+    globalLimiter: createRateLimiter({ limit: 100, windowMs: 60_000 }),
+    usesModel: (basis) => basis.raceId !== "2026-house-KY-01",
+    dailyLimiter: {
+      async take() {
+        checks++;
+        return checks === 1 ? { ok: true } : { ok: false, retryAfterSeconds: 10 };
+      },
+    },
+    summarize: async () => summary("ai"),
+  });
+  const race = "2026-senate-KY";
+  const results = await Promise.all([service.handle(race, "a"), service.handle(race, "b")]);
+  assert.deepEqual(results.map((result) => result?.status), [200, 200]);
+  assert.equal((await service.handle(race, "c"))?.status, 200);
+  assert.equal((await service.handle("2026-house-KY-01", "d"))?.status, 200);
+  assert.equal(checks, 1);
+  const denied = await service.handle("2026-house-KY-02", "e");
+  assert.equal(denied?.status, 429);
+  assert.equal(denied?.body.error, "rate_limited");
+  assert.equal(denied?.headers?.["retry-after"], "10");
+  assert.equal(checks, 2);
+});
+
+test("rate-limit address comes from the CloudFront viewer hop", () => {
   const req = (xff: string) => new Request("https://example.com/api/compare", { headers: { "x-forwarded-for": xff } });
-  assert.equal(trustedClientAddress(req("6.6.6.6, 203.0.113.9")), "203.0.113.9");
-  assert.equal(trustedClientAddress(req("1.1.1.1, 2.2.2.2, 203.0.113.9")), "203.0.113.9");
+  assert.equal(trustedClientAddress(req("203.0.113.9, 64.252.67.70")), "203.0.113.9");
+  assert.equal(trustedClientAddress(req("1.1.1.1, 203.0.113.9, 64.252.67.70")), "203.0.113.9");
   assert.equal(trustedClientAddress(req("203.0.113.9")), "203.0.113.9");
   assert.equal(trustedClientAddress(new Request("https://example.com/")), "unknown");
-  assert.equal(trustedClientAddress(req("1.1.1.1, <script>")), "unknown");
+  assert.equal(trustedClientAddress(req("1.1.1.1, <script>, 64.252.67.70")), "unknown");
   assert.match(readFileSync("src/app/api/compare/route.ts", "utf8"), /trustedClientAddress\(request\)/);
 });
 

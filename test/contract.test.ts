@@ -84,6 +84,7 @@ function chatDeps(repo: MemoryVoterRepository, converse: ConverseFn, extra: Part
     repository: () => repo,
     converse,
     siteRoot: ROOT,
+    dailyLimiter: { take: () => ({ ok: true }) },
     rateLimiter: createRateLimiter({ limit: 20, windowMs: 60_000 }),
     ...extra,
   };
