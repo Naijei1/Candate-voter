@@ -1,5 +1,6 @@
 "use client";
 
+import { thumbnail } from "@/lib/site/thumbnail";
 import { dayLabel } from "@/lib/format";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronRight, MapPin } from "lucide-react";
@@ -388,7 +389,7 @@ function PersonFace({ person }: { person: GuidePerson }) {
   return (
     <div>
       {person.photo ? (
-        <img src={person.photo} alt="" width={160} height={160} className="size-40 rounded-full object-cover object-top" />
+        <img src={thumbnail(person.photo)} alt="" width={160} height={160} loading="lazy" decoding="async" className="size-40 rounded-full object-cover object-top" />
       ) : (
         <div className={`person-initials lg ${mark.tone}`} aria-hidden>
           {initials(person.name)}

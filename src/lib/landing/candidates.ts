@@ -2,7 +2,7 @@
 
 import { linkPersonFilings, type PersonFiling } from "@/lib/data/person-filings";
 import { displayedPartyLabels, type PublicCandidate } from "@/lib/data/view";
-import { logReadError, readCandidatesForRace } from "@/lib/data/read";
+import { readCandidatesForRace } from "@/lib/data/read";
 import { parseRaceIds } from "@/lib/landing";
 
 export type CandidatePreview = {
@@ -47,8 +47,7 @@ export async function loadCandidatesForRaces(
       try {
         const candidates = await readCandidatesForRace(raceId);
         return { raceId, candidates };
-      } catch (error) {
-        logReadError("listCandidatesForRace", error);
+      } catch {
         return { raceId, error: true as const };
       }
     }),

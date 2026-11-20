@@ -34,6 +34,9 @@ html {
 }
 
 body {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
   margin: 0;
   background: var(--color-paper);
   color: var(--color-ink);
@@ -290,6 +293,7 @@ a {
 }
 
 .page-main {
+  flex: 1 0 auto;
   padding-bottom: 5rem;
 }
 
@@ -1355,6 +1359,10 @@ td {
 }
 
 .cd-hover-label {
+  min-height: 1lh;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   margin: 0.35rem 0 0;
   font-weight: 650;
 }
@@ -2309,4 +2317,32 @@ td {
 
 @media (max-width: 640px) {
   .compare-board .compare-grid { display: grid; grid-template-columns: minmax(0, 1fr); }
+}
+
+.list-tail {
+  margin-block: 0.75rem;
+}
+
+.list-tail summary,
+.official-sources summary {
+  cursor: pointer;
+}
+
+.page-skeleton {
+  display: grid;
+  gap: 0.75rem;
+  padding-block: 2rem;
+}
+
+.page-skeleton span {
+  width: min(100%, 24rem);
+  height: 1rem;
+  border-radius: 0.25rem;
+  background: currentColor;
+  opacity: 0.08;
+}
+
+.page-skeleton span:first-child {
+  width: min(75%, 14rem);
+  height: 2rem;
 }

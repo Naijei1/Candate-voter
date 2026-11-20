@@ -176,7 +176,7 @@ Resources:
       Period: 3600
       EvaluationPeriods: 1
       Threshold: 300000
-      ComparisonOperator: GreaterThan
+      ComparisonOperator: GreaterThanThreshold
       TreatMissingData: notBreaching
       AlarmActions: [!Ref AlertTopic]
   ChatInputTokensAlarm:
@@ -191,7 +191,7 @@ Resources:
       Period: 3600
       EvaluationPeriods: 1
       Threshold: 3000000
-      ComparisonOperator: GreaterThan
+      ComparisonOperator: GreaterThanThreshold
       TreatMissingData: notBreaching
       AlarmActions: [!Ref AlertTopic]
   ChatInvocationsAlarm:
@@ -206,7 +206,7 @@ Resources:
       Period: 3600
       EvaluationPeriods: 1
       Threshold: 600
-      ComparisonOperator: GreaterThan
+      ComparisonOperator: GreaterThanThreshold
       TreatMissingData: notBreaching
       AlarmActions: [!Ref AlertTopic]
 Outputs:

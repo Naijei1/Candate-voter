@@ -3,9 +3,13 @@ import { FeedGrid } from "@/components/site/FeedCard";
 import { recentKentuckyPosts } from "@/lib/site/x-posts";
 import { todayMoney } from "@/lib/site/today";
 
+export function loadHomeNewsFeed() {
+  return Promise.all([recentKentuckyPosts(), todayMoney()]);
+}
+
 /** Home "News Feed" section, built from FEC filings. */
-export async function HomeNewsFeed() {
-  const [posts, money] = await Promise.all([recentKentuckyPosts(), todayMoney()]);
+export function HomeNewsFeed({ data }: { data: Awaited<ReturnType<typeof loadHomeNewsFeed>> }) {
+  const [posts, money] = data;
   const cards = [...money.spending, ...money.receipts, ...money.filings].slice(0, 6);
   if (!posts?.length && !cards.length) return null;
   return (

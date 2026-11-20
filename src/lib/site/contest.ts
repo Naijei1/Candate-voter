@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { isBogusAtLargeContest } from "@/lib/data/at-large";
 import { appendExpectedRaces, expectedRaceById } from "@/lib/data/expected-races";
 import {
@@ -25,10 +26,9 @@ export type FilingLoad = {
 
 export async function loadPilotIndex(cycle = PILOT_YEAR): Promise<FilingLoad> {
   try {
-    const races = await readRacesForCycle(cycle);
-    return { races, refreshedAt: await safeWatermark(), filingsLoaded: true };
-  } catch (error) {
-    logReadError("listRacesByCycle", error);
+    const [races, refreshedAt] = await Promise.all([readRacesForCycle(cycle), safeWatermark()]);
+    return { races, refreshedAt, filingsLoaded: true };
+  } catch {
     return {
       races: appendExpectedRaces([], [cycle]),
       refreshedAt: null,
@@ -44,7 +44,7 @@ export type ContestLoad = {
   filingsLoaded: boolean;
 };
 
-export async function loadContest(raceId: string): Promise<ContestLoad> {
+export const loadContest = cache(async (raceId: string): Promise<ContestLoad> => {
   let filingsLoaded = true;
   let race: Race | null = null;
   try {
@@ -61,13 +61,12 @@ export async function loadContest(raceId: string): Promise<ContestLoad> {
     return { race, candidates: ballotFallback(race.raceId), refreshedAt: null, filingsLoaded: false };
   }
   try {
-    const candidates = await readCandidatesForRace(race.raceId);
-    return { race, candidates, refreshedAt: await safeWatermark(), filingsLoaded: true };
-  } catch (error) {
-    logReadError("listCandidatesForRace", error);
+    const [candidates, refreshedAt] = await Promise.all([readCandidatesForRace(race.raceId), safeWatermark()]);
+    return { race, candidates, refreshedAt, filingsLoaded: true };
+  } catch {
     return { race, candidates: ballotFallback(race.raceId), refreshedAt: null, filingsLoaded: false };
   }
-}
+});
 
 function ballotFallback(raceId: string): PublicCandidate[] {
   return missingKyBallotCandidates(raceId, new Set()).flatMap((candidate) => {
@@ -85,7 +84,7 @@ export type ProfileLoad =
     }
   | { ok: false; missing: boolean };
 
-export async function loadProfile(candidateId: string): Promise<ProfileLoad> {
+export const loadProfile = cache(async (candidateId: string): Promise<ProfileLoad> => {
   try {
     const candidate = await readCandidate(candidateId);
     if (!candidate) return { ok: false, missing: true };
@@ -105,7 +104,7 @@ export async function loadProfile(candidateId: string): Promise<ProfileLoad> {
     logReadError("getCandidate", error);
     return { ok: false, missing: false };
   }
-}
+});
 
 async function safeWatermark(): Promise<string | null> {
   try {

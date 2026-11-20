@@ -1,3 +1,4 @@
+import { memoizeRead } from "../cache/memo";
 import { cache } from "react";
 import { signalRace } from "./candidate-signal";
 import { cyclesFromEnv } from "./cycles";
@@ -17,7 +18,7 @@ import type { Candidate, Filing, IngestWatermark, Race } from "../types";
 export { racesByOffice } from "../races";
 
 /**
- * Server-component reads. Each function calls `createDynamoRepository()`.
+ * Server-component reads with request deduplication and cached partition queries.
  * Callers render an empty state when a query returns no rows.
  */
 
@@ -26,6 +27,11 @@ export function logReadError(operation: string, error: unknown): void {
   const message = error instanceof Error ? error.message : "unknown error";
   console.error(`DynamoDB ${operation} failed: ${name}: ${message}`);
 }
+
+const readRacePartition = memoizeRead(
+  (cycle: number) => createDynamoRepository().listRacesByCycle(cycle),
+  (error) => logReadError("listRacesByCycle", error),
+);
 
 export async function listRacesForCycles(
   repo: Pick<VoterRepository, "listRacesByCycle">,
@@ -55,12 +61,15 @@ export async function readRaceIndex(
   refreshedAt: string | null;
 }> {
   const cycles = cyclesFromEnv(env, now);
-  const groups = await listRacesForCycles(createDynamoRepository(), cycles);
-  return { cycles, groups, refreshedAt: await readIndexRefreshedAt() };
+  const [groups, refreshedAt] = await Promise.all([
+    listRacesForCycles({ listRacesByCycle: readRacePartition }, cycles),
+    readIndexRefreshedAt(),
+  ]);
+  return { cycles, groups, refreshedAt };
 }
 
 export const readRacesForCycle = cache(async (cycle: number): Promise<Race[]> => {
-  const stored = visibleRaces(await createDynamoRepository().listRacesByCycle(cycle)).filter(
+  const stored = visibleRaces(await readRacePartition(cycle)).filter(
     (race) => raceMatchesCycle(race, cycle),
   );
   return appendExpectedRaces(stored, [cycle]).map(signalRace);
@@ -77,11 +86,10 @@ export const readCandidate = cache(
   },
 );
 
-export const readCandidatesForRace = cache(
-  async (raceId: string): Promise<PublicCandidate[]> => {
-    return loadPublicCandidates(createDynamoRepository(), raceId);
-  },
-);
+export const readCandidatesForRace = cache(memoizeRead(
+  (raceId: string): Promise<PublicCandidate[]> => loadPublicCandidates(createDynamoRepository(), raceId),
+  (error) => logReadError("listCandidatesForRace", error),
+));
 
 export const readWatermark = cache(
   async (): Promise<IngestWatermark | null> => {

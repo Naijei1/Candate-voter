@@ -1,3 +1,4 @@
+import { thumbnail } from "@/lib/site/thumbnail";
 export function partyMark(party: string): { letter: string; tone: "rep" | "dem" | "lib" | "ind" | "oth" } {
   if (/republican/i.test(party)) return { letter: "R", tone: "rep" };
   if (/democrat/i.test(party)) return { letter: "D", tone: "dem" };
@@ -12,16 +13,18 @@ export function PersonMark({
   photo,
   party = "",
   size = "md",
+  priority = false,
 }: {
   name: string;
   photo: string | null;
   party?: string;
+  priority?: boolean;
   size?: "sm" | "md" | "lg";
 }) {
   const mark = partyMark(party);
   const px = size === "lg" ? 160 : size === "sm" ? 72 : 96;
   if (photo) {
-    return <img className={`person-photo ${size}`} src={photo} alt="" width={px} height={px} />;
+    return <img className={`person-photo ${size}`} src={priority ? photo : thumbnail(photo)} alt="" width={px} height={px} loading={priority ? undefined : "lazy"} decoding={priority ? undefined : "async"} />;
   }
   return (
     <span className={`person-initials ${mark.tone} ${size}`} aria-hidden>

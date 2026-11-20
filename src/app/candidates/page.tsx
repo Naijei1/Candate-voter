@@ -1,3 +1,4 @@
+import { ShortList } from "@/components/site/ShortList";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CandidateCard } from "@/components/site/CandidateCard";
@@ -41,11 +42,12 @@ export default function CandidatesPage() {
             </Link>
           </div>
           {race.note ? <p className="hint">{race.note}</p> : null}
-          <ul className="cand-grid">
-            {candidateCards(race.raceId).map((person) => (
+          <ShortList
+            className="cand-grid"
+            items={candidateCards(race.raceId).map((person) => (
               <CandidateCard key={person.id} person={person} />
             ))}
-          </ul>
+          />
         </section>
       ))}
       <p className="hint">Source: <a href={KY_BALLOT_SOURCES[0].url}>Kentucky Secretary of State ↗</a></p>
