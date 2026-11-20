@@ -12,7 +12,7 @@ import type { ChatContextInput } from "./ui";
 export const ALIGNMENT_DISCLAIMER =
   "Viewpoint similarity uses public records only. This is not a voting recommendation.";
 
-export const ASK_INTRO = "Ask factual questions about federal races and filings.";
+export const ASK_INTRO = "Ask about Kentucky’s races.";
 
 const MAX_MESSAGE = 2000;
 
@@ -336,8 +336,8 @@ export function limitAnswerToRaceScope(
     answer_markdown: markdown.trim()
       ? markdown
       : senateOnly
-        ? "No Senate filing is stored for that contest."
-        : "No House filing is stored for that district.",
+        ? "No Senate filing found for that race."
+        : "No House filing found for that district.",
     sources: answer.sources.filter((source) => sourceKept(source, keep, keepDistrict, senateOnly)),
   };
 }
@@ -392,7 +392,7 @@ function stripHouseDistricts(markdown: string, keep: ReadonlySet<string>): strin
     const district = /\bDistrict\s+(\d+)\b/.exec(line);
     if (district?.[1] && /^\s*[-*]/.test(line) && !keepDistrict.has(Number(district[1]))) return false;
     if (keep.size === 0 && /^\s*[-*]/.test(line) && /\bat-large\b/i.test(line)) return false;
-    if (keep.size === 0 && /^No House filing is stored\.?$/.test(line.trim())) return false;
+    if (keep.size === 0 && /^No House filing found\.?$/.test(line.trim())) return false;
     return true;
   });
   const compacted = lines.filter((line, index, all) => {

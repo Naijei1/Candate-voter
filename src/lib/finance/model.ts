@@ -55,12 +55,8 @@ export type TotalsWatermark = {
   updatedAt: string;
 };
 
-/** Shown once, on /finance. Other pages link here instead of repeating it. */
-export const FINANCE_EXPLANATION =
-  "Money raised and spent by a campaign is separate from money other groups spend on their own. Those amounts are not added together.";
-
 export function formatMoney(value: number | null): string {
-  if (value == null) return "Not reported";
+  if (value == null) return "—";
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(value);
 }
 
@@ -70,9 +66,8 @@ export function coverageKey(start: string | null, end: string | null): string | 
 }
 
 export function coverageLabel(start: string | null, end: string | null): string {
-  if (!start && !end) return "Coverage dates not reported";
   if (start && end) return `${start} to ${end}`;
-  return end ?? start ?? "Coverage dates not reported";
+  return end ?? start ?? "";
 }
 
 export function fecImagePdf(image: string | null | undefined): string | null {

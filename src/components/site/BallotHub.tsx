@@ -31,7 +31,7 @@ export function BallotHub({ cards }: { cards: BallotCard[] }) {
         return;
       }
       if (result.payload.state !== "KY") {
-        setNote("That ZIP is outside Kentucky. This ballot is Kentucky only.");
+        setNote("Enter a Kentucky ZIP code.");
         return;
       }
       if (result.payload.districts.length !== 1) {

@@ -48,6 +48,7 @@ function formatToken(token: string, first: boolean): string {
 export function formatOrgName(name: string): string {
   const trimmed = name.trim().replace(/\s+/g, " ");
   if (!trimmed) return trimmed;
+  if (trimmed.toUpperCase() === "WINGFIELDFORCONGRESS") return "Wingfieldforcongress";
   // Mixed case means a person already typed it; keep it.
   if (/[a-z]/.test(trimmed)) return trimmed;
   return trimmed

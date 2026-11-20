@@ -43,7 +43,7 @@ test("homepage is a document in the navy and red palette, not a map shell", () =
   assert.match(page, /Hero/);
   assert.match(readFileSync(new URL("../src/app/ballot/page.tsx", import.meta.url), "utf8"), /GuideFlow/);
   assert.match(guide, /Step \{stepNumber\} of 3/);
-  assert.match(brand, /Your elections\. All in one place\./);
+  assert.match(brand, /Kentucky’s federal elections\./);
   assert.equal(page.includes("Landing"), false);
   assert.equal(page.includes("Explore by state"), false);
   assert.match(css, /--color-navy:\s*#142b49/);

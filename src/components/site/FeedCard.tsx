@@ -31,7 +31,7 @@ export function FeedCard({ card }: { card: TodayCard }) {
         <span className="feed-title">{card.title}</span>
         <span className="feed-text">{card.text}</span>
         <span className="meta">
-          {card.when} · {card.sourceName}
+          {card.sourceName} · {card.when}
         </span>
       </span>
     </a>

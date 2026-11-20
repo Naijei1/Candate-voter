@@ -143,7 +143,7 @@ export function GuideFlow({ races }: { races: GuideRace[]; signedIn: boolean }) 
         return;
       }
       if (result.payload.state !== "KY") {
-        setNote("That ZIP is outside Kentucky. This guide covers Kentucky only.");
+        setNote("Enter a Kentucky ZIP code.");
         return;
       }
       if (result.payload.districts.length !== 1) {
@@ -184,7 +184,7 @@ export function GuideFlow({ races }: { races: GuideRace[]; signedIn: boolean }) 
       },
       () => {
         setBusy(false);
-        setNote("Location was not shared. It was not saved.");
+        setNote("Location unavailable. Enter a ZIP code.");
       },
       { enableHighAccuracy: false, timeout: 8000 },
     );
@@ -212,13 +212,13 @@ export function GuideFlow({ races }: { races: GuideRace[]; signedIn: boolean }) 
           {step === "zip" ? (
             <section>
               <h1 ref={headingRef} tabIndex={-1} className="mb-2 text-4xl font-semibold tracking-tight text-slate-950">Where do you vote?</h1>
-              <p className="mb-6 text-lg text-slate-600">Kentucky only. A ZIP or your location finds a U.S. House district. It is not your full local ballot.</p>
+              <p className="mb-6 text-lg text-slate-600">Enter your ZIP code to find your races.</p>
               <Card className="space-y-4">
                 <label className="block text-lg font-medium" htmlFor="guide-zip">
                   ZIP code
-                  <input id="guide-zip" className="mt-2 h-14 w-full rounded-2xl border border-slate-300 px-4 text-2xl" inputMode="numeric" autoComplete="postal-code" maxLength={5} pattern="[0-9]{5}" aria-invalid={note ? true : undefined} aria-describedby={note ? "zip-error" : "zip-hint"} value={zip} onChange={(event) => setZip(event.target.value)} />
+                  <input id="guide-zip" className="mt-2 h-14 w-full rounded-2xl border border-slate-300 px-4 text-2xl" inputMode="numeric" autoComplete="postal-code" maxLength={5} pattern="[0-9]{5}" aria-invalid={note ? true : undefined} placeholder="40202" aria-describedby={note ? "zip-error" : undefined} value={zip} onChange={(event) => setZip(event.target.value)} />
                 </label>
-                <p id="zip-hint" className="text-slate-600">5 digits, e.g. 40202</p>
+
                 <Button className="w-full" disabled={busy} onClick={() => void lookupZip()}>
                   See my ballot
                 </Button>
@@ -242,7 +242,6 @@ export function GuideFlow({ races }: { races: GuideRace[]; signedIn: boolean }) 
               {district ? (
                 <>
                   <p className="mb-4 text-lg text-slate-700">{`You're in KY-${district.padStart(2, "0")}. You'll vote on ${ballot.length} federal races.`}</p>
-                  <p className="mb-4">It is not your full local ballot.</p>
                 </>
               ) : (
                 <p className="mb-4">Go back and add a ZIP so this list is your U.S. House district plus the Senate race.</p>
@@ -273,16 +272,14 @@ export function GuideFlow({ races }: { races: GuideRace[]; signedIn: boolean }) 
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                 {current.people.map((row) => {
                   const choice = choices[current.id];
+                  const topStance = stancesFor(row.id)[0];
                   const leaned = choice?.kind === "lean" && choice.candidateId === row.id;
-                  const openSeat = !current.people.some((person) => person.holds);
                   return (
                   <Card key={row.id} className={leaned ? "ring-2 ring-[#1e3a8a]" : ""}>
-                    <PersonFace person={row} openSeat={openSeat} />
-                    <p className="mt-3 text-slate-800">{row.job ?? "No job line is stored."}</p>
-                    <ul className="mt-3 space-y-2 text-slate-800">
-                      <li>{row.raised ? `Raised ${row.raised}` : "No money total is stored."}</li>
-                      <li>{topFact(row.id)}</li>
-                    </ul>
+                    <PersonFace person={row} />
+                    {row.job ? <p className="mt-3 text-slate-800">{row.job}</p> : null}
+                    {row.raised ? <p className="mt-3">Raised {row.raised}</p> : null}
+                    {topStance ? <div className="mt-3"><StanceLine stance={topStance} /></div> : null}
                     <p className="mt-3">
                       <Link href={`/candidates/${row.id}`}>View</Link>
                       {" · "}
@@ -303,7 +300,7 @@ export function GuideFlow({ races }: { races: GuideRace[]; signedIn: boolean }) 
           {step === "list" ? (
             <section>
               <h1 className="mb-2 text-4xl font-semibold">What matters to you?</h1>
-              <p className="mb-4 text-lg text-slate-600">Optional. This is not a recommendation. It only counts issues where a sourced stance is on file.</p>
+              <p className="mb-4 text-lg text-slate-600">Choose issues to compare.</p>
               <div className="flex flex-wrap gap-2">
                 {stanceIssues().map((issue) => {
                   const on = issues.includes(issue.id);
@@ -322,7 +319,6 @@ export function GuideFlow({ races }: { races: GuideRace[]; signedIn: boolean }) 
                   return <li key={issueId}>{label}: {withNotes} of {total} people on your ballot have a sourced note.</li>;
                 })}
               </ul>
-              <p className="mt-6 text-slate-600">Optional. This is not a recommendation.</p>
             </section>
           ) : null}
 
@@ -332,16 +328,15 @@ export function GuideFlow({ races }: { races: GuideRace[]; signedIn: boolean }) 
       <Sheet open={sheet != null} onOpenChange={(open) => { if (!open) setSheet(null); }}>
         {sheet ? (
           <SheetContent title={sheet.name}>
-            <PersonFace person={sheet} openSeat={!sheet.holds} />
+            <PersonFace person={sheet} />
             <p className="mt-3">{sheet.party}</p>
-            <p className="mt-3">{sheet.raised ? `Raised ${sheet.raised}` : "No money total is stored."}</p>
+            {sheet.raised ? <p className="mt-3">Raised {sheet.raised}</p> : null}
             <ul className="mt-4 space-y-3">
               {stancesFor(sheet.id).map((stance) => (
                 <li key={stance.issueId}>
                   <StanceLine stance={stance} />
                 </li>
               ))}
-              {stancesFor(sheet.id).length === 0 ? <li>No public stance found.</li> : null}
             </ul>
             <p className="mt-4">
               <Link className="font-semibold text-[#1e3a8a]" href={`/candidates/${sheet.id}`}>Filings, spending by other groups, and news</Link>
@@ -376,13 +371,6 @@ export function GuideFlow({ races }: { races: GuideRace[]; signedIn: boolean }) 
   );
 }
 
-function topFact(id: string): string {
-  const stance = stancesFor(id)[0];
-  if (!stance) return "No public stance found.";
-  const label = stanceIssues().find((issue) => issue.id === stance.issueId)?.label ?? "Issue";
-  return `${label}: ${stance.text}`;
-}
-
 function StanceLine({ stance }: { stance: Stance }) {
   return (
     <p>
@@ -393,9 +381,9 @@ function StanceLine({ stance }: { stance: Stance }) {
   );
 }
 
-function PersonFace({ person, openSeat }: { person: GuidePerson; openSeat: boolean }) {
+function PersonFace({ person }: { person: GuidePerson }) {
   const mark = partyMark(person.party);
-  const status = seatStatus({ holds: person.holds, writeIn: person.writeIn, openSeat });
+  const status = seatStatus({ holds: person.holds, writeIn: person.writeIn });
   return (
     <div>
       {person.photo ? (
@@ -410,7 +398,7 @@ function PersonFace({ person, openSeat }: { person: GuidePerson; openSeat: boole
         <Badge tone={partyTone(person.party)}>{mark.letter} · {person.party}</Badge>
         {status ? <Badge>{status}</Badge> : null}
       </div>
-      {person.photoCredit ? <p className="mt-1 text-sm text-slate-600">{person.photoCredit}</p> : null}
+      {person.photoCredit ? <p className="mt-1 text-sm text-slate-600">Photo: {person.photoCredit}</p> : null}
       {person.website ? <p className="mt-1"><a href={person.website.href}>{person.website.label}</a></p> : null}
     </div>
   );

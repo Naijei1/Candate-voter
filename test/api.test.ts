@@ -525,14 +525,14 @@ test("route modules require a key before touching the table", async () => {
       assert.equal(routeModule.runtime, "nodejs");
     }
 
-    const raceRoute = await import("../src/app/api/v1/races/[raceId]/route.ts");
+    const raceRoute = await import("../src/app/api/v1/races/[raceId]/route");
     const raceResponse = await raceRoute.GET(
       new Request("https://voter.example/api/v1/races/2026-senate-CA"),
       { params: Promise.resolve({ raceId: "2026-senate-CA" }) },
     );
     assert.equal(raceResponse.status, 401);
 
-    const candidateRoute = await import("../src/app/api/v1/candidates/[candidateId]/route.ts");
+    const candidateRoute = await import("../src/app/api/v1/candidates/[candidateId]/route");
     const candidateResponse = await candidateRoute.GET(
       new Request("https://voter.example/api/v1/candidates/S0CA00123"),
       { params: Promise.resolve({ candidateId: "S0CA00123" }) },
@@ -540,7 +540,7 @@ test("route modules require a key before touching the table", async () => {
     assert.equal(candidateResponse.status, 401);
 
     const filingsRoute = await import(
-      "../src/app/api/v1/candidates/[candidateId]/filings/route.ts"
+      "../src/app/api/v1/candidates/[candidateId]/filings/route"
     );
     const filingsResponse = await filingsRoute.GET(
       new Request("https://voter.example/api/v1/candidates/S0CA00123/filings"),

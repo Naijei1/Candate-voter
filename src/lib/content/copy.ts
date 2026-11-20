@@ -1,4 +1,4 @@
-/** Public site copy. Empty fields render as awaiting content. Do not invent text. */
+/** Public site copy. Empty fields are omitted on public pages. Do not invent text. */
 
 export const AWAITING_CONTENT = "Awaiting content";
 

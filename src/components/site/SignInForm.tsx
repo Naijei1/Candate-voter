@@ -13,7 +13,7 @@ export function SignInForm({ configured, googleUrl = null }: { configured: boole
   const [busy, setBusy] = useState(false);
 
   if (!configured) {
-    return <p className="notice">Sign-in is not set up on this server.</p>;
+    return <p className="notice">Sign-in unavailable.</p>;
   }
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {

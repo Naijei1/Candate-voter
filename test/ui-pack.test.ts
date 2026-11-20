@@ -24,7 +24,7 @@ test("data refreshed banner uses the index timestamp and stays quiet when it is 
 
   const page = readFileSync(new URL("../src/app/states/[state]/page.tsx", import.meta.url), "utf8");
   const read = readFileSync(new URL("../src/lib/data/read.ts", import.meta.url), "utf8");
-  assert.match(page, /refreshedAt=\{loaded\.refreshedAt\}/);
+  assert.doesNotMatch(page, /DataRefreshedBanner/);
   assert.match(read, /refreshedAt: await readIndexRefreshedAt\(\)/);
   assert.equal(page.includes("loadRefreshedAt"), false);
 });

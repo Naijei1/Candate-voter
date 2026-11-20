@@ -37,6 +37,7 @@ test("Solomon stays on both contests and each row lists both FEC ids", () => {
   for (const row of linked) {
     assert.equal(row.multiFiling, true);
     assert.equal(row.writeIn, true);
+    assert.ok(row.filings);
     assert.deepEqual(
       [...row.filings.map((filing) => filing.fecId)].sort(),
       ["S6TX00644", "S6TX00693"],
@@ -49,7 +50,7 @@ test("Solomon stays on both contests and each row lists both FEC ids", () => {
     assert.match(note, /S6TX00644/);
     assert.match(note, /S6TX00693/);
   }
-  assert.equal(personFilingNote(linked[0]?.filings.slice(0, 1) ?? []), null);
+  assert.equal(personFilingNote(linked[0]?.filings?.slice(0, 1) ?? []), null);
 });
 
 test("identical Form 2 rows collapse and a different document stays", () => {

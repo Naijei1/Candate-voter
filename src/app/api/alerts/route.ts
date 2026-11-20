@@ -59,7 +59,7 @@ export async function PUT(request: Request): Promise<Response> {
   } catch (error) {
     console.error("save alerts failed:", error instanceof Error ? error.name : "Error");
     return Response.json(
-      { reason: "unavailable", message: "Not saved. This server cannot write alert preferences yet." },
+      { reason: "unavailable", message: "Preferences could not be saved." },
       { status: 503 },
     );
   }

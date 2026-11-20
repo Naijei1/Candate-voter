@@ -118,7 +118,7 @@ test("statewide panel lists 2 senators and the 7 constitutional officers with so
   assert.equal(beshear?.name, "Andy Beshear");
   const text = `${beshear?.term} ${beshear?.note}`;
   assert.equal(/seeking|re-?election|running for/i.test(text), false);
-  assert.match(text, /cannot run for governor/);
+  assert.match(text, /Term-limited in 2027/);
   assert.ok(KY_CONSTITUTIONAL_OFFICERS.every((row) => row.photo === null));
 });
 
@@ -135,12 +135,12 @@ test("candidate cards carry photo or initials, party, and one seat label", () =>
   assert.ok(senate.some((person) => person.photo));
   assert.ok(senate.some((person) => person.photo === null));
   assert.equal(seatLabel({ holdsOffice: true, openSeat: false, writeIn: false }), "Current officeholder");
-  assert.equal(seatLabel({ holdsOffice: false, openSeat: true, writeIn: false }), "Running for an open seat");
+  assert.equal(seatLabel({ holdsOffice: false, openSeat: true, writeIn: false }), "Open seat");
   assert.equal(seatLabel({ holdsOffice: false, openSeat: false, writeIn: false }), null);
   assert.equal(seatLabel({ holdsOffice: false, openSeat: true, writeIn: true }), "Write-in");
   const district1 = candidateCards("2026-house-KY-01");
   assert.ok(district1.some((person) => person.holdsOffice && seatLabel(person) === "Current officeholder"));
-  assert.equal(district1.some((person) => seatLabel(person) === "Running for an open seat"), false);
+  assert.equal(district1.some((person) => seatLabel(person) === "Open seat"), false);
 });
 
 test("feed cards name a person for the headshot and draw a mark for groups", () => {

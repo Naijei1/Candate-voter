@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { DataRefreshedBanner } from "@/components/DataRefreshedBanner";
 import { MultiFilingDetails } from "@/components/MultiFilingDetails";
 import { AskPanel } from "@/components/site/AskPanel";
 import { CheckHistory } from "@/components/site/CheckHistory";
@@ -12,11 +11,10 @@ import { BallotBar } from "@/components/site/BallotBar";
 import { PersonFace } from "@/components/site/PersonFace";
 import { raceCardTitle } from "@/lib/site/candidate-cards";
 import { openSeatLine } from "@/lib/site/seat";
-import { KY_BALLOT_CHECKED, KY_BALLOT_SOURCES, calendarDay, kyBallot, kyBallotIds } from "@/lib/site/ky-ballot";
-import { portraitFor } from "@/lib/site/stances";
+import { KY_BALLOT_SOURCES, kyBallot, kyBallotIds } from "@/lib/site/ky-ballot";
+import { photoAttribution, portraitFor } from "@/lib/site/stances";
 import { cardsForRace } from "@/lib/site/showcase";
 import { personFilingNote } from "@/lib/data/filing-note";
-import { generalElectionLabel } from "@/lib/copy";
 import { httpsUrl } from "@/lib/format";
 import { loadChecks } from "@/lib/content/store";
 import { loadContest } from "@/lib/site/contest";
@@ -56,28 +54,14 @@ export default async function RacePage({ params }: PageProps) {
       />
       <h1>{race.title}</h1>
       {ballot ? null : <ElectionDayBanner />}
-      <p className="lede">
-        {race.cycle != null ? `${generalElectionLabel(race.cycle)} · General` : "General"}
-      </p>
-      <p className="hint" title="Alphabetical by name. Not a ranking. A filing is not the printed ballot.">
-        {ballot ? "November 3, 2026 ballot, A to Z" : "Listed A to Z. Not a ranking."}
-        {sourceHref ? (
-          <>
-            {" · "}
-            <a href={sourceHref} title="FEC filing, Form 2">
-              Official filing
-            </a>
-          </>
-        ) : null}
-      </p>
-      <DataRefreshedBanner refreshedAt={loaded.refreshedAt} />
+      {!ballot && sourceHref ? <p className="hint"><a href={sourceHref}>Source ↗</a></p> : null}
       {ballot || loaded.filingsLoaded ? null : roster.fecList ? (
         <p className="notice" role="status">
-          Live filings could not be loaded. Names below are from the election commission candidate list.
+          Names from the FEC candidate list.
         </p>
       ) : (
         <p className="notice notice-error" role="status">
-          Names could not be loaded. <Link href="/sources">About this data</Link>
+          Candidates unavailable. <Link href="/sources">Sources</Link>
         </p>
       )}
 
@@ -112,16 +96,14 @@ export default async function RacePage({ params }: PageProps) {
                     holds={person.holdsOffice}
                     writeIn={person.role === "write-in"}
                     href={`/candidates/${person.id}`}
-                    credit={photo?.credit ?? null}
+                    credit={photoAttribution(photo)}
                   />
                 </li>
                 );
               })}
             </ul>
             <p className="hint">
-              Kentucky Secretary of State general-election filings, checked {calendarDay(KY_BALLOT_CHECKED)}. Nominees also
-              match the Clerk of the House list published Oct 8, 2026.{" "}
-              <a href={KY_BALLOT_SOURCES[0].url}>Filing list</a>
+              Source: <a href={KY_BALLOT_SOURCES[0].url}>Kentucky Secretary of State ↗</a>
             </p>
             {others.length > 0 ? (
               <details>

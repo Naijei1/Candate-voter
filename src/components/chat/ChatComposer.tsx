@@ -44,7 +44,7 @@ export function ChatComposer({
           maxLength={MAX_CHAT_MESSAGE}
           aria-label="Ask about races or candidates"
           aria-describedby={nearLimit ? counterId : undefined}
-          placeholder="Ask a factual question…"
+          placeholder="Ask about Kentucky’s races…"
           disabled={pending}
           onChange={(event) => onChange(event.target.value)}
           onKeyDown={onKeyDown}

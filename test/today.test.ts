@@ -16,10 +16,11 @@ test("home money cards use November ballot totals and skip primary losers", () =
   assert.equal(/donated \$|gave \$|Jane Doe/.test(text), false);
   for (const card of all) {
     assert.match(card.sourceUrl, /^https:\/\//);
-    assert.match(card.when, /^Retrieved 2026-/);
-    assert.match(card.text, /total/);
+    assert.match(card.when, /^[A-Z][a-z]{2} \d{1,2}, 2026$/);
+    assert.match(card.text, /outside spending|^Raised \$/);
+    assert.doesNotMatch(card.text, /stored|committee total|one payment/);
   }
-  assert.ok(cards.spending.every((card) => card.sourceName === "FEC independent expenditures"));
+  assert.ok(cards.spending.every((card) => card.sourceName === "FEC"));
 });
 
 test("posts on X stay hidden when the bearer token is unset", async () => {
@@ -29,7 +30,7 @@ test("posts on X stay hidden when the bearer token is unset", async () => {
   if (previous !== undefined) process.env[X_BEARER_ENV] = previous;
 });
 
-test("the home page leads with the hero, the Kentucky map, and stored records", () => {
+test("the home page leads with the hero, the Kentucky map, and FEC activity", () => {
   const page = readFileSync("src/app/page.tsx", "utf8");
   const hero = readFileSync("src/components/home/Hero.tsx", "utf8");
   assert.match(page, /Hero/);

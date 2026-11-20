@@ -13,7 +13,7 @@ export async function notesAnswer(request: ChatRequest): Promise<ChatAnswer | nu
     : namedPeople(request.message);
   if (!race && people.length === 0 && !/news|lantern/i.test(request.message)) {
     return {
-      answer_markdown: "Name a Kentucky federal race and I can cite the sourced notes stored for it. I will not guess a position.",
+      answer_markdown: "Which Kentucky federal race?",
       sources: [],
       refused: false,
       mode: "factual",
@@ -26,7 +26,7 @@ export async function notesAnswer(request: ChatRequest): Promise<ChatAnswer | nu
     for (const person of people) {
       const notes = stancesFor(person.id);
       if (notes.length === 0) {
-        lines.push(`**${person.name}:** no public stance is stored.`);
+        lines.push(`**${person.name}:** no public stance found.`);
         continue;
       }
       const bits = notes.map((note) => {

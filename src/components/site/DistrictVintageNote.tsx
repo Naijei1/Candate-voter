@@ -1,5 +1,5 @@
 export function DistrictVintageNote() {
   return (
-    <p>Map and ZIP lookup both use Census 120th Congressional Districts (January 1, 2026).</p>
+    <p>District maps and ZIP lookup · 120th Congress · <a href="https://www.census.gov/geographies/mapping-files/time-series/geo/tiger-line-file.html">U.S. Census Bureau</a> · Jan 1, 2026</p>
   );
 }

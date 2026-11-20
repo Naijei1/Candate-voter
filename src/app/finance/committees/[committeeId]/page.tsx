@@ -28,21 +28,16 @@ export default async function CommitteeFinancePage({ params }: PageProps) {
         <Link href="/finance">Campaign finance</Link>
       </p>
       <h1>{title}</h1>
-      {bundle.notice ? <p className="notice">{bundle.notice}</p> : null}
-      <p>
-        <Link href="/finance#direct-and-outside">Money a campaign reports is separate from money other groups spend.</Link>
-      </p>
-      {named ? null : <p className="hint">Official id {committeeId}</p>}
-      {direct.length === 0 && outside.length === 0 ? <p>No money totals are stored for this group.</p> : null}
+      {named ? null : <p className="hint">FEC ID {committeeId}</p>}
       {direct.length > 0 ? (
         <>
-          <h2>Money this group reported</h2>
+          <h2>Campaign finance</h2>
           <DirectList rows={direct} />
         </>
       ) : null}
       {outside.length > 0 ? (
         <>
-          <h2>Spending on its own</h2>
+          <h2>Outside spending</h2>
           <OutsideList rows={outside} />
         </>
       ) : null}

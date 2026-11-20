@@ -1,9 +1,6 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { FollowControl } from "@/components/site/FollowControl";
 import { isPostalState, stateName } from "@/lib/data/states";
-import { MEASURE_KINDS } from "@/lib/site/measure-kinds";
 
 export const dynamic = "force-dynamic";
 
@@ -20,28 +17,8 @@ export default async function MeasuresPage({ params }: PageProps) {
   const name = stateName(postal);
   return (
     <article className="wrap">
-      <p>
-        <Link href="/measures">All states</Link>
-      </p>
-      <h1>{name} ballot measures</h1>
-      <p>No certified question is loaded. You can look at federal races instead.</p>
-      <p>
-        {postal === "KY"
-          ? "The Kentucky State Board of Elections site did not return a readable file, so these are empty templates."
-          : "No official measure list is connected for this state."}
-      </p>
-      <ul className="card-grid">
-        {MEASURE_KINDS.map((kind) => (
-          <li className="card" key={kind.id}>
-            <h2>{kind.label}</h2>
-            <p>The official question is not loaded yet.</p>
-            <FollowControl what="measure" targetId={`${postal.toLowerCase()}-${kind.id}`} />
-            <p>
-              <Link href={`/measures/${postal.toLowerCase()}/${kind.id}`}>Open template</Link>
-            </p>
-          </li>
-        ))}
-      </ul>
+      <h1>{name} ballot questions</h1>
+      <p>No ballot questions listed.</p>
     </article>
   );
 }

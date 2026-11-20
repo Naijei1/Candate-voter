@@ -9,19 +9,19 @@ export const KY_BALLOT_CHECKED = "2026-11-03";
 
 export const KY_BALLOT_SOURCES = [
   {
-    name: "Kentucky Secretary of State, 2026 General Election candidate filings",
+    name: "Kentucky Secretary of State",
     url: "https://web.sos.ky.gov/candidatefilings/Default.aspx?id=3",
-    note: "List All Candidates for the 2026 General Election. Retrieved November 3, 2026.",
+    note: "General election filings · Nov 3, 2026.",
   },
   {
-    name: "Clerk of the U.S. House, nominees for November 3, 2026",
+    name: "Clerk of the House",
     url: "https://clerk.house.gov/member_info/electionInfo/2026/120-nominations.pdf",
-    note: "Published October 8, 2026. A star marks a current House member. Footnotes name who is not on the ballot.",
+    note: "Published Oct 8, 2026.",
   },
   {
-    name: "OpenFEC candidate and committee totals, 2026 cycle",
+    name: "FEC",
     url: "https://api.open.fec.gov/v1/candidates/totals/",
-    note: "Retrieved November 3, 2026. Coverage ends October 14, 2026 on every total that was returned.",
+    note: "Campaign totals through Oct 14, 2026.",
   },
 ] as const;
 
@@ -175,7 +175,7 @@ const HOUSE: KyRace[] = [
   },
   {
     raceId: "2026-house-KY-04",
-    note: "Thomas Massie lost the primary and is not on this ballot.",
+    note: "Thomas Massie lost the primary.",
     people: [
       person("H6KY04171", "Ed Gallrein", "Republican Party", false, money("H6KY04171", 4095784.14, 3662248.65, 433535.49, 0, "2025-10-01")),
       person("H6KY04189", "Melissa Claire Strange", "Democratic Party", false, money("H6KY04189", 157330.4, 123485.44, 40742.09, 20000, "2025-10-01")),
@@ -196,7 +196,7 @@ const HOUSE: KyRace[] = [
   },
   {
     raceId: "2026-house-KY-06",
-    note: "Andy Barr is not running for this House seat. He is a Senate nominee.",
+    note: "Andy Barr is running for Senate.",
     people: [
       person("H6KY06192", "Ralph Alvarado", "Republican Party", false, money("H6KY06192", 2307369.27, 2126557.77, 180811.5, 0, "2025-07-01")),
       person("H6KY06184", "Zach Dembo", "Democratic Party", false, money("H6KY06184", 3205461.88, 2585132.32, 620329.56, 0, "2025-06-13")),

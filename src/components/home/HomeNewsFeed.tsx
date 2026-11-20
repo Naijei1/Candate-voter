@@ -3,10 +3,11 @@ import { FeedGrid } from "@/components/site/FeedCard";
 import { recentKentuckyPosts } from "@/lib/site/x-posts";
 import { todayMoney } from "@/lib/site/today";
 
-/** Home "News Feed" section. Built from records this site stores, not outside news. */
+/** Home "News Feed" section, built from FEC filings. */
 export async function HomeNewsFeed() {
   const [posts, money] = await Promise.all([recentKentuckyPosts(), todayMoney()]);
   const cards = [...money.spending, ...money.receipts, ...money.filings].slice(0, 6);
+  if (!posts?.length && !cards.length) return null;
   return (
     <section className="home-section" aria-labelledby="feed-heading">
       <div className="section-head">
@@ -15,7 +16,6 @@ export async function HomeNewsFeed() {
           See the full News Feed <span aria-hidden="true">→</span>
         </Link>
       </div>
-      <p className="lede">What Kentucky candidates on the November ballot reported, from records this site stores.</p>
       {posts && posts.length > 0 ? (
         <div>
           <h3>Posts on X</h3>
@@ -34,7 +34,7 @@ export async function HomeNewsFeed() {
           </ul>
         </div>
       ) : null}
-      {cards.length === 0 ? <p>Nothing new is stored.</p> : <FeedGrid cards={cards} />}
+      {cards.length > 0 ? <FeedGrid cards={cards} /> : null}
     </section>
   );
 }

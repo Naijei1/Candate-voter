@@ -1,60 +1,37 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { Term } from "@/components/site/Term";
 import { DistrictVintageNote } from "@/components/site/DistrictVintageNote";
+import { KY_BALLOT_SOURCES } from "@/lib/site/ky-ballot";
+import { creativeCommonsPortraits, photoAttribution } from "@/lib/site/stances";
 
-export const metadata: Metadata = { title: "Where this comes from" };
+export const metadata: Metadata = { title: "Sources" };
 
 export default function SourcesPage() {
   return (
     <article className="wrap">
-      <h1>Where this comes from</h1>
-      <p className="lede">
-        Names on federal races come from candidacy paperwork filed with the election commission. Filing that paperwork
-        is not the same as being printed on the ballot.
-      </p>
-      <h2>Kentucky, November 3, 2026</h2>
-      <p>
-        Federal names on the Kentucky pages are the Secretary of State general-election filings, checked Nov 3, 2026.
-        They also match the Clerk of the House nominee list published Oct 8, 2026. People who only filed for the primary
-        are not on that list. Money figures are FEC totals retrieved the same day, through Oct 14, 2026.
-      </p>
-      <h2>What you can use now</h2>
+      <h1>Sources</h1>
+      <h2>Kentucky&apos;s 2026 federal elections</h2>
       <ul className="plain-list">
-        <li>U.S. Senate and U.S. House contests, including Kentucky in 2026.</li>
-        <li>A ZIP code finds those federal districts. It is not your full local ballot.</li>
-        <li>Money raised and spent, when a campaign has filed a report.</li>
-      </ul>
-      <h2>Not here yet</h2>
-      <ul className="plain-list">
-        <li>State, county, city, judicial, and school-board races.</li>
-        <li>Ballot questions.</li>
-        <li>Polls, news stories, biographies, and photos.</li>
-        <li>Email alerts. You can save a race, but nothing is emailed yet.</li>
-      </ul>
-      <h2>Words you may see</h2>
-      <ul className="plain-list">
-        <li>
-          <Term tip="The Federal Election Commission. Campaigns file paperwork there.">Election commission</Term> keeps
-          the federal filings.
-        </li>
-        <li>
-          <Term tip="The person who holds the office now is not running again.">Open seat</Term> means no current
-          officeholder is on the list.
-        </li>
-        <li>
-          <Term tip="Money other groups spend on their own ads. It is not a donation to the campaign.">
-            Outside spending
-          </Term>{" "}
-          is separate from money the campaign raised.
-        </li>
+        <li><a href={KY_BALLOT_SOURCES[0].url}>Kentucky Secretary of State candidate filings</a> · Nov 3, 2026</li>
+        <li><a href={KY_BALLOT_SOURCES[1].url}>Clerk of the House nominee list</a> · Oct 8, 2026</li>
+        <li><a href={KY_BALLOT_SOURCES[2].url}>FEC campaign totals</a> · Through Oct 14, 2026</li>
+        <li><a href="https://www.fec.gov/data/independent-expenditures/">FEC outside spending</a></li>
       </ul>
       <DistrictVintageNote />
-      <p>
-        <Link className="btn btn-navy" href="/states/ky">
-          See Kentucky races
-        </Link>
-      </p>
+      <h2>Media credits</h2>
+      <ul className="plain-list">
+        <li>
+          Edmond Dantès, Pexels · <a href="https://www.pexels.com/video/people-voting-7103537/">People voting</a>
+          {" · "}<a href="https://www.pexels.com/video/woman-putting-his-vote-on-a-ballot-box-7103427/">Ballot box</a>
+        </li>
+        {creativeCommonsPortraits().map(([id, photo]) => (
+          <li key={id}><a href={photo.sourceUrl}>{photoAttribution(photo)}</a> · Wikimedia Commons</li>
+        ))}
+      </ul>
+      <h2>Glossary</h2>
+      <ul className="plain-list">
+        <li><strong>Open seat</strong> — No current officeholder is running.</li>
+        <li><strong>Outside spending</strong> — Spending by groups outside a campaign.</li>
+      </ul>
     </article>
   );
 }

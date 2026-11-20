@@ -2,7 +2,7 @@ import Link from "next/link";
 import { normalizePersonName } from "@/lib/data/names";
 import { httpsUrl } from "@/lib/format";
 import { formatOrgName } from "@/lib/site/org-name";
-import { coverageLabel, FINANCE_EXPLANATION, formatMoney, type FinanceDirect, type FinanceOutside } from "@/lib/finance/model";
+import { coverageLabel, formatMoney, type FinanceDirect, type FinanceOutside } from "@/lib/finance/model";
 
 function personLabel(name: string | null, fallback: string): string {
   const normalized = name ? normalizePersonName(name) ?? name : fallback;
@@ -23,16 +23,8 @@ function plainSource(label: string): string {
   return "Election commission totals";
 }
 
-export function FinanceExplanation() {
-  return (
-    <p id="direct-and-outside">
-      {FINANCE_EXPLANATION}
-    </p>
-  );
-}
-
 export function DirectList({ rows }: { rows: readonly FinanceDirect[] }) {
-  if (rows.length === 0) return <p>No campaign totals for this view.</p>;
+  if (rows.length === 0) return null;
   return (
     <ul className="card-grid">
       {rows.map((row) => {
@@ -50,11 +42,11 @@ export function DirectList({ rows }: { rows: readonly FinanceDirect[] }) {
             <p>
               <Link href={`/candidates/${row.candidateId}`}>{name}</Link>
             </p>
-            <p>Raised {formatMoney(row.receipts)}</p>
-            <p>Spent {formatMoney(row.disbursements)}</p>
-            <p>Cash left {formatMoney(row.cashOnHand)}</p>
-            <p>Debts {formatMoney(row.debts)}</p>
-            <p className="hint">{coverageLabel(row.coverageStart, row.coverageEnd)}</p>
+            {row.receipts != null ? <p>Raised {formatMoney(row.receipts)}</p> : null}
+            {row.disbursements != null ? <p>Spent {formatMoney(row.disbursements)}</p> : null}
+            {row.cashOnHand != null ? <p>Cash left {formatMoney(row.cashOnHand)}</p> : null}
+            {row.debts != null ? <p>Debts {formatMoney(row.debts)}</p> : null}
+            {row.coverageStart || row.coverageEnd ? <p className="hint">{coverageLabel(row.coverageStart, row.coverageEnd)}</p> : null}
             {source ? (
               <p>
                 <a href={source}>{plainSource(row.sourceLabel)}</a>
@@ -68,7 +60,7 @@ export function DirectList({ rows }: { rows: readonly FinanceDirect[] }) {
 }
 
 export function OutsideList({ rows }: { rows: readonly FinanceOutside[] }) {
-  if (rows.length === 0) return <p>No outside spending is recorded for this year.</p>;
+  if (rows.length === 0) return null;
   return (
     <ul className="card-grid">
       {rows.map((row) => {
@@ -84,7 +76,6 @@ export function OutsideList({ rows }: { rows: readonly FinanceOutside[] }) {
               <Link href={`/candidates/${row.candidateId}`}>{who}</Link>
             </p>
             <p>{formatMoney(row.total)}</p>
-            <p className="hint">Not money the campaign received.</p>
             {source ? (
               <p>
                 <a href={source}>{plainSource(row.sourceLabel)}</a>

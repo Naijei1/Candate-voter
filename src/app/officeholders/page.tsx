@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { KY_BALLOT_CHECKED, KY_BALLOT_SOURCES, calendarDay, kyBallot } from "@/lib/site/ky-ballot";
+import { KY_BALLOT_SOURCES, kyBallot } from "@/lib/site/ky-ballot";
 
 export const metadata: Metadata = { title: "Who holds office now" };
 
@@ -9,7 +9,7 @@ export default function OfficeholdersPage() {
   return (
     <article className="wrap">
       <h1>Who holds office now</h1>
-      <p className="lede">Kentucky U.S. House members who are also on the November ballot, plus one House member running for Senate.</p>
+      <p className="lede">Kentucky U.S. House members on the November ballot.</p>
       <ul className="plain-list">
         {house.flatMap((race) =>
           (race?.people ?? [])
@@ -25,14 +25,12 @@ export default function OfficeholdersPage() {
             )),
         )}
         <li>
-          <Link href="/candidates/S6KY00286">Andy Barr</Link>, Republican, was listed as a Kentucky House member on{" "}
-          <a href="https://clerk.house.gov/Votes/2026312">roll call 312, Sept. 16, 2026</a>. He is not on the House ballot.
+          <Link href="/candidates/S6KY00286">Andy Barr</Link> (R) — U.S. Representative, running for Senate. <a href="https://clerk.house.gov/Votes/2026312">Source ↗</a>
         </li>
       </ul>
-      <p>District 4 has no current member on the November ballot. Thomas Massie lost the primary.</p>
-      <p>Current U.S. senators are not covered yet. State and local officeholders are not covered yet.</p>
+      <p>Thomas Massie lost the District 4 primary.</p>
       <p className="hint">
-        Checked {calendarDay(KY_BALLOT_CHECKED)}. <a href={KY_BALLOT_SOURCES[1].url}>Clerk nominee list</a>
+        Source: <a href={KY_BALLOT_SOURCES[1].url}>Clerk of the House ↗</a>
       </p>
       <p>
         <Link className="btn btn-navy" href="/candidates">

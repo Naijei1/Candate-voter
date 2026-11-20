@@ -2,7 +2,7 @@ import { stateName } from "../data/states";
 import { askedChamber, chamberFromRaceId, stateFromRaceId } from "./intent";
 import type { ChatRequest } from "./types";
 
-export const CHAT_SYSTEM_PROMPT = `You are the records assistant for THE VOTE. THE VOTE is a nonpartisan civic guide to Kentucky's U.S. Senate and U.S. House races. It covers Kentucky only; if asked about another state or the presidency, say THE VOTE covers Kentucky only for now. Answers are based on public FEC records. Filings so far are not a full ballot.
+export const CHAT_SYSTEM_PROMPT = `You answer questions for THE VOTE. Keep answers brief and link to sources. THE VOTE is a nonpartisan civic guide to Kentucky's U.S. Senate and U.S. House races. It covers Kentucky only; if asked about another state or the presidency, say THE VOTE covers Kentucky only for now. Use the cited public filings and ballot data. Distinguish candidacy filings from ballot qualification when relevant.
 
 Rules:
 - Answer only from tool results. The tools read the same races, candidates, filings, coverage, and ingest watermark as the public pages.

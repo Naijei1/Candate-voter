@@ -33,9 +33,7 @@ export function RecordMeta({
         >
           Source
         </a>
-      ) : (
-        <span>Source not stored</span>
-      )}
+      ) : null}
       {showUpdated ? (
         <>
           <span className="mx-2" aria-hidden="true">
@@ -70,7 +68,7 @@ function Timestamp({ label, value }: { label: string; value: string | null }) {
   return (
     <span>
       {label}{" "}
-      {text ? <time dateTime={dateTime ?? undefined}>{text}</time> : "time not stored"}
+      {text ? <time dateTime={dateTime ?? undefined}>{text}</time> : "—"}
     </span>
   );
 }

@@ -288,7 +288,7 @@ test("home and ask copy stay plain and the map does not lead with Popular", () =
   assert.equal(header.includes("map-chrome-info"), false);
   assert.match(footer, /does not endorse/);
   assert.match(footer, /Privacy/);
-  assert.match(footer, /About this data/);
+  assert.match(footer, /Sources/);
   assert.equal(footer.includes("Agent API"), false);
   assert.match(landing, /<ZipLookup/);
   assert.match(landing, /searchWithoutState/);
@@ -330,7 +330,7 @@ test("home and ask copy stay plain and the map does not lead with Popular", () =
   assert.doesNotMatch(technical, /<details[^>]*\sopen/);
   assert.match(candidatePage, /FEC filing/);
   assert.equal(candidatePage.includes("Voting record"), false);
-  assert.equal(candidatePage.includes(">Website<"), false);
+  assert.match(candidatePage, /profile\.website \?/);
   assert.match(candidatePage, /Form 2/);
   assert.equal(candidatePage.includes("Form {filing.formType}"), false);
   assert.equal(candidatePage.includes("CandidateTechnicalDetails"), false);

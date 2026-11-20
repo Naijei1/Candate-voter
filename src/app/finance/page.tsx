@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { DirectList, FinanceExplanation, OutsideList } from "@/components/site/FinanceLists";
+import { DirectList, OutsideList } from "@/components/site/FinanceLists";
 import { selectDirect, selectOutside } from "@/lib/finance/present";
 import { coverageKey } from "@/lib/finance/model";
 import { loadFinance } from "@/lib/finance/load";
@@ -40,12 +40,9 @@ export default async function FinancePage({ searchParams }: PageProps) {
   return (
     <article className="wrap">
       <h1>Candidates&apos; Political Finances</h1>
-      <p className="lede">Kentucky, election year {cycle}. Money campaigns report, kept separate from spending by other groups.</p>
-      {bundle.notice ? <p className="notice">{bundle.notice}</p> : null}
-      <FinanceExplanation />
+      <p className="lede">Money raised and spent in Kentucky&apos;s {cycle} federal races.</p>
       {cycle === 2026 ? (
-        <section className="home-section" aria-labelledby="charts-heading">
-          <h2 id="charts-heading">Charts: Kentucky&apos;s November 2026 candidates</h2>
+        <section className="home-section" aria-label="Campaign finance charts">
           <MoneyCharts data={charts} showAll />
         </section>
       ) : null}
@@ -67,12 +64,10 @@ export default async function FinancePage({ searchParams }: PageProps) {
           Apply
         </button>
       </form>
-      <p>
-        <Link href="/finance/example">Example PAC profile</Link>
-      </p>
-      <h2>Money reported by campaigns</h2>
-      <p>Raised, spent, cash left, and debts from each campaign report.</p>
-      <DirectList rows={direct} />
+      {direct.length > 0 ? <>
+        <h2>Money reported by campaigns</h2>
+        <DirectList rows={direct} />
+      </> : null}
       {pageCount > 1 ? (
         <p className="actions">
           {page > 1 ? <Link className="btn btn-ghost" href={`/finance?cycle=${cycle}${query.coverage === "latest" ? "&coverage=latest" : ""}&page=${page - 1}`}>Previous</Link> : null}
@@ -80,13 +75,10 @@ export default async function FinancePage({ searchParams }: PageProps) {
           {page < pageCount ? <Link className="btn btn-ghost" href={`/finance?cycle=${cycle}${query.coverage === "latest" ? "&coverage=latest" : ""}&page=${page + 1}`}>Next</Link> : null}
         </p>
       ) : null}
-      <h2>Spending by other groups</h2>
-      {coverage ? (
-        <p>That spending is totaled for the whole year, so it is hidden for one reporting period.</p>
-      ) : (
-        <p>Money other groups spent on their own. It is not added to the money campaigns raised.</p>
-      )}
-      <OutsideList rows={outside} />
+      {outside.length > 0 ? <>
+        <h2>Spending by other groups</h2>
+        <OutsideList rows={outside} />
+      </> : null}
     </article>
   );
 }

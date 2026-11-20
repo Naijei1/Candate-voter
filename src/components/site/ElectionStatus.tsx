@@ -27,14 +27,14 @@ export function ElectionStatus({ compact = false, now = new Date() }: { compact?
   if (compact) {
     return (
       <p className="results-note">
-        Election is over. <a href={OFFICIAL.href}>See official results</a>
+        <a href={OFFICIAL.href}>See official results</a>
       </p>
     );
   }
   return (
     <aside className="election-banner" aria-label="Election results">
       <p>
-        <strong>Election is over: see official results.</strong> Election Day was Nov 3, 2026. Counts are unofficial until certified.
+        <strong>The Nov 3, 2026 election is over.</strong>
       </p>
       <p>
         <a className="btn btn-navy" href={OFFICIAL.href}>See official results</a>

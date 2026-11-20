@@ -90,7 +90,7 @@ export const KY_CONSTITUTIONAL_OFFICERS: readonly StatewideOfficial[] = [
     name: "Andy Beshear",
     party: "Democratic Party",
     term: STATE_TERM,
-    note: "Serving his second term. Kentucky's constitution bars a governor from a third term in a row, so he cannot run for governor in 2027.",
+    note: "Serving his second consecutive term. Term-limited in 2027.",
     officialSite: "https://governor.ky.gov/",
     photo: null,
     sources: [

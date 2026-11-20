@@ -13,13 +13,11 @@ export default async function AccountPage() {
     return (
       <article className="wrap">
         <h1>Saved races and alerts</h1>
-        <p className="lede">Sign in to save follows and notification settings. The news feed is a separate choice.</p>
         <p>
           <Link className="btn btn-navy" href="/sign-in">
             Sign in
           </Link>
         </p>
-        <p>Email alerts are not on yet. You can still save a race after you sign in.</p>
       </article>
     );
   }
@@ -47,7 +45,6 @@ export default async function AccountPage() {
   return (
     <article className="wrap">
       <h1>Saved races and alerts</h1>
-      <p>These are notification settings. They do not change the news feed.</p>
       <AccountPanel email={user.email} preferences={preferences} follows={follows} loadError={loadError} />
     </article>
   );

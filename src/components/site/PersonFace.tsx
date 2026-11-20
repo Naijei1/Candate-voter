@@ -34,7 +34,7 @@ export function PersonFace({
   credit?: string | null;
 }) {
   const badge = partyBadge(party);
-  const rawStatus = seatStatus({ holds, writeIn, openSeat: !holds });
+  const rawStatus = seatStatus({ holds, writeIn });
   /** The badge already says "Write-in"; don't repeat it. */
   const status = rawStatus === badge.label ? null : rawStatus;
   const body = (

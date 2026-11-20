@@ -2,7 +2,7 @@ import { orgLabel } from "@/components/site/FinanceLists";
 import type { FinanceOutside } from "@/lib/finance/model";
 import { loadFinance } from "@/lib/finance/load";
 import { FINANCE_SNAPSHOT_RETRIEVED_AT, snapshotFinance } from "@/lib/finance/snapshot";
-import { KY_BALLOT_CHECKED, KY_BALLOT_SOURCES, kyBallot } from "@/lib/site/ky-ballot";
+import { KY_BALLOT_SOURCES, kyBallot } from "@/lib/site/ky-ballot";
 import type { ChartTarget } from "./money-chart-lines";
 
 export type { ChartTarget } from "./money-chart-lines";
@@ -145,7 +145,7 @@ export function dayLabel(value: string): string {
   const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
   if (!match) return value;
   const date = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])));
-  return new Intl.DateTimeFormat("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" }).format(date);
+  return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" }).format(date);
 }
 
 export async function loadMoneyCharts(): Promise<MoneyChartData> {
@@ -162,8 +162,8 @@ export async function loadMoneyCharts(): Promise<MoneyChartData> {
   return {
     races,
     committees: topCommittees(outside, nominees),
-    candidateAsOf: `Campaign totals reported to the FEC through ${coverageEnd ? dayLabel(coverageEnd) : "the latest stored report"}, retrieved ${dayLabel(KY_BALLOT_CHECKED)}.`,
-    committeeAsOf: `Outside spending totals for the 2026 cycle, retrieved ${dayLabel(outsideDay)}.`,
+    candidateAsOf: coverageEnd ? `, through ${dayLabel(coverageEnd)}` : "",
+    committeeAsOf: ` · ${dayLabel(outsideDay)}`,
     candidateSource: { name: source.name, url: source.url },
   };
 }
