@@ -75,7 +75,7 @@ export default async function ComparePage({ params }: PageProps) {
           Candidates unavailable. <Link href="/sources">Sources</Link>
         </p>
       )}
-      <div className="race-layout">
+      <div className="race-layout compare-layout">
         <CompareBoard
           raceHref={`/races/${race.raceId}`}
           filingsLoaded={!ballot && loaded.filingsLoaded && !roster.fecList}

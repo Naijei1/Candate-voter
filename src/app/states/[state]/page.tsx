@@ -68,7 +68,7 @@ export default async function StatePage({ params, searchParams }: PageProps) {
               <li key={race.raceId}>
                 <Link className="card contest-link" href={`/races/${race.raceId}`}>
                   <h2>{race.title}</h2>
-                  <p>{filingLine(race.raceId, loaded.filingsLoaded, race.empty === true || race.hasCandidates === false)}</p>
+                  {!kyBallot(race.raceId) && loaded.filingsLoaded && !race.empty && race.hasCandidates !== false ? <p>Candidates filed</p> : null}
                 </Link>
               </li>
             ))}
@@ -94,12 +94,6 @@ export default async function StatePage({ params, searchParams }: PageProps) {
 
     </article>
   );
-}
-
-function filingLine(raceId: string, loaded: boolean, empty: boolean): string {
-  if (kyBallot(raceId)) return "November ballot";
-  if (!loaded) return "";
-  return empty ? "" : "Candidates filed";
 }
 
 function parseYear(value: string | undefined): number {

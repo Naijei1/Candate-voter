@@ -1,5 +1,6 @@
 "use client";
 
+import { dayLabel } from "@/lib/format";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronRight, MapPin } from "lucide-react";
 import Link from "next/link";
@@ -376,7 +377,7 @@ function StanceLine({ stance }: { stance: Stance }) {
     <p>
       {stance.text}{" "}
       <a className="text-[#1e3a8a]" href={stance.sourceUrl}>{stance.sourceName}</a>
-      <span className="text-slate-500"> · {stance.sourceDate}</span>
+      <span className="text-slate-500"> · {dayLabel(stance.sourceDate)}</span>
     </p>
   );
 }

@@ -6,7 +6,7 @@ const LOOKUP =
   /\b(?:compare|list every|who(?:'s| is| are) running|who filed|which candidates)\b/i;
 
 const OFFER =
-  "Name a state or race and I can look up the FEC Form 2 filings stored for it.";
+  "Name a state or race and I can look up the FEC Form 2 filings for it.";
 
 const PRIMARY_AND_GENERAL = `A **primary** is how a party chooses its nominee. A **general election** is the later contest for the office, usually in November, among those nominees and anyone else on the ballot.
 

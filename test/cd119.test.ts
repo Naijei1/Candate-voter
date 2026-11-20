@@ -1,3 +1,5 @@
+import { labelPoint, signedDistance, type Point } from "../src/lib/geo/label-point";
+
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
@@ -134,4 +136,25 @@ test("a district feature projects to an even-odd path", () => {
     ["01", "02", "03", "04", "05", "06"],
   );
   assert.ok(paths.every((item) => item.d.includes("M") && item.d.includes("Z")));
+});
+
+test("a concave polygon gets a label inside an arm", () => {
+  const polygon: Point[][] = [[[0, 0], [8, 0], [8, 8], [6, 8], [6, 2], [2, 2], [2, 8], [0, 8]]];
+  assert.ok(signedDistance([4, 4], polygon) < 0);
+  const point = labelPoint(polygon);
+  assert.ok(signedDistance(point, polygon) > 0);
+  assert.notDeepEqual(point, [4, 4]);
+});
+
+test("all six Kentucky labels are inside their own rendered district", () => {
+  const ky = JSON.parse(readFileSync(new URL("../public/geo/cd120/KY.json", import.meta.url), "utf8"));
+  assert.ok(isCdFeatureCollection(ky));
+  const paths = projectCollection(ky, 1000, 640, 20, true);
+  assert.deepEqual(paths.map(({ district }) => district).sort(), ["01", "02", "03", "04", "05", "06"]);
+  for (const { d, district, labelX, labelY } of paths) {
+    const rings = d.split("Z").filter(Boolean).map((ring) =>
+      ring.slice(1).split("L").map((point) => point.split(" ").map(Number) as Point),
+    );
+    assert.ok(signedDistance([labelX, labelY], rings) > 0, `District ${district}`);
+  }
 });

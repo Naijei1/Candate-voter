@@ -176,7 +176,7 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
     } catch (error) {
       const name = error instanceof Error ? error.name : "Error";
       console.error(`Alignment lookup failed: ${name}`);
-      return json({ error: "unavailable", message: "Stored records are unavailable." }, 503);
+      return json({ error: "unavailable", message: "Filing records are unavailable." }, 503);
     }
   }
 
@@ -242,7 +242,7 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
   if (defined) {
     if (hasPlaceContext(asked)) {
       defined.answer_markdown = defined.answer_markdown.replace(
-        "Name a state or race and I can look up the FEC Form 2 filings stored for it.",
+        "Name a state or race and I can look up the FEC Form 2 filings for it.",
         "I can look up the FEC Form 2 filings for this page.",
       );
     }
@@ -271,7 +271,7 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
     } catch (error) {
       const name = error instanceof Error ? error.name : "Error";
       console.error(`Upcoming lookup failed: ${name}`);
-      return json({ error: "unavailable", message: "Stored records are unavailable." }, 503);
+      return json({ error: "unavailable", message: "Filing records are unavailable." }, 503);
     }
   }
 

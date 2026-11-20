@@ -16,7 +16,7 @@ export async function loadFinance(cycle: number): Promise<FinanceBundle> {
   try {
     const rows = await createDynamoRepository().listFinance(cycle);
     if (rows.direct.length === 0 && rows.outside.length === 0) {
-      return { cycle, origin: "empty", notice: "No money totals are stored for this year.", retrievedAt: null, direct: [], outside: [] };
+      return { cycle, origin: "empty", notice: "No finance totals for this year.", retrievedAt: null, direct: [], outside: [] };
     }
     return { cycle, origin: "table", notice: null, retrievedAt: null, direct: rows.direct, outside: rows.outside };
   } catch (error) {
@@ -26,7 +26,7 @@ export async function loadFinance(cycle: number): Promise<FinanceBundle> {
       return {
         cycle,
         origin: "snapshot",
-        notice: `Live money totals could not be loaded. Figures below are from the election commission snapshot retrieved ${formatInstant(FINANCE_SNAPSHOT_RETRIEVED_AT) ?? FINANCE_SNAPSHOT_RETRIEVED_AT}.`,
+        notice: `Election commission figures retrieved ${formatInstant(FINANCE_SNAPSHOT_RETRIEVED_AT) ?? FINANCE_SNAPSHOT_RETRIEVED_AT}.`,
         retrievedAt: FINANCE_SNAPSHOT_RETRIEVED_AT,
         direct: snap.direct,
         outside: snap.outside,
@@ -35,7 +35,7 @@ export async function loadFinance(cycle: number): Promise<FinanceBundle> {
     return {
       cycle,
       origin: "empty",
-      notice: "Totals could not be loaded.",
+      notice: "Finance totals are unavailable.",
       retrievedAt: null,
       direct: [],
       outside: [],

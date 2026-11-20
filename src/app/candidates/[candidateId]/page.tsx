@@ -1,3 +1,4 @@
+import { isKentuckyFinanceRow } from "@/lib/site/ky-finance";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -7,7 +8,7 @@ import { ElectionDayBanner } from "@/components/site/ElectionDayBanner";
 import { DirectList, orgLabel, OutsideList } from "@/components/site/FinanceLists";
 import { FollowControl } from "@/components/site/FollowControl";
 import { RosterMoney } from "@/components/site/RosterMoney";
-import { formatInstant, httpsUrl, partyCue, partyLabel } from "@/lib/format";
+import { dayLabel, formatInstant, httpsUrl, partyCue, partyLabel } from "@/lib/format";
 import { formatMoney } from "@/lib/finance/model";
 import { financeForCandidate, loadFinance } from "@/lib/finance/load";
 import { selectDirect, selectOutside } from "@/lib/finance/present";
@@ -47,7 +48,7 @@ export default async function CandidatePage({ params }: PageProps) {
     return (
       <article className="wrap">
         <h1>Candidate</h1>
-        <p className="notice notice-error">Could not load this profile.</p>
+        <p className="notice notice-error">This profile is unavailable.</p>
         <Link href="/states/ky">Kentucky</Link>
       </article>
     );
@@ -63,14 +64,17 @@ export default async function CandidatePage({ params }: PageProps) {
   const financeKey = ballot?.person.fecCandidateId ?? id;
   const finance = financeForCandidate(await loadFinance(race?.cycle ?? 2026), financeKey);
   const checks = await loadChecks("candidate", id);
-  const direct = selectDirect(finance.direct, null);
-  const outside = selectOutside(finance.outside, null);
+  const direct = selectDirect(finance.direct.filter(isKentuckyFinanceRow), null);
+  const outside = selectOutside(finance.outside.filter(isKentuckyFinanceRow), null);
   const profile = ballot ? profileFor(ballot.person.id) : profileFor(id);
   const photo = portraitFor(ballot?.person.id ?? id);
   const notes = stancesFor(ballot?.person.id ?? id);
 
   const job = jobLine(ballot?.person.id ?? id);
   const attribution = photoAttribution(photo);
+  const filings = loaded.ok ? loaded.filings : [];
+  const hasVerified = filings.length > 0 || Boolean(snap?.filingPdf && snap.filingDate) ||
+    Boolean(retrieved && (snap?.incumbentLabel || snap?.statusLabel || (snap?.committeeName && snap.committeeUrl)));
   const status = seatStatus({ holds: Boolean(ballot?.person.holdsOffice), writeIn: ballot?.person.role === "write-in" });
 
   return (
@@ -85,7 +89,7 @@ export default async function CandidatePage({ params }: PageProps) {
       <PersonMark name={name} photo={photo?.src ?? null} party={party} size="lg" />
       {photo && attribution ? <p className="hint">Photo: <a href={photo.sourceUrl}>{attribution}</a></p> : null}
       <h1>{name}</h1>
-      {party || status ? <p className="lede">{[party, status].filter(Boolean).join(" · ")}</p> : null}
+      {party || status ? <p className="lede">{[...new Set([party, status].filter(Boolean))].join(" · ")}</p> : null}
       <p>{race ? race.title : ballot ? ballotTitle(ballot.race.raceId) : snap ? "U.S. Senate, Kentucky · 2026" : null}</p>
       <div className="actions sticky-mobile">
         {raceHref ? (
@@ -103,13 +107,8 @@ export default async function CandidatePage({ params }: PageProps) {
         <div>
           <p className="hint">Campaign finance</p>
           <p>
-            {formatMoney(ballot.person.finance.receipts)} raised{ballot.person.finance.cash != null ? ` · ${formatMoney(ballot.person.finance.cash)} cash` : ""} · <a href={ballot.person.finance.sourceUrl}>FEC</a>
+            {formatMoney(ballot.person.finance.receipts)} raised{ballot.person.finance.cash != null ? ` · ${formatMoney(ballot.person.finance.cash)} cash on hand` : ""} · <a href={ballot.person.finance.sourceUrl}>FEC</a>
           </p>
-          {ballot?.person.finance && ballot.person.finance.receipts > 0 && ballot.person.finance.cash != null ? (
-            <div className="cash-bar" aria-hidden="true">
-              <span style={{ width: `${Math.min(100, Math.round((ballot.person.finance.cash / ballot.person.finance.receipts) * 100))}%` }} />
-            </div>
-          ) : null}
         </div>
         ) : null}
         {profile.website ? <div>
@@ -135,7 +134,7 @@ export default async function CandidatePage({ params }: PageProps) {
                 <th scope="row">{issue.label}</th>
                 <td>
                       {stance.text} <a href={stance.sourceUrl}>{stance.sourceName}</a>
-                      <span className="hint"> · {stance.sourceDate}</span>
+                      <span className="hint"> · {dayLabel(stance.sourceDate)}</span>
                 </td>
               </tr>
             );
@@ -149,7 +148,7 @@ export default async function CandidatePage({ params }: PageProps) {
           {profile.endorsements.map((item) => (
             <li key={item.sourceUrl}>
               {item.text} <a href={item.sourceUrl}>{item.sourceName}</a>
-              <span className="hint"> · {item.sourceDate}</span>
+              <span className="hint"> · {dayLabel(item.sourceDate)}</span>
             </li>
           ))}
         </ul>
@@ -159,7 +158,7 @@ export default async function CandidatePage({ params }: PageProps) {
         <ul className="plain-list">
           {profile.votes.map((vote) => (
             <li key={`${vote.bill}-${vote.date}`}>
-              {vote.date}: {vote.vote} on {vote.bill}. <a href={vote.sourceUrl}>{vote.sourceName}</a>
+              {dayLabel(vote.date)}: {vote.vote} on {vote.bill}. <a href={vote.sourceUrl}>{vote.sourceName}</a>
             </li>
           ))}
         </ul>
@@ -168,7 +167,8 @@ export default async function CandidatePage({ params }: PageProps) {
         <summary>More details</summary>
         <FollowControl what="candidate" targetId={ballot?.person.fecCandidateId ?? (loaded.ok ? loaded.candidate.candidateId : id)} />
 
-      <h2>Verified</h2>
+      {hasVerified ? <>
+      <h2>Official filings</h2>
       <ul className="plain-list">
         {snap?.incumbentLabel && retrieved ? (
           <Fact
@@ -197,8 +197,9 @@ export default async function CandidatePage({ params }: PageProps) {
             date={retrieved}
           />
         ) : null}
-        <FilingFacts filings={loaded.ok ? loaded.filings : []} snap={snap} />
+        <FilingFacts filings={filings} snap={snap} />
       </ul>
+      </> : null}
 
       {snap?.committeeWebsite && snap.committeeUrl && retrieved ? (
         <>
@@ -254,7 +255,7 @@ function Fact({
   source: string;
   date: string;
 }) {
-  const shown = formatInstant(date) ?? date.slice(0, 10);
+  const shown = formatInstant(date) ?? dayLabel(date);
   return (
     <li>
       <p>
@@ -299,31 +300,15 @@ function FilingFacts({
     return (
       <li>
         Statement of candidacy: <a href={snap.filingPdf} title="FEC filing, Form 2">Official filing</a>
-        <span className="hint"> Filed {calendarDate(snap.filingDate)}</span>
+        <span className="hint"> Filed {dayLabel(snap.filingDate)}</span>
       </li>
     );
   }
-  return (
-    <li>
-      No filing link yet.
-    </li>
-  );
-}
-
-function calendarDate(value: string): string {
-  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
-  if (!match) return value.slice(0, 10);
-  const date = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])));
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    timeZone: "UTC",
-  }).format(date);
+  return null;
 }
 
 function plainSeat(label: string): string {
-  if (/open seat/i.test(label)) return "No one currently holds this seat";
+  if (/open seat/i.test(label)) return "Open seat (the officeholder is not running)";
   if (/incumbent/i.test(label)) return "Currently holds this office";
   if (/challenger/i.test(label)) return "Running against the current officeholder";
   return label;

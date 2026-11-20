@@ -1,3 +1,4 @@
+import { isKentuckyFinanceRow } from "@/lib/site/ky-finance";
 import Link from "next/link";
 import { normalizePersonName } from "@/lib/data/names";
 import { httpsUrl } from "@/lib/format";
@@ -24,10 +25,11 @@ function plainSource(label: string): string {
 }
 
 export function DirectList({ rows }: { rows: readonly FinanceDirect[] }) {
-  if (rows.length === 0) return null;
+  const kentuckyRows = rows.filter(isKentuckyFinanceRow);
+  if (kentuckyRows.length === 0) return null;
   return (
     <ul className="card-grid">
-      {rows.map((row) => {
+      {kentuckyRows.map((row) => {
         const name = personLabel(row.name, row.candidateId);
         const source = httpsUrl(row.sourceUrl);
         return (
@@ -44,7 +46,7 @@ export function DirectList({ rows }: { rows: readonly FinanceDirect[] }) {
             </p>
             {row.receipts != null ? <p>Raised {formatMoney(row.receipts)}</p> : null}
             {row.disbursements != null ? <p>Spent {formatMoney(row.disbursements)}</p> : null}
-            {row.cashOnHand != null ? <p>Cash left {formatMoney(row.cashOnHand)}</p> : null}
+            {row.cashOnHand != null ? <p>Cash on hand {formatMoney(row.cashOnHand)}</p> : null}
             {row.debts != null ? <p>Debts {formatMoney(row.debts)}</p> : null}
             {row.coverageStart || row.coverageEnd ? <p className="hint">{coverageLabel(row.coverageStart, row.coverageEnd)}</p> : null}
             {source ? (
@@ -60,10 +62,11 @@ export function DirectList({ rows }: { rows: readonly FinanceDirect[] }) {
 }
 
 export function OutsideList({ rows }: { rows: readonly FinanceOutside[] }) {
-  if (rows.length === 0) return null;
+  const kentuckyRows = rows.filter(isKentuckyFinanceRow);
+  if (kentuckyRows.length === 0) return null;
   return (
     <ul className="card-grid">
-      {rows.map((row) => {
+      {kentuckyRows.map((row) => {
         const source = httpsUrl(row.sourceUrl);
         const who = personLabel(row.candidateName, row.candidateId);
         return (

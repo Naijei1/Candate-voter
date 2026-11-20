@@ -1,3 +1,5 @@
+import { dayLabel } from "@/lib/format";
+export { dayLabel } from "@/lib/format";
 import { orgLabel } from "@/components/site/FinanceLists";
 import type { FinanceOutside } from "@/lib/finance/model";
 import { loadFinance } from "@/lib/finance/load";
@@ -139,13 +141,6 @@ function nomineeNames(): Map<string, string> {
     }
   }
   return map;
-}
-
-export function dayLabel(value: string): string {
-  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
-  if (!match) return value;
-  const date = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])));
-  return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" }).format(date);
 }
 
 export async function loadMoneyCharts(): Promise<MoneyChartData> {

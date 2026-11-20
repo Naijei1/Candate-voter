@@ -1,5 +1,6 @@
 "use client";
 
+import { dayLabel } from "@/lib/format";
 import Link from "next/link";
 import { useState } from "react";
 import { partyMark, PersonMark } from "@/components/site/PersonMark";
@@ -99,7 +100,7 @@ export function CompareBoard({
   });
   const tab = tabs.includes(selectedTab) ? selectedTab : "Overview";
   return (
-    <div>
+    <div className="compare-board">
       <div className="tabs" role="tablist" aria-label="Comparison topics">
         {tabs.map((item) => (
           <button
@@ -121,13 +122,13 @@ export function CompareBoard({
         {candidates.map((candidate) => (
           <article className="person-card" key={candidate.candidateId}>
             <PersonMark name={candidate.displayName} photo={candidate.photo ?? null} party={candidate.partyLabel} size="lg" />
-            {candidate.photoCredit ? <p className="hint">Photo: {candidate.photoCredit}</p> : null}
             <h3>
               <Link href={`/candidates/${candidate.candidateId}`}>{candidate.displayName}</Link>
             </h3>
             <p className="party">{partyMark(candidate.partyLabel).letter} · {candidate.partyLabel}</p>
             {candidate.note ? <p className="hint">{candidate.note}</p> : null}
             <TabBody tab={tab} candidate={candidate} finance={finance} issues={issues} updates={updates} />
+            {candidate.photoCredit ? <p className="hint compare-credit">Photo: {candidate.photoCredit}</p> : null}
           </article>
         ))}
       </div>
@@ -206,7 +207,7 @@ function TabBody({
           <li key={note.issueId}>
             <p>{note.text}</p>
             <p className="hint">
-              <a href={note.sourceUrl}>{note.sourceName}</a> · {note.sourceDate}
+              <a href={note.sourceUrl}>{note.sourceName}</a> · {dayLabel(note.sourceDate)}
             </p>
           </li>
         ))}
@@ -220,7 +221,7 @@ function TabBody({
       <ul className="plain-list">
         {votes.map((vote) => (
           <li key={`${vote.bill}-${vote.date}`}>
-            {vote.date}: {vote.vote} on {vote.bill}. <a href={vote.sourceUrl}>{vote.sourceName}</a>
+            {dayLabel(vote.date)}: {vote.vote} on {vote.bill}. <a href={vote.sourceUrl}>{vote.sourceName}</a>
           </li>
         ))}
       </ul>
@@ -236,7 +237,7 @@ function TabBody({
             <span className="hint">
               {" "}
               {story.source}
-              {story.date ? ` · ${story.date}` : ""}
+              {story.date ? ` · ${dayLabel(story.date)}` : ""}
             </span>
           </li>
         ))}

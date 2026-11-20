@@ -139,7 +139,7 @@ function presentShowcase(row: (typeof raw.candidates)[number]): ShowcaseCandidat
 
 function seatLine(label: string | null | undefined): string {
   if (!label) return "Filed to run. Not confirmed on the ballot.";
-  if (/open seat/i.test(label)) return "Filed to run. No one currently holds this seat.";
+  if (/open seat/i.test(label)) return "Filed to run for an open seat.";
   if (/incumbent/i.test(label)) return "Filed to run. Currently holds this office.";
   if (/challenger/i.test(label)) return "Filed to run. Running against the current officeholder.";
   return "Filed to run. Not confirmed on the ballot.";

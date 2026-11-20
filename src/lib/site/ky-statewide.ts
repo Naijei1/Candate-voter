@@ -25,21 +25,21 @@ export type StatewideOfficial = {
 };
 
 const SENATE_LIST: StatewideSource = {
-  name: "U.S. Senate, Kentucky senators",
+  name: "U.S. Senate",
   url: "https://www.senate.gov/states/KY/intro.htm",
 };
 
 const RESULTS_2023: StatewideSource = {
-  name: "Kentucky State Board of Elections, certified 2023 general election results",
+  name: "Board of Elections",
   url: "https://elect.ky.gov/results/2020-2029/Documents/Certification%20of%20Election%20Results%20for%202023%20General%20Election%20Final.pdf",
 };
 
 const CONSTITUTION_95: StatewideSource = {
-  name: "Kentucky Constitution, Section 95 (statewide elections every four years)",
+  name: "KY Constitution §95",
   url: "https://apps.legislature.ky.gov/law/constitution/Constitution/ViewConstitution?rsn=103",
 };
 
-const STATE_TERM = "Elected Nov. 7, 2023 to a four-year term. The next election for this office is in November 2027.";
+const STATE_TERM = "Elected Nov 7, 2023 for four years. Next election in November 2027.";
 
 export const KY_SENATORS: readonly StatewideOfficial[] = [
   {
@@ -47,7 +47,7 @@ export const KY_SENATORS: readonly StatewideOfficial[] = [
     office: "U.S. Senator",
     name: "Mitch McConnell",
     party: "Republican Party",
-    term: "Term ends January 2027. He was not a candidate in the 2026 Senate race.",
+    term: "Term ends January 2027. Did not run in 2026.",
     note: null,
     officialSite: "https://www.mcconnell.senate.gov/",
     photo: {
@@ -58,8 +58,8 @@ export const KY_SENATORS: readonly StatewideOfficial[] = [
     },
     sources: [
       SENATE_LIST,
-      { name: "U.S. Senate, Class II senators (terms end in 2027)", url: "https://www.senate.gov/senators/Class_II.htm" },
-      { name: "Kentucky Secretary of State, 2026 General Election candidate filings", url: "https://web.sos.ky.gov/candidatefilings/Default.aspx?id=3" },
+      { name: "Senate Class II", url: "https://www.senate.gov/senators/Class_II.htm" },
+      { name: "2026 filings", url: "https://web.sos.ky.gov/candidatefilings/Default.aspx?id=3" },
     ],
   },
   {
@@ -78,7 +78,7 @@ export const KY_SENATORS: readonly StatewideOfficial[] = [
     },
     sources: [
       SENATE_LIST,
-      { name: "U.S. Senate, Class III senators (terms end in 2029)", url: "https://www.senate.gov/senators/Class_III.htm" },
+      { name: "Senate Class III", url: "https://www.senate.gov/senators/Class_III.htm" },
     ],
   },
 ];
@@ -90,12 +90,12 @@ export const KY_CONSTITUTIONAL_OFFICERS: readonly StatewideOfficial[] = [
     name: "Andy Beshear",
     party: "Democratic Party",
     term: STATE_TERM,
-    note: "Serving his second consecutive term. Term-limited in 2027.",
+    note: "Second consecutive term. Term-limited in 2027.",
     officialSite: "https://governor.ky.gov/",
     photo: null,
     sources: [
-      { name: "Office of the Governor, Gubernatorial History (elected to a second term in 2023)", url: "https://governor.ky.gov/about/gubernatorial-history" },
-      { name: "Kentucky Constitution, Section 71 (governor's two-term limit)", url: "https://apps.legislature.ky.gov/law/constitution/Constitution/ViewConstitution?rsn=79" },
+      { name: "Governor’s office", url: "https://governor.ky.gov/about/gubernatorial-history" },
+      { name: "KY Constitution §71", url: "https://apps.legislature.ky.gov/law/constitution/Constitution/ViewConstitution?rsn=79" },
       RESULTS_2023,
       CONSTITUTION_95,
     ],
@@ -106,11 +106,11 @@ export const KY_CONSTITUTIONAL_OFFICERS: readonly StatewideOfficial[] = [
     name: "Jacqueline Coleman",
     party: "Democratic Party",
     term: STATE_TERM,
-    note: "Elected on the same ticket as the governor.",
+    note: "Elected on the governor’s ticket.",
     officialSite: "https://ltgovernor.ky.gov/",
     photo: null,
     sources: [
-      { name: "Office of the Lieutenant Governor", url: "https://ltgovernor.ky.gov/" },
+      { name: "Lieutenant governor’s office", url: "https://ltgovernor.ky.gov/" },
       RESULTS_2023,
       CONSTITUTION_95,
     ],
@@ -124,7 +124,7 @@ export const KY_CONSTITUTIONAL_OFFICERS: readonly StatewideOfficial[] = [
     note: null,
     officialSite: "https://www.ag.ky.gov/",
     photo: null,
-    sources: [{ name: "Office of the Attorney General", url: "https://www.ag.ky.gov/" }, RESULTS_2023, CONSTITUTION_95],
+    sources: [{ name: "Attorney general’s office", url: "https://www.ag.ky.gov/" }, RESULTS_2023, CONSTITUTION_95],
   },
   {
     id: "ky-secretary-of-state",
@@ -136,7 +136,7 @@ export const KY_CONSTITUTIONAL_OFFICERS: readonly StatewideOfficial[] = [
     officialSite: "https://www.sos.ky.gov/",
     photo: null,
     sources: [
-      { name: "Office of the Secretary of State", url: "https://www.sos.ky.gov/sos-office/Pages/default.aspx" },
+      { name: "Secretary of state’s office", url: "https://www.sos.ky.gov/sos-office/Pages/default.aspx" },
       RESULTS_2023,
       CONSTITUTION_95,
     ],

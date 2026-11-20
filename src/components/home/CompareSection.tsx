@@ -1,5 +1,6 @@
 "use client";
 
+import { dayLabel } from "@/lib/format";
 import { useEffect, useId, useState } from "react";
 import type { Claim, CompareOption, Evidence } from "@/lib/compare/evidence";
 import type { CompareSummary } from "@/lib/compare/summarize";
@@ -69,7 +70,7 @@ function SideBySide({ evidence, open }: { evidence: readonly Evidence[]; open: b
                 <strong>{row.personName}:</strong> {row.text}{" "}
                 <a href={row.sourceUrl}>
                   {row.sourceName}
-                  {row.sourceDate ? `, ${row.sourceDate}` : ""}
+                  {row.sourceDate ? `, ${dayLabel(row.sourceDate)}` : ""}
                 </a>
               </li>
             ))}

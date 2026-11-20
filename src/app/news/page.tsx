@@ -1,3 +1,4 @@
+import { dayLabel } from "@/lib/format";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { latestNews } from "@/lib/site/ky-news";
@@ -61,7 +62,7 @@ export default async function NewsFeedPage({ searchParams }: PageProps) {
               {stories.map((story) => (
                 <li key={story.url}>
                   <a href={story.url}>{story.title}</a>
-                  <span className="hint"> Kentucky Lantern{story.date ? ` · ${story.date}` : ""}</span>
+                  <span className="hint"> Kentucky Lantern{story.date ? ` · ${dayLabel(story.date)}` : ""}</span>
                 </li>
               ))}
             </ul>

@@ -1,3 +1,4 @@
+import { dayLabel } from "../format";
 import { kyBallot, kyBallotSeed } from "../site/ky-ballot";
 import { latestNews, newsForNames } from "../site/ky-news";
 import { stanceIssues, stancesFor } from "../site/stances";
@@ -42,11 +43,11 @@ export async function notesAnswer(request: ChatRequest): Promise<ChatAnswer | nu
       ? await newsForNames(people.map((person) => person.name))
       : await latestNews(5);
     if (stories.length === 0) {
-      lines.push("No matching Kentucky Lantern story is loaded.");
+      lines.push("No matching Kentucky Lantern story found.");
     } else {
       lines.push("Kentucky Lantern:");
       for (const story of stories) {
-        lines.push(`- [${story.title}](${story.url})${story.date ? ` (${story.date})` : ""}`);
+        lines.push(`- [${story.title}](${story.url})${story.date ? ` (${dayLabel(story.date)})` : ""}`);
         sources.push({ title: story.title, url: story.url, as_of: story.date ?? "unknown" });
       }
     }

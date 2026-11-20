@@ -130,3 +130,14 @@ export function fecCandidateLabel(id: string | null | undefined): string {
   if (!text) return "FEC candidate id not reported";
   return `FEC ${text}`;
 }
+
+const DAY_FORMAT = new Intl.DateTimeFormat("en-US", {
+  month: "short", day: "numeric", year: "numeric", timeZone: "UTC",
+});
+
+export function dayLabel(value: string): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
+  if (!match) return value;
+  const date = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])));
+  return DAY_FORMAT.format(date);
+}

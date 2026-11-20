@@ -1,3 +1,5 @@
+import { isKentuckyFinanceRow } from "@/lib/site/ky-finance";
+import { dayLabel } from "@/lib/format";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { DirectList, OutsideList } from "@/components/site/FinanceLists";
@@ -14,17 +16,13 @@ type PageProps = { searchParams: Promise<{ cycle?: string; coverage?: string; pa
 
 const PAGE_SIZE = 20;
 
-function isKentucky(row: { candidateId: string; raceId: string | null }): boolean {
-  return row.candidateId.includes("KY") || Boolean(row.raceId?.includes("KY"));
-}
-
 export default async function FinancePage({ searchParams }: PageProps) {
   const query = await searchParams;
   const parsed = Number(query.cycle);
   const cycle = Number.isInteger(parsed) && parsed >= 2024 && parsed <= 2028 ? parsed : 2026;
   const [bundle, charts] = await Promise.all([loadFinance(cycle), loadMoneyCharts()]);
-  const kentuckyDirect = bundle.direct.filter(isKentucky);
-  const kentuckyOutside = bundle.outside.filter(isKentucky);
+  const kentuckyDirect = bundle.direct.filter(isKentuckyFinanceRow);
+  const kentuckyOutside = bundle.outside.filter(isKentuckyFinanceRow);
   const latestKey = [...kentuckyDirect]
     .filter((row) => row.coverageEnd)
     .sort((a, b) => (a.coverageEnd ?? "").localeCompare(b.coverageEnd ?? ""))
@@ -57,7 +55,7 @@ export default async function FinancePage({ searchParams }: PageProps) {
           Reporting period
           <select id="finance-period" name="coverage" defaultValue={query.coverage === "latest" ? "latest" : ""}>
             <option value="">Whole cycle</option>
-            {latest ? <option value="latest">Latest report, through {latestKey?.coverageEnd}</option> : null}
+            {latest ? <option value="latest">Latest report, through {dayLabel(latestKey?.coverageEnd ?? "")}</option> : null}
           </select>
         </label>
         <button className="btn btn-navy" type="submit">

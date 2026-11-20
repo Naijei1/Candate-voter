@@ -45,8 +45,17 @@ export function linkLabel(link: ProfileLink): string {
 export function jobLine(candidateId: string): string | null {
   const text = profileFor(candidateId).bio?.text?.trim();
   if (!text) return null;
-  const normalized = text.replace(/\b(Mr|Mrs|Ms|Dr|Sen|Rep|U\.S|Nov|Sept|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Oct|Dec)\./g, "$1");
-  const sentence = normalized.split(/(?<=\.)\s/)[0] ?? normalized;
+  const sentence = firstSentence(text);
   if (sentence.length < 20) return text.length >= 20 ? text : null;
   return sentence.length > 160 ? `${sentence.slice(0, 157)}…` : sentence;
+}
+
+export function firstSentence(text: string): string {
+  const abbreviation = /\b(?:[A-Z](?:\.[A-Z])+|Mr|Mrs|Ms|Dr|Sen|Rep|Gov|Jr|Sr|St|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)\.$/i;
+  for (const match of text.matchAll(/[.!?](?=\s)/g)) {
+    const end = match.index + 1;
+    const sentence = text.slice(0, end);
+    if (!abbreviation.test(sentence)) return sentence;
+  }
+  return text;
 }
