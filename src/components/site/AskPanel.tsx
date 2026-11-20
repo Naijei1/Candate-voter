@@ -100,14 +100,19 @@ function AskBody({
   async function sendReport(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setReportNote(null);
-    const response = await fetch("/api/corrections", {
-      method: "POST",
-      headers: { "content-type": "application/json", accept: "application/json" },
-      body: JSON.stringify({ note: report, raceId }),
-    });
-    const body = (await response.json().catch(() => null)) as { message?: string } | null;
-    setReportNote(body?.message ?? "Not saved.");
-    if (response.ok) setReport("");
+    const website = new FormData(event.currentTarget).get("website");
+    try {
+      const response = await fetch("/api/corrections", {
+        method: "POST",
+        headers: { "content-type": "application/json", accept: "application/json" },
+        body: JSON.stringify({ note: report, raceId, website }),
+      });
+      const body = (await response.json().catch(() => null)) as { message?: string } | null;
+      setReportNote(body?.message ?? "Couldn't send. Try again.");
+      if (response.ok) setReport("");
+    } catch {
+      setReportNote("Couldn't send. Try again.");
+    }
   }
 
   return (
@@ -139,6 +144,7 @@ function AskBody({
         </div>
       ) : null}
       <form className="finder" onSubmit={sendReport}>
+        <input className="sr-only" type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden />
         <label htmlFor={`report-${raceId}`}>
           Report an error
           <textarea id={`report-${raceId}`} value={report} onChange={(event) => setReport(event.target.value)} rows={3} />

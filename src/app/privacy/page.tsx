@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-export const metadata: Metadata = { title: "Privacy" };
+export const metadata: Metadata = { alternates: { canonical: "/privacy" }, title: "Privacy" };
 
 export default function PrivacyPage() {
   return (
@@ -16,6 +16,12 @@ export default function PrivacyPage() {
         <li>Your ZIP code finds your U.S. House and Senate races.</li>
         <li>For ZIP codes that span districts, we use your address once without saving it.</li>
         <li>Campaign filings shown here do not include street addresses.</li>
+      </ul>
+      <h2>Site use</h2>
+      <ul className="plain-list">
+        <li>GoatCounter counts page views without cookies.</li>
+        <li>Ask sends your question to Amazon Bedrock to write the answer. We don&apos;t store the question text.</li>
+        <li>If you create an account with email, Amazon Cognito stores your email address.</li>
       </ul>
       <h2>Contact</h2>
       <p>

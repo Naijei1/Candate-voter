@@ -7,12 +7,12 @@ export function llmsText(input: { origin: string; basePath: string }): string {
 
 ## Docs
 
-- [Agent API](${root}/agent): coverage, authentication, curl examples, and live ingest freshness
+- [Sources](${root}/sources): sources and coverage
 - [OpenAPI](${root}/openapi.yaml): OpenAPI 3.0 description of \`/api/v1\`
 
 ## API
 
-Send the key as \`Authorization: Bearer YOUR_API_KEY\` or \`X-Api-Key: YOUR_API_KEY\`. YOUR_API_KEY is a placeholder. HTML pages, including /agent, /openapi.yaml, and /llms.txt, do not require a key.
+Send the key as \`Authorization: Bearer YOUR_API_KEY\` or \`X-Api-Key: YOUR_API_KEY\`. YOUR_API_KEY is a placeholder. HTML pages, including /openapi.yaml, and /llms.txt, do not require a key.
 
 - GET ${root}/api/v1/races
 - GET ${root}/api/v1/races/{raceId}

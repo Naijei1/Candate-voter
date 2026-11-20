@@ -6,7 +6,7 @@ import { adminActor } from "@/lib/auth/guard";
 import { createDynamoRepository } from "@/lib/data/repository";
 import { currentUser } from "@/lib/auth/session";
 
-export const metadata: Metadata = { title: "Review queue" };
+export const metadata: Metadata = { alternates: { canonical: "/admin/corrections" }, title: "Review queue" };
 export const dynamic = "force-dynamic";
 
 export default async function CorrectionsQueuePage() {

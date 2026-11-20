@@ -3,6 +3,8 @@ import { GuideFlow } from "@/components/guide/GuideFlow";
 import { currentUser } from "@/lib/auth/session";
 import { guideRaces } from "@/lib/site/guide-races";
 
+export const metadata = { alternates: { canonical: "/ballot" } };
+
 export const dynamic = "force-dynamic";
 
 export default async function BallotPage() {

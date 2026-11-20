@@ -4,11 +4,8 @@ import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
-import { createElement } from "react";
-import { renderToStaticMarkup } from "react-dom/server";
 import { FORM2_SCOPE_NOTE } from "../src/lib/data/coverage";
 import { MemoryVoterRepository } from "../src/lib/data/memory-repository";
-import { AgentApiDocs } from "../src/components/AgentApiDocs";
 import { timingSafeStringEqual } from "../src/lib/api/auth";
 import type { ApiDeps } from "../src/lib/api/deps";
 import {
@@ -636,7 +633,7 @@ test("openapi and llms.txt describe the public read surface", () => {
   assert.equal(spec.includes("__SERVER_URL__"), false);
 
   const text = llmsText({ origin: "https://voter.example", basePath: "" });
-  assert.match(text, /https:\/\/voter\.example\/agent/);
+  assert.match(text, /https:\/\/voter\.example\/sources/);
   assert.match(text, /https:\/\/voter\.example\/openapi\.yaml/);
   assert.match(text, /https:\/\/voter\.example\/api\/v1\/freshness/);
   assert.match(text, /YOUR_API_KEY/);
@@ -644,60 +641,6 @@ test("openapi and llms.txt describe the public read surface", () => {
   assert.match(text, /2026-house-KY-01/);
   assert.match(text, /2026-house-WY-00/);
   assert.match(text, /does not expose district geometry/);
-});
-
-test("agent docs render the watermark and keep the key out of the page", () => {
-  const html = renderToStaticMarkup(
-    createElement(AgentApiDocs, {
-      origin: "https://voter.example",
-      basePath: "",
-      freshness: {
-        ok: true,
-        watermark: {
-          source: "fec-efile-form2",
-          lastLoadTimestamp: "2026-10-26 04:12:03",
-          lastRunAt: updatedAt,
-          lastStatus: "success",
-          lastError: null,
-          pagesFetched: 3,
-          filingsUpserted: 12,
-          skipped: 1,
-          updatedAt,
-        },
-      },
-    }),
-  );
-  for (const field of [
-    "lastLoadTimestamp",
-    "lastRunAt",
-    "lastStatus",
-    "2026-10-26 04:12:03",
-    "success",
-  ]) {
-    assert.equal(html.includes(field), true, field);
-  }
-  assert.match(html, /YOUR_API_KEY/);
-  assert.equal(html.includes(KEY), false);
-  assert.match(html, /href="\/openapi\.yaml"/);
-  assert.match(html, /Frontend map join/);
-  assert.match(html, /2026-house-KY-01/);
-  assert.match(html, /2026-house-WY-00/);
-  assert.match(html, /does not expose district geometry/);
-
-  const page = readFileSync(new URL("../src/app/agent/page.tsx", import.meta.url), "utf8");
-  assert.match(page, /readWatermark/);
-  assert.doesNotMatch(page, /CANDATE_API_KEY/);
-  assert.doesNotMatch(page, /use client/);
-
-  const empty = renderToStaticMarkup(
-    createElement(AgentApiDocs, {
-      origin: "https://voter.example",
-      basePath: "/voter",
-      freshness: { ok: true, watermark: null },
-    }),
-  );
-  assert.match(empty, /No fec-efile-form2 watermark is stored yet/);
-  assert.match(empty, /https:\/\/voter\.example\/voter\/api\/v1\/freshness/);
 });
 
 test("public origin falls back when the host header is unusable", () => {

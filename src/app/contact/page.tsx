@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { CopyText } from "@/components/site/CopyText";
 import { loadSiteCopy } from "@/lib/content/store";
 
-export const metadata: Metadata = { title: "Contact" };
+export const metadata: Metadata = { alternates: { canonical: "/contact" }, title: "Contact" };
 export const dynamic = "force-dynamic";
 
 export default async function ContactPage() {

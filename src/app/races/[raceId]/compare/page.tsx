@@ -23,8 +23,10 @@ export const runtime = "nodejs";
 type PageProps = { params: Promise<{ raceId: string }> };
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const loaded = await loadContest((await params).raceId);
-  return { title: loaded.race ? `Compare · ${loaded.race.title}` : "Compare" };
+  const id = (await params).raceId;
+  const alternates = { canonical: `/races/${encodeURIComponent(id)}/compare` };
+  const loaded = await loadContest(id);
+  return { alternates, title: loaded.race ? `Compare · ${loaded.race.title}` : "Compare" };
 }
 
 export default async function ComparePage({ params }: PageProps) {
@@ -56,7 +58,7 @@ export default async function ComparePage({ params }: PageProps) {
   const stories = news.filter(
     (story) => !/\b(wins|won|elected|victory)\b/i.test(story.title),
   );
-  const stateHref = race.state ? `/states/${race.state.toLowerCase()}` : "/states";
+  const stateHref = "/";
 
   return (
     <article className="wrap">

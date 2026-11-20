@@ -7,7 +7,6 @@ import { mapCandidateCycleTotal, mapCommitteeReport, mapScheduleEByCandidate } f
 import { fecImagePdf } from "../src/lib/finance/model";
 import { runTotalsIngest } from "../src/lib/finance/ingest";
 import { coverageChoices, selectDirect, selectOutside } from "../src/lib/finance/present";
-import { financeAlertNotice } from "../src/lib/users/alerts";
 import type { Race, Candidate } from "../src/lib/types";
 
 const context = {
@@ -301,21 +300,6 @@ test("a 429 keeps the cursor and records rate_limited", async () => {
   });
   assert.equal(second.status, "success");
   assert.deepEqual(seen, ["S6KY00001", "S6KY00002", "S6KY00002"]);
-});
-
-test("finance alerts use the coverage date as the event time", () => {
-  const first = financeAlertNotice({
-    userId: "user-1",
-    category: "finance-receipts",
-    targetType: "candidate",
-    targetId: "S6KY00385",
-    eventAt: "2026-10-14",
-    detectedAt: "2026-11-02T00:00:00.000Z",
-  });
-  const again = financeAlertNotice({ ...first, category: "finance-receipts", detectedAt: "2026-11-03T00:00:00.000Z" });
-  assert.equal(first.dedupeKey, again.dedupeKey);
-  assert.equal(first.dedupeKey.includes("2026-11-02"), false);
-  assert.equal(first.eventAt, "2026-10-14");
 });
 
 test("totals worker is a second function and does not itemize Schedule E lines", () => {

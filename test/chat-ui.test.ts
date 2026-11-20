@@ -61,7 +61,7 @@ test("context comes from the route and the year control", () => {
   assert.equal(contextLabel(race), "AK Senate · 2026");
 
   const chat = contextFromLocation({
-    pathname: "/chat",
+    pathname: "/ask",
     searchParams: new URLSearchParams("candidateId=H0AK00123&year=2026"),
     cycles: [2026],
   });
@@ -70,7 +70,7 @@ test("context comes from the route and the year control", () => {
   assert.equal(contextLabel(chat), "This candidate · 2026");
   assert.equal(
     chatPageHref({ raceId: "2026-senate-AK", cycle: 2026 }, "Who filed?"),
-    "/chat?raceId=2026-senate-AK&year=2026&q=Who+filed%3F",
+    "/ask?raceId=2026-senate-AK&year=2026&q=Who+filed%3F",
   );
 
   const home = contextFromLocation({
@@ -100,7 +100,7 @@ test("context comes from the route and the year control", () => {
   });
   assert.equal(
     chatPageHref({ state: "TX", zip: "78701", cycle: 2026 }),
-    "/chat?year=2026&state=TX&zip=78701",
+    "/ask?year=2026&state=TX&zip=78701",
   );
 });
 

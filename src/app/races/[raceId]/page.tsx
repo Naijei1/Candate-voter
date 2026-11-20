@@ -26,8 +26,10 @@ export const runtime = "nodejs";
 type PageProps = { params: Promise<{ raceId: string }> };
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const loaded = await loadContest((await params).raceId);
-  return { title: loaded.race?.title ?? "Race" };
+  const id = (await params).raceId;
+  const alternates = { canonical: `/races/${encodeURIComponent(id)}` };
+  const loaded = await loadContest(id);
+  return { alternates, title: loaded.race?.title ?? "Race" };
 }
 
 export default async function RacePage({ params }: PageProps) {
@@ -42,7 +44,7 @@ export default async function RacePage({ params }: PageProps) {
   const others = ballotIds
     ? loaded.candidates.filter((candidate) => !ballotIds.has(candidate.candidateId) && !ballotIds.has(candidate.fecCandidateId ?? ""))
     : [];
-  const stateHref = race.state ? `/states/${race.state.toLowerCase()}` : "/states";
+  const stateHref = "/";
 
   return (
     <article className="wrap">

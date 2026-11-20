@@ -1,51 +1,24 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import test from "node:test";
 import { isAdmin } from "../src/lib/auth/admin";
 import { passwordError } from "../src/lib/auth/cognito";
 import { MemoryVoterRepository } from "../src/lib/data/memory-repository";
-import {
-  ALERT_DELIVERY_STATUS,
-  alertDedupeKey,
-  dedupeNotices,
-  followSortKey,
-  parseQuietHours,
-  userPartition,
-  type AlertNotice,
-} from "../src/lib/users/alerts";
+import { followSortKey, userPartition } from "../src/lib/users/follows";
 
-test("alert dedupe uses the event time and ignores when it was detected", () => {
-  const key = alertDedupeKey({
-    category: "filings",
-    targetType: "race",
-    targetId: "2026-senate-KY",
-    eventAt: "2026-10-01T00:00:00.000Z",
-  });
-  assert.equal(key, "filings#race#2026-senate-KY#2026-10-01T00:00:00.000Z");
-  const first: AlertNotice = {
-    userId: "user-1",
-    category: "filings",
-    targetType: "race",
-    targetId: "2026-senate-KY",
-    eventAt: "2026-10-01T00:00:00.000Z",
-    detectedAt: "2026-10-02T00:00:00.000Z",
-    dedupeKey: key,
-  };
-  const again: AlertNotice = { ...first, detectedAt: "2026-10-03T12:00:00.000Z" };
-  assert.equal(dedupeNotices([first, again]).length, 1);
-  assert.equal(dedupeNotices([first, { ...again, eventAt: "2026-10-04T00:00:00.000Z", dedupeKey: "other" }]).length, 2);
-});
-
-test("follow keys and quiet hours stay explicit", () => {
+test("follow keys and password validation stay explicit", () => {
   assert.equal(userPartition("abc"), "USER#abc");
   assert.equal(followSortKey("jurisdiction", "KY"), "FOLLOW#jurisdiction#KY");
-  assert.equal(ALERT_DELIVERY_STATUS, "planned");
-  assert.deepEqual(parseQuietHours(null, null), { ok: true, value: null });
-  assert.deepEqual(parseQuietHours("22:00", "07:00"), { ok: true, value: { start: "22:00", end: "07:00" } });
-  assert.deepEqual(parseQuietHours("22:00", null), { ok: false });
   assert.equal(passwordError("short"), "Use at least 12 characters.");
   assert.equal(passwordError("longenoughpassword"), "Use upper case, lower case, and a number.");
   assert.equal(passwordError("Longenough12"), null);
+});
+
+test("saved races retain follows after email preferences are removed", () => {
+  const panel = readFileSync("src/components/site/AccountPanel.tsx", "utf8");
+  assert.match(panel, /fetch\("\/api\/follows"/);
+  assert.doesNotMatch(panel, /Email frequency|\/api\/alerts/);
+  assert.equal(existsSync("src/app/api/alerts/route.ts"), false);
 });
 
 test("admin review requires the exact Cognito admin group", () => {
@@ -118,8 +91,6 @@ test("account infrastructure stays least privilege and separate from filings", (
   assert.match(terms, /privacy policy/);
   assert.match(footer, /href: "\/privacy"/);
   assert.match(footer, /href: "\/terms"/);
-  const store = readFileSync("src/lib/users/store.ts", "utf8");
-  assert.match(store, /deliveryStatus: ALERT_DELIVERY_STATUS/);
   const admin = readFileSync("src/app/admin/corrections/page.tsx", "utf8");
   const guard = readFileSync("src/lib/auth/guard.ts", "utf8");
   assert.match(admin, /adminActor/);

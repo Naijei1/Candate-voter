@@ -33,24 +33,19 @@ Set mode to "alignment" only when the user explicitly asked for viewpoint alignm
 Set refused to true when you are refusing voting advice, a ranking, or an endorsement, or when the tools returned no matching record. Put the visitor-facing copy in answer_markdown. Use an empty sources array when you found nothing. When tools returned records, copy title, url, and as_of from those tool results into sources.`;
 
 const VOTING_ADVICE: readonly RegExp[] = [
-  /\bwho should i vote\b/i,
-  /\bwho (?:should|do|can) (?:i|we) vote\b/i,
+  /\bwho (?:should|do) (?:i|we) vote\b/i,
   /\bwho to vote for\b/i,
-  /\bvote for\b/i,
-  /\bwhom should i (?:vote|support|elect|pick|choose)\b/i,
-  /\bwhich candidate should i\b/i,
-  /\bshould i (?:vote|support|elect|pick|choose)\b/i,
-  /\bendorse\b/i,
-  /\bendorsement\b/i,
-  /\brank(?:ing)? (?:the |these )?candidates\b/i,
-  /\bbest candidate\b/i,
-  /\bworst candidate\b/i,
-  /\bwho(?:'s| is) (?:the )?(?:better|best)\b/i,
+  /\bwhom should (?:i|we) (?:vote|support|elect|pick|choose)\b/i,
+  /\bwhich candidate should (?:i|we)\b/i,
+  /\bshould (?:i|we) (?:vote|support|elect|pick|choose)\b/i,
+  /\b(?:do you|would you|please) endorse\b/i,
+  /\b(?:rank|ranking) (?:the |these )?candidates\b/i,
+  /\b(?:recommend (?:me )?(?:a|the) candidate|(?:best|better|worst) candidate)\b/i,
   /\btell me who to (?:vote|support|pick|choose|elect)\b/i,
 ];
 
 export const VOTING_ADVICE_MARKDOWN =
-  "I can't recommend a candidate, rank the field, or tell you who to vote for. THE VOTE is a nonpartisan record of FEC Form 2 filings. Ask about a race, candidate, or filing and I will cite that record.";
+  "I can't tell you who to vote for. I can show who filed for each Kentucky race and what they've reported.";
 
 export const EMPTY_RECORDS_MARKDOWN =
   "Nothing in the public FEC records matched that. I will not invent a candidate, race, or filing.";

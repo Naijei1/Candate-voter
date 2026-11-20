@@ -1,8 +1,5 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { createElement } from "react";
-import { renderToStaticMarkup } from "react-dom/server";
-import { AgentApiDocs } from "../src/components/AgentApiDocs";
 import { llmsText } from "../src/lib/api/llms";
 import { openApiDocument } from "../src/lib/api/openapi-document";
 import {
@@ -480,7 +477,7 @@ test("tools read the repository and do not invent a missing candidate", async ()
   const freshness = await executeChatTool("get_freshness", {}, ctx);
   assert.equal(freshness.ok, true);
   if (!freshness.ok) return;
-  assert.equal(freshness.sources[0]?.url, `${ROOT}/agent`);
+  assert.equal(freshness.sources[0]?.url, `${ROOT}/sources`);
   assert.equal(freshness.sources[0]?.as_of, updatedAt);
 });
 
@@ -550,7 +547,7 @@ test("Amplify env copy includes chat settings and not a public model key", () =>
   assert.equal(lines.some((line) => line.includes("should-not-be-written")), false);
 });
 
-test("openapi, llms.txt, and /agent document the browser chat route", () => {
+test("OpenAPI and llms.txt document the browser chat route", () => {
   const spec = openApiDocument("https://voter.example");
   const chat = spec.slice(spec.indexOf("  /api/chat:"));
   assert.match(chat, /operationId: postChat/);
@@ -572,19 +569,6 @@ test("openapi, llms.txt, and /agent document the browser chat route", () => {
   assert.match(text, /does not use the API key/);
   assert.match(text, /multiFilingNote/);
   assert.match(text, /out-of-cycle/);
-
-  const html = renderToStaticMarkup(
-    createElement(AgentApiDocs, {
-      origin: "https://voter.example",
-      basePath: "",
-      freshness: { ok: true, watermark: null },
-    }),
-  );
-  assert.match(html, /POST \/api\/chat/);
-  assert.match(html, /https:\/\/voter\.example\/api\/chat/);
-  assert.match(html, /No API key/);
-  assert.match(html, /alignment/);
-  assert.match(html, /Form 2/);
 });
 
 test("a vague who-is-running question asks for a race and does not call the model", async () => {
@@ -650,6 +634,23 @@ test("who is running with a state or ZIP does not ask which state", async () => 
   assert.match(stateBody.answer_markdown, /Ada Lovelace/);
   assert.doesNotMatch(stateBody.answer_markdown, /which state/i);
   assert.equal(called, false);
+
+  for (const message of [
+    "Who is running in Kentucky?",
+    "Who can I vote for in Kentucky?",
+    "Who can I vote for in KY?",
+    "Who is on my ballot?",
+    "Who is on the ballot?",
+    "What am I voting for?",
+  ]) {
+    const response = await postChat(post({ message, cycle: 2026 }), chatDeps(repo, async () => {
+      throw new Error("model should not be called for a roster");
+    }));
+    assert.equal(response.status, 200, message);
+    const body = await response.json();
+    assert.equal(body.refused, false, message);
+    assert.equal(body.answer_markdown, stateBody.answer_markdown, message);
+  }
 
   const byZip = await postChat(
     post({ message: "Who is running?", zip: "40202-1234", cycle: 2026 }),

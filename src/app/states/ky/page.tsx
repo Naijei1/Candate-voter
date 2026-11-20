@@ -1,10 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
 import { DistrictMap } from "@/components/DistrictMap";
 import { Crumbs } from "@/components/site/Crumbs";
 import { FollowControl } from "@/components/site/FollowControl";
-import { isPostalState, stateName } from "@/lib/data/states";
 import { generalElectionLabel } from "@/lib/copy";
 import { ElectionDayBanner } from "@/components/site/ElectionDayBanner";
 import { PILOT_YEAR, contestsForState, loadPilotIndex } from "@/lib/site/contest";
@@ -25,35 +23,30 @@ const CATEGORIES = [
 type Category = (typeof CATEGORIES)[number]["id"];
 
 type PageProps = {
-  params: Promise<{ state: string }>;
   searchParams: Promise<{ category?: string; year?: string }>;
 };
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const postal = (await params).state.trim().toUpperCase();
-  return { title: isPostalState(postal) ? stateName(postal) : "State" };
-}
+export const metadata: Metadata = { alternates: { canonical: "/states/ky" }, title: "Kentucky" };
 
-export default async function StatePage({ params, searchParams }: PageProps) {
-  const postal = (await params).state.trim().toUpperCase();
-  if (!isPostalState(postal)) notFound();
+export default async function StatePage({ searchParams }: PageProps) {
+  const postal = "KY";
   const query = await searchParams;
   const year = parseYear(query.year);
   const category = parseCategory(query.category);
   const loaded = await loadPilotIndex(year);
   const contests = contestsForState(loaded.races, postal);
-  const name = stateName(postal);
+  const name = "Kentucky";
 
   return (
     <article className="wrap">
       <Crumbs items={[{ href: "/", label: "Home" }, { label: name }]} />
       <h1>{name}</h1>
-      {postal === "KY" && year === PILOT_YEAR ? <ElectionDayBanner /> : null}
+      {year === PILOT_YEAR ? <ElectionDayBanner /> : null}
       <p className="lede">
         {year} general · {generalElectionLabel(year)}
       </p>
       <FollowControl what="jurisdiction" targetId={postal} />
-      {loaded.filingsLoaded || (postal === "KY" && year === PILOT_YEAR) ? null : (
+      {loaded.filingsLoaded || (year === PILOT_YEAR) ? null : (
         <p className="notice notice-error" role="status">
           Filings unavailable. <Link href="/sources">Sources</Link>
         </p>
@@ -76,7 +69,7 @@ export default async function StatePage({ params, searchParams }: PageProps) {
         )
       ) : null}
 
-      {(loaded.filingsLoaded || (postal === "KY" && year === PILOT_YEAR)) &&
+      {(loaded.filingsLoaded || (year === PILOT_YEAR)) &&
       category === "federal" &&
       contests.some((race) => race.office === "house") ? (
         <section className="section" aria-labelledby="districts">

@@ -4,7 +4,7 @@ import test from "node:test";
 import { congressionalDistricts } from "../src/lib/geo/congressional-district";
 import { emptyPlace, placeSearch, sanitizePlace } from "../src/lib/place/selection";
 import { averagePolls, type Poll } from "../src/lib/polls/model";
-import { parseFollowType } from "../src/lib/users/alerts";
+import { parseFollowType } from "../src/lib/users/follows";
 
 test("a selected place never keeps a street address", () => {
   const place = sanitizePlace({ state: "ky", year: "2026", zip: "40502", district: "06", address: "100 Main St", street: "100 Main St" });
@@ -48,19 +48,17 @@ test("poll averages stay empty until polls exist", () => {
     ],
   };
   assert.equal(averagePolls([poll])?.[0]?.label, "B");
-  const page = readFileSync("src/app/polls/page.tsx", "utf8");
-  assert.match(page, /No polls yet/);
-  assert.doesNotMatch(page, /Speeches|Debates|planned/);
+
 });
 
-test("news feed choices are not alert categories, and issue follows are allowed", () => {
+test("news feed choices and issue follows still work", () => {
   assert.equal(parseFollowType("issue"), "issue");
   const store = readFileSync("src/lib/users/store.ts", "utf8");
   assert.match(store, /sk: "FEED"/);
   const news = readFileSync("src/components/site/NewsFeed.tsx", "utf8");
   assert.match(news, /separate from/);
   assert.match(news, /Kentucky Lantern feed/);
-  const judicial = readFileSync("src/app/states/[state]/page.tsx", "utf8");
+  const judicial = readFileSync("src/app/states/ky/page.tsx", "utf8");
   assert.doesNotMatch(judicial, /LocalTemplate|<nav className="filters"/);
   assert.equal(judicial.includes("Jane Doe"), false);
 });

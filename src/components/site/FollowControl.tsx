@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import type { FollowType } from "@/lib/users/alerts";
+import type { FollowType } from "@/lib/users/follows";
 
 const LABEL: Record<FollowType, string> = {
   race: "this race",

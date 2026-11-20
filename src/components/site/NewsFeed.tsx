@@ -112,9 +112,9 @@ export function NewsFeed() {
         </p>
       ) : null}
       <h2>Feed choices</h2>
-      <p>The list above is the Kentucky Lantern feed. Saving a category does not turn on email alerts.</p>
+      <p>The list above is the Kentucky Lantern feed.</p>
       <p>
-        <Link className="btn btn-navy" href="/states/ky">
+        <Link className="btn btn-navy" href="/">
           See Kentucky races
         </Link>
       </p>

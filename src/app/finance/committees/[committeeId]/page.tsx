@@ -10,8 +10,10 @@ export const dynamic = "force-dynamic";
 
 type PageProps = { params: Promise<{ committeeId: string }> };
 
-export async function generateMetadata(): Promise<Metadata> {
-  return { title: "Campaign group" };
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const id = (await params).committeeId.trim().toUpperCase();
+  const alternates = { canonical: `/finance/committees/${encodeURIComponent(id)}` };
+  return { alternates, title: "Campaign group" };
 }
 
 export default async function CommitteeFinancePage({ params }: PageProps) {

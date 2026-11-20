@@ -5,7 +5,7 @@ import { adminActor } from "@/lib/auth/guard";
 import { FEATURES } from "@/lib/content/features";
 import { currentUser } from "@/lib/auth/session";
 
-export const metadata: Metadata = { title: "Feature status" };
+export const metadata: Metadata = { alternates: { canonical: "/admin/features" }, title: "Feature status" };
 export const dynamic = "force-dynamic";
 
 export default async function FeaturesAdminPage() {

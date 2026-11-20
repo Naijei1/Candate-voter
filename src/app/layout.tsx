@@ -10,6 +10,8 @@ import { MobileNavigation } from "@/components/site/MobileNavigation";
 import { PlaceSync } from "@/components/site/PlaceSync";
 import { brand } from "@/content/brand";
 import { cyclesFromEnv } from "@/lib/data/cycles";
+import { withBasePath } from "@/lib/base-path";
+import { PRODUCTION_ORIGIN } from "@/lib/api/public-origin";
 import "./globals.css";
 
 const sourceSans = Source_Sans_3({
@@ -33,11 +35,9 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-/** Absolute base for social preview images. `SITE_ORIGIN` overrides the live Amplify address. */
-const siteOrigin = process.env.SITE_ORIGIN?.trim() || "https://main.d253xhq1uabld3.amplifyapp.com";
-
 export const metadata: Metadata = {
-  metadataBase: new URL(siteOrigin),
+  metadataBase: new URL(withBasePath("/"), PRODUCTION_ORIGIN),
+  alternates: { canonical: "./" },
   title: {
     default: brand.name,
     template: `%s · ${brand.name}`,

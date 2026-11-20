@@ -6,7 +6,7 @@ import { adminActor } from "@/lib/auth/guard";
 import { loadSiteCopy } from "@/lib/content/store";
 import { currentUser } from "@/lib/auth/session";
 
-export const metadata: Metadata = { title: "Branding" };
+export const metadata: Metadata = { alternates: { canonical: "/admin/brand" }, title: "Branding" };
 export const dynamic = "force-dynamic";
 
 export default async function BrandAdminPage() {

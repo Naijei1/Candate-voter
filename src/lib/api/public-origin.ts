@@ -1,5 +1,5 @@
 const HOST = /^[a-z0-9.-]+(?::\d{1,5})?$/i;
-const PRODUCTION_ORIGIN = "https://voter.naijei.com";
+export const PRODUCTION_ORIGIN = "https://voter.naijei.com";
 
 /**
  * Origin for docs and curl examples. Falls back to the public site when the

@@ -11,11 +11,11 @@ const askClass =
 export function AskNav() {
   const pathname = usePathname();
   const ask = useAsk();
-  const onChat = pathname === "/chat";
+  const onAsk = pathname === "/ask";
 
-  if (!isAskPanelPath(pathname) || onChat) {
+  if (!isAskPanelPath(pathname) || onAsk) {
     return (
-      <Link href="/chat" aria-current={onChat ? "page" : undefined} aria-label="Ask a question" className={askClass}>
+      <Link href="/ask" aria-current={onAsk ? "page" : undefined} aria-label="Ask a question" className={askClass}>
         <AskMark />
         <span className="ask-label">
           Ask<span className="ask-label-rest"> a question</span>
