@@ -8,11 +8,6 @@ export function ResultsNote({ now = new Date() }: { now?: Date }) {
   return (
     <section className="results-note" aria-label="Results">
       <h2>Results</h2>
-      <p>
-        {phase === "partial"
-          ? "Polls in Central time counties stay open until 6:00 p.m. Central. This site does not copy the numbers."
-          : "Unofficial counts are on the State Board of Elections page. This site does not copy the numbers."}
-      </p>
       <p className="actions">
         {KY_RESULTS_LINKS.map((link) => (
           <a key={link.href} className="btn btn-navy" href={link.href}>

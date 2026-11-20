@@ -48,7 +48,7 @@ test("the tab bar hides while the on-screen keyboard is open", () => {
   assert.equal(keyboardOpen({ focusedField: false, layoutHeight: 844, visualHeight: 500 }), true);
   assert.equal(keyboardOpen({ focusedField: false, layoutHeight: 844, visualHeight: 800 }), false);
   assert.equal(keyboardOpen({ focusedField: false, layoutHeight: 844, visualHeight: null }), false);
-  const field = (tag: string, type?: string) => ({
+  const field = (tag: string, type?: string) => Object.assign(new EventTarget(), {
     matches: (selector: string) => selector.split(",").some((part) => part.trim().split("[")[0] === tag),
     getAttribute: () => type ?? null,
   });
@@ -85,7 +85,7 @@ test("Back/Next and page action bars stay pinned above the tab bar", () => {
 
 test("race cards keep the photo credit inside the card", () => {
   const race = readFileSync("src/app/races/[raceId]/page.tsx", "utf8");
-  assert.match(race, /credit=\{photo\?\.credit \?\? null\}/);
+  assert.match(race, /credit=\{photoAttribution\(photo\)\}/);
   assert.equal(/<p className="hint">\{photo\.credit\}<\/p>/.test(race), false);
   assert.match(readFileSync("src/components/site/PersonFace.tsx", "utf8"), /person-face-credit/);
 });

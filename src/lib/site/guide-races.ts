@@ -1,12 +1,12 @@
 import { formatMoney } from "@/lib/finance/model";
 import { kyBallot, kyBallotSeed } from "@/lib/site/ky-ballot";
 import { jobLine, linkLabel, profileFor } from "@/lib/site/profiles";
-import { portraitFor } from "@/lib/site/stances";
+import { photoAttribution, portraitFor } from "@/lib/site/stances";
 import type { GuideRace } from "@/components/guide/GuideFlow";
 
 const JOB = {
-  senate: "Writes and votes on federal laws. Kentucky has two senators. The term is six years.",
-  house: "Writes and votes on federal laws for this district. The term is two years.",
+  senate: "Six-year term.",
+  house: "Two-year term.",
 };
 
 export function guideRaces(): GuideRace[] {
@@ -34,7 +34,7 @@ export function guideRaces(): GuideRace[] {
         writeIn: person.role === "write-in",
         raised: person.finance ? formatMoney(person.finance.receipts) : null,
         photo: photo?.src ?? null,
-        photoCredit: photo?.credit ?? null,
+        photoCredit: photoAttribution(photo),
         website: link ? { href: link.url, label: linkLabel(link) } : null,
         job: jobLine(person.id),
       };

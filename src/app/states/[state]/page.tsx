@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { DistrictMap } from "@/components/DistrictMap";
-import { DataRefreshedBanner } from "@/components/DataRefreshedBanner";
 import { Crumbs } from "@/components/site/Crumbs";
 import { FollowControl } from "@/components/site/FollowControl";
 import { isPostalState, stateName } from "@/lib/data/states";
@@ -54,24 +53,11 @@ export default async function StatePage({ params, searchParams }: PageProps) {
         {year} general · {generalElectionLabel(year)}
       </p>
       <FollowControl what="jurisdiction" targetId={postal} />
-      <DataRefreshedBanner refreshedAt={loaded.refreshedAt} />
       {loaded.filingsLoaded || (postal === "KY" && year === PILOT_YEAR) ? null : (
         <p className="notice notice-error" role="status">
-          Filings could not be loaded. <Link href="/sources">About this data</Link>
+          Filings unavailable. <Link href="/sources">Sources</Link>
         </p>
       )}
-
-      <nav className="filters" aria-label="Race category">
-        {CATEGORIES.map((item) => (
-          <Link
-            key={item.id}
-            href={`/states/${postal.toLowerCase()}?year=${year}&category=${item.id}`}
-            aria-current={category === item.id ? "page" : undefined}
-          >
-            {item.label}
-          </Link>
-        ))}
-      </nav>
 
       {category === "federal" ? (
         contests.length === 0 ? (
@@ -88,13 +74,7 @@ export default async function StatePage({ params, searchParams }: PageProps) {
             ))}
           </ul>
         )
-      ) : category === "judicial" || category === "school" ? (
-        <LocalTemplate postal={postal} kind={category} />
-      ) : (
-        <p className="notice" role="status">
-          {labelFor(category)} races are not covered yet. Federal races are ready.
-        </p>
-      )}
+      ) : null}
 
       {(loaded.filingsLoaded || (postal === "KY" && year === PILOT_YEAR)) &&
       category === "federal" &&
@@ -112,19 +92,14 @@ export default async function StatePage({ params, searchParams }: PageProps) {
         </section>
       ) : null}
 
-      <p>
-        <Link href={`/measures/${postal.toLowerCase()}`}>Ballot measures</Link>
-        {" · "}
-        <Link href={`/states/${postal.toLowerCase()}/issues`}>Issues</Link>
-      </p>
     </article>
   );
 }
 
 function filingLine(raceId: string, loaded: boolean, empty: boolean): string {
   if (kyBallot(raceId)) return "November ballot";
-  if (!loaded) return "Open to see who filed";
-  return empty ? "No one has filed yet" : "People have filed";
+  if (!loaded) return "";
+  return empty ? "" : "Candidates filed";
 }
 
 function parseYear(value: string | undefined): number {
@@ -135,23 +110,4 @@ function parseYear(value: string | undefined): number {
 
 function parseCategory(value: string | undefined): Category {
   return CATEGORIES.find((item) => item.id === value)?.id ?? "federal";
-}
-
-function LocalTemplate({ postal, kind }: { postal: string; kind: "judicial" | "school" }) {
-  const title = kind === "judicial" ? "Judges" : "School board";
-  return (
-    <section className="card" aria-labelledby={`${kind}-template`}>
-      <h2 id={`${kind}-template`}>{title}</h2>
-      <p>Not covered yet. No names were copied from the state election office.</p>
-      <p>
-        <Link className="btn btn-navy" href={`/states/${postal.toLowerCase()}`}>
-          See federal races
-        </Link>
-      </p>
-    </section>
-  );
-}
-
-function labelFor(category: Category): string {
-  return CATEGORIES.find((item) => item.id === category)?.label ?? "Those";
 }

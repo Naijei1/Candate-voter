@@ -8,7 +8,6 @@ import type { ChatSource } from "@/lib/chat/types";
 const PROMPTS = [
   "Who has filed to run?",
   "What is the latest filing?",
-  "What did they say in the latest debate?",
 ] as const;
 
 type Answer =
@@ -92,7 +91,7 @@ function AskBody({
     const noEvidence = result.refused || result.sources.length === 0;
     setAnswer({
       state: "answer",
-      text: noEvidence ? "Nothing stored answers that. Try who has filed to run." : plain(result.answer_markdown),
+      text: noEvidence ? "No answer found." : plain(result.answer_markdown),
       sources: result.sources,
       noEvidence,
     });
@@ -114,7 +113,6 @@ function AskBody({
   return (
     <section data-testid="ai-prototype">
       <h2>Ask about this race</h2>
-      <p className="hint">Answers use stored candidacy filings only. If there is no filing, it will say so.</p>
       <div className="actions">
         {PROMPTS.map((prompt) => (
           <button key={prompt} className="btn btn-ghost" type="button" onClick={() => ask(prompt)}>
@@ -122,7 +120,7 @@ function AskBody({
           </button>
         ))}
       </div>
-      {answer.state === "loading" ? <p role="status">Looking up filings…</p> : null}
+      {answer.state === "loading" ? <p role="status">Looking up candidates…</p> : null}
       {answer.state === "error" ? <p role="alert">{answer.text}</p> : null}
       {answer.state === "answer" ? (
         <div>
@@ -146,7 +144,7 @@ function AskBody({
           <textarea id={`report-${raceId}`} value={report} onChange={(event) => setReport(event.target.value)} rows={3} />
         </label>
         <button className="btn btn-ghost" type="submit">
-          Send report
+          Send
         </button>
         {reportNote ? <p role="status">{reportNote}</p> : null}
       </form>

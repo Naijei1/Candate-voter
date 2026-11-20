@@ -2,10 +2,11 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 import { seatLabel } from "../src/components/site/CandidateCard";
-import { sharedRefusal } from "../src/components/home/CompareSection";
+import { visibleCompareTabs } from "../src/components/site/CompareBoard";
+import { uniqueSources } from "../src/components/home/CompareSection";
 import { createRateLimiter, trustedClientAddress } from "../src/lib/chat/rate-limit";
 import { CHAT_SYSTEM_PROMPT } from "../src/lib/chat/prompt";
-import { compareBasis, compareOption, COMPARE_RACE_IDS, REFUSALS } from "../src/lib/compare/evidence";
+import { compareBasis, compareOption, COMPARE_RACE_IDS } from "../src/lib/compare/evidence";
 import { AI_CACHE_MS, createCompareService, FALLBACK_CACHE_MS } from "../src/lib/compare/service";
 import { recordsOnlySummary, type CompareSummary } from "../src/lib/compare/summarize";
 import type { FinanceOutside } from "../src/lib/finance/model";
@@ -122,14 +123,12 @@ test("rate-limit address comes from the last proxy hop, not the visitor's own he
   assert.match(readFileSync("src/app/api/compare/route.ts", "utf8"), /trustedClientAddress\(request\)/);
 });
 
-test("the AI-unavailable message appears once, and the live region is a short status line", () => {
-  assert.equal(sharedRefusal(null, true), REFUSALS.unavailable);
-  assert.equal(sharedRefusal(null, false), null);
-  assert.equal(sharedRefusal(summary("records"), false), REFUSALS.unavailable);
-  const ai = { ...summary("ai"), differ: [{ text: "x", cites: ["E1"] }], differRefusal: null, agreeRefusal: REFUSALS.agree };
-  assert.equal(sharedRefusal(ai, false), null);
+test("comparison failures show evidence and the live region stays concise", () => {
   const source = readFileSync("src/components/home/CompareSection.tsx", "utf8");
   assert.equal((source.match(/aria-live/g) ?? []).length, 1);
+  assert.match(source, /candidateEvidence\(basis\)/);
+  assert.match(source, /open=\{!hasSummary\}/);
+  assert.doesNotMatch(source, /compare-refusal|comparison ready/);
   assert.match(source, /role="status" aria-live="polite"/);
   assert.equal(/<div className="compare-cols" aria-live/.test(source), false);
   assert.match(source, /withBasePath\(`\/races\/\$\{option\.raceId\}\/compare`\)/);
@@ -174,4 +173,17 @@ test("Ask stays Kentucky only and the map tabs say what they show", () => {
   const map = readFileSync("src/components/home/HomeMap.tsx", "utf8");
   assert.match(map, /label: "District map"/);
   assert.match(map, /label: "Statewide officeholders"/);
+});
+
+
+test("comparison hides empty tabs and shows topics with data", () => {
+  assert.deepEqual(visibleCompareTabs({ hasStances: false, hasVotes: false, hasFinance: false, hasUpdates: false }), ["Overview"]);
+  assert.deepEqual(visibleCompareTabs({ hasStances: true, hasVotes: false, hasFinance: true, hasUpdates: false }), ["Overview", "Issues", "Statements", "Campaign Finance"]);
+});
+
+test("a comparison point links each source once", () => {
+  const first = summary("records").evidence[0];
+  assert.ok(first);
+  const second = { ...first, id: "duplicate" };
+  assert.deepEqual(uniqueSources([first.id, second.id, "missing"], new Map([[first.id, first], [second.id, second]])), [first]);
 });

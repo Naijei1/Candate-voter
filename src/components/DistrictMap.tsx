@@ -152,7 +152,7 @@ export function DistrictMap({
           {here}
         </p>
       ) : null}
-      <MapLegend house />
+      {postal !== "KY" ? <MapLegend house /> : null}
     </div>
   );
 }

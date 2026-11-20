@@ -17,7 +17,7 @@ export function ResultsBar({ now = new Date() }: { now?: Date }) {
   return (
     <aside className="results-bar" aria-label="Election results">
       <p>
-        <strong>Election is over.</strong> Election Day was Nov 3, 2026. Counts are unofficial until certified.
+        <strong>The Nov 3, 2026 election is over.</strong>
       </p>
       <a href={OFFICIAL.href}>See official results</a>
     </aside>

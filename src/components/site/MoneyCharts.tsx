@@ -29,7 +29,7 @@ function RaceChart({ race }: { race: ChartRace }) {
   const max = Math.max(1, ...race.people.flatMap((person) => [person.raised, person.spent, person.cash ?? 0]));
   return (
     <figure className="chart">
-      <figcaption className="chart-title">{race.title}: money each campaign reported</figcaption>
+      <figcaption className="chart-title">{race.title}</figcaption>
       <ul className="chart-legend" aria-hidden="true">
         {SERIES.map((series) => (
           <li key={series.key}>
@@ -38,7 +38,6 @@ function RaceChart({ race }: { race: ChartRace }) {
           </li>
         ))}
       </ul>
-      {race.people.length === 0 ? <p>No FEC totals are stored for this race.</p> : null}
       <ul className="chart-rows">
         {race.people.map((person) => (
           <li key={person.id} className="chart-row">
@@ -53,18 +52,15 @@ function RaceChart({ race }: { race: ChartRace }) {
                   <span className="chart-track" aria-hidden="true">
                     {value != null ? <span className={`chart-bar s-${series.key}`} style={{ width: pct(value, max) }} /> : null}
                   </span>
-                  <span className="chart-value">{value == null ? "Not reported" : shortMoney(value)}</span>
+                  <span className="chart-value">{value == null ? "—" : shortMoney(value)}</span>
                 </div>
               );
             })}
           </li>
         ))}
       </ul>
-      {race.missing.length > 0 ? (
-        <p className="hint">No FEC totals stored for: {race.missing.join(", ")}.</p>
-      ) : null}
       <details className="chart-table">
-        <summary>Show these numbers as a table</summary>
+        <summary>View table</summary>
         <div className="table-scroll" tabIndex={0} role="region" aria-label={`${race.title}: money each campaign reported, table`}>
           <table>
             <caption className="sr-only">{race.title}: money each campaign reported to the FEC</caption>
@@ -83,7 +79,7 @@ function RaceChart({ race }: { race: ChartRace }) {
                   <th scope="row">{person.name}</th>
                   <td>{FULL.format(person.raised)}</td>
                   <td>{FULL.format(person.spent)}</td>
-                  <td>{person.cash == null ? "Not reported" : FULL.format(person.cash)}</td>
+                  <td>{person.cash == null ? "—" : FULL.format(person.cash)}</td>
                   <td>
                     <a href={person.sourceUrl}>FEC</a>
                   </td>
@@ -102,7 +98,7 @@ function CommitteeChart({ committees, asOf }: { committees: readonly ChartCommit
   return (
     <figure className="chart">
       <figcaption className="chart-title">Outside groups that spent the most on these races</figcaption>
-      <p className="hint">Money groups spent on their own to support or oppose a candidate. It is not money the campaigns received.</p>
+      <p className="hint">Spending by groups outside the campaigns.</p>
       <ul className="chart-legend" aria-hidden="true">
         <li>
           <span className="chart-swatch s-support" />
@@ -113,7 +109,6 @@ function CommitteeChart({ committees, asOf }: { committees: readonly ChartCommit
           Spent to oppose
         </li>
       </ul>
-      {committees.length === 0 ? <p>No outside spending is stored for these candidates.</p> : null}
       <ul className="chart-rows">
         {committees.map((row) => (
           <li key={row.committeeId} className="chart-row">
@@ -136,7 +131,7 @@ function CommitteeChart({ committees, asOf }: { committees: readonly ChartCommit
       </ul>
       {committees.length > 0 ? (
         <details className="chart-table">
-          <summary>Show these numbers as a table</summary>
+          <summary>View table</summary>
           <div className="table-scroll" tabIndex={0} role="region" aria-label="Outside spending by group, table">
             <table>
               <caption className="sr-only">Outside spending by group</caption>
@@ -174,22 +169,25 @@ function CommitteeChart({ committees, asOf }: { committees: readonly ChartCommit
           </div>
         </details>
       ) : null}
-      <p className="chart-foot">{asOf} Source: FEC independent expenditures.</p>
+      <p className="chart-foot">Source: <a href="https://www.fec.gov/data/independent-expenditures/">FEC</a>{asOf}.</p>
     </figure>
   );
 }
 
 export function MoneyCharts({ data, showAll = false }: { data: MoneyChartData; showAll?: boolean }) {
   const selectId = useId();
-  const [raceId, setRaceId] = useState(data.races[0]?.raceId ?? "");
-  const shown = showAll ? data.races : data.races.filter((race) => race.raceId === raceId);
+  const races = data.races.filter((race) => race.people.length > 0);
+  const [selectedRace, setRaceId] = useState(races[0]?.raceId ?? "");
+  const raceId = races.some((race) => race.raceId === selectedRace) ? selectedRace : races[0]?.raceId;
+  const shown = showAll ? races : races.filter((race) => race.raceId === raceId);
+  if (!races.length && !data.committees.length) return null;
   return (
     <div className="money-charts">
-      {showAll ? null : (
+      {showAll || !races.length ? null : (
         <label className="chart-picker" htmlFor={selectId}>
           Race
           <select id={selectId} value={raceId} onChange={(event) => setRaceId(event.target.value)}>
-            {data.races.map((race) => (
+            {races.map((race) => (
               <option key={race.raceId} value={race.raceId}>
                 {race.title}
               </option>
@@ -198,15 +196,15 @@ export function MoneyCharts({ data, showAll = false }: { data: MoneyChartData; s
         </label>
       )}
       <div className="chart-grid">
-        <div>
+        {shown.length > 0 ? <div>
           {shown.map((race) => (
             <RaceChart key={race.raceId} race={race} />
           ))}
           <p className="chart-foot">
-            {data.candidateAsOf} Source: <a href={data.candidateSource.url}>{data.candidateSource.name}</a>.
+            Source: <a href={data.candidateSource.url}>{data.candidateSource.name}</a>{data.candidateAsOf}.
           </p>
-        </div>
-        <CommitteeChart committees={data.committees} asOf={data.committeeAsOf} />
+        </div> : null}
+        {data.committees.length > 0 ? <CommitteeChart committees={data.committees} asOf={data.committeeAsOf} /> : null}
       </div>
     </div>
   );

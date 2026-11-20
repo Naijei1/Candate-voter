@@ -1,6 +1,7 @@
 import { orgLabel } from "@/components/site/FinanceLists";
-import { formatMoney, type FinanceDirect, type FinanceOutside } from "@/lib/finance/model";
+import { type FinanceDirect, type FinanceOutside } from "@/lib/finance/model";
 import { loadFinance } from "@/lib/finance/load";
+import { dayLabel } from "@/lib/site/money-charts";
 import { kyBallotSeed } from "@/lib/site/ky-ballot";
 import { snapshotFinance, FINANCE_SNAPSHOT_RETRIEVED_AT } from "@/lib/finance/snapshot";
 
@@ -40,9 +41,16 @@ function ballotNames(): Map<string, string> {
   );
 }
 
+const compactMoney = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD",
+  notation: "compact",
+  maximumSignificantDigits: 3,
+});
+
 function whenLabel(updatedAt: string | null, retrievedAt: string): string {
   const day = (updatedAt || retrievedAt).slice(0, 10);
-  return `Retrieved ${day}`;
+  return dayLabel(day);
 }
 
 /**
@@ -64,13 +72,13 @@ export function kentuckyMoneyCards(
       const who = names.get(row.candidateId) ?? row.candidateName ?? row.candidateId;
       const group = orgLabel(row.committeeName) ?? row.committeeId;
       const way = row.support === "support" ? "support" : "oppose";
-      const reports = row.count != null && row.count > 0 ? ` across ${row.count} reports` : "";
+      const reports = row.count != null && row.count > 0 ? ` (${row.count} ${row.count === 1 ? "report" : "reports"})` : "";
       return {
         id: `${row.committeeId}-${row.candidateId}-${row.support}`,
         title: `${group} ${way === "support" ? "supported" : "opposed"} ${who}`,
-        text: `${group} reported ${formatMoney(row.total)} in independent expenditures that ${way} ${who}${reports}. This is the stored total for the 2026 cycle, not one payment.`,
+        text: `${compactMoney.format(row.total ?? 0)} in outside spending ${way === "support" ? "for" : "against"} ${who} in ${row.cycle}${reports}.`,
         when: whenLabel(row.updatedAt, retrievedAt),
-        sourceName: "FEC independent expenditures",
+        sourceName: "FEC",
         sourceUrl: row.sourceUrl as string,
         personId: people.get(row.candidateId) ?? null,
         personName: who,
@@ -102,12 +110,16 @@ function receiptCard(
   const who = names.get(row.candidateId) ?? row.name ?? row.candidateId;
   const group = orgLabel(row.committeeName) ?? "The campaign";
   const filing = row.sourceLabel === "FEC filing";
+  const period = row.coverageStart && row.coverageEnd
+    ? ` from ${dayLabel(row.coverageStart)} to ${dayLabel(row.coverageEnd)}`
+    : row.coverageEnd ? ` through ${dayLabel(row.coverageEnd)}`
+    : row.coverageStart ? ` since ${dayLabel(row.coverageStart)}` : "";
   return {
     id: `${filing ? "filing" : "receipt"}-${row.candidateId}-${row.coverageEnd ?? ""}`,
-    title: filing ? `${group} filed a report for ${who}` : `${group} receipts for ${who}`,
-    text: `${group} reported ${formatMoney(row.receipts)} in receipts for ${who}. Coverage ${row.coverageStart ?? "start not stored"} to ${row.coverageEnd ?? "end not stored"}. This is the committee total, not a list of donors.`,
+    title: filing ? `${group} filed a report` : `${group} fundraising`,
+    text: `Raised ${compactMoney.format(row.receipts ?? 0)}${period}.`,
     when: whenLabel(row.updatedAt, retrievedAt),
-    sourceName: filing ? "FEC filing" : "FEC candidate totals",
+    sourceName: "FEC",
     sourceUrl: row.sourceUrl as string,
     personId: people.get(row.candidateId) ?? null,
     personName: who,

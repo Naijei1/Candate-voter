@@ -21,9 +21,6 @@ export default async function NewsFeedPage({ searchParams }: PageProps) {
   return (
     <article className="wrap">
       <h1>News Feed</h1>
-      <p className="lede">
-        What Kentucky candidates on the November ballot reported, from records this site stores.
-      </p>
       <div className="tabs" role="tablist" aria-label="News Feed lanes">
         <Link href="/news" aria-selected={lane === "activity"} role="tab">
           Activity
@@ -52,14 +49,13 @@ export default async function NewsFeedPage({ searchParams }: PageProps) {
               ))}
             </ul>
           ) : null}
-          {cards.length === 0 ? <p>Nothing new is stored.</p> : <FeedGrid cards={cards} />}
+          {cards.length > 0 ? <FeedGrid cards={cards} /> : null}
         </section>
       ) : (
         <section aria-labelledby="reporting-heading">
           <h2 id="reporting-heading">Reporting</h2>
-          <p>Kentucky Lantern stories. This is journalism from outside the site.</p>
           {stories.length === 0 ? (
-            <p>The Kentucky Lantern feed could not be loaded.</p>
+            <p>Reporting unavailable.</p>
           ) : (
             <ul className="plain-list">
               {stories.map((story) => (

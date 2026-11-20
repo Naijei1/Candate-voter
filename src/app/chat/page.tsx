@@ -4,7 +4,7 @@ import { ChatPage } from "@/components/chat/ChatPage";
 
 export const metadata: Metadata = {
   title: "Ask",
-  description: "Ask factual questions about federal races and filings.",
+  description: "Ask about Kentucky’s races.",
 };
 
 export default function ChatRoute() {

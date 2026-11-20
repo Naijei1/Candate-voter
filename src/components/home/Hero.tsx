@@ -69,7 +69,7 @@ export function Hero() {
     setBusy(true);
     setNote(null);
     if (!navigator.geolocation) {
-      setNote("This browser cannot share a location. Enter a ZIP on the ballot page.");
+      setNote("Location unavailable. Enter a ZIP code on My races.");
       setBusy(false);
       return;
     }
@@ -89,7 +89,7 @@ export function Hero() {
       },
       () => {
         setBusy(false);
-        setNote("Location was not shared. It was not saved.");
+        setNote("Location unavailable. Enter a ZIP code.");
       },
       { enableHighAccuracy: false, timeout: 8000 },
     );
@@ -126,21 +126,12 @@ export function Hero() {
             Use my location
           </button>
         </div>
-        <p className="hero-note">
-          Kentucky only. A district finds your U.S. House race and the U.S. Senate race. It is not your full local ballot.
-        </p>
         {note ? (
           <p className="hero-error" role="alert">
             {note}
           </p>
         ) : null}
       </div>
-      <p className="hero-credit">
-        Video: Edmond Dantès on Pexels, free to use.{" "}
-        <a href="https://www.pexels.com/video/people-voting-7103537/">People voting</a>
-        {" and "}
-        <a href="https://www.pexels.com/video/woman-putting-his-vote-on-a-ballot-box-7103427/">ballot box</a>.
-      </p>
     </section>
   );
 }

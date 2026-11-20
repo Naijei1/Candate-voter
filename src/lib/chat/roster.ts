@@ -149,12 +149,12 @@ function renderRoster(input: {
 }
 
 function senateBlock(rows: ReadonlyArray<{ race: Race; candidate: PublicCandidate }>): string {
-  if (rows.length === 0) return "**U.S. Senate**\n\nNo Senate filing is stored.";
+  if (rows.length === 0) return "**U.S. Senate**\n\nNo Senate filing found.";
   return `**U.S. Senate**\n\n${rows.map((row) => personLine(row.candidate, row.race)).join("\n")}`;
 }
 
 function houseBlock(rows: ReadonlyArray<{ race: Race; candidate: PublicCandidate }>): string {
-  if (rows.length === 0) return "**U.S. House**\n\nNo House filing is stored.";
+  if (rows.length === 0) return "**U.S. House**\n\nNo House filing found.";
   return `**U.S. House**\n\n${rows.map((row) => personLine(row.candidate, row.race)).join("\n")}`;
 }
 

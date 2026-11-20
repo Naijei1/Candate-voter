@@ -35,6 +35,7 @@ export type CompareCandidate = {
   votes?: CompareVote[];
   raised?: string | null;
   moneyIds?: string[];
+  raisedSource?: string;
 };
 
 const TABS = [
@@ -42,19 +43,34 @@ const TABS = [
   "Issues",
   "Statements",
   "Voting Record",
-  "Polls",
   "Campaign Finance",
   "Updates",
 ] as const;
 
 type Tab = (typeof TABS)[number];
 
+export function visibleCompareTabs({ hasStances, hasVotes, hasFinance, hasUpdates }: {
+  hasStances: boolean;
+  hasVotes: boolean;
+  hasFinance: boolean;
+  hasUpdates: boolean;
+}): Tab[] {
+  const visible: Record<Tab, boolean> = {
+    Overview: true,
+    Issues: hasStances,
+    Statements: hasStances,
+    "Voting Record": hasVotes,
+    "Campaign Finance": hasFinance,
+    Updates: hasUpdates,
+  };
+  return TABS.filter((tab) => visible[tab]);
+}
+
 export function CompareBoard({
   candidates,
   raceHref,
   filingsLoaded = true,
   summary = null,
-  statusLine = "A to Z. Filed to run. Not confirmed on the ballot.",
   finance = null,
   issues = [],
   updates = [],
@@ -63,7 +79,6 @@ export function CompareBoard({
   raceHref: string;
   filingsLoaded?: boolean;
   summary?: string | null;
-  statusLine?: string;
   finance?: {
     notice: string | null;
     direct: readonly FinanceDirect[];
@@ -72,11 +87,21 @@ export function CompareBoard({
   issues?: readonly { id: string; label: string }[];
   updates?: readonly { title: string; url: string; date: string | null; source: string }[];
 }) {
-  const [tab, setTab] = useState<Tab>("Overview");
+  const [selectedTab, setTab] = useState<Tab>("Overview");
+  const moneyIds = new Set(candidates.flatMap((candidate) => candidate.moneyIds ?? [candidate.candidateId]));
+  const hasStances = candidates.some((candidate) => candidate.stances?.length);
+  const hasFinance = [...(finance?.direct ?? []), ...(finance?.outside ?? [])].some((row) => moneyIds.has(row.candidateId));
+  const tabs = visibleCompareTabs({
+    hasStances,
+    hasVotes: candidates.some((candidate) => candidate.votes?.length),
+    hasFinance,
+    hasUpdates: updates.length > 0,
+  });
+  const tab = tabs.includes(selectedTab) ? selectedTab : "Overview";
   return (
     <div>
       <div className="tabs" role="tablist" aria-label="Comparison topics">
-        {TABS.map((item) => (
+        {tabs.map((item) => (
           <button
             key={item}
             className="btn btn-ghost"
@@ -91,15 +116,12 @@ export function CompareBoard({
           </button>
         ))}
       </div>
-      <p className="hint" title="Alphabetical by name. Not a ranking.">
-        {statusLine}
-      </p>
       {summary ? <p>{summary}</p> : filingsLoaded ? <p>{filedLine(candidates.length)}</p> : null}
       <div className="compare-grid" id="compare-panel" role="tabpanel">
         {candidates.map((candidate) => (
           <article className="person-card" key={candidate.candidateId}>
             <PersonMark name={candidate.displayName} photo={candidate.photo ?? null} party={candidate.partyLabel} size="lg" />
-            {candidate.photoCredit ? <p className="hint">{candidate.photoCredit}</p> : null}
+            {candidate.photoCredit ? <p className="hint">Photo: {candidate.photoCredit}</p> : null}
             <h3>
               <Link href={`/candidates/${candidate.candidateId}`}>{candidate.displayName}</Link>
             </h3>
@@ -154,10 +176,8 @@ function TabBody({
           <p>
             <a href={candidate.website.url}>{candidate.website.label}</a>
           </p>
-        ) : (
-          <p>No campaign site is stored.</p>
-        )}
-        <p>{candidate.raised ? `Raised ${candidate.raised}` : "No money total is stored."}</p>
+        ) : null}
+        {candidate.raised ? <p>Raised {candidate.raised}{candidate.raisedSource ? <> · <a href={candidate.raisedSource}>FEC</a></> : null}</p> : null}
       </div>
     );
   }
@@ -167,19 +187,19 @@ function TabBody({
       <ul className="plain-list">
         {rows.map((issue) => {
           const stance = notes.find((note) => note.issueId === issue.id);
+          if (!stance) return null;
           return (
             <li key={issue.id}>
               <p>{issue.label}</p>
-              <p>{stance ? stance.text : "No public stance found."}</p>
+              <p>{stance.text} <a href={stance.sourceUrl}>Source ↗</a></p>
             </li>
           );
         })}
-        {rows.length === 0 ? <li>No public stance found.</li> : null}
       </ul>
     );
   }
   if (tab === "Statements") {
-    if (notes.length === 0) return <p>No statement is stored.</p>;
+    if (notes.length === 0) return null;
     return (
       <ul className="plain-list">
         {notes.map((note) => (
@@ -195,7 +215,7 @@ function TabBody({
   }
   if (tab === "Voting Record") {
     const votes = candidate.votes ?? [];
-    if (votes.length === 0) return <p>No legislative record.</p>;
+    if (votes.length === 0) return null;
     return (
       <ul className="plain-list">
         {votes.map((vote) => (
@@ -206,9 +226,8 @@ function TabBody({
       </ul>
     );
   }
-  if (tab === "Polls") return <p>No qualifying polls.</p>;
   if (tab === "Updates") {
-    if (updates.length === 0) return <p>No matching Kentucky Lantern story.</p>;
+    if (updates.length === 0) return null;
     return (
       <ul className="plain-list">
         {updates.map((story) => (
@@ -227,13 +246,19 @@ function TabBody({
   const ids = new Set(candidate.moneyIds ?? [candidate.candidateId]);
   const direct = finance?.direct.filter((row) => ids.has(row.candidateId)) ?? [];
   const outside = finance?.outside.filter((row) => ids.has(row.candidateId)) ?? [];
-  if (direct.length === 0 && outside.length === 0) return <p>No money total is stored.</p>;
+  if (direct.length === 0 && outside.length === 0) return null;
   return (
     <div>
       <ul className="plain-list">
         {direct.map((row) => (
           <li key={`${row.candidateId}-${row.coverageEnd}`}>
-            Raised {formatMoney(row.receipts)}, spent {formatMoney(row.disbursements)}, cash left {formatMoney(row.cashOnHand)}, debts {formatMoney(row.debts)}. {coverageLabel(row.coverageStart, row.coverageEnd)}
+            {[
+              row.receipts != null ? `Raised ${formatMoney(row.receipts)}` : null,
+              row.disbursements != null ? `Spent ${formatMoney(row.disbursements)}` : null,
+              row.cashOnHand != null ? `Cash ${formatMoney(row.cashOnHand)}` : null,
+              row.debts != null ? `Debts ${formatMoney(row.debts)}` : null,
+              row.coverageStart || row.coverageEnd ? coverageLabel(row.coverageStart, row.coverageEnd) : null,
+            ].filter(Boolean).join(" · ")}
             {row.sourceUrl ? (
               <>
                 {" "}
@@ -244,7 +269,7 @@ function TabBody({
         ))}
         {outside.map((row) => (
           <li key={`${row.committeeId}-${row.support}`}>
-            {orgLabel(row.committeeName) ?? row.committeeId} {row.support === "support" ? "supports" : "opposes"} this person: {formatMoney(row.total)}. This is not money the campaign received.
+            {orgLabel(row.committeeName) ?? row.committeeId} {row.support === "support" ? "supports" : "opposes"} this person: {formatMoney(row.total)}. {row.sourceUrl ? <a href={row.sourceUrl}>Source ↗</a> : null}
           </li>
         ))}
       </ul>

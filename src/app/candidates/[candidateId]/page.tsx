@@ -14,11 +14,11 @@ import { selectDirect, selectOutside } from "@/lib/finance/present";
 import { loadChecks } from "@/lib/content/store";
 import { loadProfile } from "@/lib/site/contest";
 import { BallotBar } from "@/components/site/BallotBar";
-import { partyMark, PersonMark } from "@/components/site/PersonMark";
-import { KY_BALLOT_CHECKED, calendarDay, kyPerson } from "@/lib/site/ky-ballot";
+import { PersonMark } from "@/components/site/PersonMark";
+import { KY_BALLOT_SOURCES, kyPerson } from "@/lib/site/ky-ballot";
 import { jobLine, linkLabel, profileFor } from "@/lib/site/profiles";
 import { seatStatus } from "@/lib/site/seat";
-import { portraitFor, stanceIssues, stancesFor } from "@/lib/site/stances";
+import { photoAttribution, portraitFor, stanceIssues, stancesFor } from "@/lib/site/stances";
 import { showcaseCandidate, showcaseRace, type ShowcaseCandidate } from "@/lib/site/showcase";
 import type { Filing, Race } from "@/lib/types";
 
@@ -69,6 +69,10 @@ export default async function CandidatePage({ params }: PageProps) {
   const photo = portraitFor(ballot?.person.id ?? id);
   const notes = stancesFor(ballot?.person.id ?? id);
 
+  const job = jobLine(ballot?.person.id ?? id);
+  const attribution = photoAttribution(photo);
+  const status = seatStatus({ holds: Boolean(ballot?.person.holdsOffice), writeIn: ballot?.person.role === "write-in" });
+
   return (
     <article className="wrap">
       <Crumbs
@@ -79,15 +83,10 @@ export default async function CandidatePage({ params }: PageProps) {
         ]}
       />
       <PersonMark name={name} photo={photo?.src ?? null} party={party} size="lg" />
-      {photo ? (
-        <p className="hint">
-          {photo.credit}
-          {photo.sourceUrl ? <> · <a href={photo.sourceUrl}>Photo source</a></> : null}
-        </p>
-      ) : null}
+      {photo && attribution ? <p className="hint">Photo: <a href={photo.sourceUrl}>{attribution}</a></p> : null}
       <h1>{name}</h1>
-      <p className="lede">{partyMark(party).letter} · {party || "Party not listed"} · {seatStatus({ holds: Boolean(ballot?.person.holdsOffice), writeIn: ballot?.person.role === "write-in", openSeat: ballot ? !ballot.race.people.some((row) => row.holdsOffice) : false }) ?? "On the November ballot"}</p>
-      <p>{race ? race.title : ballot ? ballotTitle(ballot.race.raceId) : snap ? "U.S. Senate, Kentucky · 2026" : "Office not listed"}</p>
+      {party || status ? <p className="lede">{[party, status].filter(Boolean).join(" · ")}</p> : null}
+      <p>{race ? race.title : ballot ? ballotTitle(ballot.race.raceId) : snap ? "U.S. Senate, Kentucky · 2026" : null}</p>
       <div className="actions sticky-mobile">
         {raceHref ? (
           <Link className="btn btn-navy" href={`${raceHref}/compare`}>
@@ -99,18 +98,12 @@ export default async function CandidatePage({ params }: PageProps) {
         </Link>
       </div>
       <div className="fact-grid">
+        {job ? <div><p className="hint">Current job</p><p>{job}{profile.bio ? <> · <a href={profile.bio.sourceUrl}>Source ↗</a></> : null}</p></div> : null}
+        {ballot?.person.finance ? (
         <div>
-          <p className="hint">Current job</p>
-          <p>{jobLine(ballot?.person.id ?? id) ?? "Not stored"}</p>
-        </div>
-        <div>
-          <p className="hint">Lives in</p>
-          <p>Not stored</p>
-        </div>
-        <div>
-          <p className="hint">Raised / Cash on hand</p>
+          <p className="hint">Campaign finance</p>
           <p>
-            {ballot?.person.finance ? `${formatMoney(ballot.person.finance.receipts)} raised · ${formatMoney(ballot.person.finance.cash)} cash` : "Not stored"}
+            {formatMoney(ballot.person.finance.receipts)} raised{ballot.person.finance.cash != null ? ` · ${formatMoney(ballot.person.finance.cash)} cash` : ""} · <a href={ballot.person.finance.sourceUrl}>FEC</a>
           </p>
           {ballot?.person.finance && ballot.person.finance.receipts > 0 && ballot.person.finance.cash != null ? (
             <div className="cash-bar" aria-hidden="true">
@@ -118,49 +111,40 @@ export default async function CandidatePage({ params }: PageProps) {
             </div>
           ) : null}
         </div>
-        <div>
-          <p className="hint">Campaign or official site</p>
-          {profile.website ? <p><a href={profile.website.url}>{linkLabel(profile.website)}</a></p> : <p>Not stored</p>}
-        </div>
+        ) : null}
+        {profile.website ? <div>
+          <p className="hint">Site</p>
+          <p><a href={profile.website.url}>{linkLabel(profile.website)}</a></p>
+        </div> : null}
       </div>
-      {profile.bio ? (
-        <p className="hint">
-          <a href={profile.bio.sourceUrl}>{profile.bio.sourceName}</a> · {profile.bio.sourceDate}
-        </p>
-      ) : null}
-      <h2>Issue notes</h2>
+      {notes.length > 0 ? <>
+      <h2>Issues</h2>
       <table className="stance-table">
         <thead>
           <tr>
             <th>Issue</th>
-            <th>What is on file</th>
+            <th>Position</th>
           </tr>
         </thead>
         <tbody>
           {stanceIssues().map((issue) => {
             const stance = notes.find((row) => row.issueId === issue.id);
+            if (!stance) return null;
             return (
               <tr key={issue.id}>
                 <th scope="row">{issue.label}</th>
                 <td>
-                  {stance ? (
-                    <>
                       {stance.text} <a href={stance.sourceUrl}>{stance.sourceName}</a>
                       <span className="hint"> · {stance.sourceDate}</span>
-                    </>
-                  ) : (
-                    "No public stance found."
-                  )}
                 </td>
               </tr>
             );
           })}
         </tbody>
       </table>
-      <h2>Endorsements</h2>
-      {profile.endorsements.length === 0 ? (
-        <p>No endorsement is stored.</p>
-      ) : (
+      </> : null}
+      {profile.endorsements.length > 0 ? <>
+        <h2>Endorsements</h2>
         <ul className="plain-list">
           {profile.endorsements.map((item) => (
             <li key={item.sourceUrl}>
@@ -169,11 +153,9 @@ export default async function CandidatePage({ params }: PageProps) {
             </li>
           ))}
         </ul>
-      )}
-      <h2>Votes</h2>
-      {profile.votes.length === 0 ? (
-        <p>No legislative record.</p>
-      ) : (
+      </> : null}
+      {profile.votes.length > 0 ? <>
+        <h2>Votes</h2>
         <ul className="plain-list">
           {profile.votes.map((vote) => (
             <li key={`${vote.bill}-${vote.date}`}>
@@ -181,7 +163,7 @@ export default async function CandidatePage({ params }: PageProps) {
             </li>
           ))}
         </ul>
-      )}
+      </> : null}
       <details>
         <summary>More details</summary>
         <FollowControl what="candidate" targetId={ballot?.person.fecCandidateId ?? (loaded.ok ? loaded.candidate.candidateId : id)} />
@@ -196,11 +178,7 @@ export default async function CandidatePage({ params }: PageProps) {
             source="Official candidate record"
             date={retrieved}
           />
-        ) : ballot ? null : (
-          <li>
-            Running status is not in this record.
-          </li>
-        )}
+        ) : null}
         {snap?.statusLabel && retrieved ? (
           <Fact
             label="Filing status"
@@ -237,12 +215,8 @@ export default async function CandidatePage({ params }: PageProps) {
         </>
       ) : null}
 
-      <h2>Campaign finance</h2>
+      {direct.length > 0 || outside.length > 0 || ballot?.person.finance ? <h2>Campaign finance</h2> : null}
       {direct.length > 0 ? null : ballot?.person.finance ? <RosterMoney finance={ballot.person.finance} /> : null}
-      {finance.notice && direct.length === 0 && !ballot?.person.finance ? <p className="notice">{finance.notice}</p> : null}
-      <p>
-        <Link href="/finance#direct-and-outside">Money a campaign reports is separate from money other groups spend.</Link>
-      </p>
       {direct.length > 0 ? <DirectList rows={direct} /> : null}
       {outside.length > 0 ? (
         <>
@@ -255,7 +229,7 @@ export default async function CandidatePage({ params }: PageProps) {
 
       {ballot ? (
         <p className="hint">
-          Ballot name checked {calendarDay(KY_BALLOT_CHECKED)} against the Kentucky Secretary of State general-election filings.
+          Source: <a href={KY_BALLOT_SOURCES[0].url}>Kentucky Secretary of State ↗</a>
         </p>
       ) : null}
       </details>
@@ -305,7 +279,7 @@ function FilingFacts({
       <>
         {filings.map((filing) => {
           const href = httpsUrl(filing.sourceUrl);
-          const when = formatInstant(filing.fecLoadTimestamp) ?? formatInstant(filing.updatedAt) ?? "date not stored";
+          const when = formatInstant(filing.fecLoadTimestamp) ?? formatInstant(filing.updatedAt);
           return (
             <li key={filing.filingId}>
               Statement of candidacy
@@ -314,7 +288,7 @@ function FilingFacts({
                   : <a href={href} title="FEC filing, Form 2">Official filing</a>
                 </>
               ) : null}
-              <span className="hint"> Checked {when}</span>
+              {when ? <span className="hint"> · {when}</span> : null}
             </li>
           );
         })}

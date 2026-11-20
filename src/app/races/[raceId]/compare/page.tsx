@@ -12,7 +12,7 @@ import { formatMoney } from "@/lib/finance/model";
 import { kyBallot, rosterMoney } from "@/lib/site/ky-ballot";
 import { newsForNames } from "@/lib/site/ky-news";
 import { linkLabel, profileFor } from "@/lib/site/profiles";
-import { portraitFor, stanceIssues, stancesFor } from "@/lib/site/stances";
+import { photoAttribution, portraitFor, stanceIssues, stancesFor } from "@/lib/site/stances";
 import { cardsForRace } from "@/lib/site/showcase";
 import { loadContest } from "@/lib/site/contest";
 import type { Race } from "@/lib/types";
@@ -68,19 +68,18 @@ export default async function ComparePage({ params }: PageProps) {
       <p className="lede">{race.title}</p>
       {ballot || loaded.filingsLoaded ? null : roster.fecList ? (
         <p className="notice" role="status">
-          Live filings could not be loaded. Names below are from the election commission candidate list.
+          Names from the FEC candidate list.
         </p>
       ) : (
         <p className="notice notice-error" role="status">
-          Names could not be loaded. <Link href="/sources">About this data</Link>
+          Candidates unavailable. <Link href="/sources">Sources</Link>
         </p>
       )}
       <div className="race-layout">
         <CompareBoard
           raceHref={`/races/${race.raceId}`}
-          filingsLoaded={ballot ? true : loaded.filingsLoaded && !roster.fecList}
-          summary={ballot ? "On the November 3, 2026 ballot." : roster.summary}
-          statusLine={ballot ? "A to Z. On the November ballot." : undefined}
+          filingsLoaded={!ballot && loaded.filingsLoaded && !roster.fecList}
+          summary={ballot ? null : roster.summary}
           finance={{ notice: ballot ? null : finance.notice, direct, outside }}
           issues={stanceIssues()}
           updates={stories}
@@ -93,9 +92,9 @@ export default async function ComparePage({ params }: PageProps) {
                     candidateId: person.id,
                     displayName: person.name,
                     partyLabel: person.party,
-                    note: person.role === "write-in" ? "Write-in" : person.holdsOffice ? "Current officeholder" : "On the November ballot",
+                    note: person.role === "write-in" ? "Write-in" : person.holdsOffice ? "Current officeholder" : null,
                     photo: photo?.src ?? null,
-                    photoCredit: photo?.credit ?? null,
+                    photoCredit: photoAttribution(photo),
                     website: profile.website ? { url: profile.website.url, label: linkLabel(profile.website) } : null,
                     stances: stancesFor(person.id).map((stance) => ({
                       issueId: stance.issueId,
@@ -107,6 +106,7 @@ export default async function ComparePage({ params }: PageProps) {
                     })),
                     votes: profile.votes,
                     raised: person.finance ? formatMoney(person.finance.receipts) : null,
+                    raisedSource: person.finance?.sourceUrl,
                     moneyIds: [person.id, person.fecCandidateId, ...person.alsoFecIds].filter((id): id is string => Boolean(id)),
                   };
                 })

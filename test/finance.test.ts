@@ -312,7 +312,7 @@ test("finance alerts use the coverage date as the event time", () => {
     eventAt: "2026-10-14",
     detectedAt: "2026-11-02T00:00:00.000Z",
   });
-  const again = financeAlertNotice({ ...first, detectedAt: "2026-11-03T00:00:00.000Z" });
+  const again = financeAlertNotice({ ...first, category: "finance-receipts", detectedAt: "2026-11-03T00:00:00.000Z" });
   assert.equal(first.dedupeKey, again.dedupeKey);
   assert.equal(first.dedupeKey.includes("2026-11-02"), false);
   assert.equal(first.eventAt, "2026-10-14");
@@ -329,8 +329,8 @@ test("totals worker is a second function and does not itemize Schedule E lines",
   assert.match(client, /\/schedules\/schedule_e\/by_candidate\//);
   assert.equal(client.includes("/schedules/schedule_e/?"), false);
   const page = readFileSync("src/app/finance/page.tsx", "utf8");
-  const lists = readFileSync("src/components/site/FinanceLists.tsx", "utf8");
   assert.equal(page.includes("example-pac"), false);
-  assert.match(page, /FinanceExplanation/);
-  assert.match(lists, /id="direct-and-outside"/);
+  assert.doesNotMatch(page, /FinanceExplanation|\/finance\/example/);
+  assert.match(page, /Money reported by campaigns/);
+  assert.match(page, /Spending by other groups/);
 });

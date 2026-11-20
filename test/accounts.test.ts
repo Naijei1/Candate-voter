@@ -63,6 +63,8 @@ test("correction reports list newest first", async () => {
     raceId: "2026-senate-KY",
     candidateId: null,
     note: "Earlier",
+    status: "new",
+    statusLog: [],
     createdAt: "2026-10-01T00:00:00.000Z",
   });
   await repo.saveCorrection({
@@ -70,6 +72,8 @@ test("correction reports list newest first", async () => {
     raceId: null,
     candidateId: "S2KY00012",
     note: "Later",
+    status: "new",
+    statusLog: [],
     createdAt: "2026-10-02T00:00:00.000Z",
   });
   const listed = await repo.listCorrections(1);
@@ -110,7 +114,7 @@ test("account infrastructure stays least privilege and separate from filings", (
   const privacy = readFileSync("src/app/privacy/page.tsx", "utf8");
   const terms = readFileSync("src/app/terms/page.tsx", "utf8");
   const footer = readFileSync("src/components/SiteFooter.tsx", "utf8");
-  assert.match(privacy, /do not sell/);
+  assert.match(privacy, /never sell/);
   assert.match(terms, /privacy policy/);
   assert.match(footer, /href: "\/privacy"/);
   assert.match(footer, /href: "\/terms"/);

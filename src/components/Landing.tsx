@@ -361,7 +361,7 @@ export function Landing({
         ) : null}
         {!selected && !hasAnyRaces ? (
           <div className="mt-2">
-            <StorageNotice>No races are stored for election years {cycleLabel}.</StorageNotice>
+            <StorageNotice>No races listed for {cycleLabel}.</StorageNotice>
           </div>
         ) : null}
       </div>

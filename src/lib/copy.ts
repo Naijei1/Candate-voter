@@ -56,7 +56,7 @@ export function splitZipLine(): string {
  * It is not a headcount of people.
  */
 export function senateScoreSentence(count: number): string {
-  if (count <= 0) return "No Senate filing is stored";
+  if (count <= 0) return "No Senate filings";
   if (count === 1) return "Someone has filed for Senate";
   return `${count} Senate races have a filing`;
 }

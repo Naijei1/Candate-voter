@@ -20,7 +20,7 @@ export type CardPerson = {
 export function seatLabel(person: Pick<CardPerson, "holdsOffice" | "openSeat" | "writeIn"> & { party?: string }): string | null {
   if (person.holdsOffice) return "Current officeholder";
   if (person.writeIn) return person.party && partyBadge(person.party).label === "Write-in" ? null : "Write-in";
-  if (person.openSeat) return "Running for an open seat";
+  if (person.openSeat) return "Open seat";
   return null;
 }
 

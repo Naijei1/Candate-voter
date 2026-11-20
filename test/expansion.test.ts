@@ -49,8 +49,8 @@ test("poll averages stay empty until polls exist", () => {
   };
   assert.equal(averagePolls([poll])?.[0]?.label, "B");
   const page = readFileSync("src/app/polls/page.tsx", "utf8");
-  assert.match(page, /No qualifying polls/);
-  assert.match(page, /planned/);
+  assert.match(page, /No polls yet/);
+  assert.doesNotMatch(page, /Speeches|Debates|planned/);
 });
 
 test("news feed choices are not alert categories, and issue follows are allowed", () => {
@@ -61,7 +61,7 @@ test("news feed choices are not alert categories, and issue follows are allowed"
   assert.match(news, /separate from/);
   assert.match(news, /Kentucky Lantern feed/);
   const judicial = readFileSync("src/app/states/[state]/page.tsx", "utf8");
-  assert.match(judicial, /Not covered yet/);
+  assert.doesNotMatch(judicial, /LocalTemplate|<nav className="filters"/);
   assert.equal(judicial.includes("Jane Doe"), false);
 });
 

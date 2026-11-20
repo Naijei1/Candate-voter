@@ -22,7 +22,7 @@ export default async function IssuesPage({ params }: PageProps) {
         <Link href={`/states/${postal.toLowerCase()}`}>{stateName(postal)}</Link>
       </p>
       <h1>Issues</h1>
-      <p>Issue pages are not loaded yet. You can follow the topic and look at races now.</p>
+      <p>No issues listed.</p>
       <FollowControl what="issue" targetId={postal} />
     </article>
   );

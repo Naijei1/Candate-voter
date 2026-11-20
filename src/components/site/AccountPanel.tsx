@@ -42,7 +42,7 @@ export function AccountPanel({
   const [quietStart, setQuietStart] = useState(preferences.quietStart ?? "");
   const [quietEnd, setQuietEnd] = useState(preferences.quietEnd ?? "");
   const [saved, setSaved] = useState<Follow[]>(follows);
-  const [message, setMessage] = useState<string | null>(loadError ? "Could not load saved preferences." : null);
+  const [message, setMessage] = useState<string | null>(loadError ? "Preferences unavailable." : null);
   const [busy, setBusy] = useState(false);
 
   async function save(event: React.FormEvent<HTMLFormElement>) {
@@ -61,7 +61,7 @@ export function AccountPanel({
         }),
       });
       const body = await readJson(response);
-      setMessage(response.ok ? "Saved. Email alerts are not on yet." : (body.message ?? "Not saved."));
+      setMessage(response.ok ? "Preferences saved." : (body.message ?? "Not saved."));
     } catch {
       setMessage("Not saved.");
     } finally {
@@ -87,11 +87,11 @@ export function AccountPanel({
   return (
     <div>
       <p>{email}</p>
-      <p>Email alerts are not on yet. Saved races stay on this account.</p>
+      <p>Email alerts are currently off.</p>
       <h2>Saved</h2>
       {saved.length === 0 ? (
         <p>
-          Nothing saved yet. <Link href="/states/ky">See Kentucky races</Link> and follow one.
+          <Link href="/states/ky">Find races to follow</Link>
         </p>
       ) : (
         <ul className="plain-list">
@@ -137,7 +137,7 @@ export function AccountPanel({
           </div>
         </fieldset>
         <fieldset>
-          <legend>How often, once email is on</legend>
+          <legend>Email frequency</legend>
           {(
             [
               ["immediate", "Immediate"],

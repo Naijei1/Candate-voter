@@ -11,7 +11,7 @@ import { CandidateCard } from "@/components/site/CandidateCard";
 import { candidateCards } from "@/lib/site/candidate-cards";
 import { MoneyCharts } from "@/components/site/MoneyCharts";
 import { COMPARE_RACE_IDS, compareBasis, compareOption } from "@/lib/compare/evidence";
-import { kyBallotSeed, KY_BALLOT_SOURCES } from "@/lib/site/ky-ballot";
+import { kyBallotSeed } from "@/lib/site/ky-ballot";
 import { kyStatewide } from "@/lib/site/ky-statewide";
 import { parseMapView } from "@/lib/site/map-view";
 import { loadMoneyCharts } from "@/lib/site/money-charts";
@@ -34,7 +34,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
   const house = kyBallotSeed().races.filter((race) => race.office === "house");
   const statewide = kyStatewide();
-  /** Titles and ballot facts only. Each race's candidate records load when it is picked. */
+  /** Titles and ballot facts for each comparison. */
   const compareOptions = COMPARE_RACE_IDS.flatMap((id) => {
     const basis = compareBasis(id);
     return basis ? [compareOption(basis)] : [];
@@ -52,7 +52,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           initial={parseMapView(params.map)}
           congressional={
             <>
-              <p className="lede">Tap a numbered district to open that U.S. House race. No ZIP required.</p>
+              <p className="lede">Tap a district to see its race.</p>
               <div className="map-frame">
                 <DistrictMap postal="KY" races={house} year={2026} />
               </div>
@@ -77,7 +77,6 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         <div className="section-head">
           <h2 id="compare-heading">Compare the candidates</h2>
         </div>
-        <p className="lede">Pick a race. See what to know, where the candidates differ, and where they agree, with a source on every point.</p>
         <CompareSection options={compareOptions} />
       </section>
       <div className="wrap">
@@ -91,9 +90,6 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           </a>
         </div>
         <MoneyCharts data={money} />
-        <p className="hint">
-          Ballot names: <a href={KY_BALLOT_SOURCES[0].url}>{KY_BALLOT_SOURCES[0].name}</a>, checked 2026-11-03.
-        </p>
       </section>
     </>
   );

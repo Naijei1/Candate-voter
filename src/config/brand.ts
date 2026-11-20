@@ -4,7 +4,7 @@
  */
 export const homeHero = {
   headline: "Vote.",
-  subline: "Your elections. All in one place.",
+  subline: "Kentucky’s federal elections.",
 } as const;
 
 /**
