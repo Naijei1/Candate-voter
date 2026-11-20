@@ -1,3 +1,4 @@
+import { ShortList } from "@/components/site/ShortList";
 import { isKentuckyFinanceRow } from "@/lib/site/ky-finance";
 import Link from "next/link";
 import { normalizePersonName } from "@/lib/data/names";
@@ -28,8 +29,9 @@ export function DirectList({ rows }: { rows: readonly FinanceDirect[] }) {
   const kentuckyRows = rows.filter(isKentuckyFinanceRow);
   if (kentuckyRows.length === 0) return null;
   return (
-    <ul className="card-grid">
-      {kentuckyRows.map((row) => {
+    <ShortList
+      className="card-grid"
+      items={kentuckyRows.map((row) => {
         const name = personLabel(row.name, row.candidateId);
         const source = httpsUrl(row.sourceUrl);
         return (
@@ -57,7 +59,7 @@ export function DirectList({ rows }: { rows: readonly FinanceDirect[] }) {
           </li>
         );
       })}
-    </ul>
+    />
   );
 }
 
@@ -65,8 +67,9 @@ export function OutsideList({ rows }: { rows: readonly FinanceOutside[] }) {
   const kentuckyRows = rows.filter(isKentuckyFinanceRow);
   if (kentuckyRows.length === 0) return null;
   return (
-    <ul className="card-grid">
-      {kentuckyRows.map((row) => {
+    <ShortList
+      className="card-grid"
+      items={kentuckyRows.map((row) => {
         const source = httpsUrl(row.sourceUrl);
         const who = personLabel(row.candidateName, row.candidateId);
         return (
@@ -87,6 +90,6 @@ export function OutsideList({ rows }: { rows: readonly FinanceOutside[] }) {
           </li>
         );
       })}
-    </ul>
+    />
   );
 }

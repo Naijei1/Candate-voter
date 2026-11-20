@@ -10,6 +10,13 @@ import { normalizeBasePath } from "./src/lib/base-path";
 const basePath = normalizeBasePath(process.env.NEXT_PUBLIC_BASE_PATH);
 
 const nextConfig: NextConfig = {
+  poweredByHeader: false,
+  async headers() {
+    return ["photos", "video", "geo"].map((directory) => ({
+      source: `/${directory}/:path*`,
+      headers: [{ key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=604800" }],
+    }));
+  },
   // SSR on Amplify Hosting compute. Do not set `output: "export"`.
   // The data layer is server-side only. Keep the AWS SDK external so server
   // components can read DynamoDB without bundling it for the browser.

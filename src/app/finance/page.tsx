@@ -20,7 +20,7 @@ export default async function FinancePage({ searchParams }: PageProps) {
   const query = await searchParams;
   const parsed = Number(query.cycle);
   const cycle = Number.isInteger(parsed) && parsed >= 2024 && parsed <= 2028 ? parsed : 2026;
-  const [bundle, charts] = await Promise.all([loadFinance(cycle), loadMoneyCharts()]);
+  const [bundle, charts] = await Promise.all([loadFinance(cycle), cycle === 2026 ? loadMoneyCharts() : null]);
   const kentuckyDirect = bundle.direct.filter(isKentuckyFinanceRow);
   const kentuckyOutside = bundle.outside.filter(isKentuckyFinanceRow);
   const latestKey = [...kentuckyDirect]
@@ -39,7 +39,7 @@ export default async function FinancePage({ searchParams }: PageProps) {
     <article className="wrap">
       <h1>Candidates&apos; Political Finances</h1>
       <p className="lede">Money raised and spent in Kentucky&apos;s {cycle} federal races.</p>
-      {cycle === 2026 ? (
+      {charts ? (
         <section className="home-section" aria-label="Campaign finance charts">
           <MoneyCharts data={charts} showAll />
         </section>

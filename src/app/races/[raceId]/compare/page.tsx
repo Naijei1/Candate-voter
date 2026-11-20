@@ -33,7 +33,10 @@ export default async function ComparePage({ params }: PageProps) {
   const race = loaded.race;
   const ballot = kyBallot(race.raceId);
   const roster = cardsForRace(race.raceId, loaded.candidates, loaded.filingsLoaded);
-  const finance = await loadFinance(race.cycle ?? 2026);
+  const [finance, news] = await Promise.all([
+    loadFinance(race.cycle ?? 2026),
+    ballot ? newsForNames(ballot.people.map((person) => person.name)) : [],
+  ]);
   const ids = new Set(
     ballot
       ? ballot.people.flatMap((person) => [person.id, person.fecCandidateId, ...person.alsoFecIds].filter((id): id is string => Boolean(id)))
@@ -50,7 +53,7 @@ export default async function ComparePage({ params }: PageProps) {
     : [];
   const direct = [...liveDirect, ...rosterDirect];
   const outside = selectOutside(finance.outside, null).filter((row) => ids.has(row.candidateId));
-  const stories = (ballot ? await newsForNames(ballot.people.map((person) => person.name)) : []).filter(
+  const stories = news.filter(
     (story) => !/\b(wins|won|elected|victory)\b/i.test(story.title),
   );
   const stateHref = race.state ? `/states/${race.state.toLowerCase()}` : "/states";

@@ -15,15 +15,14 @@ export function OfficialCard({ person }: { person: StatewideOfficial }) {
         <p className="official-meta">
           <span className={`party-badge ${badge.tone}`}>{badge.label}</span>
         </p>
-        <p className="official-term">{person.term}</p>
-        {person.note ? <p className="official-term">{person.note}</p> : null}
-        <p className="official-sources">
-          Sources: {person.sources.map((source, i) => (
+        <details className="official-sources">
+          <summary>Sources</summary>
+          {person.sources.map((source, i) => (
             <span key={source.url}>
               {i ? " · " : ""}<a href={source.url}>{source.name} ↗</a>
             </span>
           ))}
-        </p>
+        </details>
       </div>
     </li>
   );

@@ -21,3 +21,12 @@ test("cd120 asset matches the 120th Congress layer used by ZIP lookup", () => {
   const map = readFileSync(new URL("../src/components/DistrictMap.tsx", import.meta.url), "utf8");
   assert.match(map, /\/geo\/cd120\//);
 });
+
+test("district paths render in number order with a reserved short live label", () => {
+  const map = readFileSync(new URL("../src/components/DistrictMap.tsx", import.meta.url), "utf8");
+  assert.match(map, /\.sort\(\(a, b\) => Number\(a\.district\) - Number\(b\.district\)\)/);
+  assert.match(map, /`District \$\{Number\(shape\.district\)\}`/);
+  assert.match(map, /className="cd-hover-label" aria-live="polite">\{hover \?\? "\\u00a0"\}/);
+  assert.doesNotMatch(map, /<title>/);
+  assert.match(map, /postal === "KY" && shape\.district === "03"/);
+});

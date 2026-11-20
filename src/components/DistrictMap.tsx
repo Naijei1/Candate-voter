@@ -62,7 +62,8 @@ export function DistrictMap({
         const body: unknown = await response.json();
         if (!isCdFeatureCollection(body)) throw new Error("shape");
         if (!active) return;
-        setShapes(projectCollection(body, VIEW.width, VIEW.height, 20, true));
+        setShapes(projectCollection(body, VIEW.width, VIEW.height, 20, true)
+          .sort((a, b) => Number(a.district) - Number(b.district)));
       } catch (error) {
         if (!active || isAbort(error)) return;
         setFailed(true);
@@ -98,7 +99,7 @@ export function DistrictMap({
                 const has =
                   districtHasCandidates(race) && (race?.cycle == null || race.cycle === year);
                 const hereDistrict = yours.has(shape.district);
-                const label = districtLabel(postal, shape.district, has, hereDistrict);
+                const label = shape.district === "00" ? `${stateName(postal)} at-large` : `District ${Number(shape.district)}`;
                 const className = [
                   "cd-district",
                   has ? "has-data" : "",
@@ -107,7 +108,11 @@ export function DistrictMap({
                   .filter(Boolean)
                   .join(" ");
                 return (
-                  <g key={shape.district}>
+                  <g
+                    key={shape.district}
+                    onMouseEnter={() => setHover(label)}
+                    onMouseLeave={() => setHover(null)}
+                  >
                     {race ? (
                       <path
                         d={shape.d}
@@ -116,8 +121,6 @@ export function DistrictMap({
                         role="link"
                         tabIndex={0}
                         aria-label={label}
-                        onMouseEnter={() => setHover(label)}
-                        onMouseLeave={() => setHover(null)}
                         onFocus={() => setHover(label)}
                         onBlur={() => setHover(null)}
                         onClick={() => openRace(race.raceId)}
@@ -127,13 +130,9 @@ export function DistrictMap({
                             openRace(race.raceId);
                           }
                         }}
-                      >
-                        <title>{label}</title>
-                      </path>
+                      />
                     ) : (
-                      <path d={shape.d} className={className} fillRule="evenodd">
-                        <title>{label}</title>
-                      </path>
+                      <path d={shape.d} className={className} fillRule="evenodd" aria-label={label} />
                     )}
                   </g>
                 );
@@ -159,7 +158,7 @@ export function DistrictMap({
           </MapGesture>
         )}
       </div>
-      {hover ? <p className="cd-hover-label">{hover}</p> : null}
+      <p className="cd-hover-label" aria-live="polite">{hover ?? "\u00a0"}</p>
       {here ? (
         <p className="you-are-here" data-testid="you-are-here">
           {here}
@@ -178,17 +177,6 @@ function youAreHere(postal: string, codes: readonly string[]): string | null {
     .map((code) => (code === "00" ? "the at-large seat" : `District ${Number(code)}`));
   if (names.length === 0) return null;
   return `You are here · ${names.join(", ")}`;
-}
-
-function districtLabel(postal: string, district: string, has: boolean, yours: boolean): string {
-  const place =
-    district === "00"
-      ? isSingleSeat(postal)
-        ? `${stateName(postal)} at-large`
-        : stateName(postal)
-      : `U.S. House District ${Number(district)}`;
-  const filing = has ? "has candidates" : "no candidates filed";
-  return yours ? `${place}, you are here, ${filing}` : `${place}, ${filing}`;
 }
 
 function isAbort(error: unknown): boolean {

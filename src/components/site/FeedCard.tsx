@@ -1,3 +1,4 @@
+import { thumbnail } from "@/lib/site/thumbnail";
 import { portraitFor } from "@/lib/site/stances";
 import type { TodayCard } from "@/lib/site/today";
 
@@ -14,7 +15,7 @@ export function groupInitials(group: string): string {
 export function FeedImage({ card }: { card: Pick<TodayCard, "personId" | "personName" | "group"> }) {
   const photo = card.personId ? portraitFor(card.personId) : null;
   if (photo) {
-    return <img className="feed-thumb" src={photo.src} alt="" width={64} height={64} loading="lazy" />;
+    return <img className="feed-thumb" src={thumbnail(photo.src)} alt="" width={64} height={64} loading="lazy" decoding="async" />;
   }
   return (
     <span className="feed-thumb feed-mark" aria-hidden="true">

@@ -1,3 +1,4 @@
+import { thumbnail } from "@/lib/site/thumbnail";
 import Link from "next/link";
 import { PersonMark } from "@/components/site/PersonMark";
 import { partyBadge } from "@/components/site/PersonFace";
@@ -32,7 +33,7 @@ export function CandidateCard({ person }: { person: CardPerson }) {
       <Link className="cand-link" href={`/candidates/${person.id}`}>
         <span className="cand-photo">
           {person.photo ? (
-            <img src={person.photo} alt="" width={320} height={240} loading="lazy" />
+            <img src={thumbnail(person.photo)} alt="" width={240} height={300} loading="lazy" decoding="async" />
           ) : (
             <PersonMark name={person.name} photo={null} party={person.party} size="lg" />
           )}

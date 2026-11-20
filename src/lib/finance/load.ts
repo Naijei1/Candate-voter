@@ -1,3 +1,5 @@
+import { cache } from "react";
+import { memoizeRead } from "../cache/memo";
 import { createDynamoRepository } from "../data/repository";
 import { formatInstant } from "../format";
 import type { FinanceDirect, FinanceOutside } from "./model";
@@ -12,15 +14,19 @@ export type FinanceBundle = {
   outside: FinanceOutside[];
 };
 
-export async function loadFinance(cycle: number): Promise<FinanceBundle> {
+const readFinance = memoizeRead(
+  (cycle: number) => createDynamoRepository().listFinance(cycle),
+  (error) => console.error("finance read failed:", error instanceof Error ? error.name : "Error"),
+);
+
+export const loadFinance = cache(async (cycle: number): Promise<FinanceBundle> => {
   try {
-    const rows = await createDynamoRepository().listFinance(cycle);
+    const rows = await readFinance(cycle);
     if (rows.direct.length === 0 && rows.outside.length === 0) {
       return { cycle, origin: "empty", notice: "No finance totals for this year.", retrievedAt: null, direct: [], outside: [] };
     }
     return { cycle, origin: "table", notice: null, retrievedAt: null, direct: rows.direct, outside: rows.outside };
-  } catch (error) {
-    console.error("finance read failed:", error instanceof Error ? error.name : "Error");
+  } catch {
     if (cycle === FINANCE_SNAPSHOT_CYCLE) {
       const snap = snapshotFinance();
       return {
@@ -41,7 +47,7 @@ export async function loadFinance(cycle: number): Promise<FinanceBundle> {
       outside: [],
     };
   }
-}
+});
 
 export function financeForCandidate(bundle: FinanceBundle, candidateId: string): FinanceBundle {
   return {

@@ -1,5 +1,6 @@
 "use client";
 
+import { ShortList } from "@/components/site/ShortList";
 import { useId, useState } from "react";
 import { targetLines } from "@/lib/site/money-chart-lines";
 import type { ChartCommittee, ChartRace, MoneyChartData } from "@/lib/site/money-charts";
@@ -38,8 +39,9 @@ function RaceChart({ race }: { race: ChartRace }) {
           </li>
         ))}
       </ul>
-      <ul className="chart-rows">
-        {race.people.map((person) => (
+      <ShortList
+        className="chart-rows"
+        items={race.people.map((person) => (
           <li key={person.id} className="chart-row">
             <p className="chart-label">
               <a href={`/candidates/${person.id}`}>{person.name}</a>
@@ -58,9 +60,9 @@ function RaceChart({ race }: { race: ChartRace }) {
             })}
           </li>
         ))}
-      </ul>
+      />
       <details className="chart-table">
-        <summary>View table</summary>
+        <summary>View as table</summary>
         <div className="table-scroll" tabIndex={0} role="region" aria-label={`${race.title}: money each campaign reported, table`}>
           <table>
             <caption className="sr-only">{race.title}: money each campaign reported to the FEC</caption>
@@ -109,8 +111,9 @@ function CommitteeChart({ committees, asOf }: { committees: readonly ChartCommit
           Spent to oppose
         </li>
       </ul>
-      <ul className="chart-rows">
-        {committees.map((row) => (
+      <ShortList
+        className="chart-rows"
+        items={committees.map((row) => (
           <li key={row.committeeId} className="chart-row">
             <p className="chart-label">
               <a href={`/finance/committees/${row.committeeId}`}>{row.name}</a>
@@ -128,10 +131,10 @@ function CommitteeChart({ committees, asOf }: { committees: readonly ChartCommit
             ))}
           </li>
         ))}
-      </ul>
+      />
       {committees.length > 0 ? (
         <details className="chart-table">
-          <summary>View table</summary>
+          <summary>View as table</summary>
           <div className="table-scroll" tabIndex={0} role="region" aria-label="Outside spending by group, table">
             <table>
               <caption className="sr-only">Outside spending by group</caption>

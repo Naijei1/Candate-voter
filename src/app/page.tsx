@@ -1,10 +1,11 @@
+import { ShortList } from "@/components/site/ShortList";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { DistrictMap } from "@/components/DistrictMap";
 import { CompareSection } from "@/components/home/CompareSection";
 import { Hero } from "@/components/home/Hero";
 import { HomeMap } from "@/components/home/HomeMap";
-import { HomeNewsFeed } from "@/components/home/HomeNewsFeed";
+import { HomeNewsFeed, loadHomeNewsFeed } from "@/components/home/HomeNewsFeed";
 import { ResultsBar } from "@/components/home/ResultsBar";
 import { StatewidePanel } from "@/components/home/StatewidePanel";
 import { CandidateCard } from "@/components/site/CandidateCard";
@@ -39,7 +40,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     const basis = compareBasis(id);
     return basis ? [compareOption(basis)] : [];
   });
-  const money = await loadMoneyCharts();
+  const [money, newsFeed] = await Promise.all([loadMoneyCharts(), loadHomeNewsFeed()]);
   return (
     <>
       <Hero />
@@ -69,9 +70,10 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           <h2 id="senate-candidates">U.S. Senate candidates</h2>
           <Link className="section-more" href="/candidates">All candidates <span aria-hidden="true">→</span></Link>
         </div>
-        <ul className="cand-grid">
-          {candidateCards("2026-senate-KY").map((person) => <CandidateCard key={person.id} person={person} />)}
-        </ul>
+        <ShortList
+          className="cand-grid"
+          items={candidateCards("2026-senate-KY").map((person) => <CandidateCard key={person.id} person={person} />)}
+        />
       </section>
       <section className="wrap home-section" id="compare" aria-labelledby="compare-heading">
         <div className="section-head">
@@ -80,7 +82,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         <CompareSection options={compareOptions} />
       </section>
       <div className="wrap">
-        <HomeNewsFeed />
+        <HomeNewsFeed data={newsFeed} />
       </div>
       <section className="wrap home-section" id="money" aria-labelledby="money-heading">
         <div className="section-head">

@@ -62,8 +62,8 @@ export default async function CandidatePage({ params }: PageProps) {
   const raceLabel = ballot ? shortBallot(ballot.race.raceId) : race ? shortRace(race) : snap ? "Senate" : "Race";
   const retrieved = showcaseRace()?.retrievedAt ?? null;
   const financeKey = ballot?.person.fecCandidateId ?? id;
-  const finance = financeForCandidate(await loadFinance(race?.cycle ?? 2026), financeKey);
-  const checks = await loadChecks("candidate", id);
+  const [bundle, checks] = await Promise.all([loadFinance(race?.cycle ?? 2026), loadChecks("candidate", id)]);
+  const finance = financeForCandidate(bundle, financeKey);
   const direct = selectDirect(finance.direct.filter(isKentuckyFinanceRow), null);
   const outside = selectOutside(finance.outside.filter(isKentuckyFinanceRow), null);
   const profile = ballot ? profileFor(ballot.person.id) : profileFor(id);
@@ -86,7 +86,7 @@ export default async function CandidatePage({ params }: PageProps) {
           { label: name },
         ]}
       />
-      <PersonMark name={name} photo={photo?.src ?? null} party={party} size="lg" />
+      <PersonMark name={name} photo={photo?.src ?? null} party={party} size="lg" priority />
       {photo && attribution ? <p className="hint">Photo: <a href={photo.sourceUrl}>{attribution}</a></p> : null}
       <h1>{name}</h1>
       {party || status ? <p className="lede">{[...new Set([party, status].filter(Boolean))].join(" · ")}</p> : null}
