@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import { AskProvider } from "@/components/chat/AskProvider";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
+import { GoatCounter } from "@/components/site/GoatCounter";
 import { MobileNavigation } from "@/components/site/MobileNavigation";
 import { PlaceSync } from "@/components/site/PlaceSync";
 import { brand } from "@/content/brand";
@@ -68,6 +69,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${sourceSans.variable} ${display.variable}`}>
+        <Suspense fallback={null}>
+          <GoatCounter />
+        </Suspense>
         <a className="skip-link" href="#main">
           Skip to content
         </a>
