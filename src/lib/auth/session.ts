@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { cognitoSettings, verifyIdToken } from "./cognito";
+import { cognitoSettings, verifyIdToken, type VerifiedUser } from "./cognito";
 
 export const ID_COOKIE = "candate_id";
 
@@ -10,7 +10,7 @@ const baseCookie = {
   path: "/",
 };
 
-export async function currentUser(): Promise<{ sub: string; email: string } | null> {
+export async function currentUser(): Promise<VerifiedUser | null> {
   const jar = await cookies();
   const settings = cognitoSettings();
   if (!settings) return null;

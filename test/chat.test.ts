@@ -98,6 +98,7 @@ function chatDeps(
     repository: () => repo,
     converse,
     siteRoot: ROOT,
+    dailyLimiter: { take: () => ({ ok: true }) },
     rateLimiter: createRateLimiter({ limit: 20, windowMs: 60_000 }),
     ...extra,
   };
@@ -404,6 +405,22 @@ test("the rate limit returns 429 and Retry-After seconds", async () => {
     deps,
   );
   assert.equal(otherAddress.status, 200);
+});
+
+test("chat checks the daily cap only for the model path", async () => {
+  let checks = 0;
+  const deps = chatDeps(new MemoryVoterRepository(), async () => {
+    assert.fail("a capped request must not call the model");
+  }, {
+    dailyLimiter: { take() { checks++; return { ok: false, retryAfterSeconds: 30 }; } },
+  });
+  assert.equal((await postChat(post({ message: "Who should I vote for?" }), deps)).status, 200);
+  assert.equal(checks, 0);
+  const response = await postChat(post({ message: "Summarize the California Senate race." }), deps);
+  assert.equal(response.status, 429);
+  assert.equal(response.headers.get("retry-after"), "30");
+  assert.deepEqual(await response.json(), { error: "rate_limited", message: "Ask is busy today. Try again tomorrow." });
+  assert.equal(checks, 1);
 });
 
 test("tools read the repository and do not invent a missing candidate", async () => {

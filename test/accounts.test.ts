@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
-import { isAdminEmail } from "../src/lib/auth/admin";
+import { isAdmin } from "../src/lib/auth/admin";
 import { passwordError } from "../src/lib/auth/cognito";
 import { MemoryVoterRepository } from "../src/lib/data/memory-repository";
 import {
@@ -48,12 +48,12 @@ test("follow keys and quiet hours stay explicit", () => {
   assert.equal(passwordError("Longenough12"), null);
 });
 
-test("admin review is an email allowlist", () => {
-  const env = { ADMIN_EMAILS: " Owner@Example.com, not-an-email, second@example.com " };
-  assert.equal(isAdminEmail("owner@example.com", env), true);
-  assert.equal(isAdminEmail("second@example.com", env), true);
-  assert.equal(isAdminEmail("other@example.com", env), false);
-  assert.equal(isAdminEmail(null, env), false);
+test("admin review requires the exact Cognito admin group", () => {
+  const matchingEmail = { email: "owner@example.com" };
+  assert.equal(isAdmin({ groups: ["admin", "us-east-1_xxx_Google"] }), true);
+  assert.equal(isAdmin({ groups: ["us-east-1_xxx_Google", "Admin"] }), false);
+  assert.equal(isAdmin({ ...matchingEmail, groups: [] }), false);
+  assert.equal(isAdmin(matchingEmail as { email: string; groups?: string[] }), false);
 });
 
 test("correction reports list newest first", async () => {
@@ -105,7 +105,7 @@ test("account infrastructure stays least privilege and separate from filings", (
   assert.equal(template.includes("DependsOn: !If"), false);
   assert.equal(template.includes("AWS::SES"), false);
   const script = readFileSync("scripts/write-amplify-server-env.mjs", "utf8");
-  for (const key of ["CANDATE_USERS_TABLE", "COGNITO_USER_POOL_ID", "COGNITO_CLIENT_ID", "COGNITO_DOMAIN", "COGNITO_GOOGLE", "ADMIN_EMAILS"]) {
+  for (const key of ["CANDATE_USERS_TABLE", "COGNITO_USER_POOL_ID", "COGNITO_CLIENT_ID", "COGNITO_DOMAIN", "COGNITO_GOOGLE", "CANDATE_AI_DAILY_CAP"]) {
     assert.equal(script.includes(key), true, key);
   }
   const googleRoute = readFileSync("src/app/sign-in/google/route.ts", "utf8");
@@ -123,5 +123,5 @@ test("account infrastructure stays least privilege and separate from filings", (
   const admin = readFileSync("src/app/admin/corrections/page.tsx", "utf8");
   const guard = readFileSync("src/lib/auth/guard.ts", "utf8");
   assert.match(admin, /adminActor/);
-  assert.match(guard, /isAdminEmail/);
+  assert.match(guard, /isAdmin/);
 });

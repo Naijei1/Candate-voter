@@ -1,0 +1,216 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: THE VOTE monitoring. Alarms email the alert address through SNS.
+Parameters:
+  AlertEmail:
+    Type: String
+    Default: nj277@cornell.edu
+  AmplifyAppId:
+    Type: String
+    Default: d253xhq1uabld3
+  SiteHost:
+    Type: String
+    Default: voter.naijei.com
+  HealthPath:
+    Type: String
+    Default: /api/health
+  ChatModelId:
+    Type: String
+    Default: us.anthropic.claude-haiku-5-5
+Resources:
+  AlertTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: thevote-alerts
+      DisplayName: THE VOTE alerts
+      Subscription:
+        - Protocol: email
+          Endpoint: !Ref AlertEmail
+  SiteHealthCheck:
+    Type: AWS::Route53::HealthCheck
+    Properties:
+      HealthCheckConfig:
+        Type: HTTPS
+        FullyQualifiedDomainName: !Ref SiteHost
+        Port: 443
+        ResourcePath: !Ref HealthPath
+        RequestInterval: 30
+        FailureThreshold: 3
+        EnableSNI: true
+      HealthCheckTags:
+        - Key: Name
+          Value: thevote-uptime
+  UptimeAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: thevote-site-down
+      AlarmDescription: The site health check is failing.
+      Namespace: AWS/Route53
+      MetricName: HealthCheckStatus
+      Dimensions:
+        - Name: HealthCheckId
+          Value: !Ref SiteHealthCheck
+      Statistic: Minimum
+      Period: 60
+      EvaluationPeriods: 3
+      DatapointsToAlarm: 3
+      Threshold: 1
+      ComparisonOperator: LessThanThreshold
+      TreatMissingData: breaching
+      AlarmActions: [!Ref AlertTopic]
+      OKActions: [!Ref AlertTopic]
+  Amplify5xxAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: thevote-5xx
+      AlarmDescription: 10 or more server errors in 5 minutes.
+      Namespace: AWS/AmplifyHosting
+      MetricName: 5xxErrors
+      Dimensions:
+        - Name: App
+          Value: !Ref AmplifyAppId
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 10
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      AlarmActions: [!Ref AlertTopic]
+      OKActions: [!Ref AlertTopic]
+  AmplifyLatencyAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: thevote-slow
+      AlarmDescription: p90 response time over 6 seconds for 15 minutes.
+      Namespace: AWS/AmplifyHosting
+      MetricName: Latency
+      Dimensions:
+        - Name: App
+          Value: !Ref AmplifyAppId
+      ExtendedStatistic: p90
+      Period: 300
+      EvaluationPeriods: 3
+      Threshold: 6000
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions: [!Ref AlertTopic]
+  IngestErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: thevote-fec-ingest-errors
+      Namespace: AWS/Lambda
+      MetricName: Errors
+      Dimensions: [{ Name: FunctionName, Value: candate-voter-fec-ingest }]
+      Statistic: Sum
+      Period: 3600
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      AlarmActions: [!Ref AlertTopic]
+  TotalsErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: thevote-fec-totals-errors
+      Namespace: AWS/Lambda
+      MetricName: Errors
+      Dimensions: [{ Name: FunctionName, Value: candate-voter-fec-totals }]
+      Statistic: Sum
+      Period: 3600
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      AlarmActions: [!Ref AlertTopic]
+  IngestThrottlesAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: thevote-fec-ingest-throttles
+      Namespace: AWS/Lambda
+      MetricName: Throttles
+      Dimensions: [{ Name: FunctionName, Value: candate-voter-fec-ingest }]
+      Statistic: Sum
+      Period: 3600
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      AlarmActions: [!Ref AlertTopic]
+  TotalsThrottlesAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: thevote-fec-totals-throttles
+      Namespace: AWS/Lambda
+      MetricName: Throttles
+      Dimensions: [{ Name: FunctionName, Value: candate-voter-fec-totals }]
+      Statistic: Sum
+      Period: 3600
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      AlarmActions: [!Ref AlertTopic]
+  TotalsNearTimeoutAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: thevote-fec-totals-near-timeout
+      AlarmDescription: FEC totals run took over 14 minutes (timeout is 15).
+      Namespace: AWS/Lambda
+      MetricName: Duration
+      Dimensions: [{ Name: FunctionName, Value: candate-voter-fec-totals }]
+      Statistic: Maximum
+      Period: 3600
+      EvaluationPeriods: 1
+      Threshold: 840000
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions: [!Ref AlertTopic]
+  ChatOutputTokensAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: thevote-ask-spend-output-tokens
+      AlarmDescription: Ask model wrote over 300k tokens in an hour.
+      Namespace: AWS/Bedrock
+      MetricName: OutputTokenCount
+      Dimensions: [{ Name: ModelId, Value: !Ref ChatModelId }]
+      Statistic: Sum
+      Period: 3600
+      EvaluationPeriods: 1
+      Threshold: 300000
+      ComparisonOperator: GreaterThan
+      TreatMissingData: notBreaching
+      AlarmActions: [!Ref AlertTopic]
+  ChatInputTokensAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: thevote-ask-spend-input-tokens
+      AlarmDescription: Ask model read over 3M tokens in an hour.
+      Namespace: AWS/Bedrock
+      MetricName: InputTokenCount
+      Dimensions: [{ Name: ModelId, Value: !Ref ChatModelId }]
+      Statistic: Sum
+      Period: 3600
+      EvaluationPeriods: 1
+      Threshold: 3000000
+      ComparisonOperator: GreaterThan
+      TreatMissingData: notBreaching
+      AlarmActions: [!Ref AlertTopic]
+  ChatInvocationsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: thevote-ask-calls
+      AlarmDescription: Over 600 Ask model calls in an hour.
+      Namespace: AWS/Bedrock
+      MetricName: Invocations
+      Dimensions: [{ Name: ModelId, Value: !Ref ChatModelId }]
+      Statistic: Sum
+      Period: 3600
+      EvaluationPeriods: 1
+      Threshold: 600
+      ComparisonOperator: GreaterThan
+      TreatMissingData: notBreaching
+      AlarmActions: [!Ref AlertTopic]
+Outputs:
+  AlertTopicArn:
+    Value: !Ref AlertTopic
+  HealthCheckId:
+    Value: !Ref SiteHealthCheck

@@ -39,7 +39,7 @@ Package manager is npm. Commit `package-lock.json`. Amplify runs `npm ci`.
 | `/news`, `/polls`, `/finance` | News and polls stay sample. `/finance` lists FEC committee totals and Schedule E aggregates. Committee pages are `/finance/committees/[committeeId]`. |
 | `/about`, `/sources`, `/contact`, `/accessibility`, `/privacy`, `/terms` | Credibility and legal shells. |
 | `/sign-in`, `/account` | Email sign-in and saved follows. Email delivery is planned. |
-| `/admin/corrections` | Review queue. Visible when the signed-in email is in `ADMIN_EMAILS`. |
+| `/admin/corrections` | Review queue. Visible when the signed-in user belongs to the Cognito `admin` group. |
 | `/chat` | Filings assistant for stored races. Not the race-page prototype. |
 | `/agent` | Read API documentation and live ingest freshness. Linked from Sources, not the public header. |
 | `/openapi.yaml` | OpenAPI 3.0 document for `/api/v1` |
@@ -177,7 +177,7 @@ aws lambda invoke \
 
 `/`, `/races/[raceId]`, and `/candidates/[candidateId]` are server components. They call `createDynamoRepository()` and set `dynamic = "force-dynamic"`, so `next build` does not query the table and does not prebuild ids from `src/lib/placeholders.ts`. The Amplify SSR compute role (not the build role) needs `dynamodb:GetItem` and `dynamodb:Query` on the table and `gsi1`. Leave `FEC_API_KEY` on the Lambda only.
 
-Amplify Hosting puts branch environment variables in the build shell and does not pass them to the Next.js server at request time. `amplify.yml` deletes `.env.production` and `scripts/write-amplify-server-env.mjs` writes it again before `next build`. That script is the only copy. It writes `CANDATE_TABLE_NAME`, `CANDATE_API_KEY`, `CANDATE_CYCLES`, `AWS_REGION`, the chat settings (`CANDATE_CHAT_ENABLED`, `CANDATE_CHAT_MODEL`, `CANDATE_CHAT_RATE_LIMIT`, `CANDATE_CHAT_RATE_WINDOW_SECONDS`, `BEDROCK_MODEL_ID`, `BEDROCK_SONNET_MODEL_ID`), and `NEXT_PUBLIC_*` when they are set, and it does not write `FEC_API_KEY`. Next.js loads that file when it serves traffic. If `CANDATE_TABLE_NAME` is still unset, reads use `candate-voter`. If `AWS_REGION` is unset, the repository client uses `us-east-1`.
+Amplify Hosting puts branch environment variables in the build shell and does not pass them to the Next.js server at request time. `amplify.yml` deletes `.env.production` and `scripts/write-amplify-server-env.mjs` writes it again before `next build`. That script is the only copy. It writes `CANDATE_TABLE_NAME`, `CANDATE_API_KEY`, `CANDATE_CYCLES`, `AWS_REGION`, the chat settings (`CANDATE_CHAT_ENABLED`, `CANDATE_CHAT_MODEL`, `CANDATE_CHAT_RATE_LIMIT`, `CANDATE_CHAT_RATE_WINDOW_SECONDS`, `CANDATE_AI_DAILY_CAP`, `BEDROCK_MODEL_ID`, `BEDROCK_SONNET_MODEL_ID`), and `NEXT_PUBLIC_*` when they are set, and it does not write `FEC_API_KEY`. Next.js loads that file when it serves traffic. If `CANDATE_TABLE_NAME` is still unset, reads use `candate-voter`. If `AWS_REGION` is unset, the repository client uses `us-east-1`.
 
 The home index queries `listRacesByCycle` for each year in a window: the previous UTC calendar year through six years ahead. `CANDATE_CYCLES` (comma-separated years) overrides that window. A query with no rows renders an empty state. A storage error renders an error message and does not substitute sample rows.
 
@@ -265,7 +265,7 @@ A bad body is 400. Too many requests from one address is 429 with a `Retry-After
 
 The default model is Claude Haiku 5.5 via the US geo inference profile `us.anthropic.claude-haiku-5-5` (Bedrock model id `anthropic.claude-haiku-5-5` is not on-demand). Set `CANDATE_CHAT_MODEL=sonnet` to use `us.anthropic.claude-sonnet-5-5`, or set `BEDROCK_MODEL_ID` / `BEDROCK_SONNET_MODEL_ID` to another profile id. `CANDATE_CHAT_ENABLED` must be `true` or the route returns 503. Leave it unset until the compute role can call Bedrock.
 
-The rate limit defaults to 20 requests per 60 seconds per address, in memory on that server process. Amplify runs more than one instance, so the cap is not shared. `CANDATE_CHAT_RATE_LIMIT` and `CANDATE_CHAT_RATE_WINDOW_SECONDS` change the per-instance numbers.
+The DynamoDB rate limit defaults to 20 requests per 60 seconds per address. `CANDATE_CHAT_RATE_LIMIT` and `CANDATE_CHAT_RATE_WINDOW_SECONDS` configure that window. Chat and compare share `CANDATE_AI_DAILY_CAP`, which defaults to 2,000 model-backed requests per UTC day.
 
 ### Enable Bedrock on Amplify
 
@@ -320,7 +320,7 @@ Build image Node is 22 (`nvm install 22` in `amplify.yml`, `.nvmrc`). Amplify bl
 
 ### Environment variables
 
-Branch environment variables are available to the build shell. WEB_COMPUTE does not pass them into the Next.js server. Before `next build`, `amplify.yml` replaces `.env.production` using `scripts/write-amplify-server-env.mjs`. That is the only writer. It records `CANDATE_TABLE_NAME`, `CANDATE_API_KEY`, `CANDATE_CYCLES`, `AWS_REGION`, the chat settings listed under [Browser chat](#browser-chat), `CANDATE_USERS_TABLE`, `COGNITO_USER_POOL_ID`, `COGNITO_CLIENT_ID`, `ADMIN_EMAILS`, and `NEXT_PUBLIC_*` when they are set. It skips `FEC_API_KEY`. Next.js loads `.env.production` when it serves traffic. An empty `CANDATE_TABLE_NAME` selects `candate-voter`. Do not set `AWS_REGION` on Amplify: the console rejects environment names that start with `AWS_`. The server falls back to `us-east-1`. `/api/v1` returns 401 until `CANDATE_API_KEY` is set. Changing one of these values requires a new deploy. Do not commit `.env.production`. Values in that file are readable by anyone who can read the deployment artifact.
+Branch environment variables are available to the build shell. WEB_COMPUTE does not pass them into the Next.js server. Before `next build`, `amplify.yml` replaces `.env.production` using `scripts/write-amplify-server-env.mjs`. That is the only writer. It records `CANDATE_TABLE_NAME`, `CANDATE_API_KEY`, `CANDATE_CYCLES`, `AWS_REGION`, the chat settings listed under [Browser chat](#browser-chat), `CANDATE_USERS_TABLE`, `COGNITO_USER_POOL_ID`, `COGNITO_CLIENT_ID`, `CANDATE_AI_DAILY_CAP`, and `NEXT_PUBLIC_*` when they are set. It skips `FEC_API_KEY`. Next.js loads `.env.production` when it serves traffic. An empty `CANDATE_TABLE_NAME` selects `candate-voter`. Do not set `AWS_REGION` on Amplify: the console rejects environment names that start with `AWS_`. The server falls back to `us-east-1`. `/api/v1` returns 401 until `CANDATE_API_KEY` is set. Changing one of these values requires a new deploy. Do not commit `.env.production`. Values in that file are readable by anyone who can read the deployment artifact.
 
 | Name | MVP value |
 | --- | --- |
@@ -334,12 +334,11 @@ Branch environment variables are available to the build shell. WEB_COMPUTE does 
 | `CANDATE_CHAT_MODEL` | Optional. `haiku` (default) or `sonnet`. |
 | `BEDROCK_MODEL_ID` | Optional override for the Haiku inference profile id. |
 | `BEDROCK_SONNET_MODEL_ID` | Optional override for the Sonnet inference profile id. |
-| `CANDATE_CHAT_RATE_LIMIT` | Optional. Default 20 requests per address per instance. |
+| `CANDATE_CHAT_RATE_LIMIT` | Optional. Default 20 requests per address. |
 | `CANDATE_CHAT_RATE_WINDOW_SECONDS` | Optional. Default 60. |
 | `CANDATE_USERS_TABLE` | Optional. `candate-voter-users` when unset. |
 | `COGNITO_USER_POOL_ID` | User pool id from the stack output `UserPoolId`. Sign-in stays unavailable until this and the client id are set. |
 | `COGNITO_CLIENT_ID` | Public app client id from `UserPoolClientId`. No client secret. |
-| `ADMIN_EMAILS` | Optional comma-separated emails allowed to open `/admin/corrections`. |
 
 `FEC_API_KEY` stays on the ingest Lambdas (or the shell that runs `npm run ingest`). The site does not call OpenFEC. Do not set `FEC_API_KEY` on the Amplify app.
 
@@ -367,7 +366,7 @@ The same `sam deploy` creates private bucket `candate-voter-media-<account id>` 
 | --- | --- |
 | `CANDATE_MEDIA_BUCKET` | Stack output `MediaBucketName` |
 
-Do not set `AWS_REGION`. Copy, correction status, and last-checked notes use the existing `candate-voter` table under `CONTENT#` and `CHECK#` keys. `ADMIN_EMAILS` still gates `/admin`.
+Do not set `AWS_REGION`. Copy, correction status, and last-checked notes use the existing `candate-voter` table under `CONTENT#` and `CHECK#` keys. The Cognito `admin` group gates `/admin`.
 
 ### Make accounts live
 
@@ -384,7 +383,6 @@ Then set these Amplify branch environment variables and redeploy so `scripts/wri
 | `COGNITO_USER_POOL_ID` | Stack output `UserPoolId` |
 | `COGNITO_CLIENT_ID` | Stack output `UserPoolClientId` |
 | `CANDATE_USERS_TABLE` | Stack output `UsersTableName` (`candate-voter-users`) |
-| `ADMIN_EMAILS` | Comma-separated reviewer emails |
 
 Do not set `AWS_REGION` in Amplify. The console rejects names that start with `AWS_`. DynamoDB and Cognito calls use `us-east-1` when it is unset.
 

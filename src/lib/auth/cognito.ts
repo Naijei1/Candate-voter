@@ -108,10 +108,12 @@ export async function signIn(
 
 let verifier: ReturnType<typeof CognitoJwtVerifier.create> | null = null;
 
+export type VerifiedUser = { sub: string; email: string; emailVerified: boolean; groups: string[] };
+
 export async function verifyIdToken(
   settings: CognitoSettings,
   token: string,
-): Promise<{ sub: string; email: string } | null> {
+): Promise<VerifiedUser | null> {
   if (!verifier) {
     verifier = CognitoJwtVerifier.create({
       userPoolId: settings.userPoolId,
@@ -123,7 +125,13 @@ export async function verifyIdToken(
     const payload = await verifier.verify(token);
     const email = typeof payload.email === "string" ? payload.email : "";
     if (!payload.sub || !email) return null;
-    return { sub: payload.sub, email };
+    const groups = payload["cognito:groups"];
+    return {
+      sub: payload.sub,
+      email,
+      emailVerified: payload.email_verified === true,
+      groups: Array.isArray(groups) ? groups.filter((group) => typeof group === "string") : [],
+    };
   } catch {
     return null;
   }
