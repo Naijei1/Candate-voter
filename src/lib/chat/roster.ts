@@ -37,7 +37,7 @@ export async function answerStateRoster(input: {
   const state = input.request.state ?? stateMentionedIn(input.request.message);
   if (!state) {
     return {
-      answer_markdown: "Name a state and I can list the Senate and House filings stored for it.",
+      answer_markdown: "Name a state and I can list the Senate and House filings for it.",
       sources: [],
       refused: false,
       mode: "factual",
@@ -96,7 +96,7 @@ export async function answerStateRoster(input: {
   } catch (error) {
     if (isAbortError(error)) throw error;
     logReadError("listRacesByCycle", error);
-    return { unavailable: true, message: "Stored records are unavailable." };
+    return { unavailable: true, message: "Filing records are unavailable." };
   }
 }
 
@@ -116,7 +116,7 @@ function renderRoster(input: {
   if (people.length === 0) {
     const which = office === "senate" ? "Senate" : office === "house" ? "House" : "Senate or House";
     return {
-      answer_markdown: `No ${which} Form 2 filings are stored for ${name} in ${input.cycle}. Filings so far are not a full ballot.`,
+      answer_markdown: `No ${which} Form 2 filings found for ${name} in ${input.cycle}.`,
       sources: [],
       refused: false,
       mode: "factual",
@@ -125,13 +125,13 @@ function renderRoster(input: {
   const shown = people.slice(0, NAME_CAP);
   const senate = shown.filter((row) => row.race.office === "senate");
   const house = shown.filter((row) => row.race.office === "house");
-  const blocks = [`**${name}, ${input.cycle}.** FEC Form 2 filings so far, not a full ballot.`];
+  const blocks = [`**${name}, ${input.cycle}.** FEC Form 2 filings.`];
   if (office !== "house") blocks.push(senateBlock(senate));
   if (office !== "senate") blocks.push(houseBlock(house));
   const extra = people.length - shown.length;
   if (extra > 0) {
     blocks.push(
-      `And ${extra} more filings are stored for ${name}. Open the state for the full list.`,
+      `And ${extra} more filings for ${name}. Open the state for the full list.`,
     );
   }
   const note = crossContestNote(people.map((row) => row.candidate));
@@ -236,7 +236,7 @@ export async function answerKnownPlace(input: {
     } catch (error) {
       if (isAbortError(error)) throw error;
       logReadError("getCandidate", error);
-      return { unavailable: true, message: "Stored records are unavailable." };
+      return { unavailable: true, message: "Filing records are unavailable." };
     }
   }
   if (!state) {
@@ -272,7 +272,7 @@ export async function answerScopedRace(input: {
   const raceId = input.request.raceId;
   if (!raceId) {
     return {
-      answer_markdown: "Name a race and I can count the FEC Form 2 filings stored for it.",
+      answer_markdown: "Name a race and I can count the FEC Form 2 filings for it.",
       sources: [],
       refused: false,
       mode: "factual",
@@ -301,7 +301,7 @@ export async function answerScopedRace(input: {
   } catch (error) {
     if (isAbortError(error)) throw error;
     logReadError("getRace", error);
-    return { unavailable: true, message: "Stored records are unavailable." };
+    return { unavailable: true, message: "Filing records are unavailable." };
   }
 }
 
@@ -331,7 +331,7 @@ function renderScopedRace(input: {
     blocks.push(shown.map((candidate) => personLine(candidate, input.race as Race)).join("\n"));
   }
   const extra = list ? input.candidates.length - shown.length : 0;
-  if (extra > 0) blocks.push(`And ${extra} more filings are stored for this contest.`);
+  if (extra > 0) blocks.push(`And ${extra} more filings for this race.`);
   blocks.push(FORM2_FILINGS_SENTENCE);
   return {
     answer_markdown: blocks.join("\n\n"),
@@ -357,7 +357,7 @@ function countSentence(
   cycle: number,
   names: string | null,
 ): string {
-  if (count === 0) return `No FEC Form 2 filings are stored for **${title}** in ${cycle}.`;
+  if (count === 0) return `No FEC Form 2 filings found for **${title}** in ${cycle}.`;
   const who = names ? `: ${names}` : "";
   if (count === 1) {
     return `**1** candidate has an FEC Form 2 filing for **${title}** in ${cycle}${who}.`;

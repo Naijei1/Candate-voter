@@ -17,16 +17,13 @@ export function OfficialCard({ person }: { person: StatewideOfficial }) {
         </p>
         <p className="official-term">{person.term}</p>
         {person.note ? <p className="official-term">{person.note}</p> : null}
-        <details className="official-sources">
-          <summary>Sources</summary>
-          <ul>
-            {person.sources.map((source) => (
-              <li key={source.url}>
-                <a href={source.url}>{source.name}</a>
-              </li>
-            ))}
-          </ul>
-        </details>
+        <p className="official-sources">
+          Sources: {person.sources.map((source, i) => (
+            <span key={source.url}>
+              {i ? " · " : ""}<a href={source.url}>{source.name} ↗</a>
+            </span>
+          ))}
+        </p>
       </div>
     </li>
   );

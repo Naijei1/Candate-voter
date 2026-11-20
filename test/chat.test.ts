@@ -978,7 +978,7 @@ test("2026 coming-up answers lead with the midterm ballot, not a presidential ge
   assert.match(payload.answer_markdown, /2026 U\.S\. presidential filings/);
   assert.equal(RACE_SLUG.test(proseWithoutUrls(payload.answer_markdown)), false);
   assert.equal(payload.answer_markdown.match(/is a midterm year/gi)?.length, 1);
-  assert.equal(payload.answer_markdown.match(/not a full ballot/gi)?.length, 1);
+  assert.equal(payload.answer_markdown.match(/Source: FEC Form 2 filings\./gi)?.length, 1);
   assert.equal(payload.answer_markdown.match(/no presidential general election/gi)?.length, 1);
   assert.equal(payload.refreshedAt, null);
   assert.equal(new Set(payload.sources.map((source) => source.url)).size, payload.sources.length);

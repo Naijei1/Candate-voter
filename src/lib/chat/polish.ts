@@ -17,13 +17,13 @@ const RACE_SLUG = new RegExp(RACE_SLUG_SOURCE, "g");
 const RACE_SLUG_EXACT = new RegExp(`^${RACE_SLUG_SOURCE}$`);
 
 export const FORM2_FILINGS_SENTENCE =
-  "Stored records are FEC Form 2 filings so far, not a full ballot.";
+  "Source: FEC Form 2 filings.";
 
 export const ASK_STATE_SENTENCE =
-  "Ask for a state to list the stored Senate and House filings.";
+  "Ask for a state to list Senate and House filings.";
 
 export const ASK_PRESIDENTIAL_YEAR_SENTENCE =
-  "Ask for a state to list Senate and House filings. In a presidential year, one national presidential contest is the presidential race when Form 2 filings are stored.";
+  "Ask for a state to list Senate and House filings. In a presidential year, one national presidential contest is the presidential race when there are Form 2 filings.";
 
 const STATIC_CLAUSES = [
   "There is no presidential general election.",

@@ -1,3 +1,4 @@
+import { labelPoint, ringArea, type Point } from "./label-point";
 import { houseDistrictCodes } from "../data/at-large";
 import { raceHasCandidates } from "../data/candidate-signal";
 import type { Race } from "../types";
@@ -40,6 +41,8 @@ export type CdFeatureCollection = {
 export type ProjectedDistrict = {
   district: string;
   d: string;
+  viewWidth: number;
+  viewHeight: number;
   labelX: number;
   labelY: number;
 };
@@ -92,6 +95,7 @@ export function projectCollection(
   width = 1000,
   height = 640,
   pad = 20,
+  tight = false,
 ): ProjectedDistrict[] {
   const prepared: Array<{ district: string; polygons: number[][][][] }> = [];
   let minX = Infinity;
@@ -135,32 +139,24 @@ export function projectCollection(
 
   return prepared.map((item) => {
     const commands: string[] = [];
-    let sumX = 0;
-    let sumY = 0;
-    let count = 0;
-    for (const polygon of item.polygons) {
-      for (const ring of polygon) {
-        let moved = false;
-        for (const pair of ring) {
-          const lon = pair[0];
-          const lat = pair[1];
-          if (lon == null || lat == null) continue;
-          const x = offsetX + (lon - minX) * scale;
-          const y = offsetY + (maxY - lat) * scale;
-          commands.push(`${moved ? "L" : "M"}${x.toFixed(1)} ${y.toFixed(1)}`);
-          sumX += x;
-          sumY += y;
-          count += 1;
-          moved = true;
-        }
-        if (moved) commands.push("Z");
-      }
-    }
+    const projected = item.polygons.map((polygon) => polygon.map((ring) => {
+      const points = ring.filter((pair) => pair.length >= 2).map(([lon, lat]): Point => [
+        Number(((tight ? pad : offsetX) + (lon - minX) * scale).toFixed(1)),
+        Number(((tight ? pad : offsetY) + (maxY - lat) * scale).toFixed(1)),
+      ]);
+      if (points.length) commands.push(`M${points.map(([x, y]) => `${x.toFixed(1)} ${y.toFixed(1)}`).join("L")}Z`);
+      return points;
+    }));
+    const area = (polygon: Point[][]) => polygon.reduce((sum, ring, i) => sum + (i ? -1 : 1) * Math.abs(ringArea(ring)), 0);
+    const largest = projected.filter((polygon) => polygon[0]?.length).sort((a, b) => area(b) - area(a))[0];
+    const [labelX, labelY] = largest ? labelPoint(largest) : [pad, pad];
     return {
       district: item.district,
       d: commands.join(""),
-      labelX: count > 0 ? sumX / count : offsetX,
-      labelY: count > 0 ? sumY / count : offsetY,
+      labelX,
+      labelY,
+      viewWidth: tight ? usedW + pad * 2 : width,
+      viewHeight: tight ? usedH + pad * 2 : height,
     };
   });
 }

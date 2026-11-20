@@ -551,7 +551,7 @@ function unavailable(operation: string, error: unknown): ToolOutput {
   return {
     ok: false,
     unavailable: true,
-    message: "Stored records are unavailable.",
+    message: "Filing records are unavailable.",
   };
 }
 

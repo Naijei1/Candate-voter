@@ -85,11 +85,11 @@ export function ChatShell({
       <header className="flex items-center gap-2 border-b border-line px-4 py-3">
         {mode === "page" ? (
           <h1 id={titleId} className="text-lg font-semibold tracking-tight">
-            Ask a question
+            Ask
           </h1>
         ) : (
           <strong id={titleId} className="text-base font-semibold">
-            Ask a question
+            Ask
           </strong>
         )}
         <span className="flex-1" />
@@ -136,7 +136,6 @@ export function ChatShell({
       <div className="min-h-0 flex-1 overflow-y-auto">
         {chat.turns.length === 0 ? (
           <div className="flex flex-col items-start gap-2 px-4 py-4">
-            <p>Ask about Kentucky’s races.</p>
             {["Who is running for U.S. Senate in Kentucky?", "Who is running in District 3?", "What did Kentucky candidates say about health care?"].map((prompt) => (
               <button key={prompt} className="btn btn-ghost" type="button" onClick={() => send(prompt)}>
                 {prompt}

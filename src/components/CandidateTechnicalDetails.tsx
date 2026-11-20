@@ -21,9 +21,9 @@ export function CandidateTechnicalDetails({
         <p>{fecId ? `FEC candidate id ${fecId}` : "FEC candidate id not reported"}</p>
         {filedName ? <p>Name as filed: {filedName}</p> : null}
         {!filings.ok ? (
-          <p>Filing numbers could not be loaded.</p>
+          <p>Filing numbers are unavailable.</p>
         ) : rows.length === 0 ? (
-          <p>No filing number is stored.</p>
+          <p>No filing number available.</p>
         ) : (
           rows.map((filing) => (
             <p key={filing.filingId}>

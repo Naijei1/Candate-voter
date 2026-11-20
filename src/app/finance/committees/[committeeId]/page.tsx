@@ -1,3 +1,4 @@
+import { isKentuckyFinanceRow } from "@/lib/site/ky-finance";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -17,9 +18,9 @@ export default async function CommitteeFinancePage({ params }: PageProps) {
   const committeeId = (await params).committeeId.trim().toUpperCase();
   if (!/^C\d{8}$/.test(committeeId)) notFound();
   const bundle = financeForCommittee(await loadFinance(2026), committeeId);
-  const direct = selectDirect(bundle.direct, null);
-  const outside = selectOutside(bundle.outside, null);
-  const named = orgLabel(direct[0]?.committeeName ?? outside[0]?.committeeName ?? null);
+  const direct = selectDirect(bundle.direct.filter(isKentuckyFinanceRow), null);
+  const outside = selectOutside(bundle.outside.filter(isKentuckyFinanceRow), null);
+  const named = orgLabel(bundle.direct[0]?.committeeName ?? bundle.outside[0]?.committeeName ?? null);
   const title = named ?? "Campaign group";
 
   return (

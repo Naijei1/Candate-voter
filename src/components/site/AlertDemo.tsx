@@ -1,5 +1,6 @@
 "use client";
 
+import { dayLabel } from "@/lib/format";
 import { useState } from "react";
 import { NEWS_CATEGORIES, SAMPLE_NEWS } from "@/content/pilot";
 import { StatusMark } from "@/components/site/StatusMark";
@@ -132,7 +133,7 @@ export function NewsBoard() {
               </p>
               <h2>{item.headline}</h2>
               <p className="hint">
-                {item.publisher} · {item.date}
+                {item.publisher} · {dayLabel(item.date)}
               </p>
             </li>
           ))}

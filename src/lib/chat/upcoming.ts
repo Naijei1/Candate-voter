@@ -50,7 +50,7 @@ export async function answerUpcoming(input: {
   } catch (error) {
     if (isAbortError(error)) throw error;
     logReadError("listRacesByCycle", error);
-    return { unavailable: true, message: "Stored records are unavailable." };
+    return { unavailable: true, message: "Filing records are unavailable." };
   }
 }
 
@@ -88,7 +88,7 @@ export function renderUpcoming(input: {
     paragraphs.push(outOfCycleParagraph(presidential));
     mentioned.push(presidential);
   } else if (presidential && calendar.presidentialGeneralElection) {
-    paragraphs.push(`**${humanRaceTitle(presidential)}** are stored for the presidential contest.`);
+    paragraphs.push(`**${humanRaceTitle(presidential)}**`);
     mentioned.push(presidential);
   }
 
@@ -124,9 +124,9 @@ function stateFilings(
   house: readonly Race[],
 ): string {
   if (senate.length === 0 && house.length === 0) {
-    return `No Senate or House Form 2 filings are stored for ${state} in ${cycle}.`;
+    return `No Senate or House Form 2 filings found for ${state} in ${cycle}.`;
   }
-  const lines = [`**Stored Form 2 filings for ${state} in ${cycle}:**`];
+  const lines = [`**Form 2 filings for ${state} in ${cycle}:**`];
   if (senate.length > 0) {
     lines.push("", "Senate:", "", ...bulletRaces(senate));
   }
@@ -139,12 +139,12 @@ function stateFilings(
 function bulletRaces(races: readonly Race[]): string[] {
   const shown = races.slice(0, LIST_CAP).map((race) => `- ${humanRaceTitle(race)}`);
   const extra = races.length - shown.length;
-  if (extra > 0) shown.push(`- ${extra} more House or Senate race${extra === 1 ? "" : "s"} are stored.`);
+  if (extra > 0) shown.push(`- ${extra} more House or Senate race${extra === 1 ? "" : "s"} with filings.`);
   return shown;
 }
 
 function outOfCycleParagraph(race: Race): string {
-  return `**${humanRaceTitle(race)}** are stored as an early or out-of-cycle Form 2 filing, not the general election.`;
+  return `**${humanRaceTitle(race)}** has an early or out-of-cycle Form 2 filing.`;
 }
 
 function filterOffice(races: readonly Race[], office: Race["office"], state: string | null): Race[] {

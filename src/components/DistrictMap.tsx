@@ -13,7 +13,6 @@ import {
   isCdFeatureCollection,
   projectCollection,
   raceForDistrict,
-  type CdFeatureCollection,
   type ProjectedDistrict,
 } from "@/lib/geo/cd119";
 import type { Race } from "@/lib/types";
@@ -63,7 +62,7 @@ export function DistrictMap({
         const body: unknown = await response.json();
         if (!isCdFeatureCollection(body)) throw new Error("shape");
         if (!active) return;
-        setShapes(projectCollection(body as CdFeatureCollection, VIEW.width, VIEW.height));
+        setShapes(projectCollection(body, VIEW.width, VIEW.height, 20, true));
       } catch (error) {
         if (!active || isAbort(error)) return;
         setFailed(true);
@@ -77,7 +76,7 @@ export function DistrictMap({
 
   return (
     <div className="state-map-pane" data-testid="district-map">
-      <div className="cd-canvas">
+      <div className="cd-canvas" style={shapes?.[0] ? { aspectRatio: `${shapes[0].viewWidth} / ${shapes[0].viewHeight}` } : undefined}>
         {!covered ? (
           <p className="cd-note">House district maps cover the 50 states.</p>
         ) : failed ? (
@@ -88,61 +87,75 @@ export function DistrictMap({
           </p>
         ) : (
           <MapGesture resetKey={postal} className="cd-gesture">
-          <svg
-            viewBox={`0 0 ${VIEW.width} ${VIEW.height}`}
-            className="cd-map"
-            role="group"
-            aria-label={`${stateName(postal)} congressional districts`}
-          >
-            {shapes.map((shape) => {
-              const race = raceForDistrict(races, postal, shape.district);
-              const has =
-                districtHasCandidates(race) && (race?.cycle == null || race.cycle === year);
-              const hereDistrict = yours.has(shape.district);
-              const label = districtLabel(postal, shape.district, has, hereDistrict);
-              const className = [
-                "cd-district",
-                has ? "has-data" : "",
-                hereDistrict ? "is-yours" : "",
-              ]
-                .filter(Boolean)
-                .join(" ");
-              return (
-                <g key={shape.district}>
-                  {race ? (
-                    <path
-                      d={shape.d}
-                      className={className}
-                      fillRule="evenodd"
-                      role="link"
-                      tabIndex={0}
-                      aria-label={label}
-                      onMouseEnter={() => setHover(label)}
-                      onMouseLeave={() => setHover(null)}
-                      onFocus={() => setHover(label)}
-                      onBlur={() => setHover(null)}
-                      onClick={() => openRace(race.raceId)}
-                      onKeyDown={(event: KeyboardEvent<SVGPathElement>) => {
-                        if (event.key === "Enter" || event.key === " ") {
-                          event.preventDefault();
-                          openRace(race.raceId);
-                        }
-                      }}
-                    >
-                      <title>{label}</title>
-                    </path>
-                  ) : (
-                    <path d={shape.d} className={className} fillRule="evenodd">
-                      <title>{label}</title>
-                    </path>
-                  )}
-                  <text className="cd-label" x={shape.labelX} y={shape.labelY} textAnchor="middle">
-                    {Number(shape.district)}
-                  </text>
-                </g>
-              );
-            })}
-          </svg>
+            <svg
+              viewBox={`0 0 ${shapes[0]?.viewWidth ?? VIEW.width} ${shapes[0]?.viewHeight ?? VIEW.height}`}
+              className="cd-map"
+              role="group"
+              aria-label={`${stateName(postal)} congressional districts`}
+            >
+              {shapes.map((shape) => {
+                const race = raceForDistrict(races, postal, shape.district);
+                const has =
+                  districtHasCandidates(race) && (race?.cycle == null || race.cycle === year);
+                const hereDistrict = yours.has(shape.district);
+                const label = districtLabel(postal, shape.district, has, hereDistrict);
+                const className = [
+                  "cd-district",
+                  has ? "has-data" : "",
+                  hereDistrict ? "is-yours" : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ");
+                return (
+                  <g key={shape.district}>
+                    {race ? (
+                      <path
+                        d={shape.d}
+                        className={className}
+                        fillRule="evenodd"
+                        role="link"
+                        tabIndex={0}
+                        aria-label={label}
+                        onMouseEnter={() => setHover(label)}
+                        onMouseLeave={() => setHover(null)}
+                        onFocus={() => setHover(label)}
+                        onBlur={() => setHover(null)}
+                        onClick={() => openRace(race.raceId)}
+                        onKeyDown={(event: KeyboardEvent<SVGPathElement>) => {
+                          if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault();
+                            openRace(race.raceId);
+                          }
+                        }}
+                      >
+                        <title>{label}</title>
+                      </path>
+                    ) : (
+                      <path d={shape.d} className={className} fillRule="evenodd">
+                        <title>{label}</title>
+                      </path>
+                    )}
+                  </g>
+                );
+              })}
+              <g className="cd-labels" aria-hidden="true">
+                {shapes.map((shape) => {
+                  const callout = postal === "KY" && shape.district === "03";
+                  const x = shape.labelX - (callout ? 29 : 0);
+                  const y = shape.labelY - (callout ? 34 : 0);
+                  return (
+                    <g key={shape.district}>
+                      {callout ? (
+                        <path className="cd-label-leader" d={`M${shape.labelX} ${shape.labelY}L${x + 8} ${y + 10}`} />
+                      ) : null}
+                      <text className="cd-label" x={x} y={y} dominantBaseline="central" textAnchor="middle">
+                        {Number(shape.district)}
+                      </text>
+                    </g>
+                  );
+                })}
+              </g>
+            </svg>
           </MapGesture>
         )}
       </div>
@@ -174,7 +187,7 @@ function districtLabel(postal: string, district: string, has: boolean, yours: bo
         ? `${stateName(postal)} at-large`
         : stateName(postal)
       : `U.S. House District ${Number(district)}`;
-  const filing = has ? "has candidates" : "no one has filed yet";
+  const filing = has ? "has candidates" : "no candidates filed";
   return yours ? `${place}, you are here, ${filing}` : `${place}, ${filing}`;
 }
 

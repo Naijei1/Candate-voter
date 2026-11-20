@@ -1,3 +1,4 @@
+import { dayLabel } from "@/lib/format";
 /**
  * Direct committee money and Schedule E outside spending.
  * A direct row is never added to an outside row.
@@ -66,8 +67,8 @@ export function coverageKey(start: string | null, end: string | null): string | 
 }
 
 export function coverageLabel(start: string | null, end: string | null): string {
-  if (start && end) return `${start} to ${end}`;
-  return end ?? start ?? "";
+  if (start && end) return `${dayLabel(start)} to ${dayLabel(end)}`;
+  return dayLabel(end ?? start ?? "");
 }
 
 export function fecImagePdf(image: string | null | undefined): string | null {
