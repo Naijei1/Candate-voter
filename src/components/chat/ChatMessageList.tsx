@@ -5,7 +5,7 @@ import React, { useEffect, useState } from "react";
 import { CitationCard } from "@/components/chat/CitationCard";
 import { MarkdownAnswer } from "@/components/chat/MarkdownAnswer";
 import type { AssistantTurn, ChatTurn } from "@/components/chat/useChat";
-import { ALIGNMENT_DISCLAIMER, ASK_INTRO } from "@/lib/chat/scope";
+import { ALIGNMENT_DISCLAIMER } from "@/lib/chat/scope";
 import { errorCopy, rateLimitRemainingSeconds } from "@/lib/chat/ui";
 
 export function ChatMessageList({
@@ -26,11 +26,7 @@ export function ChatMessageList({
   }, [endId, turns]);
 
   if (turns.length === 0) {
-    return (
-      <div className="space-y-4 px-4 py-4">
-        <p className="text-sm leading-6 text-muted">{ASK_INTRO}</p>
-      </div>
-    );
+    return null;
   }
 
   return (

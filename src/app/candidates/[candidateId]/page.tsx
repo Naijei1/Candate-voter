@@ -168,7 +168,7 @@ export default async function CandidatePage({ params }: PageProps) {
         <FollowControl what="candidate" targetId={ballot?.person.fecCandidateId ?? (loaded.ok ? loaded.candidate.candidateId : id)} />
 
       {hasVerified ? <>
-      <h2>Verified</h2>
+      <h2>Official filings</h2>
       <ul className="plain-list">
         {snap?.incumbentLabel && retrieved ? (
           <Fact
@@ -308,7 +308,7 @@ function FilingFacts({
 }
 
 function plainSeat(label: string): string {
-  if (/open seat/i.test(label)) return "No one currently holds this seat";
+  if (/open seat/i.test(label)) return "Open seat (the officeholder is not running)";
   if (/incumbent/i.test(label)) return "Currently holds this office";
   if (/challenger/i.test(label)) return "Running against the current officeholder";
   return label;
