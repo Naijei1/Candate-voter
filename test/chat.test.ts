@@ -1897,3 +1897,22 @@ test("Senate page tools and model text stay on the race year and chamber", async
   assert.match(panelBody.answer_markdown, /Ada Senate/);
   assert.match(panelBody.answer_markdown, /Cara House/);
 });
+
+test("state roster keeps Senate filers when House filers exceed the name cap", async () => {
+  const repo = new MemoryVoterRepository();
+  for (let d = 1; d <= 6; d += 1) {
+    const raceId = `2026-house-KY-0${d}`;
+    await repo.upsertRace(race({ raceId, office: "house", cycle: 2026, state: "KY", district: `0${d}`, title: `U.S. House, Kentucky District ${d}`, jurisdiction: "Kentucky" }));
+    for (let i = 0; i < 3; i += 1) {
+      await repo.upsertCandidate(candidate({ candidateId: `H${i}KY0${d}${i}${d}${i}`, raceId, displayName: `${["Avery","Blake","Casey"][i]} ${["Adams","Brooks","Carter","Dixon","Ellis","Foster"][d - 1]}`, partyAffiliation: "REP" }));
+    }
+  }
+  await repo.upsertRace(race({ raceId: "2026-senate-KY", office: "senate", cycle: 2026, state: "KY", title: "U.S. Senate, Kentucky", jurisdiction: "Kentucky" }));
+  await repo.upsertCandidate(candidate({ candidateId: "S0KY00999", raceId: "2026-senate-KY", displayName: "Senate Filer", partyAffiliation: "DEM" }));
+  const response = await postChat(post({ message: "Who is running in Kentucky?", cycle: 2026 }), chatDeps(repo, async () => {
+    throw new Error("model should not be called for a roster");
+  }));
+  const body = (await response.json()) as { answer_markdown: string };
+  assert.match(body.answer_markdown, /Senate Filer/);
+  assert.doesNotMatch(body.answer_markdown, /No Senate filing found/);
+});

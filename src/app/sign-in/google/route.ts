@@ -1,6 +1,6 @@
 import { originFromRequest } from "@/lib/api/public-origin";
 import { cognitoSettings } from "@/lib/auth/cognito";
-import { setIdCookie } from "@/lib/auth/session";
+import { setSessionCookies } from "@/lib/auth/session";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -27,9 +27,9 @@ export async function GET(request: Request): Promise<Response> {
       headers: { "content-type": "application/x-www-form-urlencoded" },
       body,
     });
-    const payload = (await tokenResponse.json()) as { id_token?: unknown };
-    if (!tokenResponse.ok || typeof payload.id_token !== "string") return Response.redirect(back);
-    await setIdCookie(payload.id_token);
+    const payload = (await tokenResponse.json()) as { id_token?: unknown; refresh_token?: unknown };
+    if (!tokenResponse.ok || typeof payload.id_token !== "string" || typeof payload.refresh_token !== "string") return Response.redirect(back);
+    await setSessionCookies(payload.id_token, payload.refresh_token);
     return Response.redirect(new URL("/", origin));
   } catch {
     return Response.redirect(back);

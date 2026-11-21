@@ -1,3 +1,4 @@
+import { candidateStatesFromEnv } from "../data/candidate-states";
 import { cyclesFromEnv } from "../data/cycles";
 import { createDynamoRepository } from "../data/repository";
 import { FecClient, fecApiKeyFromEnv } from "../fec/client";
@@ -23,6 +24,7 @@ export async function handler(event: unknown = {}, context?: LambdaContext): Pro
   return runTotalsIngest({
     repo,
     fec,
+    states: candidateStatesFromEnv(),
     cycles: cyclesFromEnv(),
     shouldContinue: () => remainingMs(context) > TOTALS_TIME_RESERVE_MS,
   });

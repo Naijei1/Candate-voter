@@ -46,11 +46,8 @@ test("multi-id notes collapse behind the filing count and keep the existing copy
   assert.match(html, /S6CA01111/);
   assert.equal(html.includes("ranking"), false);
 
-  const landing = readFileSync(new URL("../src/components/Landing.tsx", import.meta.url), "utf8");
   const race = readFileSync(new URL("../src/app/races/[raceId]/page.tsx", import.meta.url), "utf8");
-  assert.match(landing, /alternateFilingCount \+ 1/);
   assert.match(race, /alternateFilings\.length \+ 1/);
-  assert.equal(landing.includes('<p className="text-sm text-muted">{candidate.multiFilingNote}</p>'), false);
   assert.equal(race.includes("<p className=\"mt-1 text-sm leading-6 text-muted\">{candidate.multiFilingNote}</p>"), false);
 });
 

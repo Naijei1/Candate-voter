@@ -1,3 +1,4 @@
+import { citationLink } from "./ui";
 import { randomUUID } from "node:crypto";
 import { basePathFromEnv } from "../base-path";
 import { createDynamoRepository, isLiveRepository, runWithReadAbort } from "../data/repository";
@@ -81,6 +82,7 @@ export function liveChatDeps(
 }
 
 export async function postChat(request: Request, deps: ChatDeps): Promise<Response> {
+  const origin = deps.siteRoot ? new URL(deps.siteRoot).origin : originFromRequest(request);
   const started = Date.now();
   if (request.method !== "POST") {
     return json({ error: "bad_request", message: "Use POST" }, 400);
@@ -132,6 +134,7 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
         threadId,
         parsed.value.message,
         parsed.value,
+        origin,
       ),
     );
   }
@@ -147,7 +150,7 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
       sources: [],
       refused: false,
       mode: "factual",
-    }, threadId, scoped.message, scoped));
+    }, threadId, scoped.message, scoped, origin));
   }
   const kentuckyRoster = ballotRoster || (mentionedState === "KY" && isVagueRunningQuestion(scoped.message));
   const asked = kentuckyRoster && !hasPlaceContext(scoped) ? { ...scoped, state: "KY" } : scoped;
@@ -155,7 +158,7 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
   const notes = await notesAnswer(asked);
   if (notes) {
     logOutcome({ refused: false, tools: ["notes"], latencyMs: Date.now() - started, mode: "factual" });
-    return json(chatBody(notes, threadId, asked.message, asked));
+    return json(chatBody(notes, threadId, asked.message, asked, origin));
   }
 
   if (isAlignmentRequest(asked.message)) {
@@ -172,6 +175,7 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
           threadId,
           asked.message,
           asked,
+          origin,
         ),
       );
     }
@@ -191,7 +195,7 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
         latencyMs: Date.now() - started,
         mode: "alignment",
       });
-      return json(chatBody(answer, threadId, asked.message, asked));
+      return json(chatBody(answer, threadId, asked.message, asked, origin));
     } catch (error) {
       const name = error instanceof Error ? error.name : "Error";
       console.error(`Alignment lookup failed: ${name}`);
@@ -222,7 +226,7 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
         latencyMs: Date.now() - started,
         mode: "factual",
       });
-      return json(chatBody(answer, threadId, asked.message, asked));
+      return json(chatBody(answer, threadId, asked.message, asked, origin));
     } catch (error) {
       return json(unavailableBody(error), 503);
     }
@@ -251,7 +255,7 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
         latencyMs: Date.now() - started,
         mode: "factual",
       });
-      return json(chatBody(answer, threadId, asked.message, asked));
+      return json(chatBody(answer, threadId, asked.message, asked, origin));
     } catch (error) {
       return json(unavailableBody(error), 503);
     }
@@ -266,7 +270,7 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
       );
     }
     logOutcome({ refused: false, tools: [], latencyMs: Date.now() - started, mode: "factual" });
-    return json(chatBody(defined, threadId, asked.message, asked));
+    return json(chatBody(defined, threadId, asked.message, asked, origin));
   }
 
   if (isUpcomingElectionsQuestion(asked.message)) {
@@ -286,7 +290,7 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
         latencyMs: Date.now() - started,
         mode: "factual",
       });
-      return json(chatBody(answer, threadId, asked.message, asked));
+      return json(chatBody(answer, threadId, asked.message, asked, origin));
     } catch (error) {
       const name = error instanceof Error ? error.name : "Error";
       console.error(`Upcoming lookup failed: ${name}`);
@@ -323,7 +327,7 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
         latencyMs: Date.now() - started,
         mode: "factual",
       });
-      return json(chatBody(answer, threadId, asked.message, asked));
+      return json(chatBody(answer, threadId, asked.message, asked, origin));
     } catch (error) {
       return json(unavailableBody(error), 503);
     }
@@ -332,7 +336,7 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
   const kentucky = kentuckyRunningAnswer(asked.message);
   if (kentucky) {
     logOutcome({ refused: false, tools: ["kentucky"], latencyMs: Date.now() - started, mode: "factual" });
-    return json(chatBody(kentucky, threadId, asked.message, asked));
+    return json(chatBody(kentucky, threadId, asked.message, asked, origin));
   }
 
   if (needsRaceClarification(asked)) {
@@ -348,6 +352,7 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
         threadId,
         asked.message,
         asked,
+        origin,
       ),
     );
   }
@@ -399,7 +404,7 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
       inputTokens: answer.usage.inputTokens,
       outputTokens: answer.usage.outputTokens,
     });
-    return json(chatBody(answer, threadId, asked.message, asked));
+    return json(chatBody(answer, threadId, asked.message, asked, origin));
   } catch (error) {
     return json(unavailableBody(error), 503);
   }
@@ -409,16 +414,19 @@ function chatBody(
   answer: ChatAnswer,
   threadId: string,
   priorMessage: string,
-  asked?: ChatRequest,
+  asked: ChatRequest,
+  origin: string,
 ) {
   const polished = limitAnswerToRaceScope(
-    polishChatAnswer(answer, priorMessage, asked ? answerScope(asked) : undefined),
-    asked ?? { message: priorMessage },
+    polishChatAnswer(answer, priorMessage, answerScope(asked)),
+    asked,
   );
   const refreshedAt = polished.refreshedAt;
   return {
     answer_markdown: polished.answer_markdown,
-    sources: polished.sources.map((source) => alignSourceAsOf(source, refreshedAt)),
+    sources: polished.sources
+      .filter((source) => citationLink(source.url, { origin }))
+      .map((source) => alignSourceAsOf(source, refreshedAt)),
     refused: polished.refused,
     mode: polished.mode ?? "factual",
     threadId,

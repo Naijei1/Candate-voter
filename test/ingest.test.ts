@@ -156,3 +156,18 @@ test("records a skip and still advances the cursor past it", async () => {
   assert.equal(watermark?.source, "fec-efile-form2");
   assert.equal(watermark?.updatedAt, "2026-10-26T05:00:00.000Z");
 });
+
+
+test("state filtering stores Kentucky filings and advances past out-of-state rows", async () => {
+  const repo = new MemoryVoterRepository();
+  const kentucky = { ...older, candidate_id: "H4KY01019", election_state: "KY", candidate_district: "01" };
+  const summary = await runIngest({
+    repo,
+    states: new Set(["KY"]),
+    fec: client([{ page: 1, pages: 1, perPage: 100, results: [kentucky, newer] }]),
+  });
+  assert.equal(summary.filingsUpserted, 1);
+  assert.equal(summary.skipReasons.state_filtered, 1);
+  assert.equal(summary.watermark, newer.load_timestamp);
+  assert.deepEqual((await repo.listRacesByCycle(2026)).map((race) => race.state), ["KY"]);
+});

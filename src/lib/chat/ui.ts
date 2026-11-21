@@ -361,13 +361,27 @@ export function formatAsOf(value: string): string {
   return `As of ${AS_OF_FORMAT.format(date)}`;
 }
 
-/**
- * In-app paths and same-site race, candidate, agent, and chat URLs stay in
- * this tab. Other https URLs open in a new tab. Unsafe schemes are dropped.
- */
+const APP_ORIGINS = new Set([
+  "https://voter.naijei.com",
+  "https://main.d253xhq1uabld3.amplifyapp.com",
+]);
+
+// Official and data hosts cited by the site's records and data sources.
+const SOURCE_HOSTS = new Set([
+  "api.open.fec.gov", "docquery.fec.gov", "www.fec.gov",
+  "apps.legislature.ky.gov", "elect.ky.gov", "governor.ky.gov", "govoteky.com",
+  "ltgovernor.ky.gov", "treasury.ky.gov", "vrsws.sos.ky.gov", "web.sos.ky.gov",
+  "www.ag.ky.gov", "www.auditor.ky.gov", "www.govote.ky.gov", "www.kyagr.com", "www.sos.ky.gov",
+  "bioguide.congress.gov", "clerk.house.gov", "comer.house.gov", "guthrie.house.gov",
+  "halrogers.house.gov", "oversight.house.gov", "www.mcconnell.senate.gov",
+  "www.paul.senate.gov", "www.senate.gov",
+  "geocoding.geo.census.gov", "tigerweb.geo.census.gov", "www.census.gov",
+  "ballotpedia.org", "charlesbookerky.org", "kentuckylantern.com", "www.courier-journal.com", "www.kentucky.com",
+]);
+
 export function citationLink(url: string, options: CitationOptions = {}): CitationView | null {
   const text = url.trim();
-  if (!text || text.length > 2_000 || /[\u0000-\u001F\s]/.test(text)) return null;
+  if (!text || text.length > 2_000 || /[\u0000-\u001F\s\\]/.test(text)) return null;
   if (text.startsWith("/") && !text.startsWith("//")) {
     return { href: text, external: false };
   }
@@ -379,12 +393,15 @@ export function citationLink(url: string, options: CitationOptions = {}): Citati
   }
   if (parsed.username || parsed.password) return null;
   if (parsed.protocol !== "https:" && parsed.protocol !== "http:") return null;
-  const appPath = inAppPath(parsed.pathname, options.basePath ?? "");
-  const sameOrigin = options.origin != null && parsed.origin === options.origin;
-  if (appPath && (sameOrigin || appPath !== "/")) {
-    return { href: `${appPath}${parsed.search}${parsed.hash}`, external: false };
+  if (parsed.origin === options.origin || APP_ORIGINS.has(parsed.origin)) {
+    const base = (options.basePath ?? "").replace(/\/+$/, "");
+    const path = base && (parsed.pathname === base || parsed.pathname.startsWith(`${base}/`))
+      ? parsed.pathname.slice(base.length) || "/"
+      : parsed.pathname;
+    if (path.startsWith("//")) return null;
+    return { href: `${path}${parsed.search}${parsed.hash}`, external: false };
   }
-  if (parsed.protocol !== "https:") return null;
+  if (parsed.protocol !== "https:" || parsed.port || !SOURCE_HOSTS.has(parsed.hostname)) return null;
   return { href: parsed.toString(), external: true };
 }
 
@@ -493,7 +510,7 @@ function parseInlines(text: string, options: CitationOptions, inBold: boolean): 
     if (text[index] === "[") {
       const close = text.indexOf("]", index + 1);
       if (close > index + 1 && text[close + 1] === "(") {
-        const endParen = text.indexOf(")", close + 2);
+        const endParen = linkDestinationEnd(text, close + 2);
         if (endParen > close + 2) {
           const label = text.slice(index + 1, close);
           const rawHref = text.slice(close + 2, endParen).trim();
@@ -509,9 +526,11 @@ function parseInlines(text: string, options: CitationOptions, inBold: boolean): 
                 ? [{ type: "text", text: safe }]
                 : parseInlines(label, options, inBold),
             });
-            index = endParen + 1;
-            continue;
+          } else {
+            buffer += label;
           }
+          index = endParen + 1;
+          continue;
         }
       }
     }
@@ -522,16 +541,16 @@ function parseInlines(text: string, options: CitationOptions, inBold: boolean): 
   return nodes;
 }
 
-function inAppPath(pathname: string, basePath: string): string | null {
-  const base = basePath.replace(/\/+$/, "");
-  let path = pathname;
-  if (base && (path === base || path.startsWith(`${base}/`))) {
-    path = path.slice(base.length) || "/";
+function linkDestinationEnd(text: string, start: number): number {
+  let depth = 0;
+  for (let index = start; index < text.length; index += 1) {
+    if (text[index] === "(") depth += 1;
+    if (text[index] === ")") {
+      if (depth === 0) return index;
+      depth -= 1;
+    }
   }
-  if (!path.startsWith("/")) return null;
-  if (path === "/") return "/";
-  if (/^\/(races|candidates|agent|chat)(\/|$)/.test(path)) return path;
-  return null;
+  return -1;
 }
 
 function looksLikeUrl(value: string): boolean {

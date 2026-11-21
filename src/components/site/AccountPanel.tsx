@@ -1,5 +1,6 @@
 "use client";
 
+import { withBasePath } from "@/lib/base-path";
 import Link from "next/link";
 import { useState } from "react";
 import type { Follow } from "@/lib/users/follows";
@@ -24,7 +25,7 @@ export function AccountPanel({
   const [saved, setSaved] = useState<Follow[]>(follows);
   const [message, setMessage] = useState<string | null>(loadError ? "Saved races unavailable." : null);
   async function unfollow(follow: Follow) {
-    const response = await fetch("/api/follows", {
+    const response = await fetch(withBasePath("/api/follows"), {
       method: "DELETE",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ targetType: follow.targetType, targetId: follow.targetId }),

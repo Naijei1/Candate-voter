@@ -6,11 +6,9 @@ import {
 } from "@aws-sdk/client-cognito-identity-provider";
 import { CognitoJwtVerifier } from "aws-jwt-verify";
 
-export type CognitoSettings = {
-  userPoolId: string;
-  clientId: string;
-  region: string;
-};
+import { cognitoSettings, type CognitoSettings } from "./cognito-settings";
+
+export { cognitoSettings, type CognitoSettings };
 
 export function googleSignInConfigured(
   env: Record<string, string | undefined> = process.env,
@@ -33,16 +31,6 @@ export function googleAuthorizeUrl(
   url.searchParams.set("redirect_uri", redirect);
   url.searchParams.set("scope", "openid email profile");
   return url.toString();
-}
-
-export function cognitoSettings(
-  env: Record<string, string | undefined> = process.env,
-): CognitoSettings | null {
-  const userPoolId = env.COGNITO_USER_POOL_ID?.trim() ?? "";
-  const clientId = env.COGNITO_CLIENT_ID?.trim() ?? "";
-  const region = env.AWS_REGION?.trim() || env.AWS_DEFAULT_REGION?.trim() || "us-east-1";
-  if (!userPoolId || !clientId) return null;
-  return { userPoolId, clientId, region };
 }
 
 export function passwordError(password: string): string | null {

@@ -1,9 +1,9 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { clearIdCookie } from "./session";
+import { endSession } from "./session";
 
 export async function signOutAction(): Promise<void> {
-  await clearIdCookie();
+  await endSession();
   redirect("/");
 }

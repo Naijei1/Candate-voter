@@ -1,3 +1,4 @@
+import { currentUser } from "@/lib/auth/session";
 import { isKentuckyFinanceRow } from "@/lib/site/ky-finance";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -166,7 +167,7 @@ export default async function CandidatePage({ params }: PageProps) {
       </> : null}
       <details>
         <summary>More details</summary>
-        <FollowControl what="candidate" targetId={ballot?.person.fecCandidateId ?? (loaded.ok ? loaded.candidate.candidateId : id)} />
+        <FollowControl signedIn={Boolean(await currentUser())} what="candidate" targetId={ballot?.person.fecCandidateId ?? (loaded.ok ? loaded.candidate.candidateId : id)} />
 
       {hasVerified ? <>
       <h2>Official filings</h2>

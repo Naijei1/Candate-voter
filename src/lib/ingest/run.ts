@@ -1,3 +1,4 @@
+import { includesCandidateState } from "../data/candidate-states";
 import { presidentialPersonKey } from "../data/dedupe";
 import { mapForm2Filing, normalizeLoadTimestamp } from "../fec/map-form2";
 import type { FecClient } from "../fec/client";
@@ -33,6 +34,7 @@ export type RunIngestOptions = {
   now?: () => Date;
   maxPages?: number;
   perPage?: number;
+  states?: ReadonlySet<string>;
   /** Overrides the stored cursor for this run. */
   minLoadTimestamp?: string | null;
   resetWatermark?: boolean;
@@ -84,6 +86,12 @@ export async function runIngest(options: RunIngestOptions): Promise<IngestSummar
         if (!mapped.ok) {
           skipped += 1;
           skipReasons[mapped.reason] = (skipReasons[mapped.reason] ?? 0) + 1;
+          continue;
+        }
+
+        if (!includesCandidateState(options.states, mapped.race.state)) {
+          skipped += 1;
+          skipReasons.state_filtered = (skipReasons.state_filtered ?? 0) + 1;
           continue;
         }
 

@@ -5,6 +5,7 @@ import { MemoryVoterRepository } from "../src/lib/data/memory-repository";
 import { FecApiError } from "../src/lib/fec/client";
 import { mapCandidateCycleTotal, mapCommitteeReport, mapScheduleEByCandidate } from "../src/lib/finance/map";
 import { fecImagePdf } from "../src/lib/finance/model";
+import { candidateStatesFromEnv } from "../src/lib/data/candidate-states";
 import { runTotalsIngest } from "../src/lib/finance/ingest";
 import { coverageChoices, selectDirect, selectOutside } from "../src/lib/finance/present";
 import type { Race, Candidate } from "../src/lib/types";
@@ -131,12 +132,16 @@ test("totals ingest writes direct and outside rows without combining them", asyn
   };
   await repo.upsertRace(race);
   await repo.upsertCandidate(candidate);
+  await repo.upsertRace({ ...race, raceId: "2026-senate-OH", state: "OH" });
+  await repo.upsertCandidate({ ...candidate, raceId: "2026-senate-OH", candidateId: "S6OH00385", fecCandidateId: "S6OH00385" });
   const summary = await runTotalsIngest({
     repo,
     cycles: [2026],
+    states: candidateStatesFromEnv(" ky, tn "),
     now: () => new Date("2026-11-02T12:00:00.000Z"),
     fec: {
-      async getCandidateTotals() {
+      async getCandidateTotals(id) {
+        assert.equal(id, candidate.fecCandidateId);
         return { candidate_id: "S6KY00385", cycle: 2026, receipts: 100, disbursements: 40, cash_on_hand_end_period: 10, debts_owed_by_committee: 2, coverage_end_date: "2026-09-30" };
       },
       async getCandidateCommittees() {

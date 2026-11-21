@@ -1,9 +1,9 @@
-import { clearIdCookie } from "@/lib/auth/session";
+import { endSession } from "@/lib/auth/session";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 export async function POST(): Promise<Response> {
-  await clearIdCookie();
+  await endSession();
   return Response.json({ ok: true });
 }
