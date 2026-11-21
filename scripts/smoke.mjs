@@ -35,7 +35,8 @@ const rows = await Promise.all(checks.map(async ({ path, status, destination }) 
     } else if (response.status !== status) {
       failures.push(`expected ${status}`);
     }
-    for (const header of ["content-security-policy", "strict-transport-security", "x-frame-options"]) {
+    // Redirects are same-origin hops; check security headers on the pages they land on.
+    for (const header of destination ? [] : ["content-security-policy", "strict-transport-security", "x-frame-options"]) {
       if (!response.headers.get(header)) failures.push(`missing ${header}`);
     }
     if (response.headers.has("x-powered-by")) failures.push("x-powered-by present");
