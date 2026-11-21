@@ -510,7 +510,7 @@ async function getFreshness(
     const sources: ChatSource[] = [
       {
         title: "THE VOTE Form 2 ingest watermark",
-        url: `${ctx.root}/agent`,
+        url: `${ctx.root}/sources`,
         as_of: watermark.updatedAt,
       },
     ];
@@ -607,7 +607,7 @@ async function getCoverage(
       ? [
           {
             title: "THE VOTE Form 2 ingest watermark",
-            url: `${ctx.root}/agent`,
+            url: `${ctx.root}/sources`,
             as_of: watermark.updatedAt,
           },
         ]

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { KY_BALLOT_SOURCES, kyBallot } from "@/lib/site/ky-ballot";
 
-export const metadata: Metadata = { title: "Who holds office now" };
+export const metadata: Metadata = { alternates: { canonical: "/officeholders" }, title: "Who holds office now" };
 
 export default function OfficeholdersPage() {
   const house = ["01", "02", "03", "04", "05", "06"].map((district) => kyBallot(`2026-house-KY-${district}`));

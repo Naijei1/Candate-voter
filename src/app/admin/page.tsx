@@ -4,7 +4,7 @@ import { AdminDenied } from "@/components/admin/AdminDenied";
 import { adminActor } from "@/lib/auth/guard";
 import { currentUser } from "@/lib/auth/session";
 
-export const metadata: Metadata = { title: "Admin" };
+export const metadata: Metadata = { alternates: { canonical: "/admin" }, title: "Admin" };
 export const dynamic = "force-dynamic";
 
 export default async function AdminHomePage() {

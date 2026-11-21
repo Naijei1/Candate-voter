@@ -1,5 +1,5 @@
 import { currentUser } from "@/lib/auth/session";
-import { parseFollowId, parseFollowType } from "@/lib/users/alerts";
+import { parseFollowId, parseFollowType } from "@/lib/users/follows";
 import { deleteFollow, listFollows, saveFollow } from "@/lib/users/store";
 
 export const dynamic = "force-dynamic";

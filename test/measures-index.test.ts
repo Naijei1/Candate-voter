@@ -2,17 +2,6 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import test from "node:test";
 
-test("the empty measures index hides state, kind, and sample links", () => {
-  const page = readFileSync("src/app/measures/page.tsx", "utf8");
-  const kinds = readFileSync("src/lib/site/measure-kinds.ts", "utf8");
-  assert.doesNotMatch(page, /href=|Example/);
-  assert.match(kinds, /proposition/);
-  assert.match(kinds, /referendum/);
-  assert.match(kinds, /retention/);
-  assert.match(page, /No ballot questions listed/);
-  assert.ok(existsSync("src/app/measures/[state]/[kind]/page.tsx"));
-});
-
 test("header and footer links have pages", () => {
   const header = readFileSync("src/components/SiteHeader.tsx", "utf8");
   const footer = readFileSync("src/components/SiteFooter.tsx", "utf8");

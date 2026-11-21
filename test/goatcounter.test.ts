@@ -2,8 +2,9 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { isGoatCounterHostname, normalizeGoatCounterPath } from "../src/lib/goatcounter";
 
-test("GoatCounter is enabled only on the exact production hostname", () => {
+test("GoatCounter is enabled only on both production hostnames", () => {
   assert.equal(isGoatCounterHostname("voter.naijei.com"), true);
+  assert.equal(isGoatCounterHostname("main.d253xhq1uabld3.amplifyapp.com"), true);
   for (const hostname of [
     "", "localhost", "127.0.0.1", "192.168.1.4", "admin.naijei.com",
     "www.voter.naijei.com", "voter.naijei.com.evil.test", "preview.amplifyapp.com",
@@ -22,8 +23,8 @@ test("GoatCounter paths contain only known labels and placeholders", () => {
     ["/search/Jane-Doe", "/:unknown"],
     ["/candidates/public-slug", "/candidates/:id"],
     ["/races/public-slug/compare/", "/races/:id/compare"],
-    ["/states/KY/issues", "/states/:state/issues"],
-    ["/measures/KY/referendum", "/measures/:state/:kind"],
+    ["/states/ky", "/states/ky"],
+    ["/measures/KY/referendum", "/:unknown"],
     ["/finance/committees/C00000001", "/finance/committees/:id"],
   ]) {
     assert.equal(normalizeGoatCounterPath(input), expected, input);

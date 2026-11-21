@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-export const metadata: Metadata = { title: "Terms" };
+export const metadata: Metadata = { alternates: { canonical: "/terms" }, title: "Terms" };
 
 export default function TermsPage() {
   return (

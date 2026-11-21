@@ -19,7 +19,7 @@ info:
     these stored records through tools and refuses voting advice. The reply
     is one buffered JSON body. Amplify Hosting compute does not stream it.
 
-    HTML pages, including /agent, /openapi.yaml, and /llms.txt, are public.
+    HTML pages, including /openapi.yaml, and /llms.txt, are public.
     Every /api/v1 route requires an API key. POST /api/chat does not.
 servers:
   - url: __SERVER_URL__

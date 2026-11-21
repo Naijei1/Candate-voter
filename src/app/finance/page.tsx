@@ -9,7 +9,7 @@ import { loadFinance } from "@/lib/finance/load";
 import { MoneyCharts } from "@/components/site/MoneyCharts";
 import { loadMoneyCharts } from "@/lib/site/money-charts";
 
-export const metadata: Metadata = { title: "Candidates' Political Finances" };
+export const metadata: Metadata = { alternates: { canonical: "/finance" }, title: "Candidates' Political Finances" };
 export const dynamic = "force-dynamic";
 
 type PageProps = { searchParams: Promise<{ cycle?: string; coverage?: string; page?: string }> };

@@ -64,7 +64,7 @@ function ZipResult({ result }: { result: ZipLookupResult }) {
             : "Lookup unavailable.";
     return (
       <p className="notice notice-error" role="status">
-        {message} <Link href="/states">Choose a state</Link>
+        {message}
       </p>
     );
   }
@@ -131,7 +131,7 @@ function ZipMatches({ payload }: { payload: ZipLookupPayload }) {
       {note ? <p>{note}</p> : null}
       {payload.state ? (
         <p>
-          <Link className="btn btn-navy" href={withPlace(`/states/${payload.state.toLowerCase()}`, location)}>
+          <Link className="btn btn-navy" href={withPlace("/", location)}>
             See my races
           </Link>
         </p>

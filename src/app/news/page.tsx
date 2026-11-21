@@ -6,7 +6,7 @@ import { recentKentuckyPosts } from "@/lib/site/x-posts";
 import { todayMoney } from "@/lib/site/today";
 import { FeedGrid } from "@/components/site/FeedCard";
 
-export const metadata: Metadata = { title: "News Feed" };
+export const metadata: Metadata = { alternates: { canonical: "/news" }, title: "News Feed" };
 export const dynamic = "force-dynamic";
 
 type PageProps = { searchParams: Promise<{ lane?: string }> };

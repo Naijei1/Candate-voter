@@ -3,7 +3,7 @@ import { headers } from "next/headers";
 import { SignInForm } from "@/components/site/SignInForm";
 import { cognitoSettings, googleAuthorizeUrl } from "@/lib/auth/cognito";
 
-export const metadata: Metadata = { title: "Sign in" };
+export const metadata: Metadata = { alternates: { canonical: "/sign-in" }, title: "Sign in" };
 export const dynamic = "force-dynamic";
 
 export default async function SignInPage() {

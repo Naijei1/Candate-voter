@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { ChatPage } from "@/components/chat/ChatPage";
 
-export const metadata: Metadata = { title: "Ask" };
+export const metadata: Metadata = { alternates: { canonical: "/ask" }, title: "Ask" };
 
 export default function AskPage() {
   return (

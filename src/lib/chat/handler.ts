@@ -33,6 +33,8 @@ import {
   isSingleContestScope,
   isUpcomingElectionsQuestion,
   isVagueRunningQuestion,
+  BALLOT_ROSTER,
+  stateMentionedIn,
   needsRaceClarification,
   chamberFromRaceId,
   stateFromRaceId,
@@ -134,7 +136,21 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
     );
   }
 
-  const asked = await withZipState(parsed.value, deps);
+  const scoped = await withZipState(parsed.value, deps);
+  const ballotRoster = BALLOT_ROSTER.test(scoped.message);
+  const mentionedState = stateMentionedIn(scoped.message.replace(BALLOT_ROSTER, ""));
+  const contextState = scoped.state ?? stateFromRaceId(scoped.raceId) ?? mentionedState;
+  if (ballotRoster && contextState && contextState !== "KY") {
+    logOutcome({ refused: false, tools: [], latencyMs: Date.now() - started, mode: "factual" });
+    return json(chatBody({
+      answer_markdown: "THE VOTE covers Kentucky elections only.",
+      sources: [],
+      refused: false,
+      mode: "factual",
+    }, threadId, scoped.message, scoped));
+  }
+  const kentuckyRoster = ballotRoster || (mentionedState === "KY" && isVagueRunningQuestion(scoped.message));
+  const asked = kentuckyRoster && !hasPlaceContext(scoped) ? { ...scoped, state: "KY" } : scoped;
 
   const notes = await notesAnswer(asked);
   if (notes) {

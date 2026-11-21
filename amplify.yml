@@ -24,6 +24,7 @@ frontend:
         # role, not a key.
         - rm -f .env.production
         - node scripts/write-amplify-server-env.mjs
+        - npm test
         - npm run build
   artifacts:
     baseDirectory: .next

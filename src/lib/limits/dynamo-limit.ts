@@ -13,45 +13,64 @@ type CounterClient = {
 
 let client: CounterClient | undefined;
 
-export function createAiLimits(
+export function createCounterLimiter(
+  { scope, limit, windowMs, failOpen }: {
+    scope: string;
+    limit: number;
+    windowMs: number;
+    failOpen: boolean;
+  },
   env: Record<string, string | undefined> = process.env,
   dynamo: CounterClient = (client ??= DynamoDBDocumentClient.from(new DynamoDBClient({
     region: process.env.AWS_REGION ?? process.env.AWS_DEFAULT_REGION ?? "us-east-1",
   }))),
+): RateLimiter {
+  const table = usersTableName(env);
+  return {
+    async take(key, nowMs) {
+      const start = Math.floor(nowMs / windowMs) * windowMs;
+      const end = start + windowMs;
+      const retryAfterSeconds = Math.ceil((end - nowMs) / 1000);
+      try {
+        const { Attributes } = await dynamo.send(new UpdateCommand({
+          TableName: table,
+          Key: {
+            pk: key ? `LIMIT#${scope}#${key}` : `LIMIT#${scope}`,
+            sk: !key && windowMs === DAY_MS ? new Date(start).toISOString().slice(0, 10) : String(start),
+          },
+          UpdateExpression: "SET #ttl = if_not_exists(#ttl, :exp) ADD hits :one",
+          ExpressionAttributeNames: { "#ttl": "ttl" },
+          ExpressionAttributeValues: { ":exp": Math.ceil(end / 1000), ":one": 1 },
+          ReturnValues: "UPDATED_NEW",
+        }));
+        const hits = Attributes?.hits;
+        if (typeof hits !== "number") throw new Error("Missing counter value");
+        return hits <= limit ? { ok: true } : { ok: false, retryAfterSeconds };
+      } catch {
+        console.warn(`Counter unavailable: ${scope}`);
+        return failOpen ? { ok: true } : { ok: false, retryAfterSeconds };
+      }
+    },
+  };
+}
+
+export function createAiLimits(
+  env: Record<string, string | undefined> = process.env,
+  dynamo?: CounterClient,
 ): { perIp: RateLimiter; daily: RateLimiter } {
   const configuredCap = Number(env.CANDATE_AI_DAILY_CAP);
   const dailyCap = Number.isSafeInteger(configuredCap) && configuredCap > 0 ? configuredCap : 2000;
   const { limit, windowMs } = rateLimitSettings(env);
-  const table = usersTableName(env);
+  const daily = createCounterLimiter({ scope: "ai#daily", limit: dailyCap, windowMs: DAY_MS, failOpen: false }, env, dynamo);
+  return {
+    perIp: createCounterLimiter({ scope: "ip", limit, windowMs, failOpen: true }, env, dynamo),
+    daily: { take: (_key, nowMs) => daily.take("", nowMs) },
+  };
+}
 
-  function counter(cap: number, duration: number, daily: boolean): RateLimiter {
-    return {
-      async take(key, nowMs) {
-        const start = Math.floor(nowMs / duration) * duration;
-        const end = start + duration;
-        const retryAfterSeconds = Math.ceil((end - nowMs) / 1000);
-        try {
-          const { Attributes } = await dynamo.send(new UpdateCommand({
-            TableName: table,
-            Key: {
-              pk: daily ? "LIMIT#ai#daily" : `LIMIT#ip#${key}`,
-              sk: daily ? new Date(start).toISOString().slice(0, 10) : String(start),
-            },
-            UpdateExpression: "SET #ttl = if_not_exists(#ttl, :exp) ADD hits :one",
-            ExpressionAttributeNames: { "#ttl": "ttl" },
-            ExpressionAttributeValues: { ":exp": Math.ceil(end / 1000), ":one": 1 },
-            ReturnValues: "UPDATED_NEW",
-          }));
-          const hits = Attributes?.hits;
-          if (typeof hits !== "number") throw new Error("Missing counter value");
-          return hits <= cap ? { ok: true } : { ok: false, retryAfterSeconds };
-        } catch {
-          console.warn(daily ? "AI daily counter unavailable" : "AI per-IP counter unavailable");
-          return daily ? { ok: false, retryAfterSeconds } : { ok: true };
-        }
-      },
-    };
-  }
-
-  return { perIp: counter(limit, windowMs, false), daily: counter(dailyCap, DAY_MS, true) };
+export function createCorrectionLimits(env = process.env, dynamo?: CounterClient) {
+  return {
+    perIp: createCounterLimiter({ scope: "corrections#ip", limit: 5, windowMs: 3_600_000, failOpen: true }, env, dynamo),
+    daily: createCounterLimiter({ scope: "corrections#daily", limit: 200, windowMs: DAY_MS, failOpen: false }, env, dynamo),
+  };
 }

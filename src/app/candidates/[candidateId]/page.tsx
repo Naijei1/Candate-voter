@@ -30,12 +30,13 @@ type PageProps = { params: Promise<{ candidateId: string }> };
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const id = (await params).candidateId;
+  const alternates = { canonical: `/candidates/${encodeURIComponent(id)}` };
   const ballot = kyPerson(id);
   const snap = showcaseCandidate(ballot?.person.fecCandidateId ?? id);
-  if (ballot) return { title: ballot.person.name };
-  if (snap) return { title: snap.displayName };
+  if (ballot) return { alternates, title: ballot.person.name };
+  if (snap) return { alternates, title: snap.displayName };
   const loaded = await loadProfile(id);
-  return { title: loaded.ok ? loaded.candidate.displayName : "Candidate" };
+  return { alternates, title: loaded.ok ? loaded.candidate.displayName : "Candidate" };
 }
 
 export default async function CandidatePage({ params }: PageProps) {
@@ -49,7 +50,7 @@ export default async function CandidatePage({ params }: PageProps) {
       <article className="wrap">
         <h1>Candidate</h1>
         <p className="notice notice-error">This profile is unavailable.</p>
-        <Link href="/states/ky">Kentucky</Link>
+        <Link href="/">Kentucky</Link>
       </article>
     );
   }
@@ -57,7 +58,7 @@ export default async function CandidatePage({ params }: PageProps) {
   const race = loaded.ok ? loaded.race : null;
   const name = ballot?.person.name ?? snap?.displayName ?? (loaded.ok ? loaded.candidate.displayName : "Candidate");
   const party = ballot?.person.party ?? snap?.partyLabel ?? (loaded.ok ? partyCue([partyLabel(loaded.candidate.partyAffiliation, loaded.candidate.partyLabel)]) : "");
-  const stateHref = race?.state ? `/states/${race.state.toLowerCase()}` : ballot || snap ? "/states/ky" : "/states";
+  const stateHref = "/";
   const raceHref = ballot ? `/races/${ballot.race.raceId}` : race ? `/races/${race.raceId}` : snap ? `/races/${showcaseRace()?.raceId}` : null;
   const raceLabel = ballot ? shortBallot(ballot.race.raceId) : race ? shortRace(race) : snap ? "Senate" : "Race";
   const retrieved = showcaseRace()?.retrievedAt ?? null;

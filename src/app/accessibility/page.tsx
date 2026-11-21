@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-export const metadata: Metadata = { title: "Accessibility" };
+export const metadata: Metadata = { alternates: { canonical: "/accessibility" }, title: "Accessibility" };
 
 export default function AccessibilityPage() {
   return (

@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
+import { withBasePath } from "@/lib/base-path";
 import { DistrictVintageNote } from "@/components/site/DistrictVintageNote";
 import { KY_BALLOT_SOURCES } from "@/lib/site/ky-ballot";
 import { creativeCommonsPortraits, photoAttribution } from "@/lib/site/stances";
 
-export const metadata: Metadata = { title: "Sources" };
+export const metadata: Metadata = { alternates: { canonical: "/sources" }, title: "Sources" };
 
 export default function SourcesPage() {
   return (
@@ -17,6 +18,7 @@ export default function SourcesPage() {
         <li><a href="https://www.fec.gov/data/independent-expenditures/">FEC outside spending</a></li>
       </ul>
       <DistrictVintageNote />
+      <p><a href={withBasePath("/openapi.yaml")}>API documentation</a></p>
       <h2>Media credits</h2>
       <ul className="plain-list">
         <li>

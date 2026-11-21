@@ -5,7 +5,7 @@ import { CheckForm } from "@/components/admin/CheckForm";
 import { adminActor } from "@/lib/auth/guard";
 import { currentUser } from "@/lib/auth/session";
 
-export const metadata: Metadata = { title: "Last checked" };
+export const metadata: Metadata = { alternates: { canonical: "/admin/checks" }, title: "Last checked" };
 export const dynamic = "force-dynamic";
 
 export default async function ChecksAdminPage() {

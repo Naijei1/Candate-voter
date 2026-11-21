@@ -30,18 +30,16 @@ Package manager is npm. Commit `package-lock.json`. Amplify runs `npm ci`.
 
 | Path | Page |
 | --- | --- |
-| `/` | Homepage: ZIP or state search, how it works, featured Kentucky links, state list and map lower on the page. |
-| `/states`, `/states/[state]` | Explore by state. Kentucky `2026` federal contests live at `/states/ky`. |
+| `/` | Kentucky map, candidate comparisons, news, and campaign finance. |
+| `/states/ky` | Kentucky federal races and statewide follow control. |
 | `/races/[raceId]` | Race, stored Form 2 names, follow preview, prototype Ask panel. |
 | `/races/[raceId]/compare` | Same-field comparison. |
 | `/candidates`, `/candidates/[candidateId]` | Filer directory entry and one profile. Officeholders are `/officeholders` and are not loaded. |
-| `/measures` | Index of states and measure kinds. `/measures/ky` is the Kentucky template. `/measures/example-kentucky` stays a sample layout. |
-| `/news`, `/polls`, `/finance` | News and polls stay sample. `/finance` lists FEC committee totals and Schedule E aggregates. Committee pages are `/finance/committees/[committeeId]`. |
-| `/about`, `/sources`, `/contact`, `/accessibility`, `/privacy`, `/terms` | Credibility and legal shells. |
-| `/sign-in`, `/account` | Email sign-in and saved follows. Email delivery is planned. |
+| `/news`, `/finance` | Kentucky news and campaign finance. `/finance` lists FEC committee totals and Schedule E aggregates. Committee pages are `/finance/committees/[committeeId]`. |
+| `/sources`, `/contact`, `/accessibility`, `/privacy`, `/terms` | Credibility and legal shells. |
+| `/sign-in`, `/account` | Email sign-in and saved follows. |
 | `/admin/corrections` | Review queue. Visible when the signed-in user belongs to the Cognito `admin` group. |
-| `/chat` | Filings assistant for stored races. Not the race-page prototype. |
-| `/agent` | Read API documentation and live ingest freshness. Linked from Sources, not the public header. |
+| `/ask` | Filings assistant for stored races. Not the race-page prototype. |
 | `/openapi.yaml` | OpenAPI 3.0 document for `/api/v1` |
 | `/llms.txt` | Short index for agents |
 
@@ -216,7 +214,7 @@ Agents and scripts read the same DynamoDB records as the HTML pages. `POST /api/
 
 Send `Authorization: Bearer <key>` or `X-Api-Key: <key>`. When both headers are present, both must match `CANDATE_API_KEY`. Comparison is constant-time. A missing server key, a missing request key, or a wrong key returns `401` with `{ "error": "unauthorized" }`. Unknown candidate ids, and race ids that are not on the ballot, return `404`. An even-year House district or an in-cycle Senate id with no stored row returns the stub instead of 404. A failed table read returns `503`. Query mistakes return `400`.
 
-`/agent` is public. It documents the surface, shows curl examples with the placeholder `YOUR_API_KEY`, links `/openapi.yaml`, and renders the live watermark from the repository on the server. The key is not sent to the browser. `/llms.txt` and `/openapi.yaml` are public too.
+`/openapi.yaml` and `/llms.txt` are public. Use `YOUR_API_KEY` as a placeholder in curl examples.
 
 Responses are the domain objects from `src/lib/types.ts`, with `sourceUrl` and timestamps, plus read-time fields. Candidates include `partyCode` and `partyLabel` beside `partyAffiliation`. `GET /api/v1/races` (the index, and a `state` filter) and `GET /api/v1/races/{raceId}` include top-level `refreshedAt` for the page-level data-refreshed banner. They also add `coverage`: `scope` (`fec-efile-form2`), `filingsSoFarOnly`, `scopeNote`, `refreshedAt`, and `house[]` with `districtsWithFilings` and `districtsTotal`. Top-level `refreshedAt` and `coverage.refreshedAt` are the same ISO-8601 timestamp. The district total is the 2020 census apportionment (435). A state query returns that state's row, for example 1 of 6. The plain scoreboard reads those `coverage` fields. `GET /api/v1/races?cycle=2026&state=KY` is the per-state row, including a zero, and the `races` array lists all six Kentucky House districts plus Senate when that class is up. Empty districts are stubs in that array (`empty: true`), not a second field. `districtsWithFilings` does not count them. `districtsTotal` matches the House stub count. The unfiltered list adds one coverage row per state that already has a stored House race, plus the 50-state rollup (`state: null`). There is no per-race `candidateCount` and no party breakdown. `GET /api/v1/freshness` keeps `watermark` and adds the same scope fields. `refreshedAt` is `watermark.updatedAt`, or null when no cursor is stored. The `/api/v1` routes only implement `GET`.
 
@@ -228,9 +226,9 @@ The lookup calls the public Census TIGERweb service (2020 ZCTA intersected with 
 
 `POST /api/chat` answers from the stored races, candidates, filings, and ingest watermark. Tools call `createDynamoRepository()` in process. They do not loop back through `/api/v1` and they do not read `CANDATE_API_KEY` or `FEC_API_KEY`.
 
-Amplify Hosting compute does not support Next.js streaming. The route waits for the tool calls and the model, then returns one JSON body. The Ask panel and `/chat` show a waiting state and then the full answer. They do not stream and they do not put credentials in the browser.
+Amplify Hosting compute does not support Next.js streaming. The route waits for the tool calls and the model, then returns one JSON body. The Ask panel and `/ask` show a waiting state and then the full answer. They do not stream and they do not put credentials in the browser.
 
-The header **Ask** control opens a panel on `/`, `/races/[raceId]`, and `/candidates/[candidateId]`. On other pages it links to `/chat`. The panel’s “Open in full page” link keeps the race, candidate, and year context on that URL. A 429 disables Retry until the `Retry-After` seconds elapse.
+The header **Ask** control opens a panel on `/`, `/races/[raceId]`, and `/candidates/[candidateId]`. On other pages it links to `/ask`. The panel’s “Open in full page” link keeps the race, candidate, and year context on that URL. A 429 disables Retry until the `Retry-After` seconds elapse.
 
 ```bash
 curl -sS -X POST \
@@ -386,7 +384,7 @@ Then set these Amplify branch environment variables and redeploy so `scripts/wri
 
 Do not set `AWS_REGION` in Amplify. The console rejects names that start with `AWS_`. DynamoDB and Cognito calls use `us-east-1` when it is unset.
 
-Cognito sends its own verification code with the pool’s default email (a low daily quota). Google sign-in is not in the template. Alert email stays labeled planned until SES is configured. There is no client secret and no `FEC_API_KEY` on Amplify.
+Cognito sends its own verification code with the pool’s default email (a low daily quota). Google sign-in is not in the template. There is no client secret and no `FEC_API_KEY` on Amplify.
 
 `NEXT_PUBLIC_*` values are inlined at build time. Changing `NEXT_PUBLIC_BASE_PATH` requires a new build.
 
@@ -411,4 +409,4 @@ If CloudFront later serves this app at `https://naijei.com/voter`, set `NEXT_PUB
 - **Amplify Hosting (`amplify.yml`, `WEB_COMPUTE`)**, not Amplify Gen 2 and not a static export. Production build is `next build` (webpack). `npm run dev` uses Turbopack locally.
 - **System font stack** so the Amplify build does not depend on downloading fonts.
 - **DynamoDB single table plus a SAM-scheduled Lambda** beside Amplify Hosting. The hosting build stays `amplify.yml` / `WEB_COMPUTE`. Gen 2 (`ampx`, AppSync) is not required for this ingest path.
-- **Read-only `/api/v1` plus a public `/agent` page** for agents. `POST /api/chat` is a buffered, keyless browser route over the same DynamoDB rows. The chat UI is a separate frontend. `CANDATE_API_KEY` gates `/api/v1` only. `FEC_API_KEY` stays off the Next app. Bedrock uses the compute role.
+- **Read-only `/api/v1` plus public API documentation** for agents. `POST /api/chat` is a buffered, keyless browser route over the same DynamoDB rows. The chat UI is a separate frontend. `CANDATE_API_KEY` gates `/api/v1` only. `FEC_API_KEY` stays off the Next app. Bedrock uses the compute role.

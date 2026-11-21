@@ -5,7 +5,7 @@ import { CandidateCard } from "@/components/site/CandidateCard";
 import { candidateCards, raceCardTitle as titleFor } from "@/lib/site/candidate-cards";
 import { KY_BALLOT_SOURCES, kyBallot } from "@/lib/site/ky-ballot";
 
-export const metadata: Metadata = { title: "Candidates" };
+export const metadata: Metadata = { alternates: { canonical: "/candidates" }, title: "Candidates" };
 
 const RACE_IDS = [
   "2026-senate-KY",

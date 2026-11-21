@@ -4,9 +4,11 @@ import type { ChatRequest } from "./types";
 
 const RACE_ID = /\b(?:19|20)\d{2}-(?:president|senate-[A-Z]{2}|house-[A-Z]{2}-\d{2})\b/;
 
+export const BALLOT_ROSTER = /\b(?:who can (?:i|we) vote for|who(?:'s|’s| is)\s+on (?:my|our|the) ballot|what (?:am i|are we) voting for)\b/i;
+
 const VAGUE_RUNNING: readonly RegExp[] = [
   /\bwho(?:'s|’s|s| is| are)\s+running\b/i,
-  /\bwho(?:'s|’s| is)\s+on the ballot\b/i,
+  BALLOT_ROSTER,
   /\bwho are the candidates\b/i,
   /\bwhich candidates\b/i,
   /\bcandidates?\s+(?:are\s+)?running\b/i,
@@ -145,7 +147,7 @@ const COUNT_OR_LIST: readonly RegExp[] = [
   /\bnumber of\b[^.\n]{0,48}\b(?:candidates|filings|people)\b/i,
   /\bwho(?:'s|’s|s| is| are)\s+running\b/i,
   /\bwho(?:'s|’s| has| have| is| are)?\s*filed\b/i,
-  /\bwho(?:'s| is)\s+on the ballot\b/i,
+  BALLOT_ROSTER,
   /\bwho are the candidates\b/i,
   /\bwhich candidates\b/i,
   /\bcandidates?\s+(?:are\s+)?(?:running|filed|on the ballot)\b/i,
@@ -183,7 +185,7 @@ export function isExplicitListQuestion(message: string): boolean {
   const namesPeople =
     /\bwho\b/i.test(text) ||
     /\b(?:list|name|show)\b/i.test(text) ||
-    /\bon the ballot\b/i.test(text) ||
+    BALLOT_ROSTER.test(text) ||
     /\bwhich candidates\b/i.test(text) ||
     /\bcompare\b/i.test(text);
   if (count) return namesPeople;

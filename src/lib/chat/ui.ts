@@ -76,7 +76,7 @@ export type CitationOptions = {
   basePath?: string;
 };
 
-/** Page context for `/`, a race, a candidate, or `/chat` query params. */
+/** Page context for `/`, a race, a candidate, or `/ask` query params. */
 export function contextFromLocation(input: {
   pathname: string;
   searchParams: { get(name: string): string | null };
@@ -86,7 +86,7 @@ export function contextFromLocation(input: {
   const requested = input.searchParams.get("year") ?? undefined;
   const cycle = resolveCycle(input.cycles, requested, input.now) ?? undefined;
   const geo = pageGeo(input.searchParams.get("state"), input.searchParams.get("zip"));
-  if (input.pathname === "/chat") {
+  if (input.pathname === "/ask") {
     return withoutMismatchedRace({
       raceId: validId(input.searchParams.get("raceId")),
       candidateId: validId(input.searchParams.get("candidateId")),
@@ -198,7 +198,7 @@ export function chatPageHref(context: ChatContextInput, draft?: string): string 
   const question = draft?.trim() ?? "";
   if (question) params.set("q", question.slice(0, MAX_CHAT_MESSAGE));
   const query = params.toString();
-  return query ? `/chat?${query}` : "/chat";
+  return query ? `/ask?${query}` : "/ask";
 }
 
 export function suggestedPrompts(context: ChatContextInput): string[] {
