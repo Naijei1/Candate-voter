@@ -332,11 +332,9 @@ Resources:
       CallbackURLs:
         - https://main.d253xhq1uabld3.amplifyapp.com/sign-in/google
         - https://voter.naijei.com/sign-in/google
-        - http://localhost:3000/sign-in/google
       LogoutURLs:
         - https://main.d253xhq1uabld3.amplifyapp.com/
         - https://voter.naijei.com/
-        - http://localhost:3000/
       IdTokenValidity: 1
       AccessTokenValidity: 1
       RefreshTokenValidity: 30

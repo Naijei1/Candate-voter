@@ -2292,8 +2292,8 @@ td {
     border: 0;
     box-shadow: none;
   }
-  body:has(.ballot-bar),
-  body:has(.sticky-mobile) { padding-bottom: calc(var(--tab-space) + 4.5rem); }
+  body:has(.ballot-bar) .site-footer,
+  body:has(.sticky-mobile) .site-footer { padding-bottom: calc(2rem + env(safe-area-inset-bottom) + 4.5rem); }
   .page-main:has(.sticky-mobile) { padding-bottom: 2rem; }
 
   /* On-screen keyboard open: hide the tab bar so it can't cover the field (Android resizes the page). */
