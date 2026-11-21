@@ -1,3 +1,4 @@
+import { currentUser } from "@/lib/auth/session";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -153,7 +154,7 @@ export default async function RacePage({ params }: PageProps) {
           <Link className="btn btn-navy" href={`/races/${race.raceId}/compare`}>
             Compare candidates
           </Link>
-          <FollowControl what="race" targetId={race.raceId} />
+          <FollowControl signedIn={Boolean(await currentUser())} what="race" targetId={race.raceId} />
         </div>
           </>
         )}

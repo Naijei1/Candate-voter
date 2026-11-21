@@ -1,6 +1,6 @@
 import { cognitoSettings, normalizeEmail, signIn } from "@/lib/auth/cognito";
 import { cognitoFailure, notConfigured } from "@/lib/auth/errors";
-import { setIdCookie } from "@/lib/auth/session";
+import { setSessionCookies } from "@/lib/auth/session";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -22,7 +22,7 @@ export async function POST(request: Request): Promise<Response> {
   }
   try {
     const tokens = await signIn(settings, email, password);
-    await setIdCookie(tokens.idToken);
+    await setSessionCookies(tokens.idToken, tokens.refreshToken);
     return Response.json({ ok: true });
   } catch (error) {
     console.error("sign-in failed:", error instanceof Error ? error.name : "Error");

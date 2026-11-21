@@ -269,8 +269,8 @@ test("answer markdown renders structure without raw heading marks or html", () =
   }
   assert.equal(blocks[3]?.type, "ol");
   const skipped = JSON.stringify(blocks);
-  assert.equal(skipped.includes("javascript:"), true);
-  assert.equal(skipped.includes('"href":"javascript:'), false);
+  assert.equal(skipped.includes("javascript:"), false);
+  assert.equal(skipped.includes('"text":"skip"'), true);
 });
 
 test("candidate rows prefer a stored party label and omit it when absent", () => {

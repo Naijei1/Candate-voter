@@ -1,5 +1,6 @@
 "use client";
 
+import { withBasePath } from "@/lib/base-path";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { FollowType } from "@/lib/users/follows";
@@ -12,12 +13,13 @@ const LABEL: Record<FollowType, string> = {
   issue: "this topic",
 };
 
-export function FollowControl({ what, targetId }: { what: FollowType; targetId: string }) {
+export function FollowControl({ what, targetId, signedIn }: { what: FollowType; targetId: string; signedIn: boolean }) {
   const [status, setStatus] = useState<"off" | "on" | "saving" | "denied" | "error">("off");
 
   useEffect(() => {
+    if (!signedIn) return;
     let cancel = false;
-    fetch("/api/follows")
+    fetch(withBasePath("/api/follows"))
       .then(async (response) => {
         if (!response.ok) return;
         const body = (await response.json()) as { follows?: { targetType?: string; targetId?: string }[] };
@@ -30,13 +32,17 @@ export function FollowControl({ what, targetId }: { what: FollowType; targetId: 
     return () => {
       cancel = true;
     };
-  }, [what, targetId]);
+  }, [what, targetId, signedIn]);
 
   async function onClick() {
+    if (!signedIn) {
+      setStatus("denied");
+      return;
+    }
     const following = status === "on";
     setStatus("saving");
     try {
-      const response = await fetch("/api/follows", {
+      const response = await fetch(withBasePath("/api/follows"), {
         method: following ? "DELETE" : "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ targetType: what, targetId }),

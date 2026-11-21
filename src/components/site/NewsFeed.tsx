@@ -1,5 +1,6 @@
 "use client";
 
+import { withBasePath } from "@/lib/base-path";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { NEWS_CATEGORIES } from "@/content/pilot";
@@ -14,22 +15,23 @@ const FEED_LABEL: Record<(typeof NEWS_CATEGORIES)[number], string> = {
   "Election deadlines": "Election deadlines",
 };
 
-export function NewsFeed() {
+export function NewsFeed({ signedIn }: { signedIn: boolean }) {
   const [categories, setCategories] = useState<string[]>([...NEWS_CATEGORIES]);
   const [states, setStates] = useState<string[]>([]);
   const [stateInput, setStateInput] = useState("");
   const [message, setMessage] = useState<string | null>(null);
-  const [signedIn, setSignedIn] = useState(false);
+  const [sessionExpired, setSessionExpired] = useState(false);
+  const canSave = signedIn && !sessionExpired;
 
   useEffect(() => {
+    if (!canSave) return;
     let cancel = false;
-    fetch("/api/news/feed")
+    fetch(withBasePath("/api/news/feed"))
       .then(async (response) => {
-        if (response.status === 401) return;
+        if (!cancel && response.status === 401) setSessionExpired(true);
         if (!response.ok) return;
         const body = (await response.json()) as { feed?: { states?: string[]; categories?: string[] } };
         if (cancel || !body.feed) return;
-        setSignedIn(true);
         setStates(body.feed.states ?? []);
         if ((body.feed.categories ?? []).length > 0) setCategories(body.feed.categories ?? []);
       })
@@ -37,22 +39,25 @@ export function NewsFeed() {
     return () => {
       cancel = true;
     };
-  }, []);
+  }, [canSave]);
 
   async function save(nextCategories: string[], nextStates: string[]) {
     setCategories(nextCategories);
     setStates(nextStates);
-    const response = await fetch("/api/news/feed", {
+    if (!canSave) {
+      setMessage("Not saved. Sign in to keep feed choices.");
+      return;
+    }
+    const response = await fetch(withBasePath("/api/news/feed"), {
       method: "PUT",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ categories: nextCategories, states: nextStates }),
     });
     if (response.status === 401) {
-      setSignedIn(false);
+      setSessionExpired(true);
       setMessage("Not saved. Sign in to keep feed choices.");
       return;
     }
-    setSignedIn(true);
     setMessage(response.ok ? "Feed saved. Notifications are unchanged." : "Feed choices were not saved.");
   }
 
@@ -89,7 +94,8 @@ export function NewsFeed() {
           if (!/^[A-Z]{2}$/.test(postal) || states.includes(postal)) return;
           setStateInput("");
           void save(categories, [...states, postal]);
-          void fetch("/api/follows", {
+          if (!canSave) return;
+          void fetch(withBasePath("/api/follows"), {
             method: "POST",
             headers: { "content-type": "application/json" },
             body: JSON.stringify({ targetType: "jurisdiction", targetId: postal }),
@@ -106,7 +112,7 @@ export function NewsFeed() {
       </form>
       {states.length > 0 ? <p>Following {states.join(", ")}.</p> : <p>No followed states yet.</p>}
       {message ? <p role="status">{message}</p> : null}
-      {!signedIn ? (
+      {!canSave ? (
         <p>
           <Link href="/sign-in">Sign in</Link> to save this feed.
         </p>

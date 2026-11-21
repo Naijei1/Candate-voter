@@ -12,7 +12,8 @@
     "lint": "eslint",
     "test": "node --import tsx --test test/*.ts",
     "ingest": "tsx scripts/ingest.ts",
-    "seed:ky": "tsx scripts/seed-ky-ballot.ts"
+    "seed:ky": "tsx scripts/seed-ky-ballot.ts",
+    "smoke": "node scripts/smoke.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-bedrock-runtime": "^3.1156.0",

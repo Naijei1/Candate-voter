@@ -59,7 +59,7 @@ The state page draws U.S. House districts from static GeoJSON in this app. There
 
 Each feature is one district. `properties.state` is the postal code and `properties.district` is two digits. The map joins that pair to a race already on the page: `{cycle}-house-{ST}-{DD}`, for example `2026-house-KY-01`. At-large states (AK, DE, ND, SD, VT, WY) use `00` only (`2026-house-WY-00`). The map does not join a legacy `01` id. Fills come from those race rows: `empty: true` means no candidates yet. The file is the 50 states and 435 districts. DC and territories are not included. Alaska longitudes east of the antimeridian are shifted west so the state draws as one shape.
 
-Links use `next/link` with app-relative paths so they follow `basePath`. Server components read stored races, candidates, and filings through `createDynamoRepository()`. `src/lib/placeholders.ts` is a fixture module and is not imported by those pages.
+Links use `next/link` with app-relative paths so they follow `basePath`. Server components read stored races, candidates, and filings through `createDynamoRepository()`.
 
 ## Data model
 
@@ -173,7 +173,7 @@ aws lambda invoke \
 
 ## Race pages
 
-`/`, `/races/[raceId]`, and `/candidates/[candidateId]` are server components. They call `createDynamoRepository()` and set `dynamic = "force-dynamic"`, so `next build` does not query the table and does not prebuild ids from `src/lib/placeholders.ts`. The Amplify SSR compute role (not the build role) needs `dynamodb:GetItem` and `dynamodb:Query` on the table and `gsi1`. Leave `FEC_API_KEY` on the Lambda only.
+`/`, `/races/[raceId]`, and `/candidates/[candidateId]` are server components. They call `createDynamoRepository()` and set `dynamic = "force-dynamic"`, so `next build` does not query the table. The Amplify SSR compute role (not the build role) needs `dynamodb:GetItem` and `dynamodb:Query` on the table and `gsi1`. Leave `FEC_API_KEY` on the Lambda only.
 
 Amplify Hosting puts branch environment variables in the build shell and does not pass them to the Next.js server at request time. `amplify.yml` deletes `.env.production` and `scripts/write-amplify-server-env.mjs` writes it again before `next build`. That script is the only copy. It writes `CANDATE_TABLE_NAME`, `CANDATE_API_KEY`, `CANDATE_CYCLES`, `AWS_REGION`, the chat settings (`CANDATE_CHAT_ENABLED`, `CANDATE_CHAT_MODEL`, `CANDATE_CHAT_RATE_LIMIT`, `CANDATE_CHAT_RATE_WINDOW_SECONDS`, `CANDATE_AI_DAILY_CAP`, `BEDROCK_MODEL_ID`, `BEDROCK_SONNET_MODEL_ID`), and `NEXT_PUBLIC_*` when they are set, and it does not write `FEC_API_KEY`. Next.js loads that file when it serves traffic. If `CANDATE_TABLE_NAME` is still unset, reads use `candate-voter`. If `AWS_REGION` is unset, the repository client uses `us-east-1`.
 

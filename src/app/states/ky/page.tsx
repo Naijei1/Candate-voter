@@ -1,3 +1,4 @@
+import { currentUser } from "@/lib/auth/session";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { DistrictMap } from "@/components/DistrictMap";
@@ -45,7 +46,7 @@ export default async function StatePage({ searchParams }: PageProps) {
       <p className="lede">
         {year} general · {generalElectionLabel(year)}
       </p>
-      <FollowControl what="jurisdiction" targetId={postal} />
+      <FollowControl signedIn={Boolean(await currentUser())} what="jurisdiction" targetId={postal} />
       {loaded.filingsLoaded || (year === PILOT_YEAR) ? null : (
         <p className="notice notice-error" role="status">
           Filings unavailable. <Link href="/sources">Sources</Link>

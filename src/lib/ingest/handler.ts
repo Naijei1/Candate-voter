@@ -1,3 +1,4 @@
+import { candidateStatesFromEnv } from "../data/candidate-states";
 import { createDynamoRepository } from "../data/repository";
 import { FecClient, fecApiKeyFromEnv } from "../fec/client";
 import { runIngest, type IngestSummary } from "./run";
@@ -29,6 +30,7 @@ export async function handler(
   return runIngest({
     repo,
     fec,
+    states: candidateStatesFromEnv(),
     maxPages: event.maxPages ?? numberFromEnv(process.env.INGEST_MAX_PAGES),
     perPage: event.perPage ?? numberFromEnv(process.env.INGEST_PER_PAGE),
     resetWatermark: event.resetWatermark ?? false,

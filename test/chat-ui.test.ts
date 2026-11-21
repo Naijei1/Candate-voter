@@ -4,6 +4,7 @@ import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { ChatComposer } from "../src/components/chat/ChatComposer";
 import { ChatMessageList, loadingStatus } from "../src/components/chat/ChatMessageList";
+import { CitationCard } from "../src/components/chat/CitationCard";
 import { MarkdownAnswer } from "../src/components/chat/MarkdownAnswer";
 import { applyAskBinding, settleAssistantTurn, type ChatTurn } from "../src/components/chat/useChat";
 import { CHAT_TIMEOUT_MS, ChatCancelled, postChatMessage } from "../src/lib/chat/browser";
@@ -211,9 +212,22 @@ test("citations stay in-app for THE VOTE paths and open FEC in a new tab", () =>
   const fec = citationLink("https://www.fec.gov/data/elections/senate/AK/2026/");
   assert.equal(fec?.external, true);
   assert.equal(citationLink("javascript:alert(1)"), null);
-  assert.match(formatAsOf("2026-10-26T17:00:00Z"), /As of Oct 26, 2026, 1:00 PM EDT/);
-  assert.equal(formatAsOf("Oct 25, 2026"), "As of Oct 25, 2026");
+  assert.equal(citationLink("https://main.d253xhq1uabld3.amplifyapp.com/sources")?.href, "/sources");
+  for (const url of ["https://example.com/races/example", "https://fec.gov.evil.com/data", "data:text/html,bad", "javascript:alert(1)", "/\\evil.com"]) {
+    assert.equal(citationLink(url), null);
+    assert.deepEqual(parseMarkdown(`[Read more](${url})`), parseMarkdown("Read more"));
+    const markup = renderToStaticMarkup(React.createElement(CitationCard, {
+      source: { title: "Read more", url, as_of: "unknown" },
+    }));
+    assert.match(markup, /Read more/);
+    assert.doesNotMatch(markup, /<a\b/);
+  }
+});
+
+test("citation freshness uses Eastern time and handles unknown dates", () => {
+  assert.match(formatAsOf("2026-11-04T17:30:00Z"), /Nov 4, 2026.*12:30 PM EST/);
   assert.equal(formatAsOf("unknown"), "As of unknown");
+  assert.equal(formatAsOf("Election Day"), "As of Election Day");
 });
 
 test("POST /api/chat maps 200, refused, 400, 429, 503, and network", async () => {

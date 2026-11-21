@@ -122,7 +122,11 @@ function renderRoster(input: {
       mode: "factual",
     };
   }
-  const shown = people.slice(0, NAME_CAP);
+  // Senate first so the name cap never hides the statewide race behind House rows.
+  const ordered = [...people].sort(
+    (a, b) => Number(b.race.office === "senate") - Number(a.race.office === "senate"),
+  );
+  const shown = ordered.slice(0, NAME_CAP);
   const senate = shown.filter((row) => row.race.office === "senate");
   const house = shown.filter((row) => row.race.office === "house");
   const blocks = [`**${name}, ${input.cycle}.** FEC Form 2 filings.`];

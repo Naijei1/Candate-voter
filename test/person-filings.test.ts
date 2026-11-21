@@ -62,16 +62,11 @@ test("identical Form 2 rows collapse and a different document stays", () => {
   assert.equal(kept.some((row) => row.imageNumber === "IMG-9"), true);
 });
 
-test("federal general election day and year menu stay in sync with the contract", () => {
+test("federal general election labels and district hover styles stay in sync with the contract", () => {
   assert.equal(generalElectionLabel(2024), "November 5, 2024");
   assert.equal(generalElectionLabel(2026), "November 3, 2026");
   assert.equal(generalElectionLabel(2028), "November 7, 2028");
 
-  const yearSelect = readFileSync(new URL("../src/components/YearSelect.tsx", import.meta.url), "utf8");
-  assert.equal(yearSelect.includes("setShown"), false);
-  assert.equal(/onPointerDown=\{/.test(yearSelect), false);
-  const landing = readFileSync(new URL("../src/components/Landing.tsx", import.meta.url), "utf8");
-  assert.match(landing, /data-testid="year-loading"/);
   const css = readFileSync(new URL("../src/app/globals.css", import.meta.url), "utf8");
   assert.match(css, /\.cd-map \.cd-district\.has-data:hover[\s\S]*?fill:\s*var\(--color-map-hover\)/);
   assert.match(css, /\.cd-map \.cd-district:hover,\s*\.cd-map \.cd-district:focus-visible\s*\{[^}]*fill:\s*var\(--color-map\)/);

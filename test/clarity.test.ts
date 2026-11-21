@@ -253,8 +253,7 @@ test("candidate rows start with a name and keep full records closed", () => {
   assert.equal(html.includes("3 filings"), false);
 });
 
-test("home and ask copy stay plain and the map does not lead with Popular", () => {
-  const landing = readFileSync(new URL("../src/components/Landing.tsx", import.meta.url), "utf8");
+test("ask, navigation, and map copy stay plain", () => {
   const zip = readFileSync(new URL("../src/components/ZipLookup.tsx", import.meta.url), "utf8");
   const legend = readFileSync(new URL("../src/components/UsMap.tsx", import.meta.url), "utf8");
   const looking = readFileSync(new URL("../src/components/StateScoreboard.tsx", import.meta.url), "utf8");
@@ -262,22 +261,7 @@ test("home and ask copy stay plain and the map does not lead with Popular", () =
   const shell = readFileSync(new URL("../src/components/chat/ChatShell.tsx", import.meta.url), "utf8");
   const header = `${readFileSync(new URL("../src/components/SiteHeader.tsx", import.meta.url), "utf8")}\n${readFileSync(new URL("../src/components/site/HeaderFrame.tsx", import.meta.url), "utf8")}`;
   const footer = readFileSync(new URL("../src/components/SiteFooter.tsx", import.meta.url), "utf8");
-  assert.equal(landing.includes("WhatAmILookingAt"), false);
-  assert.equal(landing.includes("ChromeInfo"), false);
-  assert.equal(landing.includes("homeValueLine"), false);
-  assert.match(landing, /candidatesSoFarLine/);
-  assert.match(landing, /senateCandidateCount/);
-  assert.match(landing, /highlightedPostal/);
-  assert.match(landing, /selected=\{mapPostal\}/);
-  assert.match(
-    landing,
-    /setRememberedPostal\(\(current\) => nextRememberedPostal\(postal, zip, current\)\);\s*setHot\(null\);/,
-  );
-  assert.match(landing, /onReject=\{rejectZip\}/);
-  assert.match(landing, /setRememberedPostal\(null\)/);
   assert.match(zip, /onReject\?\.\(\)/);
-  assert.equal(landing.includes("1 candidate so far"), false);
-  assert.equal(landing.includes("candidates so far"), false);
   assert.equal(looking.includes("What am I looking at"), false);
   assert.match(header, /Find my races/);
   assert.match(header, /News Feed/);
@@ -290,27 +274,17 @@ test("home and ask copy stay plain and the map does not lead with Popular", () =
   assert.match(footer, /Privacy/);
   assert.match(footer, /Sources/);
   assert.equal(footer.includes("Agent API"), false);
-  assert.match(landing, /<ZipLookup/);
-  assert.match(landing, /searchWithoutState/);
-  assert.match(landing, /Your races/);
-  assert.match(landing, /See all/);
   assert.match(zip, /Enter ZIP to find your races/);
   assert.match(zip, /That ZIP didn't match/);
   assert.match(zip, /Tap a state on the map/);
-  assert.match(landing, /officeOneLiner/);
-  assert.match(landing, /Details/);
   assert.match(zip, /data-testid="zip-lookup"/);
   assert.match(zip, /findRacesByZip/);
   assert.match(legend, /Has candidates/);
   assert.match(legend, /No one has filed yet/);
   assert.equal(legend.includes("Filings stored"), false);
   assert.equal(legend.includes("No filings stored"), false);
-  assert.equal(landing.includes("popular-heading"), false);
-  assert.equal(landing.includes("state-jump"), false);
-  assert.equal(/not a ranking/i.test(landing), false);
   assert.equal(ask.includes("SuggestedPrompts"), false);
   assert.equal(shell.includes("suggestedPrompts"), false);
-  assert.equal(landing.includes("Recently updated filings"), false);
   const districts = readFileSync(new URL("../src/components/DistrictMap.tsx", import.meta.url), "utf8");
   assert.match(districts, /you-are-here/);
   assert.match(districts, /is-yours/);
@@ -463,8 +437,6 @@ test("empty district copy follows returned stubs and leaves coverage on filings"
   assert.equal(board.districtsTotal, 6);
   assert.equal(stateScoreboard([atLarge], "WY", 2026).districtsWithFilings, 0);
   assert.equal(stateScoreboard([atLarge], "WY", 2026).districtsTotal, 1);
-  const landing = readFileSync(new URL("../src/components/Landing.tsx", import.meta.url), "utf8");
-  assert.equal(landing.includes("houseGaps"), false);
 
   assert.equal(
     runningForLine({

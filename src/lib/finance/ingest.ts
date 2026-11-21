@@ -1,3 +1,4 @@
+import { includesCandidateState } from "../data/candidate-states";
 import type { VoterRepository } from "../data/repository";
 import { FecApiError, type FecClient } from "../fec/client";
 import { mapCandidateCycleTotal, mapCommitteeReport, mapScheduleEByCandidate, principalCommittee } from "./map";
@@ -34,6 +35,7 @@ export async function runTotalsIngest(options: {
   repo: VoterRepository;
   fec: Pick<FecClient, "getCandidateTotals" | "getCandidateCommittees" | "getScheduleEByCandidate" | "iterateCommitteeReports">;
   cycles: number[];
+  states?: ReadonlySet<string>;
   now?: () => Date;
   shouldContinue?: () => boolean;
 }): Promise<TotalsIngestSummary> {
@@ -91,7 +93,7 @@ export async function runTotalsIngest(options: {
   };
 
   try {
-    const work = await listWork(options.repo, options.cycles);
+    const work = await listWork(options.repo, options.cycles, options.states);
     for (const item of work) {
       if (isAtOrBeforeCursor(item, cursorCycle, cursorCandidateId)) continue;
       if (!shouldContinue()) {
@@ -194,13 +196,13 @@ function delay(ms: number): Promise<void> {
   });
 }
 
-async function listWork(repo: VoterRepository, cycles: number[]): Promise<WorkItem[]> {
+async function listWork(repo: VoterRepository, cycles: number[], states?: ReadonlySet<string>): Promise<WorkItem[]> {
   const work: WorkItem[] = [];
   const seen = new Set<string>();
   for (const cycle of [...cycles].sort((a, b) => a - b)) {
     const races = await repo.listRacesByCycle(cycle);
     for (const race of races) {
-      if (race.cycle !== cycle) continue;
+      if (race.cycle !== cycle || !includesCandidateState(states, race.state)) continue;
       const candidates = await repo.listCandidatesForRace(race.raceId);
       for (const candidate of candidates) {
         const fecId = candidate.fecCandidateId;

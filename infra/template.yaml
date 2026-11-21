@@ -122,6 +122,7 @@ Resources:
           FEC_API_KEY: !Ref FecApiKey
           FEC_API_BASE_URL: https://api.open.fec.gov/v1
           FEC_MIN_DELAY_MS: "250"
+          CANDATE_STATES: KY
       Policies:
         - Version: "2012-10-17"
           Statement:
@@ -183,6 +184,7 @@ Resources:
           FEC_API_KEY: !Ref FecApiKey
           FEC_API_BASE_URL: https://api.open.fec.gov/v1
           FEC_MIN_DELAY_MS: "250"
+          CANDATE_STATES: KY
       Policies:
         - Version: "2012-10-17"
           Statement:

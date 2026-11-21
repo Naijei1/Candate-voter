@@ -1,8 +1,8 @@
 "use client";
 
+import { CitationCard } from "@/components/chat/CitationCard";
 import { useState, type FormEvent } from "react";
 import { postChatMessage } from "@/lib/chat/browser";
-import { formatInstant } from "@/lib/format";
 import type { ChatSource } from "@/lib/chat/types";
 
 const PROMPTS = [
@@ -133,11 +133,7 @@ function AskBody({
           {answer.sources.length > 0 ? (
             <ul className="plain-list">
               {answer.sources.map((source) => (
-                <li key={source.url}>
-                  <a href={source.url}>{source.title}</a>
-                  {" · "}
-                  {formatInstant(source.as_of) ?? source.as_of}
-                </li>
+                <CitationCard key={source.url} source={source} />
               ))}
             </ul>
           ) : null}
