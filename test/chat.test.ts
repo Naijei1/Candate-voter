@@ -1967,6 +1967,36 @@ test("Kentucky District 3 questions use the ballot while statewide questions use
   assert.equal(converse.calls, 0);
 });
 
+test("a Senate page question about District 3 stays on the Senate race", async () => {
+  const repo = new MemoryVoterRepository();
+  await repo.upsertRace(race({
+    raceId: "2026-senate-KY",
+    office: "senate",
+    cycle: 2026,
+    state: "KY",
+    title: "U.S. Senate, Kentucky",
+  }));
+  await repo.upsertCandidate(candidate({
+    candidateId: "S0KY00123",
+    raceId: "2026-senate-KY",
+    displayName: "Ada Lovelace",
+    office: "senate",
+  }));
+  const response = await postChat(
+    post({
+      message: "Who is running in District 3?",
+      state: "KY",
+      raceId: "2026-senate-KY",
+      cycle: 2026,
+    }),
+    chatDeps(repo, scripted([])),
+  );
+  assert.equal(response.status, 200);
+  const { answer_markdown: answer } = await response.json();
+  assert.match(answer, /Ada Lovelace/);
+  assert.doesNotMatch(answer, /Morgan McGarvey|Maria Teresa Rodriguez/);
+});
+
 test("state roster distinguishes omitted House names from an empty House roster", async () => {
   const repo = new MemoryVoterRepository();
   const senateId = "2026-senate-KY";

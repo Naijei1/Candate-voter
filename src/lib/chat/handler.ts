@@ -229,7 +229,11 @@ async function answerChat(
   const question = visitorQuestion(asked.message);
   const questionState = stateMentionedIn(question);
   const questionCycle = cycleMentionedIn(question) ?? asked.cycle ?? yearFromRaceId(asked.raceId);
-  if ((questionState ?? contextState ?? "KY") === "KY" && (questionCycle == null || questionCycle === 2026)) {
+  if (
+    !isSingleContestScope(asked) &&
+    (questionState ?? contextState ?? "KY") === "KY" &&
+    (questionCycle == null || questionCycle === 2026)
+  ) {
     const district = kentuckyRunningAnswer(question, { districtOnly: true });
     if (district) {
       logOutcome({ refused: false, tools: ["kentucky"], latencyMs: Date.now() - started, mode: "factual" });
