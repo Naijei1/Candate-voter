@@ -65,17 +65,22 @@ function useKeyboardFlag() {
   }, []);
 }
 
-export function MobileNavigation() {
+export function MobileNavigation({ signedIn = false }: { signedIn?: boolean }) {
   const path = usePathname();
   useKeyboardFlag();
   return (
     <nav className="mobile-tabs" aria-label="Primary">
-      {MOBILE_TABS.map(({ href, label, icon: Icon }) => (
-        <Link key={href} href={href} aria-current={currentTab(path, href)}>
-          <Icon size={21} aria-hidden="true" />
-          {label}
-        </Link>
-      ))}
+      {MOBILE_TABS.map(({ href, label, icon: Icon }) => {
+        const watchlist = href === "/ballot" && signedIn;
+        const destination = watchlist ? "/account" : href;
+        const current = currentTab(path, destination) ?? (watchlist && currentTab(path, href) ? "location" : undefined);
+        return (
+          <Link key={href} href={destination} aria-current={current}>
+            <Icon size={21} aria-hidden="true" />
+            {label}
+          </Link>
+        );
+      })}
     </nav>
   );
 }

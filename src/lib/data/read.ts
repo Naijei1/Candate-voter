@@ -28,7 +28,7 @@ export function logReadError(operation: string, error: unknown): void {
   console.error(`DynamoDB ${operation} failed: ${name}: ${message}`);
 }
 
-const readRacePartition = memoizeRead(
+export const readRacePartition = memoizeRead(
   (cycle: number) => createDynamoRepository().listRacesByCycle(cycle),
   (error) => logReadError("listRacesByCycle", error),
 );
@@ -37,17 +37,10 @@ export async function listRacesForCycles(
   repo: Pick<VoterRepository, "listRacesByCycle">,
   cycles: readonly number[],
 ): Promise<Array<{ cycle: number; races: Race[] }>> {
-  const groups = await Promise.all(
-    cycles.map(async (cycle) => ({
-      cycle,
-      races: appendExpectedRaces(
-        visibleRaces(await repo.listRacesByCycle(cycle)).filter((race) =>
-          raceMatchesCycle(race, cycle),
-        ),
-        [cycle],
-      ).map(signalRace),
-    })),
-  );
+  const groups = await Promise.all(cycles.map(async (cycle) => ({
+    cycle,
+    races: await loadCycleRaces(repo, cycle),
+  })));
   return groups.filter((group) => group.races.length > 0);
 }
 
@@ -68,23 +61,30 @@ export async function readRaceIndex(
   return { cycles, groups, refreshedAt };
 }
 
-export const readRacesForCycle = cache(async (cycle: number): Promise<Race[]> => {
-  const stored = visibleRaces(await readRacePartition(cycle)).filter(
+export async function loadCycleRaces(
+  repo: Pick<VoterRepository, "listRacesByCycle">,
+  cycle: number,
+): Promise<Race[]> {
+  const stored = visibleRaces(await repo.listRacesByCycle(cycle)).filter(
     (race) => raceMatchesCycle(race, cycle),
   );
   return appendExpectedRaces(stored, [cycle]).map(signalRace);
-});
+}
+
+export const readRacesForCycle = cache((cycle: number) =>
+  loadCycleRaces({ listRacesByCycle: readRacePartition }, cycle),
+);
 
 export const readRace = cache(async (raceId: string): Promise<Race | null> => {
   return loadVisibleRace(createDynamoRepository(), raceId);
 });
 
-export const readCandidate = cache(
-  async (candidateId: string): Promise<Candidate | null> => {
-    const candidate = await createDynamoRepository().getCandidate(candidateId);
-    return candidate ? cleanCandidate(candidate) : null;
-  },
-);
+export async function loadCleanCandidate(repo: Pick<VoterRepository, "getCandidate">, candidateId: string) {
+  const candidate = await repo.getCandidate(candidateId);
+  return candidate ? cleanCandidate(candidate) : null;
+}
+
+export const readCandidate = cache((candidateId: string) => loadCleanCandidate(createDynamoRepository(), candidateId));
 
 export const readCandidatesForRace = cache(memoizeRead(
   (raceId: string): Promise<PublicCandidate[]> => loadPublicCandidates(createDynamoRepository(), raceId),
@@ -107,13 +107,11 @@ async function readIndexRefreshedAt(): Promise<string | null> {
   }
 }
 
-export const readFilingsForCandidate = cache(
-  async (candidateId: string): Promise<Filing[]> => {
-    const filings =
-      await createDynamoRepository().listFilingsForCandidate(candidateId);
-    return collapseIdenticalFilings(filings);
-  },
-);
+export async function loadCandidateFilings(repo: Pick<VoterRepository, "listFilingsForCandidate">, candidateId: string) {
+  return collapseIdenticalFilings(await repo.listFilingsForCandidate(candidateId));
+}
+
+export const readFilingsForCandidate = cache((candidateId: string) => loadCandidateFilings(createDynamoRepository(), candidateId));
 
 /** Alphabetical by display name. Party is not a sort key. */
 export function sortCandidates(candidates: readonly Candidate[]): Candidate[] {

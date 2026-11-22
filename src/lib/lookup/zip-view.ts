@@ -4,6 +4,7 @@ import {
   isBogusAtLargeContest,
 } from "@/lib/data/at-large";
 import { isPostalState, stateName } from "@/lib/data/states";
+import { API_VERSION, versioned, type ZipLookupResponse } from "@/lib/api/v1-types";
 import type { FederalOffice, Race } from "@/lib/types";
 
 /** Client and server budget for one ZIP lookup. Looking up must not sit past this. */
@@ -14,21 +15,7 @@ const SENATE_ID = /^(\d{4})-senate-([A-Z]{2})$/;
 const HOUSE_ID = /^(\d{4})-house-([A-Z]{2})-(\d{2})$/;
 const RACE_ID = /^(\d{4})-(president|senate-[A-Z]{2}|house-[A-Z]{2}-\d{2})$/;
 
-export type ZipDistrict = {
-  district: string;
-  raceId: string;
-};
-
-/** Body of `GET /api/v1/lookup/zip`. Geography comes from that response only. */
-export type ZipLookupPayload = {
-  zip: string;
-  year: number;
-  state: string | null;
-  districts: ZipDistrict[];
-  senateRaceId: string | null;
-  raceIds: string[];
-  races: Race[];
-};
+export type ZipLookupPayload = ZipLookupResponse;
 
 export type ZipLookupFailureReason =
   | "timeout"
@@ -104,6 +91,7 @@ export function zipFailureClearsSelection(reason: ZipLookupFailureReason): boole
 export function parseZipLookup(value: unknown): ZipLookupPayload | null {
   if (!value || typeof value !== "object") return null;
   const row = value as Record<string, unknown>;
+  if (row.version !== undefined && row.version !== API_VERSION) return null;
   if (typeof row.zip !== "string") return null;
   const zip = normalizeZip(row.zip);
   if (!zip) return null;
@@ -120,7 +108,7 @@ export function parseZipLookup(value: unknown): ZipLookupPayload | null {
   }
 
   if (!Array.isArray(row.districts)) return null;
-  const districts: ZipDistrict[] = [];
+  const districts: ZipLookupResponse["districts"] = [];
   for (const item of row.districts) {
     if (!item || typeof item !== "object") continue;
     const district = (item as { district?: unknown }).district;
@@ -154,7 +142,7 @@ export function parseZipLookup(value: unknown): ZipLookupPayload | null {
     }
   }
 
-  return { zip, year: row.year, state, districts, senateRaceId, raceIds, races };
+  return versioned({ zip, year: row.year, state, districts, senateRaceId, raceIds, races });
 }
 
 /**

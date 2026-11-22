@@ -1,0 +1,87 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: THE VOTE email alerts and hourly dispatch
+Parameters:
+  DispatchUrl:
+    Type: String
+    AllowedPattern: 'https://[^ ]+/api/alerts/dispatch'
+  DispatchSecret:
+    Type: String
+    MinLength: 32
+    NoEcho: true
+  AmplifyComputeRoleName:
+    Type: String
+    Default: candate-voter-amplify-compute
+  DispatchState:
+    Type: String
+    AllowedValues: [ENABLED, DISABLED]
+    Default: DISABLED
+Resources:
+  Topic:
+    Type: AWS::SNS::Topic
+    Properties:
+      DisplayName: THE VOTE
+  ComputePolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: the-vote-alerts
+      Roles: [!Ref AmplifyComputeRoleName]
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - sns:Subscribe
+              - sns:Unsubscribe
+              - sns:SetSubscriptionAttributes
+              - sns:GetSubscriptionAttributes
+              - sns:Publish
+            Resource: !Ref Topic
+  Connection:
+    Type: AWS::Events::Connection
+    Properties:
+      AuthorizationType: API_KEY
+      AuthParameters:
+        ApiKeyAuthParameters:
+          ApiKeyName: X-Thevote-Alerts-Secret
+          ApiKeyValue: !Ref DispatchSecret
+  Destination:
+    Type: AWS::Events::ApiDestination
+    Properties:
+      ConnectionArn: !GetAtt Connection.Arn
+      HttpMethod: POST
+      InvocationEndpoint: !Ref DispatchUrl
+      InvocationRateLimitPerSecond: 1
+  InvocationRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: events.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: invoke-dispatch
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: events:InvokeApiDestination
+                Resource: !GetAtt Destination.Arn
+  HourlyRule:
+    Type: AWS::Events::Rule
+    Properties:
+      ScheduleExpression: rate(1 hour)
+      State: !Ref DispatchState
+      Targets:
+        - Id: Dispatch
+          Arn: !GetAtt Destination.Arn
+          RoleArn: !GetAtt InvocationRole.Arn
+          Input: '{}'
+          RetryPolicy:
+            MaximumEventAgeInSeconds: 3600
+            MaximumRetryAttempts: 4
+Outputs:
+  AlertsTopicArn:
+    Value: !Ref Topic

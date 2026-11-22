@@ -7,6 +7,13 @@ export type Follow = {
   createdAt: string;
 };
 
+export const FOLLOW_LIMIT = 100;
+export const FOLLOW_LIMIT_MESSAGE = `You can follow up to ${FOLLOW_LIMIT} races and candidates.`;
+
+export function isAlertFollow(type: FollowType): boolean {
+  return type === "race" || type === "candidate";
+}
+
 export function followSortKey(type: FollowType, id: string): string {
   return `FOLLOW#${type}#${id}`;
 }

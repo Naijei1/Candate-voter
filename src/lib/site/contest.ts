@@ -1,4 +1,5 @@
 import { cache } from "react";
+import type { CandidateResponse, FilingsResponse, RaceListResponse, RaceResponse } from "@/lib/api/v1-types";
 import { isBogusAtLargeContest } from "@/lib/data/at-large";
 import { appendExpectedRaces, expectedRaceById } from "@/lib/data/expected-races";
 import {
@@ -12,14 +13,13 @@ import {
 } from "@/lib/data/read";
 import { presentCandidate, type PublicCandidate } from "@/lib/data/view";
 import { missingKyBallotCandidates } from "@/lib/site/ky-ballot";
-import type { Filing, Race } from "@/lib/types";
+import { isKentuckyFederalRaceId } from "@/lib/site/ky-race-id";
+import type { Race } from "@/lib/types";
 
 /** Kentucky pilot cycle from the October 30, 2026 brief. */
 export const PILOT_YEAR = 2026;
 
-export type FilingLoad = {
-  races: Race[];
-  refreshedAt: string | null;
+export type FilingLoad = Pick<RaceListResponse, "races" | "refreshedAt"> & {
   /** False when DynamoDB could not be read. Stubs are the ballot structure, not a roster. */
   filingsLoaded: boolean;
 };
@@ -37,14 +37,13 @@ export async function loadPilotIndex(cycle = PILOT_YEAR): Promise<FilingLoad> {
   }
 }
 
-export type ContestLoad = {
-  race: Race | null;
-  candidates: PublicCandidate[];
-  refreshedAt: string | null;
+export type ContestLoad = Pick<RaceResponse, "candidates" | "refreshedAt"> & {
+  race: RaceResponse["race"] | null;
   filingsLoaded: boolean;
 };
 
 export const loadContest = cache(async (raceId: string): Promise<ContestLoad> => {
+  if (!isKentuckyFederalRaceId(raceId)) return { race: null, candidates: [], refreshedAt: null, filingsLoaded: true };
   let filingsLoaded = true;
   let race: Race | null = null;
   try {
@@ -79,15 +78,15 @@ export type ProfileLoad =
   | {
       ok: true;
       candidate: NonNullable<Awaited<ReturnType<typeof readCandidate>>>;
-      race: Race | null;
-      filings: Filing[];
+      race: CandidateResponse["race"];
+      filings: FilingsResponse["filings"];
     }
   | { ok: false; missing: boolean };
 
 export const loadProfile = cache(async (candidateId: string): Promise<ProfileLoad> => {
   try {
     const candidate = await readCandidate(candidateId);
-    if (!candidate) return { ok: false, missing: true };
+    if (!candidate || !isKentuckyFederalRaceId(candidate.raceId)) return { ok: false, missing: true };
     const [race, filings] = await Promise.all([
       readRace(candidate.raceId).catch((error) => {
         logReadError("getRace", error);
