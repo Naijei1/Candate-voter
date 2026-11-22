@@ -23,6 +23,7 @@ export function DistrictMap({
   postal,
   races,
   year,
+  instruction,
   yourDistricts = [],
   context = null,
 }: {
@@ -30,6 +31,7 @@ export function DistrictMap({
   races: readonly Race[];
   /** Cycle on the page. A district from another cycle stays grey. */
   year: number;
+  instruction?: string;
   /** Two-digit House codes from a ZIP match. Empty when the visitor did not arrive by ZIP. */
   yourDistricts?: readonly string[];
   /** Year, state, and zip to keep on the race URL. */
@@ -62,7 +64,7 @@ export function DistrictMap({
         const body: unknown = await response.json();
         if (!isCdFeatureCollection(body)) throw new Error("shape");
         if (!active) return;
-        setShapes(projectCollection(body, VIEW.width, VIEW.height, 20, true)
+        setShapes(projectCollection(body, VIEW.width, VIEW.height, postal === "KY" ? 4 : 20, true, postal === "KY")
           .sort((a, b) => Number(a.district) - Number(b.district)));
       } catch (error) {
         if (!active || isAbort(error)) return;
@@ -77,6 +79,7 @@ export function DistrictMap({
 
   return (
     <div className="state-map-pane" data-testid="district-map">
+      {instruction && <p className="lede cd-instruction" aria-live="polite">{hover ?? instruction}</p>}
       <div className="cd-canvas" data-state={postal} style={shapes?.[0] ? { aspectRatio: `${shapes[0].viewWidth} / ${shapes[0].viewHeight}` } : undefined}>
         {!covered ? (
           <p className="cd-note">House district maps cover the 50 states.</p>
@@ -156,7 +159,7 @@ export function DistrictMap({
           </MapGesture>
         )}
       </div>
-      <p className="cd-hover-label" aria-live="polite">{hover ?? "\u00a0"}</p>
+      {!instruction && <p className="cd-hover-label" aria-live="polite">{hover ?? "\u00a0"}</p>}
       {here ? (
         <p className="you-are-here" data-testid="you-are-here">
           {here}

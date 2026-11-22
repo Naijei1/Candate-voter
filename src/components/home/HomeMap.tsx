@@ -1,15 +1,18 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useState, type KeyboardEvent, type ReactNode } from "react";
 
 import type { MapView } from "@/lib/site/map-view";
 
+const CountyMap = dynamic(() => import("./CountyMap"));
+
 const VIEWS: { id: MapView; label: string }[] = [
-  { id: "congressional", label: "District map" },
-  { id: "statewide", label: "Statewide officeholders" },
+  { id: "congressional", label: "Congressional" },
+  { id: "statewide", label: "Statewide" },
+  { id: "county", label: "County" },
 ];
 
-/** Toggle between the House district map and the statewide officeholders. */
 export function HomeMap({
   initial,
   congressional,
@@ -24,7 +27,7 @@ export function HomeMap({
   function choose(next: MapView) {
     setView(next);
     const url = new URL(window.location.href);
-    if (next === "statewide") url.searchParams.set("map", "statewide");
+    if (next !== "congressional") url.searchParams.set("map", next);
     else url.searchParams.delete("map");
     window.history.replaceState(null, "", `${url.pathname}${url.search}#map`);
   }
@@ -32,7 +35,9 @@ export function HomeMap({
   function onKey(event: KeyboardEvent<HTMLButtonElement>) {
     if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
     event.preventDefault();
-    const next = view === "congressional" ? "statewide" : "congressional";
+    const index = VIEWS.findIndex((item) => item.id === view);
+    const offset = event.key === "ArrowRight" ? 1 : -1;
+    const next = VIEWS[(index + offset + VIEWS.length) % VIEWS.length].id;
     choose(next);
     document.getElementById(`map-tab-${next}`)?.focus();
   }
@@ -61,6 +66,9 @@ export function HomeMap({
       </div>
       <div id="map-panel-statewide" role="tabpanel" aria-labelledby="map-tab-statewide" hidden={view !== "statewide"}>
         {statewide}
+      </div>
+      <div id="map-panel-county" role="tabpanel" aria-labelledby="map-tab-county" hidden={view !== "county"}>
+        {view === "county" && <CountyMap />}
       </div>
     </div>
   );

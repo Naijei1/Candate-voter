@@ -3,6 +3,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { DistrictMap } from "@/components/DistrictMap";
 import { CompareSection } from "@/components/home/CompareSection";
+import { RacesInFocus } from "@/components/home/RacesInFocus";
+import "@/components/home/homepage.css";
 import { Hero } from "@/components/home/Hero";
 import { HomeMap } from "@/components/home/HomeMap";
 import { HomeNewsFeed, loadHomeNewsFeed } from "@/components/home/HomeNewsFeed";
@@ -52,12 +54,9 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         <HomeMap
           initial={parseMapView(params.map)}
           congressional={
-            <>
-              <p className="lede">Tap a district to see its race.</p>
-              <div className="map-frame">
-                <DistrictMap postal="KY" races={house} year={2026} />
-              </div>
-            </>
+            <div className="map-frame">
+              <DistrictMap postal="KY" races={house} year={2026} instruction="Choose a district to see its race." />
+            </div>
           }
           statewide={<StatewidePanel senators={statewide.senators} officers={statewide.officers} />}
         />
@@ -65,6 +64,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           <a href="/ballot">Or enter a ZIP code</a>
         </p>
       </section>
+      <RacesInFocus />
       <section className="wrap home-section mobile-candidates" aria-labelledby="senate-candidates">
         <div className="section-head">
           <h2 id="senate-candidates">U.S. Senate candidates</h2>

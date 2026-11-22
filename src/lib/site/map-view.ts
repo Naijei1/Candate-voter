@@ -1,5 +1,5 @@
-export type MapView = "congressional" | "statewide";
+export type MapView = "congressional" | "statewide" | "county";
 
 export function parseMapView(value: string | null | undefined): MapView {
-  return value === "statewide" ? "statewide" : "congressional";
+  return value === "statewide" || value === "county" ? value : "congressional";
 }

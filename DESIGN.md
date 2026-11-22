@@ -31,7 +31,7 @@ Align the masthead, hero copy, sections and footer to the 1120px wrapper with at
 
 Hover and press use 160ms and `cubic-bezier(0.22, 1, 0.36, 1)`. On hover-capable inputs a linked card rises 2px, a candidate image scales to 1.02 inside its frame, and action links draw an underline. Keep keyboard focus independent of hover. Reduced motion removes translation, zoom, transitions and smooth scrolling. The film keeps its existing poster fallback.
 
-The map and News Feed share a two-segment control. Its white indicator slides under the selected label in 160ms. Candidate race links jump to headings and give press feedback. A linked card settles back to its resting position on press.
+The map has Congressional, Statewide and County segments. The News Feed uses two segments. Its white indicator slides under the selected label in 160ms. Candidate race links jump to headings and give press feedback. A linked card settles back to its resting position on press.
 
 When a reader chooses a race in Follow the money, each visible bar moves from the previous row’s proportion to the new one in 360ms. The final tabular amount moves up slightly and gains opacity over 320ms in a fixed column. Use the same easing as the controls. Render the actual values on the server. Initial loads, scrolling and the all-races finance page show settled figures. Reduced motion switches every state immediately.
 

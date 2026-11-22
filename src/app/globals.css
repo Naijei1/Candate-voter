@@ -1249,7 +1249,7 @@ td {
 }
 
 /* Reserve the fitted Kentucky geometry while its six paths load. */
-.cd-canvas[data-state="KY"] { aspect-ratio: 1000 / 374.6; }
+.cd-canvas[data-state="KY"] { aspect-ratio: 1000 / 445.71; }
 
 .cd-map {
   display: block;

@@ -122,7 +122,8 @@ test("statewide panel lists 2 senators and the 7 constitutional officers with so
   assert.ok(KY_CONSTITUTIONAL_OFFICERS.every((row) => row.photo === null));
 });
 
-test("map view parses only the two Kentucky views", () => {
+test("map view parses only the three Kentucky views", () => {
+  assert.equal(parseMapView("county"), "county");
   assert.equal(parseMapView("statewide"), "statewide");
   assert.equal(parseMapView("national"), "congressional");
   assert.equal(parseMapView(undefined), "congressional");

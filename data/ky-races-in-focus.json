@@ -1,0 +1,29 @@
+[
+  {
+    "raceId": "2026-senate-KY",
+    "reason": "Mitch McConnell did not run for another term.",
+    "person": "Mitch McConnell",
+    "portrait": "M000355",
+    "sourceUrl": "https://clerk.house.gov/member_info/electionInfo/2026/120-nominations.pdf#page=14",
+    "sourceDate": "2026-10-08",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "raceId": "2026-house-KY-04",
+    "reason": "Ed Gallrein was the Republican nominee after Thomas Massie lost the primary.",
+    "person": "Ed Gallrein",
+    "portrait": "H6KY04171",
+    "sourceUrl": "https://clerk.house.gov/member_info/electionInfo/2026/120-nominations.pdf#page=13",
+    "sourceDate": "2026-10-08",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "raceId": "2026-house-KY-06",
+    "reason": "Andy Barr ran for Senate, leaving his House seat open.",
+    "person": "Andy Barr",
+    "portrait": "S6KY00286",
+    "sourceUrl": "https://clerk.house.gov/member_info/electionInfo/2026/120-nominations.pdf#page=14",
+    "sourceDate": "2026-10-08",
+    "retrieved": "2026-11-22"
+  }
+]
