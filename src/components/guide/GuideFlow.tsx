@@ -1,5 +1,8 @@
 "use client";
 
+import type { Preferences, PreferencesResponse } from "@/lib/api/v1-types";
+import { withBasePath } from "@/lib/base-path";
+import { validIssues } from "@/lib/users/preferences";
 import { dayLabel } from "@/lib/format";
 import { ChevronRight, MapPin } from "lucide-react";
 import Link from "next/link";
@@ -51,7 +54,7 @@ type Saved = {
   issues: string[];
 };
 
-export function GuideFlow({ races }: { races: GuideRace[]; signedIn: boolean }) {
+export function GuideFlow({ races, signedIn }: { races: GuideRace[]; signedIn: boolean }) {
   const router = useRouter();
   const params = useSearchParams();
   const { step, zipParam, district, raceParam } = parseGuideQuery(params, races);
@@ -60,11 +63,16 @@ export function GuideFlow({ races }: { races: GuideRace[]; signedIn: boolean }) 
   const [busy, setBusy] = useState(false);
   const [choices, setChoices] = useState<Record<string, Choice>>({});
   const [issues, setIssues] = useState<string[]>([]);
+  const [localReady, setLocalReady] = useState(false);
+  const [issuesReady, setIssuesReady] = useState(false);
+  const [savingIssue, setSavingIssue] = useState(false);
+  const [preferenceNote, setPreferenceNote] = useState<string | null>(null);
+  const savedPlace = useRef<Preferences["geography"]>(null);
   const [sheet, setSheet] = useState<GuidePerson | null>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
 
   useEffect(() => {
-    setZip(zipParam);
+    setZip(zipParam || savedPlace.current?.zip || "");
   }, [zipParam]);
 
   useEffect(() => {
@@ -85,19 +93,69 @@ export function GuideFlow({ races }: { races: GuideRace[]; signedIn: boolean }) 
   }, [district, raceParam, router, step, zipParam]);
 
   useEffect(() => {
-    try {
-      const saved = JSON.parse(localStorage.getItem(STORAGE) ?? "null") as Saved | null;
-      if (!saved) return;
-      setChoices(saved.choices || {});
-      setIssues(saved.issues || []);
-    } catch {
-      /* keep defaults */
+    let active = true;
+    const saved = readLocalGuide();
+    setChoices(saved.choices);
+    setLocalReady(true);
+    if (!signedIn) {
+      setIssues(saved.issues);
+      setIssuesReady(true);
+      return;
     }
-  }, []);
+    setIssuesReady(false);
+    void (async () => {
+      const response = await fetch(withBasePath("/api/v1/me/preferences"));
+      if (!response.ok) throw new Error("Preferences unavailable");
+      const { preferences } = await response.json() as PreferencesResponse;
+      if (!active) return;
+      const account = preferences.issues === null && saved.issues.length > 0
+        ? await updatePreferences({ issues: saved.issues, seedIssues: true })
+        : preferences;
+      if (!active) return;
+      setIssues(account.issues ?? []);
+      if (account.issues !== null && saved.issues.length > 0) {
+        writeLocalGuide({ ...readLocalGuide(), issues: [] });
+      }
+      savedPlace.current = account.geography;
+      const accountZip = account.geography?.zip;
+      if (accountZip) setZip((currentZip) => currentZip || accountZip);
+      setIssuesReady(true);
+    })().catch(() => { if (active) setPreferenceNote("Could not load your account preferences."); });
+    return () => { active = false; };
+  }, [signedIn]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE, JSON.stringify({ choices, issues }));
-  }, [choices, issues]);
+    if (!localReady) return;
+    writeLocalGuide({ choices, issues: signedIn ? readLocalGuide().issues : issues });
+  }, [choices, issues, localReady, signedIn]);
+
+  async function chooseIssue(id: string) {
+    if (!issuesReady || savingIssue) return;
+    const next = issues.includes(id) ? issues.filter((issue) => issue !== id) : [...issues, id];
+    if (!signedIn) {
+      setIssues(next);
+      return;
+    }
+    setPreferenceNote(null);
+    setSavingIssue(true);
+    try {
+      setIssues((await updatePreferences({ issues: next })).issues ?? []);
+    } catch {
+      setPreferenceNote("Could not save your issue picks.");
+    } finally {
+      setSavingIssue(false);
+    }
+  }
+
+  async function saveDistrict(district: string, zip: string | null) {
+    if (!signedIn) return;
+    try {
+      const geography = { state: "KY", year: 2026, district, zip };
+      savedPlace.current = (await updatePreferences({ geography })).geography;
+    } catch {
+      setPreferenceNote("Could not save your district.");
+    }
+  }
 
   const previousPage = useRef({ step, raceParam });
   useEffect(() => {
@@ -158,6 +216,7 @@ export function GuideFlow({ races }: { races: GuideRace[]; signedIn: boolean }) 
         return;
       }
       push({ step: "races", zip: entered, district: found, race: null });
+      void saveDistrict(found, entered);
     } finally {
       setBusy(false);
     }
@@ -182,7 +241,8 @@ export function GuideFlow({ races }: { races: GuideRace[]; signedIn: boolean }) 
           setNote(found.message);
           return;
         }
-        push({ step: "races", district: found.district, race: null });
+        push({ step: "races", zip: "", district: found.district, race: null });
+        void saveDistrict(found.district, null);
       },
       () => {
         setBusy(false);
@@ -198,6 +258,7 @@ export function GuideFlow({ races }: { races: GuideRace[]; signedIn: boolean }) 
 
   return (
     <div className="mx-auto w-full max-w-3xl pb-28">
+      {preferenceNote ? <p role="status">{preferenceNote}</p> : null}
       <div className="sticky top-0 z-30 mb-6 border-b border-line bg-paper py-3">
         <p className="mb-2 text-sm font-semibold text-slate-700">Step {stepNumber} of 3</p>
         <p className="ballot-crumbs mb-2">
@@ -305,7 +366,7 @@ export function GuideFlow({ races }: { races: GuideRace[]; signedIn: boolean }) 
             {stanceIssues().map((issue) => {
               const on = issues.includes(issue.id);
               return (
-                <button key={issue.id} type="button" className={`min-h-11 rounded-lg px-4 ${on ? "bg-navy text-white" : "bg-white text-slate-900 ring-1 ring-slate-300"}`} onClick={() => setIssues((currentIssues) => on ? currentIssues.filter((id) => id !== issue.id) : [...currentIssues, issue.id])}>
+                <button key={issue.id} type="button" className={`min-h-11 rounded-lg px-4 ${on ? "bg-navy text-white" : "bg-white text-slate-900 ring-1 ring-slate-300"}`} aria-pressed={on} aria-disabled={!issuesReady || savingIssue} onClick={() => void chooseIssue(issue.id)}>
                   {issue.label}
                 </button>
               );
@@ -400,4 +461,27 @@ function partyTone(party: string): "dem" | "rep" | "other" | "slate" {
   if (/republican/i.test(party)) return "rep";
   if (/write-in|independent|libertarian|kentucky/i.test(party)) return "other";
   return "slate";
+}
+
+function readLocalGuide(): Saved {
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE) ?? "null") as Partial<Saved> | null;
+    return { choices: saved?.choices ?? {}, issues: validIssues(saved?.issues) };
+  } catch {
+    return { choices: {}, issues: [] };
+  }
+}
+
+function writeLocalGuide(saved: Saved) {
+  try { localStorage.setItem(STORAGE, JSON.stringify(saved)); } catch { /* Storage can be disabled. */ }
+}
+
+async function updatePreferences(values: Partial<Preferences> & { seedIssues?: boolean }): Promise<Preferences> {
+  const response = await fetch(withBasePath("/api/v1/me/preferences"), {
+    method: "PUT",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(values),
+  });
+  if (!response.ok) throw new Error("Preferences unavailable");
+  return ((await response.json()) as PreferencesResponse).preferences;
 }

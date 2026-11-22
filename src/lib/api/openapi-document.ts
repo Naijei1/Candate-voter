@@ -1,26 +1,28 @@
 /**
- * OpenAPI 3.0 document for the read API.
+ * OpenAPI 3.0 document for the shared API.
  * `__SERVER_URL__` is replaced with the request origin when the spec is served.
  * Examples use the placeholder YOUR_API_KEY and never a real key.
  */
 export const OPENAPI_DOCUMENT = `openapi: 3.0.3
 info:
-  title: THE VOTE read API
-  version: "1.4.1"
+  title: THE VOTE API
+  version: "1.5.0"
   description: |
     Read-only JSON for federal races, candidates, Form 2 filings, ZIP to
     House district and Senate race lookup, and the FEC electronic Form 2
     ingest watermark stored in DynamoDB \`candate-voter\`.
 
     Party is the affiliation code a filing reported. This API has no scores,
-    rankings, endorsements, or voting advice. It does not accept writes.
+    rankings, endorsements, or voting advice.
     \`/api/v1\` is the keyed read API. \`POST /api/chat\` is a separate
     same-origin browser route. It does not use the API key. It answers from
     these stored records through tools and refuses voting advice. The reply
     is one buffered JSON body. Amplify Hosting compute does not stream it.
 
     HTML pages, including /openapi.yaml, and /llms.txt, are public.
-    Every /api/v1 route requires an API key. POST /api/chat does not.
+    Public /api/v1 reads require an API key. The same-origin ZIP lookup runs
+    in process. Account routes accept a Cognito JWT or web session cookie.
+    Successful /api/v1 responses include the integer version 1.
 servers:
   - url: __SERVER_URL__
     description: This host
@@ -33,7 +35,125 @@ tags:
   - name: freshness
   - name: lookup
   - name: chat
+  - name: account
 paths:
+  /api/v1/me/follows:
+    get:
+      tags: [account]
+      summary: List followed races and candidates
+      security:
+        - cognitoBearer: []
+        - sessionCookie: []
+      responses:
+        "200":
+          description: Account response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FollowList"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+    put:
+      tags: [account]
+      summary: Follow a target
+      security:
+        - cognitoBearer: []
+        - sessionCookie: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FollowTarget"
+      responses:
+        "200":
+          description: Account response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WriteResult"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "409":
+          description: You can follow up to 100 races and candidates.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+    delete:
+      tags: [account]
+      summary: Unfollow a target
+      security:
+        - cognitoBearer: []
+        - sessionCookie: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FollowTarget"
+      responses:
+        "200":
+          description: Account response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WriteResult"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+  /api/v1/me/preferences:
+    get:
+      tags: [account]
+      summary: Read saved geography and issues
+      security:
+        - cognitoBearer: []
+        - sessionCookie: []
+      responses:
+        "200":
+          description: Account response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PreferenceResult"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+    put:
+      tags: [account]
+      summary: Save geography or issues
+      security:
+        - cognitoBearer: []
+        - sessionCookie: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PreferenceInput"
+      responses:
+        "200":
+          description: Account response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PreferenceResult"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+        "400":
+          $ref: "#/components/responses/BadRequest"
   /api/v1/races:
     get:
       tags: [races]
@@ -99,6 +219,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/RaceList"
               example:
+                version: 1
                 cycles: [2026]
                 nextCursor: null
                 races:
@@ -205,6 +326,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Freshness"
               example:
+                version: 1
                 watermark:
                   source: fec-efile-form2
                   lastLoadTimestamp: "2026-10-26 04:12:03"
@@ -273,6 +395,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ZipLookup"
               example:
+                version: 1
                 zip: "40502"
                 year: 2026
                 state: KY
@@ -406,6 +529,16 @@ paths:
                 message: The answer took too long. Try a narrower question.
 components:
   securitySchemes:
+    cognitoBearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Cognito ID or access token for the configured app client.
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: candate_id
+      description: Existing web session. Cookie-authenticated writes require a same-origin Origin header.
     bearerAuth:
       type: http
       scheme: bearer
@@ -462,7 +595,8 @@ components:
       name: cursor
       in: query
       required: false
-      description: \`raceId\` of the last race on the previous page.
+      description: >-
+        \`raceId\` of the last race on the previous page.
       schema:
         type: string
         maxLength: 128
@@ -473,7 +607,7 @@ components:
       description: Five-digit USPS ZIP. A ZIP+4 value uses the first five digits.
       schema:
         type: string
-        pattern: "^\\d{5}(-\\d{4})?$"
+        pattern: '^\\d{5}(-\\d{4})?$'
         example: "40502"
     year:
       name: year
@@ -563,6 +697,93 @@ components:
           example:
             error: unavailable
   schemas:
+    ApiVersion:
+      type: integer
+      enum: [1]
+    FollowTarget:
+      type: object
+      required: [targetType, targetId]
+      properties:
+        targetType:
+          type: string
+          enum: [race, candidate, jurisdiction, measure, issue]
+        targetId:
+          type: string
+          maxLength: 81
+    FollowList:
+      type: object
+      required: [version, follows]
+      properties:
+        version:
+          $ref: "#/components/schemas/ApiVersion"
+        follows:
+          type: array
+          items:
+            allOf:
+              - $ref: "#/components/schemas/FollowTarget"
+              - type: object
+                required: [userId, createdAt]
+                properties:
+                  userId:
+                    type: string
+                  createdAt:
+                    type: string
+                    format: date-time
+    WriteResult:
+      type: object
+      required: [version, ok]
+      properties:
+        version:
+          $ref: "#/components/schemas/ApiVersion"
+        ok:
+          type: boolean
+          enum: [true]
+    Geography:
+      type: object
+      nullable: true
+      properties:
+        state:
+          type: string
+          enum: [KY]
+        year:
+          type: integer
+          nullable: true
+        zip:
+          type: string
+          nullable: true
+        district:
+          type: string
+          nullable: true
+    PreferenceInput:
+      type: object
+      description: Supply geography, issues, or both. Null geography clears the saved place.
+      properties:
+        geography:
+          $ref: "#/components/schemas/Geography"
+        issues:
+          type: array
+          items:
+            type: string
+        seedIssues:
+          type: boolean
+          description: Save issue picks only when the account has no saved picks.
+    PreferenceResult:
+      type: object
+      required: [version, preferences]
+      properties:
+        version:
+          $ref: "#/components/schemas/ApiVersion"
+        preferences:
+          type: object
+          required: [geography, issues]
+          properties:
+            geography:
+              $ref: "#/components/schemas/Geography"
+            issues:
+              type: array
+              nullable: true
+              items:
+                type: string
     Error:
       type: object
       required: [error]
@@ -859,11 +1080,13 @@ components:
           description: ISO-8601 time this system last wrote the cursor.
     RaceList:
       type: object
-      required: [cycles, races, nextCursor, refreshedAt]
+      required: [version, cycles, races, nextCursor, refreshedAt]
       description: |
         Race index. The same schema is the state payload when \`state\` is set.
         \`refreshedAt\` is the page-level data-refreshed value.
       properties:
+        version:
+          $ref: "#/components/schemas/ApiVersion"
         cycles:
           type: array
           items:
@@ -887,8 +1110,10 @@ components:
           $ref: "#/components/schemas/Coverage"
     RaceDetail:
       type: object
-      required: [race, candidates, refreshedAt]
+      required: [version, race, candidates, refreshedAt]
       properties:
+        version:
+          $ref: "#/components/schemas/ApiVersion"
         race:
           $ref: "#/components/schemas/Race"
         refreshedAt:
@@ -908,8 +1133,10 @@ components:
           $ref: "#/components/schemas/Coverage"
     CandidateDetail:
       type: object
-      required: [candidate, race]
+      required: [version, candidate, race]
       properties:
+        version:
+          $ref: "#/components/schemas/ApiVersion"
         candidate:
           $ref: "#/components/schemas/Candidate"
         race:
@@ -918,8 +1145,10 @@ components:
             - $ref: "#/components/schemas/Race"
     FilingList:
       type: object
-      required: [candidate, filings]
+      required: [version, candidate, filings]
       properties:
+        version:
+          $ref: "#/components/schemas/ApiVersion"
         candidate:
           $ref: "#/components/schemas/Candidate"
         filings:
@@ -928,8 +1157,10 @@ components:
             $ref: "#/components/schemas/Filing"
     Freshness:
       type: object
-      required: [watermark]
+      required: [version, watermark]
       properties:
+        version:
+          $ref: "#/components/schemas/ApiVersion"
         watermark:
           nullable: true
           allOf:
@@ -1099,8 +1330,10 @@ components:
           type: string
     ZipLookup:
       type: object
-      required: [zip, year, state, districts, senateRaceId, raceIds, races]
+      required: [version, zip, year, state, districts, senateRaceId, raceIds, races]
       properties:
+        version:
+          $ref: "#/components/schemas/ApiVersion"
         zip:
           type: string
           description: Five-digit ZIP that was looked up.

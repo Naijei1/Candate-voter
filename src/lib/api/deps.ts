@@ -2,6 +2,7 @@ import {
   createDynamoRepository,
   type VoterRepository,
 } from "../data/repository";
+import { readRacePartition, readWatermark } from "../data/read";
 import type { ZipDistrictHit } from "../geo/zip-districts";
 
 export type ApiRepository = Pick<
@@ -31,6 +32,16 @@ export function liveApiDeps(
 ): ApiDeps {
   return {
     env,
-    repository: () => createDynamoRepository(),
+    repository: () => {
+      const repo = createDynamoRepository();
+      return {
+        listRacesByCycle: readRacePartition,
+        getRace: repo.getRace.bind(repo),
+        listCandidatesForRace: repo.listCandidatesForRace.bind(repo),
+        getCandidate: repo.getCandidate.bind(repo),
+        listFilingsForCandidate: repo.listFilingsForCandidate.bind(repo),
+        getWatermark: readWatermark,
+      };
+    },
   };
 }

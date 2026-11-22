@@ -53,7 +53,7 @@ export function HeaderFrame({
                 {item.label}
               </Link>
             ))}
-            {signedIn ? <Link href="/account">Saved races</Link> : <Link href="/sign-in">Sign in</Link>}
+            {signedIn ? <Link href="/account">My watchlist</Link> : <Link href="/sign-in">Sign in</Link>}
           </div>
         </details>
       </div>

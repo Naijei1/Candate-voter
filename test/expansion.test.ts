@@ -55,9 +55,12 @@ test("news feed choices and issue follows still work", () => {
   assert.equal(parseFollowType("issue"), "issue");
   const store = readFileSync("src/lib/users/store.ts", "utf8");
   assert.match(store, /sk: "FEED"/);
-  const news = readFileSync("src/components/site/NewsFeed.tsx", "utf8");
-  assert.match(news, /separate from/);
-  assert.match(news, /Kentucky Lantern feed/);
+  const feed = readFileSync("src/app/api/news/feed/route.ts", "utf8");
+  assert.match(feed, /getNewsFeed/);
+  assert.match(feed, /saveNewsFeed/);
+  const guide = readFileSync("src/components/guide/GuideFlow.tsx", "utf8");
+  assert.match(guide, /seedIssues: true/);
+  assert.match(guide, /\/api\/v1\/me\/preferences/);
   const judicial = readFileSync("src/app/states/ky/page.tsx", "utf8");
   assert.doesNotMatch(judicial, /LocalTemplate|<nav className="filters"/);
   assert.equal(judicial.includes("Jane Doe"), false);

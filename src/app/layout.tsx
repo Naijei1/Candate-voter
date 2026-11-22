@@ -7,7 +7,9 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { GoatCounter } from "@/components/site/GoatCounter";
 import { MobileNavigation } from "@/components/site/MobileNavigation";
+import { ServiceWorker } from "@/components/site/ServiceWorker";
 import { PlaceSync } from "@/components/site/PlaceSync";
+import { currentUser } from "@/lib/auth/session";
 import { brand } from "@/content/brand";
 import { cyclesFromEnv } from "@/lib/data/cycles";
 import { withBasePath } from "@/lib/base-path";
@@ -49,6 +51,7 @@ export const metadata: Metadata = {
   },
   description: brand.description,
   applicationName: brand.name,
+  icons: { apple: [{ url: withBasePath("/icons/apple-touch-icon.png"), sizes: "180x180" }] },
   openGraph: {
     type: "website",
     siteName: brand.name,
@@ -74,6 +77,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${sourceSans.variable} ${newsreader.variable} ${display.variable}`}>
+        <ServiceWorker />
         <Suspense fallback={null}>
           <GoatCounter />
         </Suspense>
@@ -89,9 +93,13 @@ export default function RootLayout({
             {children}
           </main>
           <SiteFooter />
-          <MobileNavigation />
+          <WatchlistNavigation />
         </AskProvider>
       </body>
     </html>
   );
+}
+
+async function WatchlistNavigation() {
+  return <MobileNavigation signedIn={Boolean(await currentUser())} />;
 }

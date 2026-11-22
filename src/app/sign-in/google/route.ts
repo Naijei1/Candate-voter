@@ -1,5 +1,7 @@
 import { originFromRequest } from "@/lib/api/public-origin";
 import { cognitoSettings } from "@/lib/auth/cognito";
+import { followReturnPath } from "@/lib/auth/return-path";
+import { withBasePath } from "@/lib/base-path";
 import { setSessionCookies } from "@/lib/auth/session";
 
 export const dynamic = "force-dynamic";
@@ -9,7 +11,8 @@ export async function GET(request: Request): Promise<Response> {
   const origin = originFromRequest(request);
   const settings = cognitoSettings();
   const domain = process.env.COGNITO_DOMAIN?.trim().replace(/^https:\/\//, "") ?? "";
-  const code = new URL(request.url).searchParams.get("code");
+  const query = new URL(request.url).searchParams;
+  const code = query.get("code");
   const back = new URL("/sign-in", origin);
   if (!settings || !domain || !code || process.env.COGNITO_GOOGLE !== "true") {
     return Response.redirect(back);
@@ -30,7 +33,7 @@ export async function GET(request: Request): Promise<Response> {
     const payload = (await tokenResponse.json()) as { id_token?: unknown; refresh_token?: unknown };
     if (!tokenResponse.ok || typeof payload.id_token !== "string" || typeof payload.refresh_token !== "string") return Response.redirect(back);
     await setSessionCookies(payload.id_token, payload.refresh_token);
-    return Response.redirect(new URL("/", origin));
+    return Response.redirect(new URL(withBasePath(followReturnPath(query.get("state")) ?? "/"), origin));
   } catch {
     return Response.redirect(back);
   }

@@ -11,6 +11,9 @@ const basePath = normalizeBasePath(process.env.NEXT_PUBLIC_BASE_PATH);
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  outputFileTracingIncludes: {
+    "/api/alerts/dispatch": ["./data/ky-certified-results.json"],
+  },
   async redirects() {
     return [
       ["/states", "/states/ky"],
@@ -69,6 +72,7 @@ const nextConfig: NextConfig = {
     "@aws-sdk/client-bedrock-runtime",
     "@aws-sdk/client-cognito-identity-provider",
     "@aws-sdk/client-s3",
+    "@aws-sdk/client-sns",
     "@aws-sdk/lib-dynamodb",
     "@aws-sdk/s3-request-presigner",
     "aws-jwt-verify",

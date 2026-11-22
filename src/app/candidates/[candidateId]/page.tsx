@@ -121,6 +121,7 @@ export default async function CandidatePage({ params }: PageProps) {
                 Compare
               </Link>
             ) : null}
+            <FollowControl signedIn={Boolean(await currentUser())} what="candidate" targetId={ballot?.person.fecCandidateId ?? (loaded.ok ? loaded.candidate.candidateId : id)} returnPath={`/candidates/${id}`} />
             <Link className="btn btn-ghost" href="/ballot">
               Your ballot
             </Link>
@@ -191,7 +192,6 @@ export default async function CandidatePage({ params }: PageProps) {
       </> : null}
       <details>
         <summary>More details</summary>
-        <FollowControl signedIn={Boolean(await currentUser())} what="candidate" targetId={ballot?.person.fecCandidateId ?? (loaded.ok ? loaded.candidate.candidateId : id)} />
 
       {hasVerified ? <>
       <h2>Official filings</h2>
