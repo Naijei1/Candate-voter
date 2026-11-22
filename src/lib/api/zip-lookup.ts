@@ -5,20 +5,7 @@ import { buildRaceId } from "../fec/map-form2";
 import type { Race } from "../types";
 import type { ZipDistrictHit } from "../geo/zip-districts";
 
-export type ZipDistrictRow = {
-  district: string;
-  raceId: string;
-};
-
-export type ZipLookupBody = {
-  zip: string;
-  year: number;
-  state: string;
-  districts: ZipDistrictRow[];
-  senateRaceId: string | null;
-  raceIds: string[];
-  races: Race[];
-};
+import { versioned, type ZipLookupResponse } from "./v1-types";
 
 /**
  * Geography ids are always returned. `races` keeps only rows stored for this
@@ -29,7 +16,7 @@ export function zipLookupBody(input: {
   year: number;
   hit: ZipDistrictHit;
   races: readonly Race[];
-}): ZipLookupBody {
+}): ZipLookupResponse {
   const senateRaceId =
     HOUSE_SEATS[input.hit.state] != null
       ? buildRaceId({
@@ -53,7 +40,7 @@ export function zipLookupBody(input: {
     ...districts.map((row) => row.raceId),
   ];
   const byId = new Map(input.races.map((race) => [race.raceId, race]));
-  return {
+  return versioned({
     zip: input.zip,
     year: input.year,
     state: input.hit.state,
@@ -65,5 +52,5 @@ export function zipLookupBody(input: {
       if (!race || !raceMatchesCycle(race, input.year)) return [];
       return [signalRace(race)];
     }),
-  };
+  });
 }

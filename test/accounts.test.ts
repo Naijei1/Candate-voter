@@ -14,17 +14,17 @@ test("follow keys and password validation stay explicit", () => {
   assert.equal(passwordError("Longenough12"), null);
 });
 
-test("saved races retain follows after email preferences are removed", () => {
+test("watchlist can remove follows and separately update email alerts", () => {
   const panel = readFileSync("src/components/site/AccountPanel.tsx", "utf8");
-  assert.match(panel, /fetch\(withBasePath\("\/api\/follows"\)/);
-  assert.doesNotMatch(panel, /Email frequency|\/api\/alerts/);
+  assert.match(panel, /fetch\(withBasePath\("\/api\/v1\/me\/follows"\)/);
+  assert.match(panel, /fetch\(withBasePath\("\/api\/alerts\/email"\)/);
   assert.equal(existsSync("src/app/api/alerts/route.ts"), false);
 });
 
 test("follow controls receive server sign-in state and guard signed-out requests", () => {
   const follow = readFileSync("src/components/site/FollowControl.tsx", "utf8");
-  assert.match(follow, /if \(!signedIn\) return;[\s\S]*?fetch\(withBasePath\("\/api\/follows"\)/);
-  assert.match(follow, /async function onClick\(\) \{\s*if \(!signedIn\)/);
+  assert.match(follow, /if \(!signedIn\) return;[\s\S]*?fetch\(endpoint\)/);
+  assert.match(follow, /if \(!signedIn \|\| expired\) return <Link[^>]*href=\{signIn\}/);
   for (const page of ["states/ky", "races/[raceId]", "candidates/[candidateId]"]) {
     assert.match(readFileSync(`src/app/${page}/page.tsx`, "utf8"), /<FollowControl signedIn=\{Boolean\(await currentUser\(\)\)\}/);
   }

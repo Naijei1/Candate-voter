@@ -1,6 +1,6 @@
 import { currentUser } from "@/lib/auth/session";
-import { parseFollowId, parseFollowType } from "@/lib/users/follows";
-import { deleteFollow, listFollows, saveFollow } from "@/lib/users/store";
+import { changeFollow } from "@/lib/users/follow-actions";
+import { listFollows } from "@/lib/users/store";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -29,18 +29,9 @@ async function writeFollow(request: Request, mode: "save" | "delete"): Promise<R
   const user = await currentUser();
   if (!user) return Response.json({ reason: "sign_in" }, { status: 401 });
   const body = await readBody(request);
-  const targetType = parseFollowType(body?.targetType);
-  const targetId = parseFollowId(body?.targetId);
-  if (!targetType || !targetId) return Response.json({ reason: "bad_request" }, { status: 400 });
   try {
-    if (mode === "delete") await deleteFollow(user.sub, targetType, targetId);
-    else {
-      await saveFollow({
-        userId: user.sub,
-        targetType,
-        targetId,
-        createdAt: new Date().toISOString(),
-      });
+    if (!await changeFollow(user.sub, body, mode === "delete")) {
+      return Response.json({ reason: "bad_request" }, { status: 400 });
     }
   } catch (error) {
     console.error("follow write failed:", error instanceof Error ? error.name : "Error");

@@ -80,6 +80,7 @@ export default async function RacePage({ params }: PageProps) {
               <Link className="btn btn-navy" href={`/races/${race.raceId}/compare`}>
                 Compare candidates
               </Link>
+              <FollowControl signedIn={Boolean(await currentUser())} what="race" targetId={race.raceId} returnPath={`/races/${race.raceId}`} />
               <Link className="btn btn-ghost" href="/ballot">
                 Your ballot
               </Link>
@@ -154,7 +155,7 @@ export default async function RacePage({ params }: PageProps) {
           <Link className="btn btn-navy" href={`/races/${race.raceId}/compare`}>
             Compare candidates
           </Link>
-          <FollowControl signedIn={Boolean(await currentUser())} what="race" targetId={race.raceId} />
+          <FollowControl signedIn={Boolean(await currentUser())} what="race" targetId={race.raceId} returnPath={`/races/${race.raceId}`} />
         </div>
           </>
         )}

@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { withBasePath } from "@/lib/base-path";
 
 type Mode = "sign-in" | "create" | "confirm";
 
-export function SignInForm({ configured, googleUrl = null }: { configured: boolean; googleUrl?: string | null }) {
+export function SignInForm({ configured, googleUrl = null, returnTo }: { configured: boolean; googleUrl?: string | null; returnTo?: string | null }) {
   const [mode, setMode] = useState<Mode>("sign-in");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -61,7 +62,7 @@ export function SignInForm({ configured, googleUrl = null }: { configured: boole
         setMessage(body.message ?? "Email or password is incorrect.");
         return;
       }
-      window.location.assign("/account");
+      window.location.assign(withBasePath(returnTo ?? "/account"));
     } catch {
       setMessage("Sign-in is unavailable.");
     } finally {

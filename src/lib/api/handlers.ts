@@ -6,9 +6,7 @@ import {
 } from "../data/coverage";
 import { withCrossContestFilings } from "../data/cross-filings";
 import { raceMatchesCycle } from "../data/cycle-match";
-import { appendExpectedRaces } from "../data/expected-races";
-import { collapseIdenticalFilings } from "../data/filings";
-import { logReadError } from "../data/read";
+import { loadCandidateFilings, loadCleanCandidate, loadCycleRaces, logReadError } from "../data/read";
 import {
   loadPublicCandidates,
   loadVisibleRace,
@@ -22,6 +20,7 @@ import { censusZipDistricts, ZipLookupError } from "../geo/zip-districts";
 import { json, rejectUnauthorized } from "./http";
 import { parseRaceListQuery, type RaceListQuery } from "./race-query";
 import { zipLookupBody } from "./zip-lookup";
+import { versioned, type CandidateResponse, type FilingsResponse, type FreshnessResponse, type RaceListResponse, type RaceResponse } from "./v1-types";
 import { parseZipLookupQuery } from "./zip-query";
 
 function notFound(): Response {
@@ -69,19 +68,10 @@ export async function getRaces(request: Request, deps: ApiDeps): Promise<Respons
 
   try {
     const repo = deps.repository();
-    const groups = await Promise.all(
-      parsed.query.cycles.map((cycle) => repo.listRacesByCycle(cycle)),
-    );
-    const stored = visibleRaces(groups.flat()).filter((race) =>
-      parsed.query.cycles.some((cycle) => raceMatchesCycle(race, cycle)),
-    );
-    const listed = appendExpectedRaces(stored, parsed.query.cycles, {
-      state: parsed.query.state,
-      office: parsed.query.office,
-    }).map(signalRace);
+    const listed = (await Promise.all(parsed.query.cycles.map((cycle) => loadCycleRaces(repo, cycle)))).flat();
     const page = pageRaces(listed, parsed.query);
     const refreshedAt = await refreshedAtFrom(repo);
-    return json({
+    return json(versioned<Omit<RaceListResponse, "version">>({
       cycles: parsed.query.cycles,
       races: page.races,
       nextCursor: page.nextCursor,
@@ -97,7 +87,7 @@ export async function getRaces(request: Request, deps: ApiDeps): Promise<Respons
           parsed.query.state,
         ),
       },
-    });
+    }));
   } catch (error) {
     logReadError("listRacesByCycle", error);
     return unavailable();
@@ -130,7 +120,7 @@ export async function getRace(
             race.cycle == null ? false : raceMatchesCycle(item, race.cycle),
           );
     const refreshedAt = await refreshedAtFrom(repo);
-    return json({
+    return json(versioned<Omit<RaceResponse, "version">>({
       race: signaled,
       candidates,
       refreshedAt,
@@ -145,7 +135,7 @@ export async function getRace(
           race.state,
         ),
       },
-    });
+    }));
   } catch (error) {
     logReadError("getRace", error);
     return unavailable();
@@ -182,12 +172,12 @@ export async function getCandidateFilings(
 
   try {
     const repo = deps.repository();
-    const candidate = await repo.getCandidate(candidateId);
+    const candidate = await loadCleanCandidate(repo, candidateId);
     if (!candidate) return notFound();
     const presented = presentCandidate(candidate);
     if (!presented) return notFound();
-    const filings = collapseIdenticalFilings(await repo.listFilingsForCandidate(candidateId));
-    return json({ candidate: presented, filings });
+    const filings = await loadCandidateFilings(repo, candidateId);
+    return json(versioned<Omit<FilingsResponse, "version">>({ candidate: presented, filings }));
   } catch (error) {
     logReadError("listFilingsForCandidate", error);
     return unavailable();
@@ -254,8 +244,8 @@ export async function getFreshness(
   }
 }
 
-async function loadCandidateWithRace(repo: ApiRepository, candidateId: string) {
-  const candidate = await repo.getCandidate(candidateId);
+async function loadCandidateWithRace(repo: ApiRepository, candidateId: string): Promise<CandidateResponse | null> {
+  const candidate = await loadCleanCandidate(repo, candidateId);
   if (!candidate) return null;
   const presented = presentCandidate(candidate);
   if (!presented) return null;
@@ -269,7 +259,7 @@ async function loadCandidateWithRace(repo: ApiRepository, candidateId: string) {
     ) ?? presented;
   const linked = race ? await withCrossContestFilings(repo, [group], race) : [group];
   const person = linked[0] ?? group;
-  return {
+  return versioned({
     candidate: {
       ...presented,
       filings: person.filings,
@@ -277,17 +267,17 @@ async function loadCandidateWithRace(repo: ApiRepository, candidateId: string) {
       multiFiling: person.multiFiling,
     },
     race: race ? signalRace(race) : null,
-  };
+  });
 }
 
-function freshnessBody(watermark: IngestWatermark | null) {
-  return {
+function freshnessBody(watermark: IngestWatermark | null): FreshnessResponse {
+  return versioned({
     watermark,
     scope: FORM2_SCOPE,
     filingsSoFarOnly: true as const,
     scopeNote: FORM2_SCOPE_NOTE,
     refreshedAt: watermark?.updatedAt ?? null,
-  };
+  });
 }
 
 function zipBadRequest(message: string): Response {
