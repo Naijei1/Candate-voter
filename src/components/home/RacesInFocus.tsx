@@ -1,3 +1,4 @@
+import Link from "next/link";
 import Image from "next/image";
 import { thumbnail } from "@/lib/site/thumbnail";
 import stories from "../../../data/ky-races-in-focus.json";
@@ -18,7 +19,7 @@ export function RacesInFocus() {
                 <div className="focus-story">
                   {photo && <Image unoptimized src={thumbnail(photo.src)} width="88" height="110" alt={story.person} loading="lazy" />}
                   <div>
-                    <h3><a href={`/races/${story.raceId}`}>{raceCardTitle(story.raceId)}</a></h3>
+                    <h3><Link href={`/races/${story.raceId}`}>{raceCardTitle(story.raceId)}</Link></h3>
                     <p>{story.reason}</p>
                   </div>
                 </div>

@@ -77,7 +77,7 @@ export default function CountyMap() {
           <a className="county-clerk" href={county.clerkUrl}>{county.clerk} <span aria-hidden="true">↗</span></a>
           <p>U.S. House</p>
           <div className="county-races">{county.districts.map((code) => (
-            <a key={code} href={`/races/2026-house-KY-${code}`}>District {Number(code)} <span aria-hidden="true">→</span></a>
+            <a key={code} href={withBasePath(`/races/2026-house-KY-${code}`)}>District {Number(code)} <span aria-hidden="true">→</span></a>
           ))}</div>
         </div>
       </div>
