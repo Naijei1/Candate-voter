@@ -2220,7 +2220,45 @@ td {
 }
 
 .compare-board, .compare-grid > .person-card { min-width: 0; overflow-wrap: anywhere; }
-.compare-board .tabs .btn { white-space: normal; }
+.compare-selection {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 16px;
+  min-inline-size: 0;
+  margin: 0 0 12px;
+  padding: 0;
+  border: 0;
+}
+.compare-selection legend { font-weight: 600; }
+.compare-selection label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-block-size: 44px;
+  cursor: pointer;
+}
+.compare-selection input {
+  flex: none;
+  inline-size: 1.25em;
+  block-size: 1.25em;
+  margin: 0;
+  accent-color: #a8123e;
+}
+.compare-board .tabs {
+  flex-wrap: nowrap;
+  max-inline-size: 100%;
+  overflow-x: auto;
+  padding: 4px;
+}
+.compare-board .tabs .btn {
+  flex: none;
+  white-space: nowrap;
+}
+.compare-board [role="tab"][aria-selected="true"] {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+#report-an-error > summary { min-block-size: 44px; width: fit-content; }
 .compare-layout { grid-template-columns: minmax(0, 1fr) minmax(16rem, 22rem); }
 .compare-credit { margin-top: auto; font-size: 0.75rem; }
 

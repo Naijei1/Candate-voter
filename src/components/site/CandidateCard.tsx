@@ -2,6 +2,8 @@ import { thumbnail } from "@/lib/site/thumbnail";
 import Link from "next/link";
 import { PersonMark } from "@/components/site/PersonMark";
 import { partyBadge } from "@/components/site/PersonFace";
+import { CandidateElectionStatus } from "@/components/site/CandidateElectionStatus";
+import type { ElectionStatus } from "@/lib/site/certified-results";
 
 export type CardPerson = {
   id: string;
@@ -12,6 +14,9 @@ export type CardPerson = {
   openSeat: boolean;
   writeIn: boolean;
   photo: string | null;
+  summary?: string | null;
+  uncontested?: boolean;
+  electionStatus?: ElectionStatus;
 };
 
 /**
@@ -41,8 +46,14 @@ export function CandidateCard({ person }: { person: CardPerson }) {
         <span className="cand-body">
           <span className={`cand-party ${badge.tone}`}>{badge.label}</span>
           <span className="cand-name">{person.name}</span>
+          {person.summary ? <span className="cand-office">{person.summary}</span> : null}
           <span className="cand-office">{person.office}</span>
           {label ? <span className={`cand-status${person.holdsOffice ? " is-incumbent" : ""}`}>{label}</span> : null}
+          {person.uncontested ? <span className="cand-status">Uncontested</span> : null}
+          <CandidateElectionStatus status={person.electionStatus} />
+          {person.electionStatus?.primaryVotes !== undefined ? (
+            <span className="cand-office">{person.electionStatus.primaryVotes.toLocaleString("en-US")} certified primary votes</span>
+          ) : null}
           <span className="cand-cta">
             View profile <span aria-hidden="true">→</span>
           </span>

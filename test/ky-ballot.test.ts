@@ -3,8 +3,9 @@ import { existsSync, readFileSync } from "node:fs";
 import test from "node:test";
 import { KY_BALLOT_SOURCES, kyBallot, kyBallotSeed, kyPerson } from "../src/lib/site/ky-ballot";
 import { kentuckyEasternPollsClosed, kentuckyPollsClosed, kentuckyResultsPhase } from "../src/lib/site/ky-results";
-import { linkLabel, profileFor } from "../src/lib/site/profiles";
+import { careerTimeline, linkLabel, profileFor } from "../src/lib/site/profiles";
 import { matchScore, portraitFor, stanceIssues, stancesFor } from "../src/lib/site/stances";
+import { kyStatewide } from "../src/lib/site/ky-statewide";
 
 test("Kentucky November ballot matches the Secretary of State filing list", () => {
   const senate = kyBallot("2026-senate-KY");
@@ -74,14 +75,45 @@ test("only sourced stances count, and missing candidates are not enough info", (
   for (const id of ["S6KY00286", "H6KY01110", "H8KY02031", "H2KY03206", "H0KY05015"]) {
     assert.equal(existsSync(`public${portraitFor(id)?.src}`), true, id);
   }
-  assert.equal(portraitFor("H6KY01169")?.credit, "Photo: campaign website");
+  assert.equal(portraitFor("H6KY01169")?.license, "CC0");
+  assert.match(portraitFor("H6KY01169")?.sourceUrl ?? "", /^https:\/\/commons\.wikimedia\.org\//);
+  assert.equal(portraitFor("H6KY02068")?.credit, "Photo: campaign website");
   assert.equal(portraitFor("S6KY00377"), null);
   assert.match(portraitFor("S6KY00385")?.sourceUrl ?? "", /^https:\/\/commons\.wikimedia\.org\//);
   assert.equal(profileFor("H6KY01169").website?.url, "https://williamsforky.com");
   assert.equal(linkLabel(profileFor("H6KY01110").website!), "Official site");
   assert.equal(profileFor("H8KY02106").votes.length, 0);
-  assert.equal(profileFor("H6KY01110").votes[0]?.vote, "Yes");
+  assert.equal(profileFor("H6KY01110").votes[0]?.vote, "Yea");
   assert.equal(profileFor("H6KY06184").website, null);
+});
+
+test("Kentucky profile records cite verified results and a common House roll-call list", () => {
+  const barr = profileFor("S6KY00286");
+  const booker = profileFor("S6KY00385");
+  const primary = booker.results.find((result) => result.year === 2020 && result.election === "Primary");
+  assert.equal(primary?.outcome, "Lost");
+  assert.equal(primary?.votes, 231888);
+  assert.equal(primary?.totalVotes, 544062);
+  assert.ok(careerTimeline(booker).some((row) => row.startYear === 2020 && row.text.startsWith("Lost")));
+  assert.ok(barr.education.some((row) => row.sourceUrl.startsWith("https://barr.house.gov/")));
+  assert.ok(barr.social.some((row) => row.kind === "office"));
+  assert.ok(barr.social.some((row) => row.kind === "campaign"));
+
+  assert.equal(barr.votes.length, 10);
+  assert.deepEqual([...new Set(barr.votes.map((vote) => vote.date.slice(0, 4)))], ["2026", "2025"]);
+  for (const id of ["H6KY01110", "H8KY02031", "H2KY03206", "H0KY05015"]) {
+    assert.deepEqual(profileFor(id).votes.map((vote) => vote.sourceUrl), barr.votes.map((vote) => vote.sourceUrl));
+  }
+  assert.ok(barr.votes.every((vote) => vote.title && vote.sourceDate && /\/roll\d+\.xml$/.test(vote.sourceUrl)));
+});
+
+test("statewide portraits have reusable files, thumbnails and source credits", () => {
+  for (const person of kyStatewide().officers) {
+    assert.ok(person.photo?.sourceUrl.startsWith("https://commons.wikimedia.org/"), person.name);
+    assert.ok(person.photo.credit && person.photo.license, person.name);
+    assert.ok(existsSync(`public${person.photo.src}`), person.name);
+    assert.ok(existsSync(`public/photos/ky/sm/${person.id}.webp`), person.name);
+  }
 });
 
 test("Kentucky results stay closed until 6 p.m. Central", () => {

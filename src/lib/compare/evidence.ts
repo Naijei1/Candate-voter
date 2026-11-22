@@ -87,7 +87,7 @@ export function compareBasis(raceId: string): CompareBasis | null {
         personName: person.name,
         kind: "vote",
         issue: null,
-        text: `Voted ${vote.vote} on ${vote.bill}.`,
+        text: `Voted ${vote.vote} on ${vote.bill} (${vote.title}).`,
         sourceName: vote.sourceName,
         sourceUrl: vote.sourceUrl,
         sourceDate: vote.date,

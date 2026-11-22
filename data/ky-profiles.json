@@ -1,6 +1,7 @@
 {
-  "checkedOn": "2026-11-03",
-  "note": "Short restatements only. Empty website, bio, endorsement, or vote lists mean nothing sourced was stored.",
+  "checkedOn": "2026-11-22",
+  "voteSelection": "Recent House passages that became law, 2025–26",
+  "note": "Sourced campaign biographies, offices, prior elections, social links, endorsements and official roll calls. Dates on new records are retrieval dates.",
   "candidates": {
     "S6KY00286": {
       "website": {
@@ -19,11 +20,376 @@
       "endorsements": [],
       "votes": [
         {
-          "bill": "H.R. 9340, Ratepayer Protection Act",
+          "bill": "S. 2403",
+          "title": "Retire through Ownership Act",
           "date": "2026-09-16",
-          "vote": "Yes",
-          "sourceName": "Office of the Clerk, House roll call 312",
-          "sourceUrl": "https://clerk.house.gov/Votes/2026312"
+          "roll": 314,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/evs/2026/roll314.xml",
+          "sourceDate": "2026-11-22",
+          "lawUrl": "https://www.govinfo.gov/bulkdata/PLAW/119/public/PLAW-119publ124.xml",
+          "lawSigned": "2026-10-15",
+          "vote": "Yea"
+        },
+        {
+          "bill": "S. 32",
+          "title": "Local Access to Courts Act",
+          "date": "2026-08-31",
+          "roll": 285,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/evs/2026/roll285.xml",
+          "sourceDate": "2026-11-22",
+          "lawUrl": "https://www.govinfo.gov/bulkdata/PLAW/119/public/PLAW-119publ109.xml",
+          "lawSigned": "2026-09-16",
+          "vote": "Not Voting"
+        },
+        {
+          "bill": "S. 307",
+          "title": "Prison Staff Safety Enhancement Act",
+          "date": "2026-08-31",
+          "roll": 284,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/evs/2026/roll284.xml",
+          "sourceDate": "2026-11-22",
+          "lawUrl": "https://www.govinfo.gov/bulkdata/PLAW/119/public/PLAW-119publ110.xml",
+          "lawSigned": "2026-09-16",
+          "vote": "Not Voting"
+        },
+        {
+          "bill": "S. 629",
+          "title": "Emergency Conservation Program Improvement Act",
+          "date": "2026-06-23",
+          "roll": 223,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/evs/2026/roll223.xml",
+          "sourceDate": "2026-11-22",
+          "lawUrl": "https://www.govinfo.gov/bulkdata/PLAW/119/public/PLAW-119publ102.xml",
+          "lawSigned": "2026-07-12",
+          "vote": "Yea"
+        },
+        {
+          "bill": "S. 2",
+          "title": "Secure America Act",
+          "date": "2026-06-09",
+          "roll": 214,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/evs/2026/roll214.xml",
+          "sourceDate": "2026-11-22",
+          "lawUrl": "https://www.govinfo.gov/bulkdata/PLAW/119/public/PLAW-119publ98.xml",
+          "lawSigned": "2026-06-10",
+          "vote": "Aye"
+        },
+        {
+          "bill": "S. 284",
+          "title": "Congressional Award Program Reauthorization Act",
+          "date": "2025-12-15",
+          "roll": 335,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/evs/2025/roll335.xml",
+          "sourceDate": "2026-11-22",
+          "lawUrl": "https://www.govinfo.gov/bulkdata/PLAW/119/public/PLAW-119publ66.xml",
+          "lawSigned": "2025-12-26",
+          "vote": "Not Voting"
+        },
+        {
+          "bill": "S. 1071",
+          "title": "To require the Secretary of Veterans Affairs to disinter the remains of Fernando V. Cota from Fort Sam Houston National Cemetery, Texas, and for other purposes",
+          "date": "2025-12-10",
+          "roll": 320,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/evs/2025/roll320.xml",
+          "sourceDate": "2026-11-22",
+          "lawUrl": "https://www.govinfo.gov/bulkdata/PLAW/119/public/PLAW-119publ60.xml",
+          "lawSigned": "2025-12-18",
+          "vote": "Yea"
+        },
+        {
+          "bill": "S. 356",
+          "title": "Secure Rural Schools Reauthorization Act",
+          "date": "2025-12-09",
+          "roll": 315,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/evs/2025/roll315.xml",
+          "sourceDate": "2026-11-22",
+          "lawUrl": "https://www.govinfo.gov/bulkdata/PLAW/119/public/PLAW-119publ58.xml",
+          "lawSigned": "2025-12-18",
+          "vote": "Not Voting"
+        },
+        {
+          "bill": "S.J.Res. 80",
+          "title": "Providing for congressional disapproval under chapter 8 of title 5, United States Code, of the rule submitted by the Bureau of Land Management relating to “National Petroleum Reserve in Alaska Integrated Activity Plan Record of Decision”.",
+          "date": "2025-11-18",
+          "roll": 296,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/evs/2025/roll296.xml",
+          "sourceDate": "2026-11-22",
+          "lawUrl": "https://www.govinfo.gov/bulkdata/PLAW/119/public/PLAW-119publ47.xml",
+          "lawSigned": "2025-12-05",
+          "vote": "Yea"
+        },
+        {
+          "bill": "H.J.Res. 131",
+          "title": "Providing for congressional disapproval under chapter 8 of title 5, United States Code, of the rule submitted by the Bureau of Land Management relating to “Coastal Plain Oil and Gas Leasing Program Record of Decision”",
+          "date": "2025-11-18",
+          "roll": 295,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/evs/2025/roll295.xml",
+          "sourceDate": "2026-11-22",
+          "lawUrl": "https://www.govinfo.gov/bulkdata/PLAW/119/public/PLAW-119publ52.xml",
+          "lawSigned": "2025-12-11",
+          "vote": "Yea"
+        }
+      ],
+      "career": [
+        {
+          "text": "U.S. representative · Kentucky District 6",
+          "startYear": 2013,
+          "sourceName": "Congress Legislators",
+          "sourceUrl": "https://unitedstates.github.io/congress-legislators/legislators-current.json",
+          "sourceDate": "2026-11-22",
+          "endYear": 2027
+        },
+        {
+          "text": "Candidate for U.S. Senate",
+          "startYear": 2026,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/member_info/electionInfo/2026/120-nominations.pdf#page=13",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "text": "Appointed to the House Select Committee on the Chinese Communist Party",
+          "startYear": 2023,
+          "sourceName": "U.S. House biography",
+          "sourceUrl": "https://barr.house.gov/full-biography",
+          "sourceDate": "2026-11-22"
+        }
+      ],
+      "social": [
+        {
+          "platform": "X",
+          "kind": "office",
+          "url": "https://x.com/RepAndyBarr",
+          "sourceName": "Congress Legislators",
+          "sourceUrl": "https://unitedstates.github.io/congress-legislators/legislators-social-media.json",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "platform": "Facebook",
+          "kind": "office",
+          "url": "https://www.facebook.com/RepAndyBarr",
+          "sourceName": "Congress Legislators",
+          "sourceUrl": "https://unitedstates.github.io/congress-legislators/legislators-social-media.json",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "platform": "Instagram",
+          "kind": "office",
+          "url": "https://www.instagram.com/RepAndyBarr",
+          "sourceName": "Congress Legislators",
+          "sourceUrl": "https://unitedstates.github.io/congress-legislators/legislators-social-media.json",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "platform": "YouTube",
+          "kind": "office",
+          "url": "https://www.youtube.com/channel/UCVL2s6x7f7H0ZJ-uwU0pQ6Q",
+          "sourceName": "Congress Legislators",
+          "sourceUrl": "https://unitedstates.github.io/congress-legislators/legislators-social-media.json",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "platform": "Facebook",
+          "url": "https://www.facebook.com/BarrForSenate/",
+          "kind": "campaign",
+          "sourceName": "Campaign site",
+          "sourceUrl": "https://barrforsenate.com/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "platform": "X",
+          "url": "https://x.com/barrforsenate",
+          "kind": "campaign",
+          "sourceName": "Campaign site",
+          "sourceUrl": "https://barrforsenate.com/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "platform": "Instagram",
+          "url": "https://www.instagram.com/barrforsenate",
+          "kind": "campaign",
+          "sourceName": "Campaign site",
+          "sourceUrl": "https://barrforsenate.com/",
+          "sourceDate": "2026-11-22"
+        }
+      ],
+      "education": [
+        {
+          "text": "B.A. in government and philosophy, University of Virginia · J.D., University of Kentucky",
+          "sourceName": "U.S. House biography",
+          "sourceUrl": "https://barr.house.gov/full-biography",
+          "sourceDate": "2026-11-22"
+        }
+      ],
+      "results": [
+        {
+          "year": 2024,
+          "office": "U.S. House District 6",
+          "election": "General",
+          "outcome": "Won",
+          "votes": 222293,
+          "totalVotes": 352638,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://history.house.gov/Institution/Election-Statistics/2024election/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "year": 2022,
+          "office": "U.S. House District 6",
+          "election": "General",
+          "outcome": "Won",
+          "votes": 154762,
+          "totalVotes": 246818,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://history.house.gov/Institution/Election-Statistics/2022election/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "year": 2022,
+          "office": "U.S. House District 6",
+          "election": "Primary",
+          "outcome": "Won",
+          "votes": 47660,
+          "totalVotes": 54253,
+          "sourceName": "Federal Election Commission",
+          "sourceUrl": "https://www.fec.gov/resources/cms-content/documents/federalelections2022.pdf",
+          "sourceDate": "2026-11-22",
+          "party": "Republican"
+        },
+        {
+          "year": 2020,
+          "office": "U.S. House District 6",
+          "election": "General",
+          "outcome": "Won",
+          "votes": 216948,
+          "totalVotes": 378450,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://history.house.gov/Institution/Election-Statistics/2020election/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "year": 2020,
+          "office": "U.S. House District 6",
+          "election": "Primary",
+          "outcome": "Won",
+          "votes": 62706,
+          "totalVotes": 69107,
+          "sourceName": "Federal Election Commission",
+          "sourceUrl": "https://www.fec.gov/resources/cms-content/documents/federalelections2020.pdf",
+          "sourceDate": "2026-11-22",
+          "party": "Republican"
+        },
+        {
+          "year": 2018,
+          "office": "U.S. House District 6",
+          "election": "General",
+          "outcome": "Won",
+          "votes": 154468,
+          "totalVotes": 302888,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://history.house.gov/Institution/Election-Statistics/2018election/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "year": 2018,
+          "office": "U.S. House District 6",
+          "election": "Primary",
+          "outcome": "Won",
+          "votes": 40514,
+          "totalVotes": 48372,
+          "sourceName": "Federal Election Commission",
+          "sourceUrl": "https://www.fec.gov/resources/cms-content/documents/federalelections2018.pdf",
+          "sourceDate": "2026-11-22",
+          "party": "Republican"
+        },
+        {
+          "year": 2016,
+          "office": "U.S. House District 6",
+          "election": "General",
+          "outcome": "Won",
+          "votes": 202099,
+          "totalVotes": 330827,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://history.house.gov/Institution/Election-Statistics/2016election/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "year": 2016,
+          "office": "U.S. House District 6",
+          "election": "Primary",
+          "outcome": "Won",
+          "votes": 25212,
+          "totalVotes": 29820,
+          "sourceName": "Federal Election Commission",
+          "sourceUrl": "https://www.fec.gov/resources/cms-content/documents/federalelections2016.pdf",
+          "sourceDate": "2026-11-22",
+          "party": "Republican"
+        },
+        {
+          "year": 2014,
+          "office": "U.S. House District 6",
+          "election": "General",
+          "outcome": "Won",
+          "votes": 147404,
+          "totalVotes": 245694,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://history.house.gov/Institution/Election-Statistics/2014election/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "year": 2012,
+          "office": "U.S. House District 6",
+          "election": "General",
+          "outcome": "Won",
+          "votes": 153222,
+          "totalVotes": 303000,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://history.house.gov/Institution/Election-Statistics/2012election/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "year": 2012,
+          "office": "U.S. House District 6",
+          "election": "Primary",
+          "outcome": "Won",
+          "votes": 20104,
+          "totalVotes": 24281,
+          "sourceName": "Federal Election Commission",
+          "sourceUrl": "https://www.fec.gov/resources/cms-content/documents/federalelections2012.pdf",
+          "sourceDate": "2026-11-22",
+          "party": "Republican"
+        },
+        {
+          "year": 2010,
+          "office": "U.S. House District 6",
+          "election": "General",
+          "outcome": "Lost",
+          "votes": 119164,
+          "totalVotes": 239223,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://history.house.gov/Institution/Election-Statistics/2010election/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "year": 2010,
+          "office": "U.S. House District 6",
+          "election": "Primary",
+          "outcome": "Won",
+          "votes": 31255,
+          "totalVotes": 48886,
+          "sourceName": "Federal Election Commission",
+          "sourceUrl": "https://www.fec.gov/resources/cms-content/documents/federalelections2010.pdf",
+          "sourceDate": "2026-11-22",
+          "party": "Republican"
         }
       ]
     },
@@ -37,7 +403,103 @@
       },
       "bio": null,
       "endorsements": [],
-      "votes": []
+      "votes": [],
+      "career": [
+        {
+          "text": "Candidate for U.S. Senate",
+          "startYear": 2026,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/member_info/electionInfo/2026/120-nominations.pdf#page=13",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "text": "Kentucky state representative",
+          "startYear": 2019,
+          "sourceName": "Kentucky Legislative Research Commission",
+          "sourceUrl": "https://apps.legislature.ky.gov/record/20rs/hb1/vote_history.pdf",
+          "sourceDate": "2026-11-22",
+          "endYear": 2020
+        }
+      ],
+      "results": [
+        {
+          "year": 2022,
+          "office": "U.S. Senate",
+          "election": "General",
+          "outcome": "Lost",
+          "votes": 564311,
+          "totalVotes": 1477830,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://history.house.gov/Institution/Election-Statistics/2022election/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "year": 2022,
+          "office": "U.S. Senate",
+          "election": "Primary",
+          "outcome": "Won",
+          "votes": 214245,
+          "totalVotes": 292310,
+          "sourceName": "Federal Election Commission",
+          "sourceUrl": "https://www.fec.gov/resources/cms-content/documents/federalelections2022.pdf",
+          "sourceDate": "2026-11-22",
+          "party": "Democratic"
+        },
+        {
+          "year": 2020,
+          "office": "U.S. Senate",
+          "election": "Primary",
+          "outcome": "Lost",
+          "votes": 231888,
+          "totalVotes": 544062,
+          "sourceName": "Federal Election Commission",
+          "sourceUrl": "https://www.fec.gov/resources/cms-content/documents/federalelections2020.pdf",
+          "sourceDate": "2026-11-22",
+          "party": "Democratic"
+        }
+      ],
+      "social": [
+        {
+          "platform": "X",
+          "url": "https://x.com/Booker4KY/",
+          "kind": "campaign",
+          "sourceName": "Campaign site",
+          "sourceUrl": "https://charlesbookerky.org/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "platform": "Facebook",
+          "url": "https://www.facebook.com/Booker4KY/",
+          "kind": "campaign",
+          "sourceName": "Campaign site",
+          "sourceUrl": "https://charlesbookerky.org/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "platform": "Instagram",
+          "url": "https://www.instagram.com/booker4ky/",
+          "kind": "campaign",
+          "sourceName": "Campaign site",
+          "sourceUrl": "https://charlesbookerky.org/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "platform": "YouTube",
+          "url": "https://www.youtube.com/channel/UCtw_5pir8O7aY9ZFePWCIgg",
+          "kind": "campaign",
+          "sourceName": "Campaign site",
+          "sourceUrl": "https://charlesbookerky.org/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "platform": "Bluesky",
+          "url": "https://bsky.app/profile/booker4ky.bsky.social",
+          "kind": "campaign",
+          "sourceName": "Campaign site",
+          "sourceUrl": "https://charlesbookerky.org/",
+          "sourceDate": "2026-11-22"
+        }
+      ]
     },
     "S6KY00377": {
       "website": {
@@ -49,7 +511,16 @@
       },
       "bio": null,
       "endorsements": [],
-      "votes": []
+      "votes": [],
+      "career": [
+        {
+          "text": "Candidate for U.S. Senate",
+          "startYear": 2026,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/member_info/electionInfo/2026/120-nominations.pdf#page=13",
+          "sourceDate": "2026-11-22"
+        }
+      ]
     },
     "H6KY01110": {
       "website": {
@@ -68,11 +539,279 @@
       "endorsements": [],
       "votes": [
         {
-          "bill": "H.R. 9340, Ratepayer Protection Act",
+          "bill": "S. 2403",
+          "title": "Retire through Ownership Act",
           "date": "2026-09-16",
-          "vote": "Yes",
-          "sourceName": "Office of the Clerk, House roll call 312",
-          "sourceUrl": "https://clerk.house.gov/Votes/2026312"
+          "roll": 314,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/evs/2026/roll314.xml",
+          "sourceDate": "2026-11-22",
+          "lawUrl": "https://www.govinfo.gov/bulkdata/PLAW/119/public/PLAW-119publ124.xml",
+          "lawSigned": "2026-10-15",
+          "vote": "Yea"
+        },
+        {
+          "bill": "S. 32",
+          "title": "Local Access to Courts Act",
+          "date": "2026-08-31",
+          "roll": 285,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/evs/2026/roll285.xml",
+          "sourceDate": "2026-11-22",
+          "lawUrl": "https://www.govinfo.gov/bulkdata/PLAW/119/public/PLAW-119publ109.xml",
+          "lawSigned": "2026-09-16",
+          "vote": "Yea"
+        },
+        {
+          "bill": "S. 307",
+          "title": "Prison Staff Safety Enhancement Act",
+          "date": "2026-08-31",
+          "roll": 284,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/evs/2026/roll284.xml",
+          "sourceDate": "2026-11-22",
+          "lawUrl": "https://www.govinfo.gov/bulkdata/PLAW/119/public/PLAW-119publ110.xml",
+          "lawSigned": "2026-09-16",
+          "vote": "Yea"
+        },
+        {
+          "bill": "S. 629",
+          "title": "Emergency Conservation Program Improvement Act",
+          "date": "2026-06-23",
+          "roll": 223,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/evs/2026/roll223.xml",
+          "sourceDate": "2026-11-22",
+          "lawUrl": "https://www.govinfo.gov/bulkdata/PLAW/119/public/PLAW-119publ102.xml",
+          "lawSigned": "2026-07-12",
+          "vote": "Yea"
+        },
+        {
+          "bill": "S. 2",
+          "title": "Secure America Act",
+          "date": "2026-06-09",
+          "roll": 214,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/evs/2026/roll214.xml",
+          "sourceDate": "2026-11-22",
+          "lawUrl": "https://www.govinfo.gov/bulkdata/PLAW/119/public/PLAW-119publ98.xml",
+          "lawSigned": "2026-06-10",
+          "vote": "Aye"
+        },
+        {
+          "bill": "S. 284",
+          "title": "Congressional Award Program Reauthorization Act",
+          "date": "2025-12-15",
+          "roll": 335,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/evs/2025/roll335.xml",
+          "sourceDate": "2026-11-22",
+          "lawUrl": "https://www.govinfo.gov/bulkdata/PLAW/119/public/PLAW-119publ66.xml",
+          "lawSigned": "2025-12-26",
+          "vote": "Yea"
+        },
+        {
+          "bill": "S. 1071",
+          "title": "To require the Secretary of Veterans Affairs to disinter the remains of Fernando V. Cota from Fort Sam Houston National Cemetery, Texas, and for other purposes",
+          "date": "2025-12-10",
+          "roll": 320,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/evs/2025/roll320.xml",
+          "sourceDate": "2026-11-22",
+          "lawUrl": "https://www.govinfo.gov/bulkdata/PLAW/119/public/PLAW-119publ60.xml",
+          "lawSigned": "2025-12-18",
+          "vote": "Yea"
+        },
+        {
+          "bill": "S. 356",
+          "title": "Secure Rural Schools Reauthorization Act",
+          "date": "2025-12-09",
+          "roll": 315,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/evs/2025/roll315.xml",
+          "sourceDate": "2026-11-22",
+          "lawUrl": "https://www.govinfo.gov/bulkdata/PLAW/119/public/PLAW-119publ58.xml",
+          "lawSigned": "2025-12-18",
+          "vote": "Yea"
+        },
+        {
+          "bill": "S.J.Res. 80",
+          "title": "Providing for congressional disapproval under chapter 8 of title 5, United States Code, of the rule submitted by the Bureau of Land Management relating to “National Petroleum Reserve in Alaska Integrated Activity Plan Record of Decision”.",
+          "date": "2025-11-18",
+          "roll": 296,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/evs/2025/roll296.xml",
+          "sourceDate": "2026-11-22",
+          "lawUrl": "https://www.govinfo.gov/bulkdata/PLAW/119/public/PLAW-119publ47.xml",
+          "lawSigned": "2025-12-05",
+          "vote": "Yea"
+        },
+        {
+          "bill": "H.J.Res. 131",
+          "title": "Providing for congressional disapproval under chapter 8 of title 5, United States Code, of the rule submitted by the Bureau of Land Management relating to “Coastal Plain Oil and Gas Leasing Program Record of Decision”",
+          "date": "2025-11-18",
+          "roll": 295,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/evs/2025/roll295.xml",
+          "sourceDate": "2026-11-22",
+          "lawUrl": "https://www.govinfo.gov/bulkdata/PLAW/119/public/PLAW-119publ52.xml",
+          "lawSigned": "2025-12-11",
+          "vote": "Yea"
+        }
+      ],
+      "career": [
+        {
+          "text": "U.S. representative · Kentucky District 1",
+          "startYear": 2016,
+          "sourceName": "Congress Legislators",
+          "sourceUrl": "https://unitedstates.github.io/congress-legislators/legislators-current.json",
+          "sourceDate": "2026-11-22",
+          "endYear": 2027
+        },
+        {
+          "text": "Candidate for U.S. House District 1",
+          "startYear": 2026,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/member_info/electionInfo/2026/120-nominations.pdf#page=13",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "text": "Ranking member, House Oversight Committee",
+          "startYear": 2020,
+          "sourceName": "House Oversight Committee",
+          "sourceUrl": "https://oversight.house.gov/chairman-james-comer/",
+          "sourceDate": "2026-11-22",
+          "endYear": 2022
+        },
+        {
+          "text": "Kentucky state representative",
+          "startYear": 2001,
+          "sourceName": "House History, Art & Archives",
+          "sourceUrl": "https://history.house.gov/People/Listing/C/COMER,-James-(C001108)/",
+          "sourceDate": "2026-11-22",
+          "endYear": 2012
+        },
+        {
+          "text": "Kentucky commissioner of agriculture",
+          "startYear": 2012,
+          "sourceName": "House History, Art & Archives",
+          "sourceUrl": "https://history.house.gov/People/Listing/C/COMER,-James-(C001108)/",
+          "sourceDate": "2026-11-22",
+          "endYear": 2015
+        }
+      ],
+      "social": [
+        {
+          "platform": "X",
+          "kind": "office",
+          "url": "https://x.com/RepJamesComer",
+          "sourceName": "Congress Legislators",
+          "sourceUrl": "https://unitedstates.github.io/congress-legislators/legislators-social-media.json",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "platform": "Facebook",
+          "kind": "office",
+          "url": "https://www.facebook.com/congressmancomer",
+          "sourceName": "Congress Legislators",
+          "sourceUrl": "https://unitedstates.github.io/congress-legislators/legislators-social-media.json",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "platform": "Instagram",
+          "kind": "office",
+          "url": "https://www.instagram.com/congressmancomer",
+          "sourceName": "Congress Legislators",
+          "sourceUrl": "https://unitedstates.github.io/congress-legislators/legislators-social-media.json",
+          "sourceDate": "2026-11-22"
+        }
+      ],
+      "education": [
+        {
+          "text": "Agriculture degree, Western Kentucky University",
+          "sourceName": "U.S. House biography",
+          "sourceUrl": "https://comer.house.gov/about/",
+          "sourceDate": "2026-11-22"
+        }
+      ],
+      "results": [
+        {
+          "year": 2024,
+          "office": "U.S. House District 1",
+          "election": "General",
+          "outcome": "Won",
+          "votes": 252729,
+          "totalVotes": 338253,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://history.house.gov/Institution/Election-Statistics/2024election/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "year": 2022,
+          "office": "U.S. House District 1",
+          "election": "General",
+          "outcome": "Won",
+          "votes": 184157,
+          "totalVotes": 245858,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://history.house.gov/Institution/Election-Statistics/2022election/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "year": 2020,
+          "office": "U.S. House District 1",
+          "election": "General",
+          "outcome": "Won",
+          "votes": 246329,
+          "totalVotes": 328470,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://history.house.gov/Institution/Election-Statistics/2020election/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "year": 2018,
+          "office": "U.S. House District 1",
+          "election": "General",
+          "outcome": "Won",
+          "votes": 172167,
+          "totalVotes": 251016,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://history.house.gov/Institution/Election-Statistics/2018election/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "year": 2016,
+          "office": "U.S. House District 1",
+          "election": "General",
+          "outcome": "Won",
+          "votes": 216959,
+          "totalVotes": 299001,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://history.house.gov/Institution/Election-Statistics/2016election/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "year": 2016,
+          "office": "U.S. House District 1",
+          "election": "Special",
+          "outcome": "Won",
+          "votes": 209810,
+          "totalVotes": 290623,
+          "sourceName": "Federal Election Commission",
+          "sourceUrl": "https://www.fec.gov/resources/cms-content/documents/federalelections2016.pdf",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "year": 2016,
+          "office": "U.S. House District 1",
+          "election": "Primary",
+          "outcome": "Won",
+          "votes": 24342,
+          "totalVotes": 40173,
+          "sourceName": "Federal Election Commission",
+          "sourceUrl": "https://www.fec.gov/resources/cms-content/documents/federalelections2016.pdf",
+          "sourceDate": "2026-11-22",
+          "party": "Republican"
         }
       ]
     },
@@ -91,7 +830,58 @@
         "sourceDate": "2026-10-29"
       },
       "endorsements": [],
-      "votes": []
+      "votes": [],
+      "career": [
+        {
+          "text": "Candidate for U.S. House District 1",
+          "startYear": 2026,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/member_info/electionInfo/2026/120-nominations.pdf#page=13",
+          "sourceDate": "2026-11-22"
+        }
+      ],
+      "social": [
+        {
+          "platform": "Facebook",
+          "url": "https://www.facebook.com/WilliamsForKY",
+          "kind": "campaign",
+          "sourceName": "Campaign site",
+          "sourceUrl": "https://www.williamsforky.com/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "platform": "TikTok",
+          "url": "https://www.tiktok.com/@williamsforky1",
+          "kind": "campaign",
+          "sourceName": "Campaign site",
+          "sourceUrl": "https://www.williamsforky.com/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "platform": "Instagram",
+          "url": "https://www.instagram.com/williamsforky1/",
+          "kind": "campaign",
+          "sourceName": "Campaign site",
+          "sourceUrl": "https://www.williamsforky.com/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "platform": "Bluesky",
+          "url": "https://bsky.app/profile/williamsforky1.bsky.social",
+          "kind": "campaign",
+          "sourceName": "Campaign site",
+          "sourceUrl": "https://www.williamsforky.com/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "platform": "X",
+          "url": "https://x.com/Williamsforky1",
+          "kind": "campaign",
+          "sourceName": "Campaign site",
+          "sourceUrl": "https://www.williamsforky.com/",
+          "sourceDate": "2026-11-22"
+        }
+      ]
     },
     "H8KY02031": {
       "website": {
@@ -110,18 +900,316 @@
       "endorsements": [],
       "votes": [
         {
-          "bill": "H.R. 9340, Ratepayer Protection Act",
+          "bill": "S. 2403",
+          "title": "Retire through Ownership Act",
           "date": "2026-09-16",
-          "vote": "Yes",
-          "sourceName": "Office of the Clerk, House roll call 312",
-          "sourceUrl": "https://clerk.house.gov/Votes/2026312"
+          "roll": 314,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/evs/2026/roll314.xml",
+          "sourceDate": "2026-11-22",
+          "lawUrl": "https://www.govinfo.gov/bulkdata/PLAW/119/public/PLAW-119publ124.xml",
+          "lawSigned": "2026-10-15",
+          "vote": "Yea"
         },
         {
-          "bill": "S. 2, Secure America Act",
+          "bill": "S. 32",
+          "title": "Local Access to Courts Act",
+          "date": "2026-08-31",
+          "roll": 285,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/evs/2026/roll285.xml",
+          "sourceDate": "2026-11-22",
+          "lawUrl": "https://www.govinfo.gov/bulkdata/PLAW/119/public/PLAW-119publ109.xml",
+          "lawSigned": "2026-09-16",
+          "vote": "Yea"
+        },
+        {
+          "bill": "S. 307",
+          "title": "Prison Staff Safety Enhancement Act",
+          "date": "2026-08-31",
+          "roll": 284,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/evs/2026/roll284.xml",
+          "sourceDate": "2026-11-22",
+          "lawUrl": "https://www.govinfo.gov/bulkdata/PLAW/119/public/PLAW-119publ110.xml",
+          "lawSigned": "2026-09-16",
+          "vote": "Yea"
+        },
+        {
+          "bill": "S. 629",
+          "title": "Emergency Conservation Program Improvement Act",
+          "date": "2026-06-23",
+          "roll": 223,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/evs/2026/roll223.xml",
+          "sourceDate": "2026-11-22",
+          "lawUrl": "https://www.govinfo.gov/bulkdata/PLAW/119/public/PLAW-119publ102.xml",
+          "lawSigned": "2026-07-12",
+          "vote": "Yea"
+        },
+        {
+          "bill": "S. 2",
+          "title": "Secure America Act",
           "date": "2026-06-09",
-          "vote": "Yes",
-          "sourceName": "Official House website, vote statement",
-          "sourceUrl": "https://guthrie.house.gov/news/documentsingle.aspx?DocumentID=391088"
+          "roll": 214,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/evs/2026/roll214.xml",
+          "sourceDate": "2026-11-22",
+          "lawUrl": "https://www.govinfo.gov/bulkdata/PLAW/119/public/PLAW-119publ98.xml",
+          "lawSigned": "2026-06-10",
+          "vote": "Aye"
+        },
+        {
+          "bill": "S. 284",
+          "title": "Congressional Award Program Reauthorization Act",
+          "date": "2025-12-15",
+          "roll": 335,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/evs/2025/roll335.xml",
+          "sourceDate": "2026-11-22",
+          "lawUrl": "https://www.govinfo.gov/bulkdata/PLAW/119/public/PLAW-119publ66.xml",
+          "lawSigned": "2025-12-26",
+          "vote": "Yea"
+        },
+        {
+          "bill": "S. 1071",
+          "title": "To require the Secretary of Veterans Affairs to disinter the remains of Fernando V. Cota from Fort Sam Houston National Cemetery, Texas, and for other purposes",
+          "date": "2025-12-10",
+          "roll": 320,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/evs/2025/roll320.xml",
+          "sourceDate": "2026-11-22",
+          "lawUrl": "https://www.govinfo.gov/bulkdata/PLAW/119/public/PLAW-119publ60.xml",
+          "lawSigned": "2025-12-18",
+          "vote": "Yea"
+        },
+        {
+          "bill": "S. 356",
+          "title": "Secure Rural Schools Reauthorization Act",
+          "date": "2025-12-09",
+          "roll": 315,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/evs/2025/roll315.xml",
+          "sourceDate": "2026-11-22",
+          "lawUrl": "https://www.govinfo.gov/bulkdata/PLAW/119/public/PLAW-119publ58.xml",
+          "lawSigned": "2025-12-18",
+          "vote": "Yea"
+        },
+        {
+          "bill": "S.J.Res. 80",
+          "title": "Providing for congressional disapproval under chapter 8 of title 5, United States Code, of the rule submitted by the Bureau of Land Management relating to “National Petroleum Reserve in Alaska Integrated Activity Plan Record of Decision”.",
+          "date": "2025-11-18",
+          "roll": 296,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/evs/2025/roll296.xml",
+          "sourceDate": "2026-11-22",
+          "lawUrl": "https://www.govinfo.gov/bulkdata/PLAW/119/public/PLAW-119publ47.xml",
+          "lawSigned": "2025-12-05",
+          "vote": "Yea"
+        },
+        {
+          "bill": "H.J.Res. 131",
+          "title": "Providing for congressional disapproval under chapter 8 of title 5, United States Code, of the rule submitted by the Bureau of Land Management relating to “Coastal Plain Oil and Gas Leasing Program Record of Decision”",
+          "date": "2025-11-18",
+          "roll": 295,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/evs/2025/roll295.xml",
+          "sourceDate": "2026-11-22",
+          "lawUrl": "https://www.govinfo.gov/bulkdata/PLAW/119/public/PLAW-119publ52.xml",
+          "lawSigned": "2025-12-11",
+          "vote": "Yea"
+        }
+      ],
+      "career": [
+        {
+          "text": "U.S. representative · Kentucky District 2",
+          "startYear": 2009,
+          "sourceName": "Congress Legislators",
+          "sourceUrl": "https://unitedstates.github.io/congress-legislators/legislators-current.json",
+          "sourceDate": "2026-11-22",
+          "endYear": 2027
+        },
+        {
+          "text": "Candidate for U.S. House District 2",
+          "startYear": 2026,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/member_info/electionInfo/2026/120-nominations.pdf#page=13",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "text": "Elected to represent District 32 in the Kentucky Senate",
+          "startYear": 1998,
+          "sourceName": "U.S. House biography",
+          "sourceUrl": "https://guthrie.house.gov/about/",
+          "sourceDate": "2026-11-22",
+          "endYear": 2008
+        }
+      ],
+      "social": [
+        {
+          "platform": "X",
+          "kind": "office",
+          "url": "https://x.com/RepGuthrie",
+          "sourceName": "Congress Legislators",
+          "sourceUrl": "https://unitedstates.github.io/congress-legislators/legislators-social-media.json",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "platform": "Facebook",
+          "kind": "office",
+          "url": "https://www.facebook.com/CongressmanGuthrie",
+          "sourceName": "Congress Legislators",
+          "sourceUrl": "https://unitedstates.github.io/congress-legislators/legislators-social-media.json",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "platform": "Instagram",
+          "kind": "office",
+          "url": "https://www.instagram.com/repguthrie",
+          "sourceName": "Congress Legislators",
+          "sourceUrl": "https://unitedstates.github.io/congress-legislators/legislators-social-media.json",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "platform": "YouTube",
+          "kind": "office",
+          "url": "https://www.youtube.com/channel/UCdJhDw-YbdH0RHfWK0sIfiw",
+          "sourceName": "Congress Legislators",
+          "sourceUrl": "https://unitedstates.github.io/congress-legislators/legislators-social-media.json",
+          "sourceDate": "2026-11-22"
+        }
+      ],
+      "education": [
+        {
+          "text": "U.S. Military Academy · Master’s in public and private management, Yale University",
+          "sourceName": "U.S. House biography",
+          "sourceUrl": "https://guthrie.house.gov/about/",
+          "sourceDate": "2026-11-22"
+        }
+      ],
+      "results": [
+        {
+          "year": 2024,
+          "office": "U.S. House District 2",
+          "election": "General",
+          "outcome": "Won",
+          "votes": 252826,
+          "totalVotes": 345855,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://history.house.gov/Institution/Election-Statistics/2024election/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "year": 2022,
+          "office": "U.S. House District 2",
+          "election": "General",
+          "outcome": "Won",
+          "votes": 170487,
+          "totalVotes": 237256,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://history.house.gov/Institution/Election-Statistics/2022election/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "year": 2022,
+          "office": "U.S. House District 2",
+          "election": "Primary",
+          "outcome": "Won",
+          "votes": 52265,
+          "totalVotes": 66942,
+          "sourceName": "Federal Election Commission",
+          "sourceUrl": "https://www.fec.gov/resources/cms-content/documents/federalelections2022.pdf",
+          "sourceDate": "2026-11-22",
+          "party": "Republican"
+        },
+        {
+          "year": 2020,
+          "office": "U.S. House District 2",
+          "election": "General",
+          "outcome": "Won",
+          "votes": 255735,
+          "totalVotes": 360399,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://history.house.gov/Institution/Election-Statistics/2020election/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "year": 2020,
+          "office": "U.S. House District 2",
+          "election": "Primary",
+          "outcome": "Won",
+          "votes": 65313,
+          "totalVotes": 73693,
+          "sourceName": "Federal Election Commission",
+          "sourceUrl": "https://www.fec.gov/resources/cms-content/documents/federalelections2020.pdf",
+          "sourceDate": "2026-11-22",
+          "party": "Republican"
+        },
+        {
+          "year": 2018,
+          "office": "U.S. House District 2",
+          "election": "General",
+          "outcome": "Won",
+          "votes": 171700,
+          "totalVotes": 257345,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://history.house.gov/Institution/Election-Statistics/2018election/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "year": 2016,
+          "office": "U.S. House District 2",
+          "election": "General",
+          "outcome": "Won",
+          "votes": 251825,
+          "totalVotes": 251825,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://history.house.gov/Institution/Election-Statistics/2016election/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "year": 2014,
+          "office": "U.S. House District 2",
+          "election": "General",
+          "outcome": "Won",
+          "votes": 156936,
+          "totalVotes": 226834,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://history.house.gov/Institution/Election-Statistics/2014election/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "year": 2012,
+          "office": "U.S. House District 2",
+          "election": "General",
+          "outcome": "Won",
+          "votes": 181508,
+          "totalVotes": 282267,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://history.house.gov/Institution/Election-Statistics/2012election/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "year": 2010,
+          "office": "U.S. House District 2",
+          "election": "General",
+          "outcome": "Won",
+          "votes": 155906,
+          "totalVotes": 229655,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://history.house.gov/Institution/Election-Statistics/2010election/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "year": 2008,
+          "office": "U.S. House District 2",
+          "election": "General",
+          "outcome": "Won",
+          "votes": 158936,
+          "totalVotes": 302315,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://history.house.gov/Institution/Election-Statistics/2008election/",
+          "sourceDate": "2026-11-22"
         }
       ]
     },
@@ -140,7 +1228,50 @@
         "sourceDate": "2026-10-29"
       },
       "endorsements": [],
-      "votes": []
+      "votes": [],
+      "career": [
+        {
+          "text": "Candidate for U.S. House District 2",
+          "startYear": 2026,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/member_info/electionInfo/2026/120-nominations.pdf#page=13",
+          "sourceDate": "2026-11-22"
+        }
+      ],
+      "social": [
+        {
+          "platform": "Facebook",
+          "url": "https://www.facebook.com/megan.wingfield.for.congress",
+          "kind": "campaign",
+          "sourceName": "Campaign site",
+          "sourceUrl": "https://www.wingfieldforcongress.com/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "platform": "Bluesky",
+          "url": "https://bsky.app/profile/justwingit1.bsky.social",
+          "kind": "campaign",
+          "sourceName": "Campaign site",
+          "sourceUrl": "https://www.wingfieldforcongress.com/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "platform": "Instagram",
+          "url": "https://www.instagram.com/wingfieldforcongress",
+          "kind": "campaign",
+          "sourceName": "Campaign site",
+          "sourceUrl": "https://www.wingfieldforcongress.com/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "platform": "TikTok",
+          "url": "https://www.tiktok.com/@wingfieldforcongress",
+          "kind": "campaign",
+          "sourceName": "Campaign site",
+          "sourceUrl": "https://www.wingfieldforcongress.com/",
+          "sourceDate": "2026-11-22"
+        }
+      ]
     },
     "H2KY03206": {
       "website": {
@@ -159,11 +1290,259 @@
       "endorsements": [],
       "votes": [
         {
-          "bill": "H.R. 9340, Ratepayer Protection Act",
+          "bill": "S. 2403",
+          "title": "Retire through Ownership Act",
           "date": "2026-09-16",
-          "vote": "Yes",
-          "sourceName": "Office of the Clerk, House roll call 312",
-          "sourceUrl": "https://clerk.house.gov/Votes/2026312"
+          "roll": 314,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/evs/2026/roll314.xml",
+          "sourceDate": "2026-11-22",
+          "lawUrl": "https://www.govinfo.gov/bulkdata/PLAW/119/public/PLAW-119publ124.xml",
+          "lawSigned": "2026-10-15",
+          "vote": "Yea"
+        },
+        {
+          "bill": "S. 32",
+          "title": "Local Access to Courts Act",
+          "date": "2026-08-31",
+          "roll": 285,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/evs/2026/roll285.xml",
+          "sourceDate": "2026-11-22",
+          "lawUrl": "https://www.govinfo.gov/bulkdata/PLAW/119/public/PLAW-119publ109.xml",
+          "lawSigned": "2026-09-16",
+          "vote": "Yea"
+        },
+        {
+          "bill": "S. 307",
+          "title": "Prison Staff Safety Enhancement Act",
+          "date": "2026-08-31",
+          "roll": 284,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/evs/2026/roll284.xml",
+          "sourceDate": "2026-11-22",
+          "lawUrl": "https://www.govinfo.gov/bulkdata/PLAW/119/public/PLAW-119publ110.xml",
+          "lawSigned": "2026-09-16",
+          "vote": "Yea"
+        },
+        {
+          "bill": "S. 629",
+          "title": "Emergency Conservation Program Improvement Act",
+          "date": "2026-06-23",
+          "roll": 223,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/evs/2026/roll223.xml",
+          "sourceDate": "2026-11-22",
+          "lawUrl": "https://www.govinfo.gov/bulkdata/PLAW/119/public/PLAW-119publ102.xml",
+          "lawSigned": "2026-07-12",
+          "vote": "Yea"
+        },
+        {
+          "bill": "S. 2",
+          "title": "Secure America Act",
+          "date": "2026-06-09",
+          "roll": 214,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/evs/2026/roll214.xml",
+          "sourceDate": "2026-11-22",
+          "lawUrl": "https://www.govinfo.gov/bulkdata/PLAW/119/public/PLAW-119publ98.xml",
+          "lawSigned": "2026-06-10",
+          "vote": "No"
+        },
+        {
+          "bill": "S. 284",
+          "title": "Congressional Award Program Reauthorization Act",
+          "date": "2025-12-15",
+          "roll": 335,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/evs/2025/roll335.xml",
+          "sourceDate": "2026-11-22",
+          "lawUrl": "https://www.govinfo.gov/bulkdata/PLAW/119/public/PLAW-119publ66.xml",
+          "lawSigned": "2025-12-26",
+          "vote": "Yea"
+        },
+        {
+          "bill": "S. 1071",
+          "title": "To require the Secretary of Veterans Affairs to disinter the remains of Fernando V. Cota from Fort Sam Houston National Cemetery, Texas, and for other purposes",
+          "date": "2025-12-10",
+          "roll": 320,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/evs/2025/roll320.xml",
+          "sourceDate": "2026-11-22",
+          "lawUrl": "https://www.govinfo.gov/bulkdata/PLAW/119/public/PLAW-119publ60.xml",
+          "lawSigned": "2025-12-18",
+          "vote": "Nay"
+        },
+        {
+          "bill": "S. 356",
+          "title": "Secure Rural Schools Reauthorization Act",
+          "date": "2025-12-09",
+          "roll": 315,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/evs/2025/roll315.xml",
+          "sourceDate": "2026-11-22",
+          "lawUrl": "https://www.govinfo.gov/bulkdata/PLAW/119/public/PLAW-119publ58.xml",
+          "lawSigned": "2025-12-18",
+          "vote": "Yea"
+        },
+        {
+          "bill": "S.J.Res. 80",
+          "title": "Providing for congressional disapproval under chapter 8 of title 5, United States Code, of the rule submitted by the Bureau of Land Management relating to “National Petroleum Reserve in Alaska Integrated Activity Plan Record of Decision”.",
+          "date": "2025-11-18",
+          "roll": 296,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/evs/2025/roll296.xml",
+          "sourceDate": "2026-11-22",
+          "lawUrl": "https://www.govinfo.gov/bulkdata/PLAW/119/public/PLAW-119publ47.xml",
+          "lawSigned": "2025-12-05",
+          "vote": "Nay"
+        },
+        {
+          "bill": "H.J.Res. 131",
+          "title": "Providing for congressional disapproval under chapter 8 of title 5, United States Code, of the rule submitted by the Bureau of Land Management relating to “Coastal Plain Oil and Gas Leasing Program Record of Decision”",
+          "date": "2025-11-18",
+          "roll": 295,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/evs/2025/roll295.xml",
+          "sourceDate": "2026-11-22",
+          "lawUrl": "https://www.govinfo.gov/bulkdata/PLAW/119/public/PLAW-119publ52.xml",
+          "lawSigned": "2025-12-11",
+          "vote": "Nay"
+        }
+      ],
+      "career": [
+        {
+          "text": "U.S. representative · Kentucky District 3",
+          "startYear": 2023,
+          "sourceName": "Congress Legislators",
+          "sourceUrl": "https://unitedstates.github.io/congress-legislators/legislators-current.json",
+          "sourceDate": "2026-11-22",
+          "endYear": 2027
+        },
+        {
+          "text": "Candidate for U.S. House District 3",
+          "startYear": 2026,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/member_info/electionInfo/2026/120-nominations.pdf#page=13",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "text": "Kentucky state senator",
+          "startYear": 2013,
+          "sourceName": "House History, Art & Archives",
+          "sourceUrl": "https://history.house.gov/People/Listing/M/MCGARVEY,-Morgan-(M001220)/",
+          "sourceDate": "2026-11-22",
+          "endYear": 2023
+        }
+      ],
+      "social": [
+        {
+          "platform": "X",
+          "kind": "office",
+          "url": "https://x.com/RepMcGarvey",
+          "sourceName": "Congress Legislators",
+          "sourceUrl": "https://unitedstates.github.io/congress-legislators/legislators-social-media.json",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "platform": "Facebook",
+          "kind": "office",
+          "url": "https://www.facebook.com/RepMcGarvey",
+          "sourceName": "Congress Legislators",
+          "sourceUrl": "https://unitedstates.github.io/congress-legislators/legislators-social-media.json",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "platform": "Instagram",
+          "kind": "office",
+          "url": "https://www.instagram.com/repmcgarvey",
+          "sourceName": "Congress Legislators",
+          "sourceUrl": "https://unitedstates.github.io/congress-legislators/legislators-social-media.json",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "platform": "Facebook",
+          "url": "https://www.facebook.com/MorganMcGarveyForCongress",
+          "kind": "campaign",
+          "sourceName": "Campaign site",
+          "sourceUrl": "https://www.morganmcgarvey.com/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "platform": "X",
+          "url": "https://twitter.com/MorganMcGarvey",
+          "kind": "campaign",
+          "sourceName": "Campaign site",
+          "sourceUrl": "https://www.morganmcgarvey.com/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "platform": "Instagram",
+          "url": "https://www.instagram.com/morgan_mcgarvey/",
+          "kind": "campaign",
+          "sourceName": "Campaign site",
+          "sourceUrl": "https://www.morganmcgarvey.com/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "platform": "Bluesky",
+          "url": "https://bsky.app/profile/morganmcgarvey.bsky.social",
+          "kind": "campaign",
+          "sourceName": "Campaign site",
+          "sourceUrl": "https://www.morganmcgarvey.com/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "platform": "TikTok",
+          "url": "https://www.tiktok.com/@morgan_mcgarvey",
+          "kind": "campaign",
+          "sourceName": "Campaign site",
+          "sourceUrl": "https://www.morganmcgarvey.com/",
+          "sourceDate": "2026-11-22"
+        }
+      ],
+      "education": [
+        {
+          "text": "B.A. in journalism, University of Missouri · J.D., University of Kentucky",
+          "sourceName": "U.S. House biography",
+          "sourceUrl": "https://mcgarvey.house.gov/about",
+          "sourceDate": "2026-11-22"
+        }
+      ],
+      "results": [
+        {
+          "year": 2024,
+          "office": "U.S. House District 3",
+          "election": "General",
+          "outcome": "Won",
+          "votes": 203100,
+          "totalVotes": 327864,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://history.house.gov/Institution/Election-Statistics/2024election/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "year": 2022,
+          "office": "U.S. House District 3",
+          "election": "General",
+          "outcome": "Won",
+          "votes": 160920,
+          "totalVotes": 259587,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://history.house.gov/Institution/Election-Statistics/2022election/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "year": 2022,
+          "office": "U.S. House District 3",
+          "election": "Primary",
+          "outcome": "Won",
+          "votes": 52157,
+          "totalVotes": 82340,
+          "sourceName": "Federal Election Commission",
+          "sourceUrl": "https://www.fec.gov/resources/cms-content/documents/federalelections2022.pdf",
+          "sourceDate": "2026-11-22",
+          "party": "Democratic"
         }
       ]
     },
@@ -182,7 +1561,26 @@
         "sourceDate": "2026-10-29"
       },
       "endorsements": [],
-      "votes": []
+      "votes": [],
+      "career": [
+        {
+          "text": "Candidate for U.S. House District 3",
+          "startYear": 2026,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/member_info/electionInfo/2026/120-nominations.pdf#page=13",
+          "sourceDate": "2026-11-22"
+        }
+      ],
+      "social": [
+        {
+          "platform": "Facebook",
+          "url": "https://www.facebook.com/profile.php?id=61586552040656",
+          "kind": "campaign",
+          "sourceName": "Campaign site",
+          "sourceUrl": "https://mariaforuscongress.com/",
+          "sourceDate": "2026-11-22"
+        }
+      ]
     },
     "H6KY04171": {
       "website": {
@@ -199,7 +1597,34 @@
         "sourceDate": "2026-10-29"
       },
       "endorsements": [],
-      "votes": []
+      "votes": [],
+      "career": [
+        {
+          "text": "Candidate for U.S. House District 4",
+          "startYear": 2026,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/member_info/electionInfo/2026/120-nominations.pdf#page=13",
+          "sourceDate": "2026-11-22"
+        }
+      ],
+      "social": [
+        {
+          "platform": "Facebook",
+          "url": "https://www.facebook.com/EdGallreinforCongress/",
+          "kind": "campaign",
+          "sourceName": "Campaign site",
+          "sourceUrl": "https://www.edgallrein.com/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "platform": "X",
+          "url": "https://x.com/EdGallrein",
+          "kind": "campaign",
+          "sourceName": "Campaign site",
+          "sourceUrl": "https://www.edgallrein.com/",
+          "sourceDate": "2026-11-22"
+        }
+      ]
     },
     "H6KY04189": {
       "website": {
@@ -216,7 +1641,42 @@
         "sourceDate": "2026-10-29"
       },
       "endorsements": [],
-      "votes": []
+      "votes": [],
+      "career": [
+        {
+          "text": "Candidate for U.S. House District 4",
+          "startYear": 2026,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/member_info/electionInfo/2026/120-nominations.pdf#page=13",
+          "sourceDate": "2026-11-22"
+        }
+      ],
+      "social": [
+        {
+          "platform": "Facebook",
+          "url": "https://www.facebook.com/people/Melissa-Strange-for-Congress/61584974888471/",
+          "kind": "campaign",
+          "sourceName": "Campaign site",
+          "sourceUrl": "https://strangeforky.com/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "platform": "X",
+          "url": "https://x.com/StrangeForKY",
+          "kind": "campaign",
+          "sourceName": "Campaign site",
+          "sourceUrl": "https://strangeforky.com/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "platform": "Instagram",
+          "url": "https://www.instagram.com/strangeforky/",
+          "kind": "campaign",
+          "sourceName": "Campaign site",
+          "sourceUrl": "https://strangeforky.com/",
+          "sourceDate": "2026-11-22"
+        }
+      ]
     },
     "H0KY05015": {
       "website": {
@@ -235,11 +1695,514 @@
       "endorsements": [],
       "votes": [
         {
-          "bill": "H.R. 9340, Ratepayer Protection Act",
+          "bill": "S. 2403",
+          "title": "Retire through Ownership Act",
           "date": "2026-09-16",
-          "vote": "Yes",
-          "sourceName": "Office of the Clerk, House roll call 312",
-          "sourceUrl": "https://clerk.house.gov/Votes/2026312"
+          "roll": 314,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/evs/2026/roll314.xml",
+          "sourceDate": "2026-11-22",
+          "lawUrl": "https://www.govinfo.gov/bulkdata/PLAW/119/public/PLAW-119publ124.xml",
+          "lawSigned": "2026-10-15",
+          "vote": "Yea"
+        },
+        {
+          "bill": "S. 32",
+          "title": "Local Access to Courts Act",
+          "date": "2026-08-31",
+          "roll": 285,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/evs/2026/roll285.xml",
+          "sourceDate": "2026-11-22",
+          "lawUrl": "https://www.govinfo.gov/bulkdata/PLAW/119/public/PLAW-119publ109.xml",
+          "lawSigned": "2026-09-16",
+          "vote": "Yea"
+        },
+        {
+          "bill": "S. 307",
+          "title": "Prison Staff Safety Enhancement Act",
+          "date": "2026-08-31",
+          "roll": 284,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/evs/2026/roll284.xml",
+          "sourceDate": "2026-11-22",
+          "lawUrl": "https://www.govinfo.gov/bulkdata/PLAW/119/public/PLAW-119publ110.xml",
+          "lawSigned": "2026-09-16",
+          "vote": "Yea"
+        },
+        {
+          "bill": "S. 629",
+          "title": "Emergency Conservation Program Improvement Act",
+          "date": "2026-06-23",
+          "roll": 223,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/evs/2026/roll223.xml",
+          "sourceDate": "2026-11-22",
+          "lawUrl": "https://www.govinfo.gov/bulkdata/PLAW/119/public/PLAW-119publ102.xml",
+          "lawSigned": "2026-07-12",
+          "vote": "Yea"
+        },
+        {
+          "bill": "S. 2",
+          "title": "Secure America Act",
+          "date": "2026-06-09",
+          "roll": 214,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/evs/2026/roll214.xml",
+          "sourceDate": "2026-11-22",
+          "lawUrl": "https://www.govinfo.gov/bulkdata/PLAW/119/public/PLAW-119publ98.xml",
+          "lawSigned": "2026-06-10",
+          "vote": "Aye"
+        },
+        {
+          "bill": "S. 284",
+          "title": "Congressional Award Program Reauthorization Act",
+          "date": "2025-12-15",
+          "roll": 335,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/evs/2025/roll335.xml",
+          "sourceDate": "2026-11-22",
+          "lawUrl": "https://www.govinfo.gov/bulkdata/PLAW/119/public/PLAW-119publ66.xml",
+          "lawSigned": "2025-12-26",
+          "vote": "Yea"
+        },
+        {
+          "bill": "S. 1071",
+          "title": "To require the Secretary of Veterans Affairs to disinter the remains of Fernando V. Cota from Fort Sam Houston National Cemetery, Texas, and for other purposes",
+          "date": "2025-12-10",
+          "roll": 320,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/evs/2025/roll320.xml",
+          "sourceDate": "2026-11-22",
+          "lawUrl": "https://www.govinfo.gov/bulkdata/PLAW/119/public/PLAW-119publ60.xml",
+          "lawSigned": "2025-12-18",
+          "vote": "Yea"
+        },
+        {
+          "bill": "S. 356",
+          "title": "Secure Rural Schools Reauthorization Act",
+          "date": "2025-12-09",
+          "roll": 315,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/evs/2025/roll315.xml",
+          "sourceDate": "2026-11-22",
+          "lawUrl": "https://www.govinfo.gov/bulkdata/PLAW/119/public/PLAW-119publ58.xml",
+          "lawSigned": "2025-12-18",
+          "vote": "Yea"
+        },
+        {
+          "bill": "S.J.Res. 80",
+          "title": "Providing for congressional disapproval under chapter 8 of title 5, United States Code, of the rule submitted by the Bureau of Land Management relating to “National Petroleum Reserve in Alaska Integrated Activity Plan Record of Decision”.",
+          "date": "2025-11-18",
+          "roll": 296,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/evs/2025/roll296.xml",
+          "sourceDate": "2026-11-22",
+          "lawUrl": "https://www.govinfo.gov/bulkdata/PLAW/119/public/PLAW-119publ47.xml",
+          "lawSigned": "2025-12-05",
+          "vote": "Yea"
+        },
+        {
+          "bill": "H.J.Res. 131",
+          "title": "Providing for congressional disapproval under chapter 8 of title 5, United States Code, of the rule submitted by the Bureau of Land Management relating to “Coastal Plain Oil and Gas Leasing Program Record of Decision”",
+          "date": "2025-11-18",
+          "roll": 295,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/evs/2025/roll295.xml",
+          "sourceDate": "2026-11-22",
+          "lawUrl": "https://www.govinfo.gov/bulkdata/PLAW/119/public/PLAW-119publ52.xml",
+          "lawSigned": "2025-12-11",
+          "vote": "Yea"
+        }
+      ],
+      "career": [
+        {
+          "text": "U.S. representative · Kentucky District 5",
+          "startYear": 1981,
+          "sourceName": "Congress Legislators",
+          "sourceUrl": "https://unitedstates.github.io/congress-legislators/legislators-current.json",
+          "sourceDate": "2026-11-22",
+          "endYear": 2027
+        },
+        {
+          "text": "Candidate for U.S. House District 5",
+          "startYear": 2026,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/member_info/electionInfo/2026/120-nominations.pdf#page=13",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "text": "Commonwealth’s attorney for Pulaski and Rockcastle counties",
+          "startYear": 1969,
+          "sourceName": "House History, Art & Archives",
+          "sourceUrl": "https://history.house.gov/People/Listing/R/ROGERS,-Harold-Dallas-(Hal)-(R000395)/",
+          "sourceDate": "2026-11-22",
+          "endYear": 1980
+        },
+        {
+          "text": "Chaired the House Appropriations Committee",
+          "startYear": 2011,
+          "sourceName": "U.S. House biography",
+          "sourceUrl": "https://halrogers.house.gov/biography",
+          "sourceDate": "2026-11-22",
+          "endYear": 2016
+        }
+      ],
+      "social": [
+        {
+          "platform": "X",
+          "kind": "office",
+          "url": "https://x.com/RepHalRogers",
+          "sourceName": "Congress Legislators",
+          "sourceUrl": "https://unitedstates.github.io/congress-legislators/legislators-social-media.json",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "platform": "Facebook",
+          "kind": "office",
+          "url": "https://www.facebook.com/CongressmanHalRogers",
+          "sourceName": "Congress Legislators",
+          "sourceUrl": "https://unitedstates.github.io/congress-legislators/legislators-social-media.json",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "platform": "Instagram",
+          "kind": "office",
+          "url": "https://www.instagram.com/rephalrogers",
+          "sourceName": "Congress Legislators",
+          "sourceUrl": "https://unitedstates.github.io/congress-legislators/legislators-social-media.json",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "platform": "YouTube",
+          "kind": "office",
+          "url": "https://www.youtube.com/channel/UChVFKLZkRoHQDhp4zNvEezQ",
+          "sourceName": "Congress Legislators",
+          "sourceUrl": "https://unitedstates.github.io/congress-legislators/legislators-social-media.json",
+          "sourceDate": "2026-11-22"
+        }
+      ],
+      "education": [
+        {
+          "text": "Attended Western Kentucky University · A.B. and LL.B., University of Kentucky",
+          "sourceName": "House History, Art & Archives",
+          "sourceUrl": "https://history.house.gov/People/Listing/R/ROGERS,-Harold-Dallas-(Hal)-(R000395)/",
+          "sourceDate": "2026-11-22"
+        }
+      ],
+      "results": [
+        {
+          "year": 2024,
+          "office": "U.S. House District 5",
+          "election": "General",
+          "outcome": "Won",
+          "votes": 261407,
+          "totalVotes": 261407,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://history.house.gov/Institution/Election-Statistics/2024election/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "year": 2022,
+          "office": "U.S. House District 5",
+          "election": "General",
+          "outcome": "Won",
+          "votes": 177712,
+          "totalVotes": 216270,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://history.house.gov/Institution/Election-Statistics/2022election/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "year": 2022,
+          "office": "U.S. House District 5",
+          "election": "Primary",
+          "outcome": "Won",
+          "votes": 77050,
+          "totalVotes": 93285,
+          "sourceName": "Federal Election Commission",
+          "sourceUrl": "https://www.fec.gov/resources/cms-content/documents/federalelections2022.pdf",
+          "sourceDate": "2026-11-22",
+          "party": "Republican"
+        },
+        {
+          "year": 2020,
+          "office": "U.S. House District 5",
+          "election": "General",
+          "outcome": "Won",
+          "votes": 250914,
+          "totalVotes": 297970,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://history.house.gov/Institution/Election-Statistics/2020election/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "year": 2020,
+          "office": "U.S. House District 5",
+          "election": "Primary",
+          "outcome": "Won",
+          "votes": 76575,
+          "totalVotes": 84011,
+          "sourceName": "Federal Election Commission",
+          "sourceUrl": "https://www.fec.gov/resources/cms-content/documents/federalelections2020.pdf",
+          "sourceDate": "2026-11-22",
+          "party": "Republican"
+        },
+        {
+          "year": 2018,
+          "office": "U.S. House District 5",
+          "election": "General",
+          "outcome": "Won",
+          "votes": 172093,
+          "totalVotes": 218017,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://history.house.gov/Institution/Election-Statistics/2018election/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "year": 2018,
+          "office": "U.S. House District 5",
+          "election": "Primary",
+          "outcome": "Won",
+          "votes": 75601,
+          "totalVotes": 89817,
+          "sourceName": "Federal Election Commission",
+          "sourceUrl": "https://www.fec.gov/resources/cms-content/documents/federalelections2018.pdf",
+          "sourceDate": "2026-11-22",
+          "party": "Republican"
+        },
+        {
+          "year": 2016,
+          "office": "U.S. House District 5",
+          "election": "General",
+          "outcome": "Won",
+          "votes": 221242,
+          "totalVotes": 221242,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://history.house.gov/Institution/Election-Statistics/2016election/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "year": 2016,
+          "office": "U.S. House District 5",
+          "election": "Primary",
+          "outcome": "Won",
+          "votes": 35984,
+          "totalVotes": 43653,
+          "sourceName": "Federal Election Commission",
+          "sourceUrl": "https://www.fec.gov/resources/cms-content/documents/federalelections2016.pdf",
+          "sourceDate": "2026-11-22",
+          "party": "Republican"
+        },
+        {
+          "year": 2014,
+          "office": "U.S. House District 5",
+          "election": "General",
+          "outcome": "Won",
+          "votes": 171350,
+          "totalVotes": 218967,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://history.house.gov/Institution/Election-Statistics/2014election/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "year": 2012,
+          "office": "U.S. House District 5",
+          "election": "General",
+          "outcome": "Won",
+          "votes": 195408,
+          "totalVotes": 250855,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://history.house.gov/Institution/Election-Statistics/2012election/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "year": 2010,
+          "office": "U.S. House District 5",
+          "election": "General",
+          "outcome": "Won",
+          "votes": 151019,
+          "totalVotes": 195053,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://history.house.gov/Institution/Election-Statistics/2010election/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "year": 2008,
+          "office": "U.S. House District 5",
+          "election": "General",
+          "outcome": "Won",
+          "votes": 177024,
+          "totalVotes": 210468,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://history.house.gov/Institution/Election-Statistics/2008election/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "year": 2006,
+          "office": "U.S. House District 5",
+          "election": "General",
+          "outcome": "Won",
+          "votes": 147201,
+          "totalVotes": 199568,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://history.house.gov/Institution/Election-Statistics/2006election/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "year": 2004,
+          "office": "U.S. House District 5",
+          "election": "General",
+          "outcome": "Won",
+          "votes": 177579,
+          "totalVotes": 177579,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://history.house.gov/Institution/Election-Statistics/2004election/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "year": 2004,
+          "office": "U.S. House District 5",
+          "election": "Primary",
+          "outcome": "Won",
+          "votes": 26909,
+          "totalVotes": 29475,
+          "sourceName": "Federal Election Commission",
+          "sourceUrl": "https://www.fec.gov/resources/cms-content/documents/federalelections2004.pdf",
+          "sourceDate": "2026-11-22",
+          "party": "Republican"
+        },
+        {
+          "year": 2002,
+          "office": "U.S. House District 5",
+          "election": "General",
+          "outcome": "Won",
+          "votes": 137986,
+          "totalVotes": 176240,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://history.house.gov/Institution/Election-Statistics/2002election/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "year": 2000,
+          "office": "U.S. House District 5",
+          "election": "General",
+          "outcome": "Won",
+          "votes": 145980,
+          "totalVotes": 198475,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://history.house.gov/Institution/Election-Statistics/2000election/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "year": 1998,
+          "office": "U.S. House District 5",
+          "election": "General",
+          "outcome": "Won",
+          "votes": 142215,
+          "totalVotes": 181800,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://history.house.gov/Institution/Election-Statistics/1998election/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "year": 1996,
+          "office": "U.S. House District 5",
+          "election": "General",
+          "outcome": "Won",
+          "votes": 117842,
+          "totalVotes": 117853,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://history.house.gov/Institution/Election-Statistics/1996election/#page=27",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "year": 1994,
+          "office": "U.S. House District 5",
+          "election": "General",
+          "outcome": "Won",
+          "votes": 82291,
+          "totalVotes": 103609,
+          "sourceName": "Federal Election Commission",
+          "sourceUrl": "https://www.fec.gov/resources/cms-content/documents/federalelections94.pdf",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "year": 1992,
+          "office": "U.S. House District 5",
+          "election": "General",
+          "outcome": "Won",
+          "votes": 115255,
+          "totalVotes": 211015,
+          "sourceName": "Federal Election Commission",
+          "sourceUrl": "https://www.fec.gov/resources/cms-content/documents/federalelections92.pdf",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "year": 1990,
+          "office": "U.S. House District 5",
+          "election": "General",
+          "outcome": "Won",
+          "votes": 64660,
+          "totalVotes": 64660,
+          "sourceName": "Federal Election Commission",
+          "sourceUrl": "https://www.fec.gov/resources/cms-content/documents/federalelections90.pdf",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "year": 1988,
+          "office": "U.S. House District 5",
+          "election": "General",
+          "outcome": "Won",
+          "votes": 104467,
+          "totalVotes": 104501,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://history.house.gov/Institution/Election-Statistics/1988election/#page=18",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "year": 1986,
+          "office": "U.S. House District 5",
+          "election": "General",
+          "outcome": "Won",
+          "votes": 56760,
+          "totalVotes": 56764,
+          "sourceName": "Federal Election Commission",
+          "sourceUrl": "https://www.fec.gov/resources/cms-content/documents/federalelections86.pdf",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "year": 1984,
+          "office": "U.S. House District 5",
+          "election": "General",
+          "outcome": "Won",
+          "votes": 125164,
+          "totalVotes": 164947,
+          "sourceName": "Federal Election Commission",
+          "sourceUrl": "https://www.fec.gov/resources/cms-content/documents/federalelections84.pdf",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "year": 1982,
+          "office": "U.S. House District 5",
+          "election": "General",
+          "outcome": "Won",
+          "votes": 52928,
+          "totalVotes": 81217,
+          "sourceName": "Federal Election Commission",
+          "sourceUrl": "https://www.fec.gov/resources/cms-content/documents/federalelections82.pdf",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "year": 1980,
+          "office": "U.S. House District 5",
+          "election": "General",
+          "outcome": "Won",
+          "votes": 112093,
+          "totalVotes": 166120,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://history.house.gov/Institution/Election-Statistics/1980election/#page=25",
+          "sourceDate": "2026-11-22"
         }
       ]
     },
@@ -258,7 +2221,16 @@
         "sourceDate": "2026-10-29"
       },
       "endorsements": [],
-      "votes": []
+      "votes": [],
+      "career": [
+        {
+          "text": "Candidate for U.S. House District 5",
+          "startYear": 2026,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/member_info/electionInfo/2026/120-nominations.pdf#page=13",
+          "sourceDate": "2026-11-22"
+        }
+      ]
     },
     "H6KY05202": {
       "website": {
@@ -275,7 +2247,66 @@
         "sourceDate": "2026-10-29"
       },
       "endorsements": [],
-      "votes": []
+      "votes": [],
+      "career": [
+        {
+          "text": "Candidate for U.S. House District 5",
+          "startYear": 2026,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/member_info/electionInfo/2026/120-nominations.pdf#page=13",
+          "sourceDate": "2026-11-22"
+        }
+      ],
+      "social": [
+        {
+          "platform": "X",
+          "url": "https://x.com/weinforky5",
+          "kind": "campaign",
+          "sourceName": "Campaign site",
+          "sourceUrl": "https://www.weinforky5.com/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "platform": "Instagram",
+          "url": "https://www.instagram.com/weinforky5/",
+          "kind": "campaign",
+          "sourceName": "Campaign site",
+          "sourceUrl": "https://www.weinforky5.com/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "platform": "Facebook",
+          "url": "https://www.facebook.com/61585167021531",
+          "kind": "campaign",
+          "sourceName": "Campaign site",
+          "sourceUrl": "https://www.weinforky5.com/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "platform": "YouTube",
+          "url": "https://www.youtube.com/@weinforky5",
+          "kind": "campaign",
+          "sourceName": "Campaign site",
+          "sourceUrl": "https://www.weinforky5.com/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "platform": "TikTok",
+          "url": "https://www.tiktok.com/@weinforky5",
+          "kind": "campaign",
+          "sourceName": "Campaign site",
+          "sourceUrl": "https://www.weinforky5.com/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "platform": "Bluesky",
+          "url": "https://bsky.app/profile/weinforky5.bsky.social",
+          "kind": "campaign",
+          "sourceName": "Campaign site",
+          "sourceUrl": "https://www.weinforky5.com/",
+          "sourceDate": "2026-11-22"
+        }
+      ]
     },
     "H2KY05136": {
       "website": null,
@@ -286,7 +2317,86 @@
         "sourceDate": "2026-10-29"
       },
       "endorsements": [],
-      "votes": []
+      "votes": [],
+      "career": [
+        {
+          "text": "Candidate for U.S. House District 5",
+          "startYear": 2026,
+          "sourceName": "Federal Election Commission",
+          "sourceUrl": "https://www.fec.gov/data/candidate/H2KY05136/?cycle=2026",
+          "sourceDate": "2026-11-22"
+        }
+      ],
+      "results": [
+        {
+          "year": 2022,
+          "office": "U.S. Senate",
+          "election": "General",
+          "outcome": "Lost",
+          "votes": 48,
+          "totalVotes": 1477830,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://history.house.gov/Institution/Election-Statistics/2022election/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "year": 2018,
+          "office": "U.S. House District 5",
+          "election": "General",
+          "outcome": "Lost",
+          "votes": 34,
+          "totalVotes": 218017,
+          "sourceName": "Federal Election Commission",
+          "sourceUrl": "https://www.fec.gov/resources/cms-content/documents/federalelections2018.pdf",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "year": 2016,
+          "office": "U.S. Senate",
+          "election": "General",
+          "outcome": "Lost",
+          "votes": 36,
+          "totalVotes": 1903465,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://history.house.gov/Institution/Election-Statistics/2016election/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "year": 2014,
+          "office": "U.S. House District 5",
+          "election": "Primary",
+          "outcome": "Lost",
+          "votes": 27246,
+          "totalVotes": 66195,
+          "sourceName": "Federal Election Commission",
+          "sourceUrl": "https://www.fec.gov/resources/cms-content/documents/federalelections2014.pdf",
+          "sourceDate": "2026-11-22",
+          "party": "Democratic"
+        },
+        {
+          "year": 2010,
+          "office": "U.S. Senate",
+          "election": "General",
+          "outcome": "Lost",
+          "votes": 338,
+          "totalVotes": 1356096,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://history.house.gov/Institution/Election-Statistics/2010election/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "year": 2004,
+          "office": "U.S. House District 5",
+          "election": "Primary",
+          "outcome": "Lost",
+          "votes": 2566,
+          "totalVotes": 29475,
+          "sourceName": "Federal Election Commission",
+          "sourceUrl": "https://www.fec.gov/resources/cms-content/documents/federalelections2004.pdf",
+          "sourceDate": "2026-11-22",
+          "party": "Republican"
+        }
+      ]
     },
     "H6KY06192": {
       "website": null,
@@ -297,7 +2407,23 @@
         "sourceDate": "2026-10-02"
       },
       "endorsements": [],
-      "votes": []
+      "votes": [],
+      "career": [
+        {
+          "text": "Candidate for U.S. House District 6",
+          "startYear": 2026,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/member_info/electionInfo/2026/120-nominations.pdf#page=14",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "text": "Served in the Kentucky Senate",
+          "startYear": 2022,
+          "sourceName": "Kentucky Legislative Research Commission",
+          "sourceUrl": "https://apps.legislature.ky.gov/record/22rs/sb25/vote_history.pdf",
+          "sourceDate": "2026-11-22"
+        }
+      ]
     },
     "H6KY06184": {
       "website": null,
@@ -308,7 +2434,72 @@
         "sourceDate": "2026-05-20"
       },
       "endorsements": [],
-      "votes": []
+      "votes": [],
+      "career": [
+        {
+          "text": "Candidate for U.S. House District 6",
+          "startYear": 2026,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/member_info/electionInfo/2026/120-nominations.pdf#page=14",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "text": "Became a federal prosecutor in the Justice Department’s Civil Rights Division",
+          "startYear": 2017,
+          "sourceName": "Campaign biography",
+          "sourceUrl": "https://zachdembo.com/#bio",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "text": "Appointed policy adviser to the Kentucky governor",
+          "startYear": 2020,
+          "sourceName": "Campaign biography",
+          "sourceUrl": "https://zachdembo.com/#bio",
+          "sourceDate": "2026-11-22"
+        }
+      ],
+      "social": [
+        {
+          "platform": "X",
+          "url": "https://x.com/ZachDemboKY",
+          "kind": "campaign",
+          "sourceName": "Campaign site",
+          "sourceUrl": "https://zachdembo.com/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "platform": "Instagram",
+          "url": "https://www.instagram.com/zachdembo/",
+          "kind": "campaign",
+          "sourceName": "Campaign site",
+          "sourceUrl": "https://zachdembo.com/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "platform": "Bluesky",
+          "url": "https://bsky.app/profile/zachdembo.bsky.social",
+          "kind": "campaign",
+          "sourceName": "Campaign site",
+          "sourceUrl": "https://zachdembo.com/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "platform": "Facebook",
+          "url": "https://www.facebook.com/zachdembo/",
+          "kind": "campaign",
+          "sourceName": "Campaign site",
+          "sourceUrl": "https://zachdembo.com/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "platform": "YouTube",
+          "url": "https://www.youtube.com/@ZachDemboforcongress",
+          "kind": "campaign",
+          "sourceName": "Campaign site",
+          "sourceUrl": "https://zachdembo.com/",
+          "sourceDate": "2026-11-22"
+        }
+      ]
     },
     "H6KY06234": {
       "website": {
@@ -325,7 +2516,50 @@
         "sourceDate": "2026-10-29"
       },
       "endorsements": [],
-      "votes": []
+      "votes": [],
+      "career": [
+        {
+          "text": "Candidate for U.S. House District 6",
+          "startYear": 2026,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/member_info/electionInfo/2026/120-nominations.pdf#page=14",
+          "sourceDate": "2026-11-22"
+        }
+      ],
+      "social": [
+        {
+          "platform": "Instagram",
+          "url": "https://www.instagram.com/jbowman2026/",
+          "kind": "campaign",
+          "sourceName": "Campaign site",
+          "sourceUrl": "https://www.bowman2026.com/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "platform": "Facebook",
+          "url": "https://www.facebook.com/profile.php?id=61584741065528",
+          "kind": "campaign",
+          "sourceName": "Campaign site",
+          "sourceUrl": "https://www.bowman2026.com/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "platform": "X",
+          "url": "https://x.com/Bowman2026_KY",
+          "kind": "campaign",
+          "sourceName": "Campaign site",
+          "sourceUrl": "https://www.bowman2026.com/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "platform": "LinkedIn",
+          "url": "https://www.linkedin.com/in/jay-bowman-b8b68523/",
+          "kind": "campaign",
+          "sourceName": "Campaign site",
+          "sourceUrl": "https://www.bowman2026.com/",
+          "sourceDate": "2026-11-22"
+        }
+      ]
     },
     "H6KY06242": {
       "website": {
@@ -342,16 +2576,76 @@
         "sourceDate": "2026-10-29"
       },
       "endorsements": [],
-      "votes": []
+      "votes": [],
+      "career": [
+        {
+          "text": "Candidate for U.S. House District 6",
+          "startYear": 2026,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/member_info/electionInfo/2026/120-nominations.pdf#page=14",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "text": "Began teaching political science at the University of Kentucky",
+          "startYear": 2025,
+          "sourceName": "Campaign biography",
+          "sourceUrl": "https://petelynchforkentucky.com/",
+          "sourceDate": "2026-11-22"
+        }
+      ],
+      "education": [
+        {
+          "text": "B.A. in economics, Tufts University · Ph.D., University of Kentucky",
+          "sourceName": "University of Kentucky",
+          "sourceUrl": "https://polisci.as.uky.edu/users/ply223",
+          "sourceDate": "2026-11-22"
+        }
+      ],
+      "social": [
+        {
+          "platform": "X",
+          "url": "https://x.com/PeteLynch4KY",
+          "kind": "campaign",
+          "sourceName": "Campaign site",
+          "sourceUrl": "https://petelynchforkentucky.com/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "platform": "Instagram",
+          "url": "https://www.instagram.com/PeteLynchForKentucky/",
+          "kind": "campaign",
+          "sourceName": "Campaign site",
+          "sourceUrl": "https://petelynchforkentucky.com/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "platform": "TikTok",
+          "url": "https://www.tiktok.com/@petelynch4ky",
+          "kind": "campaign",
+          "sourceName": "Campaign site",
+          "sourceUrl": "https://petelynchforkentucky.com/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "platform": "Facebook",
+          "url": "https://www.facebook.com/profile.php?id=61583563949985",
+          "kind": "campaign",
+          "sourceName": "Campaign site",
+          "sourceUrl": "https://petelynchforkentucky.com/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "platform": "YouTube",
+          "url": "https://www.youtube.com/@PeteLynchForKentucky",
+          "kind": "campaign",
+          "sourceName": "Campaign site",
+          "sourceUrl": "https://petelynchforkentucky.com/",
+          "sourceDate": "2026-11-22"
+        }
+      ]
     },
     "H6KY06283": {
-      "website": {
-        "url": "https://robertquigleyforcongress.com",
-        "kind": "campaign",
-        "sourceName": "Louisville Courier Journal questionnaire",
-        "sourceUrl": "https://www.courier-journal.com/story/news/politics/elections/2026/10/08/kentucky-candidates-congress-2026-midterm-election/92074952007/",
-        "sourceDate": "2026-10-29"
-      },
+      "website": null,
       "bio": {
         "text": "Says he is a business owner, investor, and author.",
         "sourceName": "Louisville Courier Journal questionnaire",
@@ -359,7 +2653,181 @@
         "sourceDate": "2026-10-29"
       },
       "endorsements": [],
-      "votes": []
+      "votes": [],
+      "career": [
+        {
+          "text": "Write-in candidate for U.S. House District 6",
+          "startYear": 2026,
+          "sourceName": "Kentucky Secretary of State",
+          "sourceUrl": "https://web.sos.ky.gov/candidatefilings/Default.aspx?cand=11409",
+          "sourceDate": "2026-11-22"
+        }
+      ]
+    },
+    "sos-ky-2026-murphy": {
+      "website": {
+        "url": "https://www.murphyforkentucky.com/",
+        "kind": "campaign",
+        "sourceName": "Kentucky Secretary of State",
+        "sourceUrl": "https://web.sos.ky.gov/candidatefilings/Default.aspx?cand=11388",
+        "sourceDate": "2026-11-22"
+      },
+      "bio": null,
+      "endorsements": [],
+      "votes": [],
+      "career": [
+        {
+          "text": "Write-in candidate for U.S. Senate",
+          "startYear": 2026,
+          "sourceName": "Kentucky Secretary of State",
+          "sourceUrl": "https://web.sos.ky.gov/candidatefilings/Default.aspx?cand=11388",
+          "sourceDate": "2026-11-22"
+        }
+      ],
+      "social": [
+        {
+          "platform": "Facebook",
+          "kind": "campaign",
+          "url": "https://www.facebook.com/profile.php?id=61574522921084",
+          "sourceName": "Campaign site",
+          "sourceUrl": "https://www.murphyforkentucky.com/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "platform": "X",
+          "kind": "campaign",
+          "url": "https://x.com/BRAVE2026MURPHY",
+          "sourceName": "Campaign site",
+          "sourceUrl": "https://www.murphyforkentucky.com/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "platform": "Instagram",
+          "kind": "campaign",
+          "url": "https://www.instagram.com/murphyforkentucky/",
+          "sourceName": "Campaign site",
+          "sourceUrl": "https://www.murphyforkentucky.com/",
+          "sourceDate": "2026-11-22"
+        },
+        {
+          "platform": "Substack",
+          "kind": "campaign",
+          "url": "https://substack.com/@tommurphy28/posts",
+          "sourceName": "Campaign site",
+          "sourceUrl": "https://www.murphyforkentucky.com/",
+          "sourceDate": "2026-11-22"
+        }
+      ]
+    },
+    "H8KY02106": {
+      "website": null,
+      "bio": null,
+      "endorsements": [],
+      "votes": [],
+      "career": [
+        {
+          "text": "Candidate for U.S. House District 2",
+          "startYear": 2026,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/member_info/electionInfo/2026/120-nominations.pdf#page=13",
+          "sourceDate": "2026-11-22"
+        }
+      ]
+    },
+    "H6KY04205": {
+      "website": null,
+      "bio": null,
+      "endorsements": [],
+      "votes": [],
+      "career": [
+        {
+          "text": "Candidate for U.S. House District 4",
+          "startYear": 2026,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/member_info/electionInfo/2026/120-nominations.pdf#page=13",
+          "sourceDate": "2026-11-22"
+        }
+      ]
+    },
+    "sos-ky-2026-peter-williams": {
+      "website": {
+        "url": "https://ky4thdistrict.framer.website/",
+        "kind": "campaign",
+        "sourceName": "Kentucky Secretary of State",
+        "sourceUrl": "https://web.sos.ky.gov/candidatefilings/Default.aspx?cand=11737",
+        "sourceDate": "2026-11-22"
+      },
+      "bio": null,
+      "endorsements": [],
+      "votes": [],
+      "career": [
+        {
+          "text": "Write-in candidate for U.S. House District 4",
+          "startYear": 2026,
+          "sourceName": "Kentucky Secretary of State",
+          "sourceUrl": "https://web.sos.ky.gov/candidatefilings/Default.aspx?cand=11737",
+          "sourceDate": "2026-11-22"
+        }
+      ]
+    },
+    "H2KY05185": {
+      "website": {
+        "url": "https://serranoforamerica.com/",
+        "kind": "campaign",
+        "sourceName": "Kentucky Secretary of State",
+        "sourceUrl": "https://web.sos.ky.gov/candidatefilings/Default.aspx?cand=11402",
+        "sourceDate": "2026-11-22"
+      },
+      "bio": null,
+      "endorsements": [],
+      "votes": [],
+      "career": [
+        {
+          "text": "Candidate for U.S. House District 5",
+          "startYear": 2026,
+          "sourceName": "House Clerk",
+          "sourceUrl": "https://clerk.house.gov/member_info/electionInfo/2026/120-nominations.pdf#page=13",
+          "sourceDate": "2026-11-22"
+        }
+      ],
+      "results": [
+        {
+          "year": 2022,
+          "office": "U.S. House District 5",
+          "election": "Primary",
+          "outcome": "Lost",
+          "votes": 5460,
+          "totalVotes": 93285,
+          "sourceName": "Federal Election Commission",
+          "sourceUrl": "https://www.fec.gov/resources/cms-content/documents/federalelections2022.pdf",
+          "sourceDate": "2026-11-22",
+          "party": "Republican"
+        },
+        {
+          "year": 2020,
+          "office": "U.S. House District 5",
+          "election": "Primary",
+          "outcome": "Lost",
+          "votes": 7436,
+          "totalVotes": 84011,
+          "sourceName": "Federal Election Commission",
+          "sourceUrl": "https://www.fec.gov/resources/cms-content/documents/federalelections2020.pdf",
+          "sourceDate": "2026-11-22",
+          "party": "Republican"
+        },
+        {
+          "year": 2018,
+          "office": "U.S. House District 5",
+          "election": "Primary",
+          "outcome": "Lost",
+          "votes": 14216,
+          "totalVotes": 89817,
+          "sourceName": "Federal Election Commission",
+          "sourceUrl": "https://www.fec.gov/resources/cms-content/documents/federalelections2018.pdf",
+          "sourceDate": "2026-11-22",
+          "party": "Republican"
+        }
+      ]
     }
   }
 }

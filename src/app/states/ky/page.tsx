@@ -7,6 +7,8 @@ import { FollowControl } from "@/components/site/FollowControl";
 import { generalElectionLabel } from "@/lib/copy";
 import { ElectionDayBanner } from "@/components/site/ElectionDayBanner";
 import { PILOT_YEAR, contestsForState, loadPilotIndex } from "@/lib/site/contest";
+import { dayLabel } from "@/lib/format";
+import { KY_ELECTION_CALENDAR } from "@/lib/site/certified-results";
 import { kyBallot } from "@/lib/site/ky-ballot";
 
 export const dynamic = "force-dynamic";
@@ -42,7 +44,7 @@ export default async function StatePage({ searchParams }: PageProps) {
     <article className="wrap">
       <Crumbs items={[{ href: "/", label: "Home" }, { label: name }]} />
       <h1>{name}</h1>
-      {year === PILOT_YEAR ? <ElectionDayBanner /> : null}
+      {year === PILOT_YEAR ? <ElectionDayBanner compact /> : null}
       <p className="lede">
         {year} general · {generalElectionLabel(year)}
       </p>
@@ -52,6 +54,19 @@ export default async function StatePage({ searchParams }: PageProps) {
           Filings unavailable. <Link href="/sources">Sources</Link>
         </p>
       )}
+
+      {year === PILOT_YEAR ? (
+        <section className="section" aria-labelledby="election-calendar">
+          <h2 id="election-calendar">Election calendar</h2>
+          <ul className="plain-list">
+            {KY_ELECTION_CALENDAR.map((event) => (
+              <li key={event.date}>
+                <time dateTime={event.date}>{dayLabel(event.date)}</time> · {event.label} · <a href={event.sourceUrl}>{event.sourceName}</a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       {category === "federal" ? (
         contests.length === 0 ? (

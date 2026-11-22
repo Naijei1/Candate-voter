@@ -22,6 +22,9 @@ export function OfficialCard({ person }: { person: StatewideOfficial }) {
               {i ? " · " : ""}<a href={source.url}>{source.name} ↗</a>
             </span>
           ))}
+          {person.photo ? (
+            <p>Photo · <a href={person.photo.sourceUrl}>{person.photo.credit}</a></p>
+          ) : null}
         </details>
       </div>
     </li>
