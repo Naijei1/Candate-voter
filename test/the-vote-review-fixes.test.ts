@@ -245,8 +245,9 @@ test("Ask stays Kentucky only and the map tabs say what they show", () => {
   assert.equal(/President, Senate, and House races/.test(CHAT_SYSTEM_PROMPT), false);
   assert.equal(/ask which state or race/i.test(CHAT_SYSTEM_PROMPT), false);
   const map = readFileSync("src/components/home/HomeMap.tsx", "utf8");
-  assert.match(map, /label: "District map"/);
-  assert.match(map, /label: "Statewide officeholders"/);
+  assert.match(map, /label: "Congressional"/);
+  assert.match(map, /label: "Statewide"/);
+  assert.match(map, /label: "County"/);
 });
 
 

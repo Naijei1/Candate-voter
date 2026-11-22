@@ -96,6 +96,7 @@ export function projectCollection(
   height = 640,
   pad = 20,
   tight = false,
+  localLatitude = false,
 ): ProjectedDistrict[] {
   const prepared: Array<{ district: string; polygons: number[][][][] }> = [];
   let minX = Infinity;
@@ -127,7 +128,9 @@ export function projectCollection(
   }
 
   if (!Number.isFinite(minX) || prepared.length === 0) return [];
-  const spanX = maxX - minX || 1;
+  // Equirectangular projection at the middle parallel keeps Kentucky proportional.
+  const longitudeScale = localLatitude ? Math.cos((minY + maxY) * Math.PI / 360) : 1;
+  const spanX = (maxX - minX) * longitudeScale || 1;
   const spanY = maxY - minY || 1;
   const innerW = width - pad * 2;
   const innerH = height - pad * 2;
@@ -141,7 +144,7 @@ export function projectCollection(
     const commands: string[] = [];
     const projected = item.polygons.map((polygon) => polygon.map((ring) => {
       const points = ring.filter((pair) => pair.length >= 2).map(([lon, lat]): Point => [
-        Number(((tight ? pad : offsetX) + (lon - minX) * scale).toFixed(1)),
+        Number(((tight ? pad : offsetX) + (lon - minX) * longitudeScale * scale).toFixed(1)),
         Number(((tight ? pad : offsetY) + (maxY - lat) * scale).toFixed(1)),
       ]);
       if (points.length) commands.push(`M${points.map(([x, y]) => `${x.toFixed(1)} ${y.toFixed(1)}`).join("L")}Z`);

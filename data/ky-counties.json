@@ -1,0 +1,1568 @@
+[
+  {
+    "fips": "21001",
+    "name": "Adair",
+    "districts": [
+      "01"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Lisa Greer",
+    "clerkUrl": "https://www.adair.clerkinfo.net/",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21003",
+    "name": "Allen",
+    "districts": [
+      "01"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Sarah Constant",
+    "clerkUrl": "https://allen.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21005",
+    "name": "Anderson",
+    "districts": [
+      "01",
+      "06"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Jason Denny",
+    "clerkUrl": "https://anderson.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21007",
+    "name": "Ballard",
+    "districts": [
+      "01"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Katie Mercer",
+    "clerkUrl": "https://www.ballard.clerkinfo.net",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21009",
+    "name": "Barren",
+    "districts": [
+      "02"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Helena Birdwell",
+    "clerkUrl": "https://barren.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21011",
+    "name": "Bath",
+    "districts": [
+      "05",
+      "06"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Roger Coyle",
+    "clerkUrl": "https://www.bathwp.clerkinfo.net",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21013",
+    "name": "Bell",
+    "districts": [
+      "05"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Debbie Turner Gambrel",
+    "clerkUrl": "https://bell.countyclerk.us/",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21015",
+    "name": "Boone",
+    "districts": [
+      "04"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Justin Crigler",
+    "clerkUrl": "https://boonecountyclerk.ky.gov/",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21017",
+    "name": "Bourbon",
+    "districts": [
+      "06"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Cynthia Santana Wilson",
+    "clerkUrl": "https://bourbon.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21019",
+    "name": "Boyd",
+    "districts": [
+      "05"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Kevin Johnston",
+    "clerkUrl": "https://boyd.kycountyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21021",
+    "name": "Boyle",
+    "districts": [
+      "01"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Casey McCoy",
+    "clerkUrl": "https://boylecountyclerk.ky.gov/",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21023",
+    "name": "Bracken",
+    "districts": [
+      "04"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Jennifer Free",
+    "clerkUrl": "https://bracken.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21025",
+    "name": "Breathitt",
+    "districts": [
+      "05"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Becky Curtis",
+    "clerkUrl": "https://breathitt.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21027",
+    "name": "Breckinridge",
+    "districts": [
+      "02"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Samantha Bennett",
+    "clerkUrl": "https://breckinridge.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21029",
+    "name": "Bullitt",
+    "districts": [
+      "02"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Kevin Mooney",
+    "clerkUrl": "http://www.bullittcountyclerk.com",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21031",
+    "name": "Butler",
+    "districts": [
+      "02"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Sherry Johnson",
+    "clerkUrl": "https://butler.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21033",
+    "name": "Caldwell",
+    "districts": [
+      "01"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Jennifer Watson Hale",
+    "clerkUrl": "https://caldwell.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21035",
+    "name": "Calloway",
+    "districts": [
+      "01"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Antonia D. Faulkner",
+    "clerkUrl": "https://www.calloway.clerkinfo.net",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21037",
+    "name": "Campbell",
+    "districts": [
+      "04"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Jim Luersen",
+    "clerkUrl": "https://campbell.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21039",
+    "name": "Carlisle",
+    "districts": [
+      "01"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Becky Martin",
+    "clerkUrl": "https://carlisle.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21041",
+    "name": "Carroll",
+    "districts": [
+      "04"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Danielle Maiden Kinman",
+    "clerkUrl": "https://carroll.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21043",
+    "name": "Carter",
+    "districts": [
+      "04",
+      "05"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Debbie Johnston",
+    "clerkUrl": "https://carter.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21045",
+    "name": "Casey",
+    "districts": [
+      "01"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Casey Davis",
+    "clerkUrl": "https://casey.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21047",
+    "name": "Christian",
+    "districts": [
+      "01"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Melinda A. Humphries",
+    "clerkUrl": "https://www.christiancountyky.gov",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21049",
+    "name": "Clark",
+    "districts": [
+      "06"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Michelle Turner",
+    "clerkUrl": "https://clark.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21051",
+    "name": "Clay",
+    "districts": [
+      "05"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Beverly Craft",
+    "clerkUrl": "https://www.clay.clerkinfo.net",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21053",
+    "name": "Clinton",
+    "districts": [
+      "01"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Nathan Collins",
+    "clerkUrl": "https://www.clinton.clerkinfo.net",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21055",
+    "name": "Crittenden",
+    "districts": [
+      "01"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Daryl K. Tabor",
+    "clerkUrl": "https://www.crittenden.clerkinfo.net",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21057",
+    "name": "Cumberland",
+    "districts": [
+      "01"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Bryan Morgan",
+    "clerkUrl": "https://kentuckycountyclerks.com/cumberland/",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21059",
+    "name": "Daviess",
+    "districts": [
+      "02"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Leslie McCarty",
+    "clerkUrl": "https://www.daviessky.org",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21061",
+    "name": "Edmonson",
+    "districts": [
+      "02"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Kevin Alexander",
+    "clerkUrl": "https://edmonson.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21063",
+    "name": "Elliott",
+    "districts": [
+      "05"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Jennifer Carter",
+    "clerkUrl": "https://elliott.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21065",
+    "name": "Estill",
+    "districts": [
+      "06"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Kimberly Charles",
+    "clerkUrl": "https://estill.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21067",
+    "name": "Fayette",
+    "districts": [
+      "06"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Susan Lamb",
+    "clerkUrl": "https://www.fayettekyclerk.gov",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21069",
+    "name": "Fleming",
+    "districts": [
+      "06"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Jarrod Fritz",
+    "clerkUrl": "https://fleming.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21071",
+    "name": "Floyd",
+    "districts": [
+      "05"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Chris Waugh",
+    "clerkUrl": "https://floyd.clerkinfo.net/",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21073",
+    "name": "Franklin",
+    "districts": [
+      "01"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Jeff Hancock",
+    "clerkUrl": "https://franklin.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21075",
+    "name": "Fulton",
+    "districts": [
+      "01"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Naomi Jones",
+    "clerkUrl": "https://fulton.clerkinfo.net",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21077",
+    "name": "Gallatin",
+    "districts": [
+      "04"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Christina Clark McEntire",
+    "clerkUrl": "https://gallatin.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21079",
+    "name": "Garrard",
+    "districts": [
+      "06"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Kevin Montgomery",
+    "clerkUrl": "https://garrard.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21081",
+    "name": "Grant",
+    "districts": [
+      "04"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Colton Simpson",
+    "clerkUrl": "https://grant.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21083",
+    "name": "Graves",
+    "districts": [
+      "01"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Kim Gills",
+    "clerkUrl": "https://graves.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21085",
+    "name": "Grayson",
+    "districts": [
+      "02"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Tonya Kessinger",
+    "clerkUrl": "https://graysoncountyclerk.ky.gov",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21087",
+    "name": "Green",
+    "districts": [
+      "02"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Jessica Baker",
+    "clerkUrl": "https://green.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21089",
+    "name": "Greenup",
+    "districts": [
+      "04"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Andrew Imel",
+    "clerkUrl": "https://greenup.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21091",
+    "name": "Hancock",
+    "districts": [
+      "02"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Trina Ogle",
+    "clerkUrl": "https://hancock.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21093",
+    "name": "Hardin",
+    "districts": [
+      "02"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Brian D. Smith",
+    "clerkUrl": "https://www.hccoky.org",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21095",
+    "name": "Harlan",
+    "districts": [
+      "05"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Ashley Sullivan",
+    "clerkUrl": "https://harlan.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21097",
+    "name": "Harrison",
+    "districts": [
+      "04"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Linda Barnes",
+    "clerkUrl": "https://harrison.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21099",
+    "name": "Hart",
+    "districts": [
+      "02"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Felicia Shelton",
+    "clerkUrl": "https://hart.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21101",
+    "name": "Henderson",
+    "districts": [
+      "01"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Renesa Abner",
+    "clerkUrl": "https://www.hendersonky.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21103",
+    "name": "Henry",
+    "districts": [
+      "04"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Shanda Archer",
+    "clerkUrl": "https://henry.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21105",
+    "name": "Hickman",
+    "districts": [
+      "01"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "James \"Jimbo\" Berry",
+    "clerkUrl": "https://hickman.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21107",
+    "name": "Hopkins",
+    "districts": [
+      "01"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Keenan Woodruff",
+    "clerkUrl": "https://www.hopkinscounty.ky.gov",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21109",
+    "name": "Jackson",
+    "districts": [
+      "05"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Donald Moore",
+    "clerkUrl": "https://jacksoncountyky.net/?page_id=1210",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21111",
+    "name": "Jefferson",
+    "districts": [
+      "02",
+      "03"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "David Yates",
+    "clerkUrl": "https://www.jeffersoncountyclerk.org",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21113",
+    "name": "Jessamine",
+    "districts": [
+      "06"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Johnny Collier",
+    "clerkUrl": "https://jessamine.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21115",
+    "name": "Johnson",
+    "districts": [
+      "05"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Sallee Ann Holbrook",
+    "clerkUrl": "https://johnson.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21117",
+    "name": "Kenton",
+    "districts": [
+      "04"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Gabrielle Summe",
+    "clerkUrl": "https://www.kentoncountykyclerk.com",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21119",
+    "name": "Knott",
+    "districts": [
+      "05"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Reci Cornett",
+    "clerkUrl": "https://www.knottcountyclerk.com",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21121",
+    "name": "Knox",
+    "districts": [
+      "05"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Mike Corey",
+    "clerkUrl": "https://knox.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21123",
+    "name": "Larue",
+    "districts": [
+      "02"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Rhonda Metcalf",
+    "clerkUrl": "https://kentuckycountyclerks.com/larue/",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21125",
+    "name": "Laurel",
+    "districts": [
+      "05"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Joe \"Tony\" Brown II",
+    "clerkUrl": "https://laurel.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21127",
+    "name": "Lawrence",
+    "districts": [
+      "05"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Chris Jobe",
+    "clerkUrl": "https://www.lawrencekyclerk.com",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21129",
+    "name": "Lee",
+    "districts": [
+      "05"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Kim Noe",
+    "clerkUrl": "https://leecounty.ky.gov",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21131",
+    "name": "Leslie",
+    "districts": [
+      "05"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Onzie Sizemore",
+    "clerkUrl": "https://lesliecountyclerk.ky.gov",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21133",
+    "name": "Letcher",
+    "districts": [
+      "05"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Winston Meade",
+    "clerkUrl": "https://letcher.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21135",
+    "name": "Lewis",
+    "districts": [
+      "04"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Leslie A. Collier",
+    "clerkUrl": "https://lewis.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21137",
+    "name": "Lincoln",
+    "districts": [
+      "05"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Nancy Jackson",
+    "clerkUrl": "https://lincoln.clerkinfo.net",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21139",
+    "name": "Livingston",
+    "districts": [
+      "01"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Sonya Williams",
+    "clerkUrl": "https://livingston.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21141",
+    "name": "Logan",
+    "districts": [
+      "01",
+      "02"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Stacy Watkins",
+    "clerkUrl": "https://logan.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21143",
+    "name": "Lyon",
+    "districts": [
+      "01"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Lori Duff",
+    "clerkUrl": "https://lyon.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21151",
+    "name": "Madison",
+    "districts": [
+      "06"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Kenny Barger",
+    "clerkUrl": "https://www.madisoncountyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21153",
+    "name": "Magoffin",
+    "districts": [
+      "05"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Renee Arnett Shepherd",
+    "clerkUrl": "https://magoffincountyclerk.ky.gov",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21155",
+    "name": "Marion",
+    "districts": [
+      "01"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Chad Mattingly",
+    "clerkUrl": "https://marion.clerkinfo.net",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21157",
+    "name": "Marshall",
+    "districts": [
+      "01"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Crissy Greer",
+    "clerkUrl": "https://www.marshallcountyky.gov",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21159",
+    "name": "Martin",
+    "districts": [
+      "05"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Susie Skyles",
+    "clerkUrl": "https://martin.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21161",
+    "name": "Mason",
+    "districts": [
+      "04"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Stephanie Schumacher",
+    "clerkUrl": "https://mason.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21145",
+    "name": "McCracken",
+    "districts": [
+      "01"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Jamie Huskey",
+    "clerkUrl": "https://mccracken.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21147",
+    "name": "McCreary",
+    "districts": [
+      "05"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Eric Haynes",
+    "clerkUrl": "https://mccreary.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21149",
+    "name": "McLean",
+    "districts": [
+      "02"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Carol Eaton",
+    "clerkUrl": "https://mclean.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21163",
+    "name": "Meade",
+    "districts": [
+      "02"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Susan Masterson",
+    "clerkUrl": "https://meade.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21165",
+    "name": "Menifee",
+    "districts": [
+      "05"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Krystal Chapman",
+    "clerkUrl": "https://menifee.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21167",
+    "name": "Mercer",
+    "districts": [
+      "06"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Chris Horn",
+    "clerkUrl": "https://mercer.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21169",
+    "name": "Metcalfe",
+    "districts": [
+      "01"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Shannon Fields",
+    "clerkUrl": "https://www.metcalfecountyclerk.com",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21171",
+    "name": "Monroe",
+    "districts": [
+      "01"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Brandi Kirkpatrick Birge",
+    "clerkUrl": "https://monroe.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21173",
+    "name": "Montgomery",
+    "districts": [
+      "06"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Chris Cockrell",
+    "clerkUrl": "https://montgomery.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21175",
+    "name": "Morgan",
+    "districts": [
+      "05"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Randy Williams",
+    "clerkUrl": "https://morgan.clerkinfo.net",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21177",
+    "name": "Muhlenberg",
+    "districts": [
+      "02"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Crystal Smith",
+    "clerkUrl": "https://muhlenberg.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21179",
+    "name": "Nelson",
+    "districts": [
+      "02",
+      "04"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Jeanette Sidebottom",
+    "clerkUrl": "https://nelson.kycountyclerk.us/",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21181",
+    "name": "Nicholas",
+    "districts": [
+      "06"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Martha Moss",
+    "clerkUrl": "https://nicholas.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21183",
+    "name": "Ohio",
+    "districts": [
+      "02"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Bess T. Ralph",
+    "clerkUrl": "https://ohio.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21185",
+    "name": "Oldham",
+    "districts": [
+      "04"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Amy Alvey",
+    "clerkUrl": "http://oldhamcountyclerkky.com",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21187",
+    "name": "Owen",
+    "districts": [
+      "04"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Laura Gambrell",
+    "clerkUrl": "https://owen.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21189",
+    "name": "Owsley",
+    "districts": [
+      "05"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Austin Bowling",
+    "clerkUrl": "https://kentuckycountyclerks.com/owsley/",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21191",
+    "name": "Pendleton",
+    "districts": [
+      "04"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Kinley G. Scott",
+    "clerkUrl": "https://www.pendleton.clerkinfo.net",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21193",
+    "name": "Perry",
+    "districts": [
+      "05"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Wayne Napier",
+    "clerkUrl": "https://perry.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21195",
+    "name": "Pike",
+    "districts": [
+      "05"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Darrell Pugh",
+    "clerkUrl": "https://pikewp.clerkinfo.net",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21197",
+    "name": "Powell",
+    "districts": [
+      "06"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Jackie Everman",
+    "clerkUrl": "https://powell.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21199",
+    "name": "Pulaski",
+    "districts": [
+      "05"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Tim Price",
+    "clerkUrl": "https://Pulaski.Kycountyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21201",
+    "name": "Robertson",
+    "districts": [
+      "04"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Joanie Jolly",
+    "clerkUrl": "https://robertson.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21203",
+    "name": "Rockcastle",
+    "districts": [
+      "05"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Danetta Ford Allen",
+    "clerkUrl": "https://rockcastlecountyclerk.com",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21205",
+    "name": "Rowan",
+    "districts": [
+      "05"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Elwood Caudill",
+    "clerkUrl": "https://rowan.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21207",
+    "name": "Russell",
+    "districts": [
+      "01"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Patti Glover",
+    "clerkUrl": "https://russell.clerkinfo.net",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21209",
+    "name": "Scott",
+    "districts": [
+      "06"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Rebecca Johnson",
+    "clerkUrl": "https://www.scottcountyclerk.com",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21211",
+    "name": "Shelby",
+    "districts": [
+      "04"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Tony Harover",
+    "clerkUrl": "https://shelby.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21213",
+    "name": "Simpson",
+    "districts": [
+      "01"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Austin L. Johnson",
+    "clerkUrl": "https://simpson.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21215",
+    "name": "Spencer",
+    "districts": [
+      "04"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Lynn Hesselbrock",
+    "clerkUrl": "https://spencer.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21217",
+    "name": "Taylor",
+    "districts": [
+      "01"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Mark Carney",
+    "clerkUrl": "https://www.tcclerk.com",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21219",
+    "name": "Todd",
+    "districts": [
+      "01"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Cythia \"Cindy\" O'Bryan",
+    "clerkUrl": "https://todd.clerkinfo.net",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21221",
+    "name": "Trigg",
+    "districts": [
+      "01"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Carmen Finley",
+    "clerkUrl": "https://triggcountyclerk.ky.gov",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21223",
+    "name": "Trimble",
+    "districts": [
+      "04"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Sarah Cull",
+    "clerkUrl": "https://trimble.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21225",
+    "name": "Union",
+    "districts": [
+      "01"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Garrick Thompson",
+    "clerkUrl": "https://union.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21227",
+    "name": "Warren",
+    "districts": [
+      "02"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Lynette Yates",
+    "clerkUrl": "https://warren.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21229",
+    "name": "Washington",
+    "districts": [
+      "01"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Brett Filiatreau Berry",
+    "clerkUrl": "https://washington.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21231",
+    "name": "Wayne",
+    "districts": [
+      "05"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Heather Piercy",
+    "clerkUrl": "https://wayne.countyclerk.us/",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21233",
+    "name": "Webster",
+    "districts": [
+      "01"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Valerie Newell",
+    "clerkUrl": "https://webstercountyclerk.ky.gov",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21235",
+    "name": "Whitley",
+    "districts": [
+      "05"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Carolyn Willis",
+    "clerkUrl": "https://whitley.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21237",
+    "name": "Wolfe",
+    "districts": [
+      "05"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Corrinna Groves",
+    "clerkUrl": "https://wolfe.clerkinfo.net",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  },
+  {
+    "fips": "21239",
+    "name": "Woodford",
+    "districts": [
+      "06"
+    ],
+    "districtSource": "https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/cd120.zip",
+    "clerk": "Sandra Jones",
+    "clerkUrl": "https://woodford.countyclerk.us",
+    "clerkSource": "https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx",
+    "geometrySource": "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip",
+    "retrieved": "2026-11-22"
+  }
+]

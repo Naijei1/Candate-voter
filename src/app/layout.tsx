@@ -58,7 +58,7 @@ export const metadata: Metadata = {
     title: brand.name,
     description: brand.description,
     locale: "en_US",
-    images: [{ url: "/video/vote-hero.jpg", alt: "People voting at a polling place." }],
+    images: [{ url: "/video/vote-hero.jpg", alt: "Fields in the Knobs region of Kentucky." }],
   },
   twitter: {
     card: "summary_large_image",
