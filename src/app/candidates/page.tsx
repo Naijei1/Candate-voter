@@ -1,9 +1,10 @@
+import { DatasetUpdated } from "@/components/site/DatasetUpdated";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CandidateDirectory } from "@/components/site/CandidateDirectory";
 import { candidateCards, primaryCandidateCards, raceCardTitle } from "@/lib/site/candidate-cards";
 import { KY_FEDERAL_RACES, primaryResults } from "@/lib/site/certified-results";
-import { KY_BALLOT_SOURCES, kyBallot } from "@/lib/site/ky-ballot";
+import { KY_BALLOT_CHECKED, KY_BALLOT_SOURCES, kyBallot } from "@/lib/site/ky-ballot";
 import { KY_CONGRESSIONAL_ROSTER_SOURCE } from "@/lib/site/ky-officeholders";
 
 export const metadata: Metadata = { alternates: { canonical: "/candidates" }, title: "Candidates" };
@@ -24,6 +25,7 @@ export default function CandidatesPage() {
   return (
     <article className="wrap">
       <h1>Candidates</h1>
+      <DatasetUpdated date={KY_BALLOT_CHECKED} />
       <p className="lede">Kentucky’s U.S. Senate and House candidates.</p>
       <CandidateDirectory general={general} primary={primary} generalSources={KY_BALLOT_SOURCES.slice(0, 2)} primarySources={primarySources} />
       <p className="hint"><a href={KY_CONGRESSIONAL_ROSTER_SOURCE}>Congress Legislators roster</a></p>

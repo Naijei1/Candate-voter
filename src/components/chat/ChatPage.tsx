@@ -1,13 +1,16 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
+import { CompareSection } from "@/components/home/CompareSection";
+import type { CompareOption } from "@/lib/compare/evidence";
 import { ChatShell } from "@/components/chat/ChatShell";
 import { useAsk } from "@/components/chat/AskProvider";
+import { yearFromRaceId } from "@/lib/chat/intent";
 import { contextFromLocation, MAX_CHAT_MESSAGE } from "@/lib/chat/ui";
 
-export function ChatPage() {
+export function ChatPage({ options }: { options: readonly CompareOption[] }) {
   const ask = useAsk();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -16,6 +19,12 @@ export function ChatPage() {
     searchParams,
     cycles: ask.cycles,
   });
+  const [selected, setSelected] = useState<string>();
+  const raceId = options.some((option) => option.raceId === located.raceId) ? located.raceId : options[0]?.raceId;
+  const activeRaceId = selected ?? raceId;
+  const context = activeRaceId && (selected || !located.raceId)
+    ? { ...located, raceId: activeRaceId, cycle: yearFromRaceId(activeRaceId) ?? located.cycle, candidateId: undefined, messagePrefix: undefined }
+    : located;
   const applied = useRef(false);
 
   useEffect(() => {
@@ -28,7 +37,12 @@ export function ChatPage() {
 
   return (
     <div className="wrap ask-page">
-      <ChatShell mode="page" context={located} chat={ask.chat} />
+      <h1>Ask</h1>
+      <section aria-labelledby="ask-compare-heading">
+        <h2 id="ask-compare-heading" className="sr-only">Compare candidates</h2>
+        <CompareSection key={raceId} options={options} initialRaceId={raceId} onRaceChange={setSelected} compact />
+      </section>
+      <ChatShell mode="page" context={context} chat={ask.chat} />
     </div>
   );
 }

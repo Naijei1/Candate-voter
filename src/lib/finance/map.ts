@@ -74,6 +74,7 @@ export function mapCommitteeReport(
     coverageStart: day(row.coverage_start_date),
     coverageEnd,
     fileNumber,
+    receiptDate: day(row.receipt_date) ?? day(row.filing_date),
     sourceUrl: pdf,
     sourceLabel: pdf ? "FEC committee report" : "FEC candidate totals",
     updatedAt: context.updatedAt,

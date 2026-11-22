@@ -1,6 +1,6 @@
 import type { RateLimiter } from "@/lib/chat/rate-limit";
 import { DAILY_LIMIT_MESSAGE } from "../limits/dynamo-limit";
-import { compareBasis, type CompareBasis } from "./evidence";
+import { candidatesWithEvidence, compareBasis, comparisonOnTopic, normalizeTopic, REFUSALS, selectCandidates, type CompareBasis } from "./evidence";
 import { singleFlight } from "./single-flight";
 import { recordsOnlySummary, type CompareSummary } from "./summarize";
 
@@ -15,11 +15,11 @@ const BUDGET_MS = 15_000;
 export type CompareResult = { status: number; body: CompareSummary & { error?: "rate_limited"; message?: string }; headers?: Record<string, string> };
 
 export type CompareService = {
-  handle(raceId: string, clientKey: string): Promise<CompareResult | null>;
+  handle(raceId: string, clientKey: string, personIds?: readonly string[], topic?: string): Promise<CompareResult | null>;
 };
 
 /**
- * Cache, single-flight, and caps for the home comparison.
+ * Cache, single-flight, and caps for comparisons.
  * Order: cached answer, shared in-flight answer, per-address cap, global cap, then one model call.
  */
 export function createCompareService(deps: {
@@ -33,42 +33,61 @@ export function createCompareService(deps: {
   const now = deps.now ?? Date.now;
   const cache = new Map<string, { until: number; body: CompareSummary }>();
   const pending = new Map<string, Promise<CompareResult>>();
-  return {
-    async handle(raceId, clientKey) {
-      const deadline = now() + BUDGET_MS;
-      const basis = compareBasis(raceId);
-      if (!basis) return null;
-      const hit = cache.get(raceId);
-      if (hit && now() < hit.until) return { status: 200, body: hit.body };
-      const inFlight = pending.get(raceId);
-      if (inFlight) return inFlight;
-      const perIp = await deps.limiter.take(`compare:${clientKey}`, now());
-      if (!perIp.ok) return tooManyRequests(basis, perIp.retryAfterSeconds);
-      const filled = cache.get(raceId);
-      if (filled && now() < filled.until) return { status: 200, body: filled.body };
-      return singleFlight(pending, raceId, async (): Promise<CompareResult> => {
-        const global = await deps.globalLimiter.take("compare:all", now());
-        if (!global.ok) return tooManyRequests(basis, global.retryAfterSeconds);
-        if (deps.dailyLimiter && deps.usesModel?.(basis)) {
-          const decision = await deps.dailyLimiter.take("daily", now());
-          if (!decision.ok) {
-            return {
-              status: 429,
-              body: {
-                ...recordsOnlySummary(basis, DAILY_LIMIT_MESSAGE),
-                error: "rate_limited",
-                message: DAILY_LIMIT_MESSAGE,
-              },
-              headers: { "retry-after": String(decision.retryAfterSeconds) },
-            };
-          }
+
+  async function compare(basis: CompareBasis, clientKey: string, deadline: number): Promise<CompareResult> {
+    const key = JSON.stringify([basis.raceId, basis.people.map((person) => person.id), basis.topic]);
+    const hit = cache.get(key);
+    if (hit && now() < hit.until) return { status: 200, body: hit.body };
+    const inFlight = pending.get(key);
+    if (inFlight) return inFlight;
+    const perIp = await deps.limiter.take(`compare:${clientKey}`, now());
+    if (!perIp.ok) return tooManyRequests(basis, perIp.retryAfterSeconds);
+    const filled = cache.get(key);
+    if (filled && now() < filled.until) return { status: 200, body: filled.body };
+    return singleFlight(pending, key, async (): Promise<CompareResult> => {
+      const global = await deps.globalLimiter.take("compare:all", now());
+      if (!global.ok) return tooManyRequests(basis, global.retryAfterSeconds);
+      if (deps.dailyLimiter && deps.usesModel?.(basis)) {
+        const decision = await deps.dailyLimiter.take("daily", now());
+        if (!decision.ok) {
+          return {
+            status: 429,
+            body: {
+              ...recordsOnlySummary(basis, DAILY_LIMIT_MESSAGE),
+              error: "rate_limited",
+              message: DAILY_LIMIT_MESSAGE,
+            },
+            headers: { "retry-after": String(decision.retryAfterSeconds) },
+          };
         }
-        const remaining = deadline - now();
-        if (remaining <= 0) return { status: 200, body: recordsOnlySummary(basis, null) };
-        const summary = await deps.summarize(basis, remaining);
-        cache.set(raceId, { until: now() + (summary.mode === "ai" ? AI_CACHE_MS : FALLBACK_CACHE_MS), body: summary });
-        return { status: 200, body: summary };
-      });
+      }
+      const remaining = deadline - now();
+      if (remaining <= 0) return { status: 200, body: recordsOnlySummary(basis, null) };
+      const summary = await deps.summarize(basis, remaining);
+      cache.set(key, { until: now() + (summary.mode === "ai" ? AI_CACHE_MS : FALLBACK_CACHE_MS), body: summary });
+      return { status: 200, body: summary };
+    });
+  }
+
+  return {
+    async handle(raceId, clientKey, personIds, topic) {
+      const deadline = now() + BUDGET_MS;
+      const full = compareBasis(raceId);
+      if (!full) return null;
+      const basis = selectCandidates(full, personIds);
+      if (!basis.people.length) return null;
+      const normalized = topic && normalizeTopic(topic);
+      if (!normalized) return compare(basis, clientKey, deadline);
+
+      const focused = comparisonOnTopic(basis, normalized);
+      if (candidatesWithEvidence(focused) >= 2) {
+        const result = await compare(focused, clientKey, deadline);
+        if (result.status !== 200 || result.body.mode === "records" || result.body.differ.length || result.body.agree.length) {
+          return result;
+        }
+      }
+      const general = await compare(basis, clientKey, deadline);
+      return general.status === 200 ? { ...general, body: { ...general.body, notice: REFUSALS.topic } } : general;
     },
   };
 }

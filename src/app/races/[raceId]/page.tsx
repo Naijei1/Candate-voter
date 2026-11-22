@@ -1,3 +1,4 @@
+import { DatasetUpdated } from "@/components/site/DatasetUpdated";
 import { currentUser } from "@/lib/auth/session";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -14,7 +15,7 @@ import { RaceResults } from "@/components/site/RaceResults";
 import { candidateElectionStatus } from "@/lib/site/certified-results";
 import { raceCardTitle } from "@/lib/site/candidate-cards";
 import { openSeatLine } from "@/lib/site/seat";
-import { KY_BALLOT_SOURCES, kyBallot, kyBallotIds } from "@/lib/site/ky-ballot";
+import { KY_BALLOT_CHECKED, KY_BALLOT_SOURCES, kyBallot, kyBallotIds } from "@/lib/site/ky-ballot";
 import { photoAttribution, portraitFor } from "@/lib/site/stances";
 import { cardsForRace } from "@/lib/site/showcase";
 import { personFilingNote } from "@/lib/data/filing-note";
@@ -58,6 +59,7 @@ export default async function RacePage({ params }: PageProps) {
         ]}
       />
       <h1>{race.title}</h1>
+      <DatasetUpdated date={[ballot ? KY_BALLOT_CHECKED : "", loaded.refreshedAt ?? ""].sort().at(-1)} />
       {ballot ? <RaceResults raceId={race.raceId} /> : <ElectionDayBanner />}
       {!ballot && sourceHref ? <p className="hint"><a href={sourceHref}>Source ↗</a></p> : null}
       {ballot || loaded.filingsLoaded ? null : roster.fecList ? (

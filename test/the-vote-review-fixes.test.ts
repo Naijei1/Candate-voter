@@ -195,7 +195,7 @@ test("comparison failures show evidence and the live region stays concise", () =
   const source = readFileSync("src/components/home/CompareSection.tsx", "utf8");
   assert.equal((source.match(/aria-live/g) ?? []).length, 1);
   assert.match(source, /candidateEvidence\(basis\)/);
-  assert.match(source, /open=\{!hasSummary\}/);
+  assert.match(source, /open=\{!hasSummary && !compact\}/);
   assert.doesNotMatch(source, /compare-refusal|comparison ready/);
   assert.match(source, /role="status" aria-live="polite"/);
   assert.equal(/<div className="compare-cols" aria-live/.test(source), false);

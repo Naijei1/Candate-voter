@@ -20,7 +20,6 @@ export function SiteFooter() {
             </Link>
           ))}
         </nav>
-        <p>THE VOTE does not endorse candidates.</p>
       </div>
     </footer>
   );

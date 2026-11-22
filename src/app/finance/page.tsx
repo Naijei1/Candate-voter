@@ -1,3 +1,5 @@
+import { DatasetUpdated } from "@/components/site/DatasetUpdated";
+import { FilingCharts } from "@/components/site/FilingCharts";
 import { isKentuckyFinanceRow } from "@/lib/site/ky-finance";
 import { dayLabel } from "@/lib/format";
 import type { Metadata } from "next";
@@ -38,12 +40,14 @@ export default async function FinancePage({ searchParams }: PageProps) {
   return (
     <article className="wrap">
       <h1>Candidates&apos; Political Finances</h1>
+      <DatasetUpdated date={charts?.updatedAt ?? bundle.retrievedAt ?? [...kentuckyDirect, ...kentuckyOutside].map((row) => row.updatedAt).sort().at(-1)} />
       <p className="lede">Money raised and spent in Kentucky&apos;s {cycle} federal races.</p>
       {charts ? (
         <section className="home-section" aria-label="Campaign finance charts">
           <MoneyCharts data={charts} showAll />
         </section>
       ) : null}
+      {cycle === 2026 ? <FilingCharts direct={kentuckyDirect} /> : null}
       <form className="finder-row" method="get" action="/finance">
         <label htmlFor="finance-cycle">
           Election cycle

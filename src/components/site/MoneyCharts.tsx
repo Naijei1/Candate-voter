@@ -2,18 +2,14 @@
 
 import { ShortList } from "@/components/site/ShortList";
 import { type CSSProperties, useId, useState } from "react";
+import { shortMoney } from "@/lib/finance/model";
+import { dayLabel } from "@/lib/format";
 import { targetLines } from "@/lib/site/money-chart-lines";
 import type { ChartCommittee, ChartRace, MoneyChartData } from "@/lib/site/money-charts";
 
-const FULL = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
+export { shortMoney } from "@/lib/finance/model";
 
-/** Short label for a bar, e.g. "$12.5M". The table shows the full amount. */
-export function shortMoney(value: number): string {
-  const abs = Math.abs(value);
-  if (abs >= 1_000_000) return `$${(value / 1_000_000).toFixed(abs >= 10_000_000 ? 1 : 2).replace(/\.?0+$/, "")}M`;
-  if (abs >= 1_000) return `$${Math.round(value / 1_000)}K`;
-  return FULL.format(value);
-}
+const FULL = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
 
 /** Bar share as a plain number for scaleX(); percentages in scale() are not supported by older browsers. */
 function share(value: number, max: number): number {
@@ -36,12 +32,19 @@ function raceMaximum(race: ChartRace) {
   return Math.max(1, ...race.people.flatMap((person) => [person.raised, person.spent, person.cash ?? 0]));
 }
 
-function RaceChart({ race, previous }: { race: ChartRace; previous?: ChartRace }) {
+function RaceChart({ race, previous, showHeadline }: { race: ChartRace; previous?: ChartRace; showHeadline: boolean }) {
   const max = raceMaximum(race);
   const previousMax = previous ? raceMaximum(previous) : 1;
   return (
     <figure className={previous ? "chart chart-switched" : "chart"}>
       <figcaption className="chart-title">{race.title}</figcaption>
+      {showHeadline && race.headline ? (
+        <p className="chart-foot">
+          {race.headline.name} <a href={race.headline.sourceUrl}>raised {shortMoney(race.headline.raised)}</a> through {dayLabel(race.headline.coverageEnd)}. {" "}
+          {race.headline.outside.length ? <><a href={race.headline.outsideSourceUrl}>Outside groups spent</a> {race.headline.outside.map((item) => `${shortMoney(item.amount)} ${item.side}`).join(" and ")} {race.headline.name}. {" "}</> : null}
+          <span>FEC</span>
+        </p>
+      ) : null}
       <ul className="chart-legend" aria-hidden="true">
         {SERIES.map((series) => (
           <li key={series.key}>
@@ -220,7 +223,7 @@ export function MoneyCharts({ data, showAll = false }: { data: MoneyChartData; s
       <div className="chart-grid">
         {shown.length > 0 ? <div>
           {shown.map((race) => (
-            <RaceChart key={race.raceId} race={race} previous={races.find((item) => item.raceId === previousId)} />
+            <RaceChart key={race.raceId} race={race} showHeadline={showAll} previous={races.find((item) => item.raceId === previousId)} />
           ))}
           <p className="chart-foot">
             Source: <a href={data.candidateSource.url}>{data.candidateSource.name}</a>{data.candidateAsOf}.

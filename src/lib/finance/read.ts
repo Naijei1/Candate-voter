@@ -22,6 +22,7 @@ export function fromDirectItem(item: Record<string, unknown>): FinanceDirect | n
     coverageStart: stringOrNull(item.coverageStart),
     coverageEnd: stringOrNull(item.coverageEnd),
     fileNumber: stringOrNull(item.fileNumber),
+    receiptDate: stringOrNull(item.receiptDate),
     sourceUrl: stringOrNull(item.sourceUrl),
     sourceLabel: label,
     updatedAt: item.updatedAt,

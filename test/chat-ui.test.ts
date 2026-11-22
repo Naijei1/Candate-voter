@@ -460,8 +460,8 @@ test("message states render sources only after a successful answer", () => {
       }),
     ),
   );
-  assert.match(aligned, /Viewpoint similarity uses public records only/);
-  assert.match(aligned, /This is not a voting recommendation/);
+  assert.match(aligned, /Two stored filers discuss housing/);
+  assert.doesNotMatch(aligned, /This is not a voting recommendation/);
   assert.doesNotMatch(aligned, /Retry/);
 
   const limited = render(

@@ -67,7 +67,7 @@ function SideBySide({ evidence, open }: { evidence: readonly Evidence[]; open: b
           <ul>
             {rows.map((row) => (
               <li key={row.id}>
-                <strong>{row.personName}:</strong> {row.text}{" "}
+                <strong>{row.personName}</strong> · {row.kind === "vote" ? "Official record" : "Candidate says"} · {row.text}{" "}
                 <a href={row.sourceUrl}>
                   {row.sourceName}
                   {row.sourceDate ? `, ${dayLabel(row.sourceDate)}` : ""}
@@ -81,9 +81,14 @@ function SideBySide({ evidence, open }: { evidence: readonly Evidence[]; open: b
   );
 }
 
-export function CompareSection({ options }: { options: readonly CompareOption[] }) {
+export function CompareSection({ options, initialRaceId, onRaceChange, compact = false }: {
+  options: readonly CompareOption[];
+  initialRaceId?: string;
+  onRaceChange?: (raceId: string) => void;
+  compact?: boolean;
+}) {
   const selectId = useId();
-  const [raceId, setRaceId] = useState(options[0]?.raceId ?? "");
+  const [raceId, setRaceId] = useState(initialRaceId ?? options[0]?.raceId ?? "");
   const [state, setState] = useState<State>({ raceId: "", summary: null, failed: false });
   const option = options.find((row) => row.raceId === raceId) ?? options[0];
 
@@ -120,16 +125,19 @@ export function CompareSection({ options }: { options: readonly CompareOption[] 
 
   return (
     <div className="compare-ai" data-testid="compare-ai">
-      <label className="chart-picker" htmlFor={selectId}>
-        Pick a race
-        <select id={selectId} value={raceId} onChange={(event) => setRaceId(event.target.value)}>
+      <div className="chart-picker">
+        <label htmlFor={selectId}>Pick a race</label>
+        <select id={selectId} value={raceId} onChange={(event) => {
+          setRaceId(event.target.value);
+          onRaceChange?.(event.target.value);
+        }}>
           {options.map((row) => (
             <option key={row.raceId} value={row.raceId}>
               {row.title}
             </option>
           ))}
         </select>
-      </label>
+      </div>
       <p className="sr-only" role="status" aria-live="polite">
         {loading ? "Loading comparison…" : ""}
       </p>
@@ -138,21 +146,25 @@ export function CompareSection({ options }: { options: readonly CompareOption[] 
           <h3>What to know</h3>
           <ClaimList claims={option.know} byId={byId} />
         </section>
-        {summary?.differ.length ? (
+        {summary?.differ.length || (compact && !loading) ? (
           <section className="compare-col">
             <h3>Where they differ</h3>
-            <ClaimList claims={summary.differ} byId={byId} />
+            {summary?.differ.length
+              ? <ClaimList claims={summary.differ} byId={byId} />
+              : <p className="hint">{summary?.differRefusal ?? "See the candidate records below."}</p>}
           </section>
         ) : null}
-        {summary?.agree.length ? (
+        {summary?.agree.length || (compact && !loading) ? (
           <section className="compare-col">
             <h3>Where they agree</h3>
-            <ClaimList claims={summary.agree} byId={byId} />
+            {summary?.agree.length
+              ? <ClaimList claims={summary.agree} byId={byId} />
+              : <p className="hint">{summary?.agreeRefusal ?? "See the candidate records below."}</p>}
           </section>
         ) : null}
       </div>
       {summary?.mode === "ai" && hasSummary ? <p className="hint">AI summary</p> : null}
-      {!loading ? <SideBySide key={raceId} evidence={evidence} open={!hasSummary} /> : null}
+      {!loading ? <SideBySide key={raceId} evidence={evidence} open={!hasSummary && !compact} /> : null}
       <p className="hint">
         <a href={withBasePath(`/races/${option.raceId}/compare`)}>Full side-by-side comparison</a>
       </p>

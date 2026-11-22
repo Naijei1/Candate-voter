@@ -13,7 +13,7 @@ import { FollowControl } from "@/components/site/FollowControl";
 import { RosterMoney } from "@/components/site/RosterMoney";
 import { CareerTimeline, EducationList, PriorResults, RecordSource, VoteList } from "@/components/site/ProfileRecords";
 import { dayLabel, formatInstant, httpsUrl, partyCue, partyLabel } from "@/lib/format";
-import { formatMoney } from "@/lib/finance/model";
+import { shortMoney } from "@/lib/finance/model";
 import { financeForCandidate, loadFinance } from "@/lib/finance/load";
 import { selectDirect, selectOutside } from "@/lib/finance/present";
 import { loadChecks } from "@/lib/content/store";
@@ -142,7 +142,7 @@ export default async function CandidatePage({ params }: PageProps) {
         <div>
           <p className="hint">Campaign finance</p>
           <p>
-            {formatMoney(ballot.person.finance.receipts)} raised{ballot.person.finance.cash != null ? ` · ${formatMoney(ballot.person.finance.cash)} cash on hand` : ""} · <a href={ballot.person.finance.sourceUrl}>FEC</a>
+            {shortMoney(ballot.person.finance.receipts)} raised{ballot.person.finance.cash != null ? ` · ${shortMoney(ballot.person.finance.cash)} cash on hand` : ""} · <a href={ballot.person.finance.sourceUrl}>FEC</a>
           </p>
         </div>
         ) : null}

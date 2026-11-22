@@ -23,7 +23,6 @@ export async function notesAnswer(request: ChatRequest): Promise<ChatAnswer | nu
   const lines: string[] = [];
   const sources: ChatAnswer["sources"] = [];
   if (people.length > 0) {
-    lines.push("Sourced notes only. This is not a recommendation.");
     for (const person of people) {
       const notes = stancesFor(person.id);
       if (notes.length === 0) {

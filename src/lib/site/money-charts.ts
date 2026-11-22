@@ -5,6 +5,7 @@ import type { FinanceOutside } from "@/lib/finance/model";
 import { loadFinance } from "@/lib/finance/load";
 import { FINANCE_SNAPSHOT_RETRIEVED_AT, snapshotFinance } from "@/lib/finance/snapshot";
 import { KY_BALLOT_SOURCES, kyBallot } from "@/lib/site/ky-ballot";
+import { campaignFinanceChecked, candidateOutsideSpending } from "./fec-reports";
 import type { ChartTarget } from "./money-chart-lines";
 
 export type { ChartTarget } from "./money-chart-lines";
@@ -38,6 +39,14 @@ export type ChartRace = {
   people: ChartPerson[];
   /** Names on the ballot with no FEC totals stored. Listed, never drawn as zero. */
   missing: string[];
+  headline?: {
+    name: string;
+    raised: number;
+    coverageEnd: string;
+    sourceUrl: string;
+    outsideSourceUrl: string;
+    outside: Array<{ side: "for" | "against"; amount: number }>;
+  };
 };
 
 export type ChartCommittee = {
@@ -60,6 +69,7 @@ export type MoneyChartData = {
   candidateAsOf: string;
   committeeAsOf: string;
   candidateSource: { name: string; url: string };
+  updatedAt: string | null;
 };
 
 export function raceTitle(raceId: string): string {
@@ -152,6 +162,27 @@ export async function loadMoneyCharts(): Promise<MoneyChartData> {
     ? (bundle.retrievedAt ?? latest(bundle.outside.map((row) => row.updatedAt)) ?? FINANCE_SNAPSHOT_RETRIEVED_AT)
     : FINANCE_SNAPSHOT_RETRIEVED_AT;
   const races = chartRaces();
+  for (const race of races) {
+    const leader = race.people[0];
+    if (!leader) continue;
+    const person = kyBallot(race.raceId)?.people.find((person) => person.id === leader.id);
+    const ids = new Set([person?.fecCandidateId, ...(person?.alsoFecIds ?? [])]);
+    const rows = outside.filter((row) => ids.has(row.candidateId));
+    const verified = candidateOutsideSpending.find((row) => ids.has(row.candidateId));
+    const newer = rows.some((row) => !verified || row.updatedAt.slice(0, 10) > verified.retrievedAt);
+    race.headline = {
+      name: leader.name,
+      raised: leader.raised,
+      coverageEnd: leader.coverageEnd,
+      sourceUrl: leader.sourceUrl,
+      outsideSourceUrl: verified?.sourceUrl ?? "https://www.fec.gov/data/independent-expenditures/",
+      outside: (["support", "oppose"] as const).flatMap((type) => {
+        const matched = rows.filter((row) => row.support === type);
+        const amount = verified && !newer ? verified[type] : matched.length ? matched.reduce((sum, row) => sum + row.total, 0) : null;
+        return amount != null ? [{ side: type === "support" ? "for" : "against", amount }] : [];
+      }),
+    };
+  }
   const coverageEnd = latest(races.flatMap((race) => race.people.map((person) => person.coverageEnd)));
   const source = KY_BALLOT_SOURCES[2];
   return {
@@ -160,6 +191,7 @@ export async function loadMoneyCharts(): Promise<MoneyChartData> {
     candidateAsOf: coverageEnd ? `, through ${dayLabel(coverageEnd)}` : "",
     committeeAsOf: ` · ${dayLabel(outsideDay)}`,
     candidateSource: { name: source.name, url: source.url },
+    updatedAt: latest([campaignFinanceChecked, outsideDay, bundle.retrievedAt, ...bundle.direct.filter((row) => nominees.has(row.candidateId)).map((row) => row.updatedAt)]),
   };
 }
 
