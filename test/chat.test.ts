@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { createCompareService } from "../src/lib/compare/service";
+import { summarizeRace } from "../src/lib/compare/summarize";
 import { llmsText } from "../src/lib/api/llms";
 import { openApiDocument } from "../src/lib/api/openapi-document";
 import {
@@ -2019,4 +2021,94 @@ test("state roster distinguishes omitted House names from an empty House roster"
   assert.match(capped, /Alex Adams/);
   assert.match(capped, /House names are omitted here\./);
   assert.doesNotMatch(capped, /No House filing found\./);
+});
+
+
+test("candidate comparisons in Ask reuse the race comparison and return sourced records across races", async () => {
+  const repo = new MemoryVoterRepository();
+  const fallback = scripted([]);
+  let compares = 0;
+  const compare = createCompareService({
+    limiter: createRateLimiter({ limit: 5, windowMs: 60_000 }),
+    globalLimiter: createRateLimiter({ limit: 5, windowMs: 60_000 }),
+    async summarize(basis) {
+      compares += 1;
+      assert.deepEqual(basis.people.map((person) => person.name), ["Andy Barr", "Charles Booker"]);
+      const cites = basis.people.map((person) => basis.evidence.find((row) => row.personId === person.id)?.id);
+      const result = JSON.stringify({
+        differ: [{ text: "Barr and Booker addressed the cost of living in different ways.", cites }],
+        agree: [{ text: "Both candidates discussed costs.", cites }],
+      });
+      return summarizeRace(basis, { converse: scripted([{ stopReason: "end_turn", message: { role: "assistant", content: [{ text: result }] } }]), modelId: "test" });
+    },
+  });
+  const deps = chatDeps(repo, fallback, { compare });
+  const response = await postChat(post({ message: "Where do Barr and Booker differ, and where do they agree?" }), deps);
+  const body = await response.json();
+  assert.equal(response.status, 200);
+  assert.match(body.answer_markdown, /What to know[\s\S]+Where they differ[\s\S]+Where they agree/);
+  assert.match(body.answer_markdown, /Both candidates discussed costs/);
+  assert.ok(body.sources.length > 1);
+  const across = await postChat(post({ message: "Where do Barr and Zach Dembo agree?", raceId: "2026-senate-KY" }), deps);
+  const acrossBody = await across.json();
+  assert.equal(across.status, 200);
+  assert.match(acrossBody.answer_markdown, /Andy Barr/);
+  assert.match(acrossBody.answer_markdown, /Zach Dembo/);
+  assert.match(acrossBody.answer_markdown, /2026-house-KY-06\/compare/);
+  assert.ok(acrossBody.sources.length > 1);
+  assert.equal(compares, 1);
+  assert.equal(fallback.calls, 0);
+});
+
+test("Ask scopes comparison evidence, prompts and cached answers to the requested issue", async () => {
+  const prompts: string[] = [];
+  const compare = createCompareService({
+    limiter: createRateLimiter({ limit: 5, windowMs: 60_000 }),
+    globalLimiter: createRateLimiter({ limit: 5, windowMs: 60_000 }),
+    async summarize(basis) {
+      const cites = basis.people.map((person) => basis.evidence.find((row) => row.personId === person.id)?.id);
+      const text = basis.topic === "data centers"
+        ? "Barr voted for the Ratepayer Protection Act. Booker supports a pause on new AI data centers."
+        : "Barr cited fuel prices. Booker called for reining in tariffs and ending Medicaid cuts.";
+      return summarizeRace(basis, {
+        modelId: "test",
+        converse: async ({ messages }) => {
+          const block = messages[0]?.content[0];
+          prompts.push(block && "text" in block ? block.text : "");
+          return {
+            stopReason: "end_turn",
+            message: { role: "assistant", content: [{ text: JSON.stringify({ differ: [{ text, cites }], agree: [] }) }] },
+          };
+        },
+      });
+    },
+  });
+  const fallback = scripted([]);
+  const deps = chatDeps(new MemoryVoterRepository(), fallback, { compare });
+  async function ask(message: string): Promise<string> {
+    const response = await postChat(post({ message }), deps);
+    assert.equal(response.status, 200);
+    return (await response.json()).answer_markdown;
+  }
+
+  const general = await ask("Where do Barr and Booker differ?");
+  const immigration = await ask("Where do Barr and Booker differ on immigration?");
+  assert.equal(immigration, `The records don’t support a comparison on this issue.\n\n${general}`);
+  assert.equal(await ask("How do Barr and Booker’s immigration policies differ?"), immigration);
+  assert.equal(prompts.length, 1);
+
+  const dataCenters = await ask("Where do Barr and Booker differ on data centers?");
+  assert.match(dataCenters, /pause on new AI data centers/);
+  assert.doesNotMatch(dataCenters, /fuel prices|support a comparison on this issue/);
+  assert.match(prompts[1], /Topic: data centers\./);
+  assert.match(prompts[1], /Ratepayer Protection Act/);
+  assert.doesNotMatch(prompts[1], /immigration|fuel prices|Medicaid/);
+  assert.equal(await ask("Compare Booker and Barr on Data Centers."), dataCenters);
+
+  await ask("Where do Barr and Booker differ on the cost of living?");
+  assert.match(prompts[2], /Topic: cost of living\./);
+  assert.doesNotMatch(prompts[2], /data centers/);
+  assert.equal(await ask("Where do Barr and Booker differ?"), general);
+  assert.equal(prompts.length, 3);
+  assert.equal(fallback.calls, 0);
 });

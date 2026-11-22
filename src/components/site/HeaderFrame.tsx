@@ -29,6 +29,7 @@ export function HeaderFrame({
         {wordmark}
         <nav className="nav-desktop" aria-label="Primary">
           <Link href={findHref}>Find my races</Link>
+          <Link href="/candidates" aria-current={active(path, "/candidates") ? "page" : undefined}>Candidates</Link>
           {NAV_LINKS.map((item) => (
             <Link key={item.href} href={item.href} aria-current={active(path, item.href) ? "page" : undefined}>
               {item.short === item.label ? (
@@ -52,7 +53,7 @@ export function HeaderFrame({
                 {item.label}
               </Link>
             ))}
-            {signedIn ? <Link href="/account">Saved races</Link> : <Link href="/sign-in">Sign in</Link>}
+            {signedIn ? <Link href="/account">My watchlist</Link> : <Link href="/sign-in">Sign in</Link>}
           </div>
         </details>
       </div>

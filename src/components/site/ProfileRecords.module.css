@@ -1,0 +1,23 @@
+ol.timeline {
+  border-inline-start: 1px solid currentColor;
+  padding-inline-start: 16px;
+}
+
+.timeline li {
+  position: relative;
+}
+
+.timeline li::before {
+  content: "";
+  position: absolute;
+  inset-block-start: 0.9em;
+  inset-inline-start: -20px;
+  inline-size: 7px;
+  block-size: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.numbers {
+  font-variant-numeric: tabular-nums;
+}

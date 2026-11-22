@@ -1,3 +1,4 @@
+import { DatasetUpdated } from "@/components/site/DatasetUpdated";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -5,13 +6,14 @@ import { BallotBar } from "@/components/site/BallotBar";
 import { AskPanel } from "@/components/site/AskPanel";
 import { CompareBoard } from "@/components/site/CompareBoard";
 import { Crumbs } from "@/components/site/Crumbs";
+import { CareerTimeline, EducationList, PriorResults, VoteList } from "@/components/site/ProfileRecords";
 import { loadFinance } from "@/lib/finance/load";
 import { selectDirect, selectOutside } from "@/lib/finance/present";
 import { ElectionDayBanner } from "@/components/site/ElectionDayBanner";
 import { formatMoney } from "@/lib/finance/model";
-import { kyBallot, rosterMoney } from "@/lib/site/ky-ballot";
+import { KY_BALLOT_CHECKED, kyBallot, rosterMoney } from "@/lib/site/ky-ballot";
 import { newsForNames } from "@/lib/site/ky-news";
-import { linkLabel, profileFor } from "@/lib/site/profiles";
+import { careerTimeline, linkLabel, profileFor } from "@/lib/site/profiles";
 import { photoAttribution, portraitFor, stanceIssues, stancesFor } from "@/lib/site/stances";
 import { cardsForRace } from "@/lib/site/showcase";
 import { loadContest } from "@/lib/site/contest";
@@ -55,9 +57,6 @@ export default async function ComparePage({ params }: PageProps) {
     : [];
   const direct = [...liveDirect, ...rosterDirect];
   const outside = selectOutside(finance.outside, null).filter((row) => ids.has(row.candidateId));
-  const stories = news.filter(
-    (story) => !/\b(wins|won|elected|victory)\b/i.test(story.title),
-  );
   const stateHref = "/";
 
   return (
@@ -70,6 +69,7 @@ export default async function ComparePage({ params }: PageProps) {
         ]}
       />
       <h1>Compare</h1>
+      <DatasetUpdated date={[ballot ? KY_BALLOT_CHECKED : "", loaded.refreshedAt ?? ""].sort().at(-1)} />
       <p className="lede">{race.title}</p>
       {ballot || loaded.filingsLoaded ? null : roster.fecList ? (
         <p className="notice" role="status">
@@ -87,19 +87,21 @@ export default async function ComparePage({ params }: PageProps) {
           summary={ballot ? null : roster.summary}
           finance={{ notice: ballot ? null : finance.notice, direct, outside }}
           issues={stanceIssues()}
-          updates={stories}
+          updates={news}
           candidates={
             ballot
               ? [...ballot.people].sort((a, b) => a.name.localeCompare(b.name)).map((person) => {
                   const profile = profileFor(person.id);
                   const photo = portraitFor(person.id);
+                  const timeline = careerTimeline(profile);
                   return {
                     candidateId: person.id,
                     displayName: person.name,
                     partyLabel: person.party,
                     note: person.role === "write-in" ? "Write-in" : person.holdsOffice ? "Current officeholder" : null,
                     photo: photo?.src ?? null,
-                    photoCredit: photoAttribution(photo),
+                    photoCredit: photoAttribution(photo) ?? photo?.credit,
+                    photoSource: photo?.sourceUrl,
                     website: profile.website ? { url: profile.website.url, label: linkLabel(profile.website) } : null,
                     stances: stancesFor(person.id).map((stance) => ({
                       issueId: stance.issueId,
@@ -109,7 +111,19 @@ export default async function ComparePage({ params }: PageProps) {
                       sourceUrl: stance.sourceUrl,
                       sourceDate: stance.sourceDate,
                     })),
-                    votes: profile.votes,
+                    votes: profile.votes.length ? <VoteList entries={profile.votes} /> : null,
+                    experience: timeline.length || profile.education.length ? (
+                      <>
+                        <CareerTimeline entries={timeline} />
+                        {profile.education.length > 0 ? (
+                          <>
+                            <h3>Education</h3>
+                            <EducationList entries={profile.education} />
+                          </>
+                        ) : null}
+                      </>
+                    ) : null,
+                    priorResults: profile.results.length ? <PriorResults entries={profile.results} /> : null,
                     raised: person.finance ? formatMoney(person.finance.receipts) : null,
                     raisedSource: person.finance?.sourceUrl,
                     moneyIds: [person.id, person.fecCandidateId, ...person.alsoFecIds].filter((id): id is string => Boolean(id)),

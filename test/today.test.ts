@@ -16,7 +16,8 @@ test("home money cards use November ballot totals and skip primary losers", () =
   assert.equal(/donated \$|gave \$|Jane Doe/.test(text), false);
   for (const card of all) {
     assert.match(card.sourceUrl, /^https:\/\//);
-    assert.match(card.when, /^[A-Z][a-z]{2} \d{1,2}, 2026$/);
+    if (card.date) assert.match(card.when ?? "", /^[A-Z][a-z]{2} \d{1,2}, 20\d{2}$/);
+    else assert.equal(card.when, null);
     assert.match(card.text, /outside spending|^Raised \$/);
     assert.doesNotMatch(card.text, /stored|committee total|one payment/);
   }

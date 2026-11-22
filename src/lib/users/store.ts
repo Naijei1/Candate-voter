@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import {
   DeleteCommand,
@@ -5,7 +6,10 @@ import {
   GetCommand,
   PutCommand,
   QueryCommand,
+  UpdateCommand,
 } from "@aws-sdk/lib-dynamodb";
+import type { Preferences } from "../api/v1-types";
+import { kyPlace, validIssues } from "./preferences";
 import { type Follow, type FollowType, followSortKey, userPartition } from "./follows";
 
 export const DEFAULT_USERS_TABLE = "candate-voter-users";
@@ -16,7 +20,7 @@ export function usersTableName(env: Record<string, string | undefined> = process
 
 let cached: DynamoDBDocumentClient | null = null;
 
-function client(): DynamoDBDocumentClient {
+export function usersClient(): DynamoDBDocumentClient {
   if (cached) return cached;
   const region = process.env.AWS_REGION ?? process.env.AWS_DEFAULT_REGION ?? "us-east-1";
   cached = DynamoDBDocumentClient.from(new DynamoDBClient({ region }), {
@@ -25,16 +29,40 @@ function client(): DynamoDBDocumentClient {
   return cached;
 }
 
+export async function withFollowLock<T>(sub: string, action: () => Promise<T>): Promise<T> {
+  const key = { pk: userPartition(sub), sk: "ALERT_LOCK" };
+  const owner = randomUUID();
+  const now = Date.now();
+  await usersClient().send(new PutCommand({
+    TableName: usersTableName(), Item: { ...key, owner, lockedUntil: now + 120_000 },
+    ConditionExpression: "attribute_not_exists(pk) OR lockedUntil < :now", ExpressionAttributeValues: { ":now": now },
+  }));
+  try {
+    return await action();
+  } finally {
+    await usersClient().send(new DeleteCommand({
+      TableName: usersTableName(), Key: key,
+      ConditionExpression: "#owner = :owner", ExpressionAttributeNames: { "#owner": "owner" },
+      ExpressionAttributeValues: { ":owner": owner },
+    }));
+  }
+}
+
 export async function listFollows(userId: string): Promise<Follow[]> {
-  const result = await client().send(
-    new QueryCommand({
+  const items: Record<string, unknown>[] = [];
+  let cursor: Record<string, unknown> | undefined;
+  do {
+    const result = await usersClient().send(new QueryCommand({
       TableName: usersTableName(),
-      KeyConditionExpression: "#pk = :pk AND begins_with(#sk, :prefix)",
-      ExpressionAttributeNames: { "#pk": "pk", "#sk": "sk" },
+      KeyConditionExpression: "pk = :pk AND begins_with(sk, :prefix)",
       ExpressionAttributeValues: { ":pk": userPartition(userId), ":prefix": "FOLLOW#" },
-    }),
-  );
-  return (result.Items ?? []).flatMap((item) => {
+      ExclusiveStartKey: cursor,
+      ConsistentRead: true,
+    }));
+    items.push(...(result.Items ?? []));
+    cursor = result.LastEvaluatedKey;
+  } while (cursor);
+  return items.flatMap((item) => {
     if (
       item.targetType !== "race" &&
       item.targetType !== "candidate" &&
@@ -57,7 +85,7 @@ export async function listFollows(userId: string): Promise<Follow[]> {
 }
 
 export async function saveFollow(follow: Follow): Promise<void> {
-  await client().send(
+  await usersClient().send(
     new PutCommand({
       TableName: usersTableName(),
       Item: {
@@ -72,7 +100,7 @@ export async function saveFollow(follow: Follow): Promise<void> {
 }
 
 export async function deleteFollow(userId: string, type: FollowType, id: string): Promise<void> {
-  await client().send(
+  await usersClient().send(
     new DeleteCommand({
       TableName: usersTableName(),
       Key: { pk: userPartition(userId), sk: followSortKey(type, id) },
@@ -90,7 +118,7 @@ export function emptyNewsFeed(): NewsFeed {
 }
 
 export async function getNewsFeed(userId: string): Promise<NewsFeed> {
-  const result = await client().send(
+  const result = await usersClient().send(
     new GetCommand({
       TableName: usersTableName(),
       Key: { pk: userPartition(userId), sk: "FEED" },
@@ -100,7 +128,7 @@ export async function getNewsFeed(userId: string): Promise<NewsFeed> {
 }
 
 export async function saveNewsFeed(userId: string, feed: NewsFeed): Promise<void> {
-  await client().send(
+  await usersClient().send(
     new PutCommand({
       TableName: usersTableName(),
       Item: {
@@ -122,4 +150,29 @@ function newsFeedFromItem(item: Record<string, unknown> | null): NewsFeed {
     ? item.categories.filter((value): value is string => typeof value === "string" && value.length > 0 && value.length < 80)
     : [];
   return { states, categories };
+}
+
+function preferencesFromItem(item?: Record<string, unknown>): Preferences {
+  return { geography: kyPlace(item?.geography), issues: Array.isArray(item?.issues) ? validIssues(item.issues) : null };
+}
+
+export async function getPreferences(userId: string): Promise<Preferences> {
+  const result = await usersClient().send(new GetCommand({
+    TableName: usersTableName(), Key: { pk: userPartition(userId), sk: "PREFERENCES" }, ConsistentRead: true,
+  }));
+  return preferencesFromItem(result.Item);
+}
+
+export async function savePreferences(userId: string, values: Partial<Preferences>, seedIssues = false): Promise<Preferences> {
+  const assignments = Object.keys(values).map((name) => name === "issues" && seedIssues
+    ? "issues = if_not_exists(issues, :issues)"
+    : `${name} = :${name}`);
+  if (!assignments.length) return getPreferences(userId);
+  const result = await usersClient().send(new UpdateCommand({
+    TableName: usersTableName(), Key: { pk: userPartition(userId), sk: "PREFERENCES" },
+    UpdateExpression: `SET ${assignments.join(", ")}`,
+    ExpressionAttributeValues: Object.fromEntries(Object.entries(values).map(([name, value]) => [`:${name}`, value])),
+    ReturnValues: "ALL_NEW",
+  }));
+  return preferencesFromItem(result.Attributes);
 }

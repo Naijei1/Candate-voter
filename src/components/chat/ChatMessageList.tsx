@@ -5,7 +5,6 @@ import React, { useEffect, useState } from "react";
 import { CitationCard } from "@/components/chat/CitationCard";
 import { MarkdownAnswer } from "@/components/chat/MarkdownAnswer";
 import type { AssistantTurn, ChatTurn } from "@/components/chat/useChat";
-import { ALIGNMENT_DISCLAIMER } from "@/lib/chat/scope";
 import { errorCopy, rateLimitRemainingSeconds } from "@/lib/chat/ui";
 
 export function ChatMessageList({
@@ -106,12 +105,9 @@ function AssistantBubble({
       role={turn.status === "refused" ? "status" : undefined}
     >
       <MarkdownAnswer markdown={turn.markdown} />
-      {turn.mode === "alignment" ? (
-        <p className="mt-3 text-sm leading-6 text-muted">{ALIGNMENT_DISCLAIMER}</p>
-      ) : null}
       {turn.sources.length > 0 ? (
         <div className="mt-3">
-          <h3 className="text-xs font-semibold tracking-wide text-muted uppercase">{heading}</h3>
+          <h3 className="text-sm font-semibold text-muted">{heading}</h3>
           <ul className="mt-2 space-y-2" aria-label={heading}>
             {turn.sources.map((source) => (
               <CitationCard key={`${source.url}:${source.title}`} source={source} />

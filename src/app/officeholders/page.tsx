@@ -1,42 +1,55 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { KY_BALLOT_SOURCES, kyBallot } from "@/lib/site/ky-ballot";
+import { CONGRESSIONAL_TERM_START, KY_RESULTS_SOURCE } from "@/lib/site/certified-results";
+import { currentKentuckyOfficeholders, kentuckyElectionSuccessors, KY_CONGRESSIONAL_ROSTER_SOURCE } from "@/lib/site/ky-officeholders";
 
 export const metadata: Metadata = { alternates: { canonical: "/officeholders" }, title: "Who holds office now" };
+export const revalidate = 3600;
 
 export default function OfficeholdersPage() {
-  const house = ["01", "02", "03", "04", "05", "06"].map((district) => kyBallot(`2026-house-KY-${district}`));
+  const now = new Date();
+  const members = currentKentuckyOfficeholders(now);
+  const successors = kentuckyElectionSuccessors();
+  const termStarted = now.getTime() >= Date.parse(CONGRESSIONAL_TERM_START);
+  const incoming = successors.filter((row) => !row.continuing);
   return (
     <article className="wrap">
       <h1>Who holds office now</h1>
-      <p className="lede">Kentucky U.S. House members on the November ballot.</p>
-      <ul className="plain-list">
-        {house.flatMap((race) =>
-          (race?.people ?? [])
-            .filter((person) => person.holdsOffice)
-            .map((person) => (
-              <li key={person.id}>
-                <Link href={`/candidates/${person.id}`}>{person.name}</Link>
-                {" · "}
-                {person.party}
-                {" · "}
-                District {Number(race?.raceId.slice(-2))}
+      <p className="lede">Kentucky’s U.S. senators and representatives.</p>
+      {(["senate", "house"] as const).map((office) => (
+        <section key={office}>
+          <h2>{office === "senate" ? "U.S. Senate" : "U.S. House"}</h2>
+          <ul className="plain-list">
+            {members.filter((member) => member.office === office).map((member) => (
+              <li key={member.bioguide}>
+                <a href={member.url}>{member.name}</a> · {member.party}{member.district ? ` · District ${member.district}` : ""}
               </li>
-            )),
-        )}
-        <li>
-          <Link href="/candidates/S6KY00286">Andy Barr</Link> (R) — U.S. Representative, running for Senate. <a href="https://clerk.house.gov/Votes/2026312">Source ↗</a>
-        </li>
-      </ul>
-      <p>Thomas Massie lost the District 4 primary.</p>
-      <p className="hint">
-        Source: <a href={KY_BALLOT_SOURCES[1].url}>Clerk of the House ↗</a>
-      </p>
-      <p>
-        <Link className="btn btn-navy" href="/candidates">
-          November nominees
-        </Link>
-      </p>
+            ))}
+            {termStarted ? successors.filter((row) => (row.district ? "house" : "senate") === office).map((row) => (
+              <li key={row.raceId}>
+                <Link href={row.person ? `/candidates/${row.person.id}` : `/races/${row.raceId}`}>{row.winner.name}</Link>
+                {row.winner.party || row.person ? ` · ${row.winner.party ?? row.person?.party}` : null}
+                {row.district ? ` · District ${row.district}` : null} · <a href={row.sourceUrl}>{KY_RESULTS_SOURCE}</a>
+              </li>
+            )) : null}
+          </ul>
+        </section>
+      ))}
+      <p className="hint"><a href={KY_CONGRESSIONAL_ROSTER_SOURCE}>Congress Legislators roster</a></p>
+      {!termStarted && incoming.length > 0 ? (
+        <section>
+          <h2>Incoming members</h2>
+          <ul className="plain-list">
+            {incoming.map((row) => (
+              <li key={row.raceId}>
+                <Link href={row.person ? `/candidates/${row.person.id}` : `/races/${row.raceId}`}>{row.winner.name}</Link>
+                {row.district ? ` · Rep.-elect, District ${row.district}` : " · Senator-elect"} · <a href={row.sourceUrl}>{KY_RESULTS_SOURCE}</a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+      <p><Link className="btn btn-navy" href="/candidates">Candidates</Link></p>
     </article>
   );
 }

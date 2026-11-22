@@ -19,6 +19,7 @@ export type FinanceDirect = {
   coverageStart: string | null;
   coverageEnd: string | null;
   fileNumber: string | null;
+  receiptDate?: string | null;
   sourceUrl: string | null;
   sourceLabel: "FEC filing" | "FEC candidate totals" | "FEC committee report";
   updatedAt: string;
@@ -59,6 +60,16 @@ export type TotalsWatermark = {
 export function formatMoney(value: number | null): string {
   if (value == null) return "—";
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(value);
+}
+
+const WHOLE_DOLLARS = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
+
+/** Short label for a bar, e.g. "$12.5M". The table shows the full amount. */
+export function shortMoney(value: number): string {
+  const abs = Math.abs(value);
+  if (abs >= 1_000_000) return `$${(value / 1_000_000).toFixed(abs >= 10_000_000 ? 1 : 2).replace(/\.?0+$/, "")}M`;
+  if (abs >= 1_000) return `$${Math.round(value / 1_000)}K`;
+  return WHOLE_DOLLARS.format(value);
 }
 
 export function coverageKey(start: string | null, end: string | null): string | null {

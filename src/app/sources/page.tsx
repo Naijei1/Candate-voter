@@ -26,6 +26,11 @@ export default function SourcesPage() {
         <li><a href="https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx">State Board of Elections county clerk directory</a> · Nov 22, 2026</li>
       </ul>
       <p><a className="action-link" href={withBasePath("/openapi.yaml")}>API documentation</a></p>
+      <h2>News Feed</h2>
+      <ul className="plain-list">
+        <li><a href="https://kentuckylantern.com/feed/">Kentucky Lantern RSS</a></li>
+        <li><a href="https://guthrie.house.gov/news/rss.aspx">Office of Rep. Brett Guthrie RSS</a></li>
+      </ul>
       <h2>Media credits</h2>
       <p>The homepage film uses trimmed, muted excerpts. The opening landscape and archival shots are cropped.</p>
       <ul className="plain-list">
@@ -42,6 +47,10 @@ export default function SourcesPage() {
       <ul className="plain-list">
         <li><strong>Open seat</strong> — No current officeholder is running.</li>
         <li><strong>Outside spending</strong> — Spending by groups outside a campaign.</li>
+        <li><strong>Fundraising period</strong> — The dates covered by a campaign finance report.</li>
+        <li><strong>Cash on hand</strong> — Money a committee has available at the end of a reporting period.</li>
+        <li><strong>Write-in</strong> — A candidate voters must write on the ballot.</li>
+        <li><strong>Election status</strong> — The current stage of an election, such as filing, voting or certification.</li>
       </ul>
     </article>
   );

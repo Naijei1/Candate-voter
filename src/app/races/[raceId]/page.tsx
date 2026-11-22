@@ -1,3 +1,4 @@
+import { DatasetUpdated } from "@/components/site/DatasetUpdated";
 import { currentUser } from "@/lib/auth/session";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -10,9 +11,11 @@ import { FollowControl } from "@/components/site/FollowControl";
 import { ElectionDayBanner } from "@/components/site/ElectionDayBanner";
 import { BallotBar } from "@/components/site/BallotBar";
 import { PersonFace } from "@/components/site/PersonFace";
+import { RaceResults } from "@/components/site/RaceResults";
+import { candidateElectionStatus } from "@/lib/site/certified-results";
 import { raceCardTitle } from "@/lib/site/candidate-cards";
 import { openSeatLine } from "@/lib/site/seat";
-import { KY_BALLOT_SOURCES, kyBallot, kyBallotIds } from "@/lib/site/ky-ballot";
+import { KY_BALLOT_CHECKED, KY_BALLOT_SOURCES, kyBallot, kyBallotIds } from "@/lib/site/ky-ballot";
 import { photoAttribution, portraitFor } from "@/lib/site/stances";
 import { cardsForRace } from "@/lib/site/showcase";
 import { personFilingNote } from "@/lib/data/filing-note";
@@ -56,7 +59,8 @@ export default async function RacePage({ params }: PageProps) {
         ]}
       />
       <h1>{race.title}</h1>
-      {ballot ? null : <ElectionDayBanner />}
+      <DatasetUpdated date={[ballot ? KY_BALLOT_CHECKED : "", loaded.refreshedAt ?? ""].sort().at(-1)} />
+      {ballot ? <RaceResults raceId={race.raceId} /> : <ElectionDayBanner />}
       {!ballot && sourceHref ? <p className="hint"><a href={sourceHref}>Source ↗</a></p> : null}
       {ballot || loaded.filingsLoaded ? null : roster.fecList ? (
         <p className="notice" role="status">
@@ -80,6 +84,7 @@ export default async function RacePage({ params }: PageProps) {
               <Link className="btn btn-navy" href={`/races/${race.raceId}/compare`}>
                 Compare candidates
               </Link>
+              <FollowControl signedIn={Boolean(await currentUser())} what="race" targetId={race.raceId} returnPath={`/races/${race.raceId}`} />
               <Link className="btn btn-ghost" href="/ballot">
                 Your ballot
               </Link>
@@ -98,6 +103,7 @@ export default async function RacePage({ params }: PageProps) {
                     photo={photo?.src ?? null}
                     holds={person.holdsOffice}
                     writeIn={person.role === "write-in"}
+                    electionStatus={candidateElectionStatus(race.raceId, person)}
                     href={`/candidates/${person.id}`}
                     credit={photoAttribution(photo)}
                   />
@@ -122,7 +128,6 @@ export default async function RacePage({ params }: PageProps) {
                 </ul>
               </details>
             ) : null}
-            {ballot ? <ElectionDayBanner compact /> : null}
           </>
         ) : (
           <>
@@ -154,7 +159,7 @@ export default async function RacePage({ params }: PageProps) {
           <Link className="btn btn-navy" href={`/races/${race.raceId}/compare`}>
             Compare candidates
           </Link>
-          <FollowControl signedIn={Boolean(await currentUser())} what="race" targetId={race.raceId} />
+          <FollowControl signedIn={Boolean(await currentUser())} what="race" targetId={race.raceId} returnPath={`/races/${race.raceId}`} />
         </div>
           </>
         )}

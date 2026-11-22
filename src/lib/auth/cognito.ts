@@ -19,6 +19,7 @@ export function googleSignInConfigured(
 export function googleAuthorizeUrl(
   origin: string,
   env: Record<string, string | undefined> = process.env,
+  returnTo: string | null = null,
 ): string | null {
   const settings = cognitoSettings(env);
   const domain = env.COGNITO_DOMAIN?.trim().replace(/^https:\/\//, "") ?? "";
@@ -30,6 +31,7 @@ export function googleAuthorizeUrl(
   url.searchParams.set("client_id", settings.clientId);
   url.searchParams.set("redirect_uri", redirect);
   url.searchParams.set("scope", "openid email profile");
+  if (returnTo) url.searchParams.set("state", returnTo);
   return url.toString();
 }
 

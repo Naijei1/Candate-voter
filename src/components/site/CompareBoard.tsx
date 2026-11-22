@@ -2,8 +2,8 @@
 
 import { dayLabel } from "@/lib/format";
 import Link from "next/link";
-import { useState } from "react";
-import { partyMark, PersonMark } from "@/components/site/PersonMark";
+import { useId, useState, type KeyboardEvent, type ReactNode } from "react";
+import { PersonMark } from "@/components/site/PersonMark";
 import { orgLabel } from "@/components/site/FinanceLists";
 import { coverageLabel, formatMoney, type FinanceDirect, type FinanceOutside } from "@/lib/finance/model";
 
@@ -16,14 +16,6 @@ export type CompareStance = {
   sourceDate: string;
 };
 
-export type CompareVote = {
-  bill: string;
-  date: string;
-  vote: string;
-  sourceName: string;
-  sourceUrl: string;
-};
-
 export type CompareCandidate = {
   candidateId: string;
   displayName: string;
@@ -31,9 +23,12 @@ export type CompareCandidate = {
   note?: string | null;
   photo?: string | null;
   photoCredit?: string | null;
+  photoSource?: string;
   website?: { url: string; label: string } | null;
   stances?: CompareStance[];
-  votes?: CompareVote[];
+  votes?: ReactNode;
+  experience?: ReactNode;
+  priorResults?: ReactNode;
   raised?: string | null;
   moneyIds?: string[];
   raisedSource?: string;
@@ -41,28 +36,34 @@ export type CompareCandidate = {
 
 const TABS = [
   "Overview",
+  "Experience",
+  "Prior results",
   "Issues",
   "Statements",
   "Voting Record",
   "Campaign Finance",
-  "Updates",
+  "News",
 ] as const;
 
 type Tab = (typeof TABS)[number];
 
-export function visibleCompareTabs({ hasStances, hasVotes, hasFinance, hasUpdates }: {
+export function visibleCompareTabs({ hasStances, hasVotes, hasFinance, hasUpdates, hasExperience, hasPriorResults }: {
   hasStances: boolean;
   hasVotes: boolean;
   hasFinance: boolean;
   hasUpdates: boolean;
+  hasExperience?: boolean;
+  hasPriorResults?: boolean;
 }): Tab[] {
   const visible: Record<Tab, boolean> = {
     Overview: true,
+    Experience: Boolean(hasExperience),
+    "Prior results": Boolean(hasPriorResults),
     Issues: hasStances,
     Statements: hasStances,
     "Voting Record": hasVotes,
     "Campaign Finance": hasFinance,
-    Updates: hasUpdates,
+    News: hasUpdates,
   };
   return TABS.filter((tab) => visible[tab]);
 }
@@ -89,28 +90,64 @@ export function CompareBoard({
   updates?: readonly { title: string; url: string; date: string | null; source: string }[];
 }) {
   const [selectedTab, setTab] = useState<Tab>("Overview");
-  const moneyIds = new Set(candidates.flatMap((candidate) => candidate.moneyIds ?? [candidate.candidateId]));
-  const hasStances = candidates.some((candidate) => candidate.stances?.length);
+  const [excluded, setExcluded] = useState<string[]>([]);
+  const id = useId();
+  const selected = candidates.filter((candidate) => !excluded.includes(candidate.candidateId));
+  const moneyIds = new Set(selected.flatMap((candidate) => candidate.moneyIds ?? [candidate.candidateId]));
+  const hasStances = selected.some((candidate) => candidate.stances?.length);
   const hasFinance = [...(finance?.direct ?? []), ...(finance?.outside ?? [])].some((row) => moneyIds.has(row.candidateId));
   const tabs = visibleCompareTabs({
     hasStances,
-    hasVotes: candidates.some((candidate) => candidate.votes?.length),
+    hasVotes: selected.some((candidate) => candidate.votes),
     hasFinance,
-    hasUpdates: updates.length > 0,
+    hasUpdates: updates.length > 0 && selected.length > 0,
+    hasExperience: selected.some((candidate) => candidate.experience),
+    hasPriorResults: selected.some((candidate) => candidate.priorResults),
   });
   const tab = tabs.includes(selectedTab) ? selectedTab : "Overview";
+  const tabId = (item: Tab) => `${id}-${item.replace(/\s+/g, "-").toLowerCase()}`;
+
+  function moveTab(event: KeyboardEvent<HTMLButtonElement>, index: number) {
+    const offsets: Record<string, number> = { ArrowLeft: -1, ArrowRight: 1, Home: -index, End: tabs.length - 1 - index };
+    const offset = offsets[event.key];
+    if (offset === undefined) return;
+    event.preventDefault();
+    const next = tabs[(index + offset + tabs.length) % tabs.length];
+    setTab(next);
+    document.getElementById(tabId(next))?.focus();
+  }
+
   return (
     <div className="compare-board">
+      {candidates.length > 1 ? (
+        <fieldset className="compare-selection">
+          <legend>Candidates to compare</legend>
+          {candidates.map((candidate) => (
+            <label key={candidate.candidateId}>
+              <input
+                type="checkbox"
+                checked={!excluded.includes(candidate.candidateId)}
+                onChange={(event) => {
+                  const checked = event.currentTarget.checked;
+                  setExcluded((ids) => checked ? ids.filter((value) => value !== candidate.candidateId) : [...ids, candidate.candidateId]);
+                }}
+              />
+              {candidate.displayName}
+            </label>
+          ))}
+        </fieldset>
+      ) : null}
       <div className="tabs" role="tablist" aria-label="Comparison topics">
-        {tabs.map((item) => (
+        {tabs.map((item, index) => (
           <button
             key={item}
             className="btn btn-ghost"
             type="button"
             role="tab"
-            id={`compare-tab-${item.replace(/\s+/g, "-").toLowerCase()}`}
+            id={tabId(item)}
             aria-selected={tab === item}
-            aria-controls="compare-panel"
+            tabIndex={tab === item ? 0 : -1}
+            onKeyDown={(event) => moveTab(event, index)}
             onClick={() => setTab(item)}
           >
             {item}
@@ -118,19 +155,20 @@ export function CompareBoard({
         ))}
       </div>
       {summary ? <p>{summary}</p> : filingsLoaded ? <p>{filedLine(candidates.length)}</p> : null}
-      <div className="compare-grid" id="compare-panel" role="tabpanel">
-        {candidates.map((candidate) => (
+      <div className="compare-grid" role="tabpanel" aria-labelledby={tabId(tab)} tabIndex={selected.length ? undefined : 0}>
+        {selected.map((candidate) => (
           <article className="person-card" key={candidate.candidateId}>
             <PersonMark name={candidate.displayName} photo={candidate.photo ?? null} party={candidate.partyLabel} size="lg" />
             <h2>
               <Link href={`/candidates/${candidate.candidateId}`}>{candidate.displayName}</Link>
             </h2>
-            <p className="party">{partyMark(candidate.partyLabel).letter} · {candidate.partyLabel}</p>
+            <p className="party">{candidate.partyLabel}</p>
             {candidate.note ? <p className="hint">{candidate.note}</p> : null}
             <TabBody tab={tab} candidate={candidate} finance={finance} issues={issues} updates={updates} />
-            {candidate.photoCredit ? <p className="hint compare-credit">Photo: {candidate.photoCredit}</p> : null}
+            {candidate.photoCredit && candidate.photoSource ? <p className="hint compare-credit">Photo: <a href={candidate.photoSource}>{candidate.photoCredit}</a></p> : null}
           </article>
         ))}
+        {!selected.length && candidates.length ? <p role="status">Choose candidates to compare.</p> : null}
       </div>
       <p>
         <Link href={raceHref}>Back to race</Link>
@@ -170,6 +208,8 @@ function TabBody({
   updates: readonly { title: string; url: string; date: string | null; source: string }[];
 }) {
   const notes = candidate.stances ?? [];
+  if (tab === "Experience") return candidate.experience;
+  if (tab === "Prior results") return candidate.priorResults;
   if (tab === "Overview") {
     return (
       <div>
@@ -192,7 +232,7 @@ function TabBody({
           return (
             <li key={issue.id}>
               <p>{issue.label}</p>
-              <p>{stance.text} <a href={stance.sourceUrl}>Source ↗</a></p>
+              <p>{stance.text} <a href={stance.sourceUrl}>{stance.sourceName}</a></p>
             </li>
           );
         })}
@@ -207,27 +247,15 @@ function TabBody({
           <li key={note.issueId}>
             <p>{note.text}</p>
             <p className="hint">
-              <a href={note.sourceUrl}>{note.sourceName}</a> · {dayLabel(note.sourceDate)}
+              Candidate says · <a href={note.sourceUrl}>{note.sourceName}</a> · {dayLabel(note.sourceDate)}
             </p>
           </li>
         ))}
       </ul>
     );
   }
-  if (tab === "Voting Record") {
-    const votes = candidate.votes ?? [];
-    if (votes.length === 0) return null;
-    return (
-      <ul className="plain-list">
-        {votes.map((vote) => (
-          <li key={`${vote.bill}-${vote.date}`}>
-            {dayLabel(vote.date)}: {vote.vote} on {vote.bill}. <a href={vote.sourceUrl}>{vote.sourceName}</a>
-          </li>
-        ))}
-      </ul>
-    );
-  }
-  if (tab === "Updates") {
+  if (tab === "Voting Record") return candidate.votes;
+  if (tab === "News") {
     if (updates.length === 0) return null;
     return (
       <ul className="plain-list">
@@ -236,7 +264,7 @@ function TabBody({
             <a href={story.url}>{story.title}</a>
             <span className="hint">
               {" "}
-              {story.source}
+              Reporting · {story.source}
               {story.date ? ` · ${dayLabel(story.date)}` : ""}
             </span>
           </li>

@@ -1,9 +1,9 @@
+import { portraitFor } from "./stances";
+
 /**
  * Kentucky's two U.S. senators and seven statewide constitutional officers.
  * Every name, party, and term below was checked on an official site on
- * 2026-11-19. Photos are used only when the license is clear (U.S. Congress
- * official portraits are public domain). State officers have no stored photo,
- * so the card shows initials.
+ * 2026-11-19. Portrait credits and licenses are stored with the images.
  */
 
 export const KY_STATEWIDE_CHECKED = "2026-11-19";
@@ -92,7 +92,7 @@ export const KY_CONSTITUTIONAL_OFFICERS: readonly StatewideOfficial[] = [
     term: STATE_TERM,
     note: "Second consecutive term. Term-limited in 2027.",
     officialSite: "https://governor.ky.gov/",
-    photo: null,
+    photo: portraitFor("ky-governor"),
     sources: [
       { name: "Governor’s office", url: "https://governor.ky.gov/about/gubernatorial-history" },
       { name: "KY Constitution §71", url: "https://apps.legislature.ky.gov/law/constitution/Constitution/ViewConstitution?rsn=79" },
@@ -108,7 +108,7 @@ export const KY_CONSTITUTIONAL_OFFICERS: readonly StatewideOfficial[] = [
     term: STATE_TERM,
     note: "Elected on the governor’s ticket.",
     officialSite: "https://ltgovernor.ky.gov/",
-    photo: null,
+    photo: portraitFor("ky-lt-governor"),
     sources: [
       { name: "Lieutenant governor’s office", url: "https://ltgovernor.ky.gov/" },
       RESULTS_2023,
@@ -123,7 +123,7 @@ export const KY_CONSTITUTIONAL_OFFICERS: readonly StatewideOfficial[] = [
     term: STATE_TERM,
     note: null,
     officialSite: "https://www.ag.ky.gov/",
-    photo: null,
+    photo: portraitFor("ky-attorney-general"),
     sources: [{ name: "Attorney general’s office", url: "https://www.ag.ky.gov/" }, RESULTS_2023, CONSTITUTION_95],
   },
   {
@@ -134,7 +134,7 @@ export const KY_CONSTITUTIONAL_OFFICERS: readonly StatewideOfficial[] = [
     term: STATE_TERM,
     note: null,
     officialSite: "https://www.sos.ky.gov/",
-    photo: null,
+    photo: portraitFor("ky-secretary-of-state"),
     sources: [
       { name: "Secretary of state’s office", url: "https://www.sos.ky.gov/sos-office/Pages/default.aspx" },
       RESULTS_2023,
@@ -149,7 +149,7 @@ export const KY_CONSTITUTIONAL_OFFICERS: readonly StatewideOfficial[] = [
     term: STATE_TERM,
     note: null,
     officialSite: "https://treasury.ky.gov/",
-    photo: null,
+    photo: portraitFor("ky-treasurer"),
     sources: [{ name: "Kentucky State Treasury", url: "https://treasury.ky.gov/" }, RESULTS_2023, CONSTITUTION_95],
   },
   {
@@ -160,7 +160,7 @@ export const KY_CONSTITUTIONAL_OFFICERS: readonly StatewideOfficial[] = [
     term: STATE_TERM,
     note: null,
     officialSite: "https://www.auditor.ky.gov/",
-    photo: null,
+    photo: portraitFor("ky-auditor"),
     sources: [{ name: "Auditor of Public Accounts", url: "https://www.auditor.ky.gov/" }, RESULTS_2023, CONSTITUTION_95],
   },
   {
@@ -171,7 +171,7 @@ export const KY_CONSTITUTIONAL_OFFICERS: readonly StatewideOfficial[] = [
     term: STATE_TERM,
     note: null,
     officialSite: "https://www.kyagr.com/",
-    photo: null,
+    photo: portraitFor("ky-agriculture"),
     sources: [{ name: "Kentucky Department of Agriculture", url: "https://www.kyagr.com/" }, RESULTS_2023, CONSTITUTION_95],
   },
 ];

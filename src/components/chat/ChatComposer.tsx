@@ -24,7 +24,7 @@ export function ChatComposer({
   const canSend = value.trim().length > 0 && !pending && !sendLocked;
 
   function onKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
-    if (event.key !== "Enter" || event.shiftKey) return;
+    if (event.key !== "Enter" || event.shiftKey || event.nativeEvent.isComposing) return;
     event.preventDefault();
     if (canSend) onSend();
   }

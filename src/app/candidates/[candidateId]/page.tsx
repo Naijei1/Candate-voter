@@ -4,13 +4,16 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CheckHistory } from "@/components/site/CheckHistory";
+import { CandidateCorrection } from "@/components/site/CandidateCorrection";
 import { Crumbs } from "@/components/site/Crumbs";
+import { CandidateElectionStatus } from "@/components/site/CandidateElectionStatus";
 import { ElectionDayBanner } from "@/components/site/ElectionDayBanner";
 import { DirectList, orgLabel, OutsideList } from "@/components/site/FinanceLists";
 import { FollowControl } from "@/components/site/FollowControl";
 import { RosterMoney } from "@/components/site/RosterMoney";
+import { CareerTimeline, EducationList, PriorResults, RecordSource, VoteList } from "@/components/site/ProfileRecords";
 import { dayLabel, formatInstant, httpsUrl, partyCue, partyLabel } from "@/lib/format";
-import { formatMoney } from "@/lib/finance/model";
+import { shortMoney } from "@/lib/finance/model";
 import { financeForCandidate, loadFinance } from "@/lib/finance/load";
 import { selectDirect, selectOutside } from "@/lib/finance/present";
 import { loadChecks } from "@/lib/content/store";
@@ -18,8 +21,11 @@ import { loadProfile } from "@/lib/site/contest";
 import { BallotBar } from "@/components/site/BallotBar";
 import { PersonMark } from "@/components/site/PersonMark";
 import { KY_BALLOT_SOURCES, kyPerson } from "@/lib/site/ky-ballot";
-import { jobLine, linkLabel, profileFor } from "@/lib/site/profiles";
+import { newsForNames } from "@/lib/site/ky-news";
+import { careerTimeline, jobLine, linkLabel, profileFor } from "@/lib/site/profiles";
 import { seatStatus } from "@/lib/site/seat";
+import { candidateElectionStatus, CONGRESSIONAL_TERM_START, KY_RESULTS_SOURCE, primaryCandidateById } from "@/lib/site/certified-results";
+import { raceCardTitle } from "@/lib/site/candidate-cards";
 import { photoAttribution, portraitFor, stanceIssues, stancesFor } from "@/lib/site/stances";
 import { showcaseCandidate, showcaseRace, type ShowcaseCandidate } from "@/lib/site/showcase";
 import type { Filing, Race } from "@/lib/types";
@@ -33,6 +39,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const id = (await params).candidateId;
   const alternates = { canonical: `/candidates/${encodeURIComponent(id)}` };
   const ballot = kyPerson(id);
+  const primary = primaryCandidateById(id);
+  if (primary && !ballot) return { alternates, title: primary.candidate.name };
   const snap = showcaseCandidate(ballot?.person.fecCandidateId ?? id);
   if (ballot) return { alternates, title: ballot.person.name };
   if (snap) return { alternates, title: snap.displayName };
@@ -43,8 +51,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function CandidatePage({ params }: PageProps) {
   const id = (await params).candidateId;
   const ballot = kyPerson(id);
+  const primary = primaryCandidateById(id);
+  if (primary && !ballot && !primary.candidate.candidateId) return <PrimaryProfile primary={primary} />;
   const snap = showcaseCandidate(ballot?.person.fecCandidateId ?? id);
   const loaded = await loadProfile(ballot?.person.fecCandidateId ?? id);
+  if (!loaded.ok && primary && !ballot) return <PrimaryProfile primary={primary} />;
   if (!loaded.ok && loaded.missing && !snap && !ballot) notFound();
   if (!loaded.ok && !loaded.missing && !snap && !ballot) {
     return (
@@ -64,11 +75,16 @@ export default async function CandidatePage({ params }: PageProps) {
   const raceLabel = ballot ? shortBallot(ballot.race.raceId) : race ? shortRace(race) : snap ? "Senate" : "Race";
   const retrieved = showcaseRace()?.retrievedAt ?? null;
   const financeKey = ballot?.person.fecCandidateId ?? id;
-  const [bundle, checks] = await Promise.all([loadFinance(race?.cycle ?? 2026), loadChecks("candidate", id)]);
+  const [bundle, checks, news] = await Promise.all([
+    loadFinance(race?.cycle ?? 2026),
+    loadChecks("candidate", id),
+    ballot ? newsForNames([name]) : [],
+  ]);
   const finance = financeForCandidate(bundle, financeKey);
   const direct = selectDirect(finance.direct.filter(isKentuckyFinanceRow), null);
   const outside = selectOutside(finance.outside.filter(isKentuckyFinanceRow), null);
   const profile = ballot ? profileFor(ballot.person.id) : profileFor(id);
+  const timeline = careerTimeline(profile);
   const photo = portraitFor(ballot?.person.id ?? id);
   const notes = stancesFor(ballot?.person.id ?? id);
 
@@ -78,6 +94,16 @@ export default async function CandidatePage({ params }: PageProps) {
   const hasVerified = filings.length > 0 || Boolean(snap?.filingPdf && snap.filingDate) ||
     Boolean(retrieved && (snap?.incumbentLabel || snap?.statusLabel || (snap?.committeeName && snap.committeeUrl)));
   const status = seatStatus({ holds: Boolean(ballot?.person.holdsOffice), writeIn: ballot?.person.role === "write-in" });
+  const filedRaceId = race?.raceId ?? (snap ? showcaseRace()?.raceId : undefined);
+  const electionStatus = ballot ? candidateElectionStatus(ballot.race.raceId, ballot.person) :
+    primary ? candidateElectionStatus(primary.raceId, {
+      id: primary.candidate.candidateId,
+      name: primary.candidate.name,
+      party: primary.result.party,
+    }) : filedRaceId ? candidateElectionStatus(filedRaceId, { id, name, party }) : undefined;
+  const officeElect = electionStatus?.elected && !ballot?.person.holdsOffice && Date.now() < Date.parse(CONGRESSIONAL_TERM_START)
+    ? (ballot?.race.raceId ?? primary?.raceId)?.includes("senate") ? "Senator-elect" : "Rep.-elect"
+    : null;
 
   return (
     <article className="wrap">
@@ -95,13 +121,15 @@ export default async function CandidatePage({ params }: PageProps) {
         </figure>
         <div>
           <h1>{name}</h1>
-          <p className="profile-meta">{[...new Set([party, status, race ? race.title : ballot ? ballotTitle(ballot.race.raceId) : snap ? "U.S. Senate, Kentucky · 2026" : null].filter(Boolean))].join(" · ")}</p>
+          <p className="profile-meta">{[...new Set([party, status, officeElect, race ? race.title : ballot ? ballotTitle(ballot.race.raceId) : snap ? "U.S. Senate, Kentucky · 2026" : null].filter(Boolean))].join(" · ")}</p>
+          <CandidateElectionStatus status={electionStatus} />
           <div className="actions">
             {raceHref ? (
               <Link className="btn btn-navy" href={`${raceHref}/compare`}>
                 Compare
               </Link>
             ) : null}
+            <FollowControl signedIn={Boolean(await currentUser())} what="candidate" targetId={ballot?.person.fecCandidateId ?? (loaded.ok ? loaded.candidate.candidateId : id)} returnPath={`/candidates/${id}`} />
             <Link className="btn btn-ghost" href="/ballot">
               Your ballot
             </Link>
@@ -114,7 +142,7 @@ export default async function CandidatePage({ params }: PageProps) {
         <div>
           <p className="hint">Campaign finance</p>
           <p>
-            {formatMoney(ballot.person.finance.receipts)} raised{ballot.person.finance.cash != null ? ` · ${formatMoney(ballot.person.finance.cash)} cash on hand` : ""} · <a href={ballot.person.finance.sourceUrl}>FEC</a>
+            {shortMoney(ballot.person.finance.receipts)} raised{ballot.person.finance.cash != null ? ` · ${shortMoney(ballot.person.finance.cash)} cash on hand` : ""} · <a href={ballot.person.finance.sourceUrl}>FEC</a>
           </p>
         </div>
         ) : null}
@@ -123,6 +151,40 @@ export default async function CandidatePage({ params }: PageProps) {
           <p><a href={profile.website.url}>{linkLabel(profile.website)}</a></p>
         </div> : null}
       </div>
+      {timeline.length > 0 ? (
+        <section>
+          <h2>Career timeline</h2>
+          <CareerTimeline entries={timeline} />
+        </section>
+      ) : null}
+      {profile.education.length > 0 ? (
+        <section>
+          <h2>Education</h2>
+          <EducationList entries={profile.education} />
+        </section>
+      ) : null}
+      {profile.results.length > 0 ? (
+        <section>
+          <h2>Prior election results</h2>
+          <PriorResults entries={profile.results} />
+        </section>
+      ) : null}
+      {profile.social.length > 0 ? (
+        <section>
+          <h2>Social accounts</h2>
+          <ul className="plain-list">
+            {profile.social.map((account) => {
+              const label = `${account.platform} · ${account.kind === "office" ? "Official" : "Campaign"}`;
+              return (
+                <li key={account.url}>
+                  <a href={account.url} aria-label={`${label} · ${name}`}>{label}</a>
+                  <RecordSource source={account} />
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      ) : null}
       {notes.length > 0 ? <>
       <h2>Issues</h2>
       <table className="stance-table">
@@ -162,17 +224,23 @@ export default async function CandidatePage({ params }: PageProps) {
       </> : null}
       {profile.votes.length > 0 ? <>
         <h2>Votes</h2>
-        <ul className="plain-list">
-          {profile.votes.map((vote) => (
-            <li key={`${vote.bill}-${vote.date}`}>
-              {dayLabel(vote.date)}: {vote.vote} on {vote.bill}. <a href={vote.sourceUrl}>{vote.sourceName}</a>
-            </li>
-          ))}
-        </ul>
+        <VoteList entries={profile.votes} />
       </> : null}
+      {news.length > 0 ? (
+        <section>
+          <h2>News</h2>
+          <ul className="plain-list">
+            {news.map((story) => (
+              <li key={story.url}>
+                <p><a href={story.url}>{story.title}</a></p>
+                <p className="hint">{story.source}{story.date ? ` · ${dayLabel(story.date)}` : ""}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
       <details>
         <summary>More details</summary>
-        <FollowControl signedIn={Boolean(await currentUser())} what="candidate" targetId={ballot?.person.fecCandidateId ?? (loaded.ok ? loaded.candidate.candidateId : id)} />
 
       {hasVerified ? <>
       <h2>Official filings</h2>
@@ -241,6 +309,7 @@ export default async function CandidatePage({ params }: PageProps) {
         </p>
       ) : null}
       </details>
+      <CandidateCorrection candidateId={ballot?.person.id ?? id} raceId={ballot?.race.raceId ?? race?.raceId} />
       {ballot ? <ElectionDayBanner compact /> : null}
       {raceHref ? (
         <BallotBar place="candidate" backHref={raceHref} nextHref={`${raceHref}/compare`} nextLabel="Compare candidates" />
@@ -333,6 +402,25 @@ function ballotTitle(raceId: string): string {
   if (raceId.includes("senate")) return "U.S. Senate, Kentucky · 2026";
   const district = Number(raceId.split("-").at(-1));
   return `U.S. House, Kentucky District ${district} · 2026`;
+}
+
+function PrimaryProfile({ primary }: { primary: NonNullable<ReturnType<typeof primaryCandidateById>> }) {
+  const { candidate, result, raceId } = primary;
+  return (
+    <article className="wrap">
+      <Crumbs items={[{ href: "/candidates", label: "Candidates" }, { label: candidate.name }]} />
+      <header className="profile-head">
+        <PersonMark name={candidate.name} photo={null} party={result.party} size="lg" />
+        <div>
+          <h1>{candidate.name}</h1>
+          <p className="profile-meta">{result.party} · {raceCardTitle(raceId)}</p>
+          <CandidateElectionStatus status={{ primary: candidate.winner ? "won" : "lost" }} />
+          <p>{candidate.votes.toLocaleString("en-US")} certified primary votes · <a href={result.sourceUrl}>{KY_RESULTS_SOURCE}</a></p>
+          <Link className="action-link" href={`/races/${raceId}`}>Race details</Link>
+        </div>
+      </header>
+    </article>
+  );
 }
 
 function shortBallot(raceId: string): string {

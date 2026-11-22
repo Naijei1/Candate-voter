@@ -1,19 +1,21 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
+import { followReturnPath } from "@/lib/auth/return-path";
 import { SignInForm } from "@/components/site/SignInForm";
 import { cognitoSettings, googleAuthorizeUrl } from "@/lib/auth/cognito";
 
 export const metadata: Metadata = { alternates: { canonical: "/sign-in" }, title: "Sign in" };
 export const dynamic = "force-dynamic";
 
-export default async function SignInPage() {
+export default async function SignInPage({ searchParams }: { searchParams: Promise<{ returnTo?: string | string[] }> }) {
+  const returnTo = followReturnPath((await searchParams).returnTo);
   const incoming = await headers();
   const proto = incoming.get("x-forwarded-proto") ?? "http";
   const host = incoming.get("x-forwarded-host") ?? incoming.get("host") ?? "localhost:3000";
   return (
     <article className="wrap">
       <h1>Sign in</h1>
-      <SignInForm configured={cognitoSettings() !== null} googleUrl={googleAuthorizeUrl(`${proto}://${host}`)} />
+      <SignInForm configured={cognitoSettings() !== null} googleUrl={googleAuthorizeUrl(`${proto}://${host}`, process.env, returnTo)} returnTo={returnTo} />
     </article>
   );
 }

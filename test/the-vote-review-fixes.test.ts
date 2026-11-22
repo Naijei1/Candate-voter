@@ -195,7 +195,7 @@ test("comparison failures show evidence and the live region stays concise", () =
   const source = readFileSync("src/components/home/CompareSection.tsx", "utf8");
   assert.equal((source.match(/aria-live/g) ?? []).length, 1);
   assert.match(source, /candidateEvidence\(basis\)/);
-  assert.match(source, /open=\{!hasSummary\}/);
+  assert.match(source, /open=\{!hasSummary && !compact\}/);
   assert.doesNotMatch(source, /compare-refusal|comparison ready/);
   assert.match(source, /role="status" aria-live="polite"/);
   assert.equal(/<div className="compare-cols" aria-live/.test(source), false);
@@ -248,6 +248,10 @@ test("Ask stays Kentucky only and the map tabs say what they show", () => {
 test("comparison hides empty tabs and shows topics with data", () => {
   assert.deepEqual(visibleCompareTabs({ hasStances: false, hasVotes: false, hasFinance: false, hasUpdates: false }), ["Overview"]);
   assert.deepEqual(visibleCompareTabs({ hasStances: true, hasVotes: false, hasFinance: true, hasUpdates: false }), ["Overview", "Issues", "Statements", "Campaign Finance"]);
+  assert.deepEqual(
+    visibleCompareTabs({ hasStances: false, hasVotes: false, hasFinance: false, hasUpdates: false, hasExperience: true, hasPriorResults: true }),
+    ["Overview", "Experience", "Prior results"],
+  );
 });
 
 test("a comparison point links each source once", () => {

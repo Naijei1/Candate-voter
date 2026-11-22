@@ -81,12 +81,10 @@ export function ChatShell({
   }
 
   return (
-    <section className={mode === "page" ? "flex min-h-[70vh] flex-col" : "flex h-full min-h-0 flex-col"} aria-labelledby={titleId}>
+    <section className={mode === "page" ? "flex flex-col" : "flex h-full min-h-0 flex-col"} aria-labelledby={titleId}>
       <header className="flex items-center gap-2 border-b border-line px-4 py-3">
         {mode === "page" ? (
-          <h1 id={titleId}>
-            Ask
-          </h1>
+          <h2 id={titleId}>Ask a follow-up</h2>
         ) : (
           <strong id={titleId} className="text-base font-semibold">
             Ask
@@ -134,7 +132,7 @@ export function ChatShell({
         </div>
       ) : null}
       <div className="min-h-0 flex-1 overflow-y-auto">
-        {chat.turns.length === 0 ? (
+        {mode === "panel" && chat.turns.length === 0 ? (
           <div className="flex flex-col items-start gap-2 px-4 py-4">
             {["Who is running for U.S. Senate in Kentucky?", "Who is running in District 3?", "What did Kentucky candidates say about health care?"].map((prompt) => (
               <button key={prompt} className="btn btn-ghost" type="button" onClick={() => send(prompt)}>
