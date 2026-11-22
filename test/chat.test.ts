@@ -2059,3 +2059,56 @@ test("candidate comparisons in Ask reuse the race comparison and return sourced 
   assert.equal(compares, 1);
   assert.equal(fallback.calls, 0);
 });
+
+test("Ask scopes comparison evidence, prompts and cached answers to the requested issue", async () => {
+  const prompts: string[] = [];
+  const compare = createCompareService({
+    limiter: createRateLimiter({ limit: 5, windowMs: 60_000 }),
+    globalLimiter: createRateLimiter({ limit: 5, windowMs: 60_000 }),
+    async summarize(basis) {
+      const cites = basis.people.map((person) => basis.evidence.find((row) => row.personId === person.id)?.id);
+      const text = basis.topic === "data centers"
+        ? "Barr voted for the Ratepayer Protection Act. Booker supports a pause on new AI data centers."
+        : "Barr cited fuel prices. Booker called for reining in tariffs and ending Medicaid cuts.";
+      return summarizeRace(basis, {
+        modelId: "test",
+        converse: async ({ messages }) => {
+          const block = messages[0]?.content[0];
+          prompts.push(block && "text" in block ? block.text : "");
+          return {
+            stopReason: "end_turn",
+            message: { role: "assistant", content: [{ text: JSON.stringify({ differ: [{ text, cites }], agree: [] }) }] },
+          };
+        },
+      });
+    },
+  });
+  const fallback = scripted([]);
+  const deps = chatDeps(new MemoryVoterRepository(), fallback, { compare });
+  async function ask(message: string): Promise<string> {
+    const response = await postChat(post({ message }), deps);
+    assert.equal(response.status, 200);
+    return (await response.json()).answer_markdown;
+  }
+
+  const general = await ask("Where do Barr and Booker differ?");
+  const immigration = await ask("Where do Barr and Booker differ on immigration?");
+  assert.equal(immigration, `The records don’t support a comparison on this issue.\n\n${general}`);
+  assert.equal(await ask("How do Barr and Booker’s immigration policies differ?"), immigration);
+  assert.equal(prompts.length, 1);
+
+  const dataCenters = await ask("Where do Barr and Booker differ on data centers?");
+  assert.match(dataCenters, /pause on new AI data centers/);
+  assert.doesNotMatch(dataCenters, /fuel prices|support a comparison on this issue/);
+  assert.match(prompts[1], /Topic: data centers\./);
+  assert.match(prompts[1], /Ratepayer Protection Act/);
+  assert.doesNotMatch(prompts[1], /immigration|fuel prices|Medicaid/);
+  assert.equal(await ask("Compare Booker and Barr on Data Centers."), dataCenters);
+
+  await ask("Where do Barr and Booker differ on the cost of living?");
+  assert.match(prompts[2], /Topic: cost of living\./);
+  assert.doesNotMatch(prompts[2], /data centers/);
+  assert.equal(await ask("Where do Barr and Booker differ?"), general);
+  assert.equal(prompts.length, 3);
+  assert.equal(fallback.calls, 0);
+});

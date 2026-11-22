@@ -24,6 +24,7 @@ export type CompareBasis = {
   title: string;
   people: ComparePerson[];
   evidence: Evidence[];
+  topic?: string;
   /** Facts from the stored ballot, each with its own citation. */
   know: Claim[];
 };
@@ -112,6 +113,29 @@ export function compareBasis(raceId: string): CompareBasis | null {
   ];
   if (race.note) know.push({ text: race.note, cites: [ballotId] });
   return { raceId, title: compareTitle(raceId), people, evidence, know: know.filter((claim) => claim.cites.length > 0) };
+}
+
+export function selectCandidates(basis: CompareBasis, personIds?: readonly string[]): CompareBasis {
+  if (!personIds?.length) return basis;
+  const selected = new Set(personIds);
+  const people = basis.people.filter((person) => selected.has(person.id));
+  if (people.length === basis.people.length) return basis;
+  return { ...basis, people, evidence: basis.evidence.filter((row) => !row.personId || selected.has(row.personId)) };
+}
+
+export function normalizeTopic(text: string): string {
+  return text.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim()
+    .replace(/^the /, "").replace(/\bhealthcare\b/g, "health care").replace(/\bdata centers?\b/g, "data centers");
+}
+
+export function comparisonOnTopic(basis: CompareBasis, topic: string): CompareBasis {
+  const phrase = ` ${topic} `;
+  return {
+    ...basis,
+    topic,
+    evidence: basis.evidence.filter((row) => !row.personId ||
+      ` ${normalizeTopic(row.issue ?? "")} `.includes(phrase) || ` ${normalizeTopic(row.text)} `.includes(phrase)),
+  };
 }
 
 /** What the home page sends to the browser for one race: the title and ballot facts only. Candidate records load on demand. */

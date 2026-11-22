@@ -20,6 +20,7 @@ export const COMPARE_PROMPT_VERSION = "2026-11-19.1";
 
 export const COMPARE_SYSTEM_PROMPT = `You compare candidates in one Kentucky race for voters who are short on time and new to politics.
 Use ONLY the numbered records you are given. Do not use outside knowledge. Do not guess.
+If the user message specifies a topic, limit the comparison to that topic.
 Write plain, neutral sentences of 40 words or fewer. Name the candidates. Never say who is better, who to vote for, or who will win. No ratings or predictions.
 "differ": points where two or more candidates took different positions or votes on the same topic.
 "agree": points where two or more candidates took the same position or vote on the same topic.
@@ -43,7 +44,8 @@ export function compareUserMessage(basis: CompareBasis): string {
   const lines = basis.evidence
     .filter((row) => row.personId)
     .map((row) => `${row.id} | ${row.personName} | ${row.kind}${row.issue ? ` | ${row.issue}` : ""} | ${row.text}`);
-  return `Race: ${basis.title}, Kentucky, November 3, 2026.\nCandidates: ${basis.people.map((person) => person.name).join("; ")}.\nRecords:\n${lines.join("\n")}`;
+  const topic = basis.topic ? `\nTopic: ${basis.topic}.` : "";
+  return `Race: ${basis.title}, Kentucky, November 3, 2026.\nCandidates: ${basis.people.map((person) => person.name).join("; ")}.${topic}\nRecords:\n${lines.join("\n")}`;
 }
 
 /** Keep only claims that cite real records from two or more candidates. Everything else is dropped. */

@@ -73,7 +73,6 @@ export function parseNewsFeed(xml: string, source: FeedSource, retrievedAt: stri
     const description = text(field(block, "description"));
     const tags = [...block.matchAll(/<category\b[^>]*>([\s\S]*?)<\/category>/gi)].map(([, value]) => text(unwrap(value))).join(" ");
     const story = `${title} ${description} ${tags}`;
-    if (!source.personId && /\b(?:wins? (?:the |a )?(?:race|seat|election)|won (?:the |a )?(?:race|seat|election)|victory over)\b/i.test(title)) continue;
     const people = source.personId ? [] : mentionedCandidates(story);
     const raceIds = source.personId ? [] : mentionedRaces(story);
     if (!source.personId && !people.length && !raceIds.length) continue;

@@ -36,6 +36,19 @@ test("RSS reporting selects Kentucky races and candidates, uses published dates,
   assert.deepEqual(others, []);
 });
 
+test("RSS keeps result headlines tied to a Kentucky federal candidate or race", () => {
+  const rss = `<rss><channel>
+    <item><title>Zach Dembo wins the race</title><link>https://kentuckylantern.com/dembo/</link><pubDate>Fri, 20 Nov 2026 17:00:00 GMT</pubDate></item>
+    <item><title>Who won the election in Kentucky's 2nd Congressional District?</title><link>https://kentuckylantern.com/district/</link><pubDate>Thu, 19 Nov 2026 17:00:00 GMT</pubDate></item>
+    <item><title>Alaska candidate wins the race</title><link>https://kentuckylantern.com/alaska/</link><pubDate>Thu, 19 Nov 2026 17:00:00 GMT</pubDate></item>
+  </channel></rss>`;
+  const items = parseNewsFeed(rss, LANTERN, "2026-11-22");
+  assert.deepEqual(items.map(({ title, personIds, raceIds }) => ({ title, personIds, raceIds })), [
+    { title: "Zach Dembo wins the race", personIds: ["H6KY06184"], raceIds: ["2026-house-KY-06"] },
+    { title: "Who won the election in Kentucky's 2nd Congressional District?", personIds: [], raceIds: ["2026-house-KY-02"] },
+  ]);
+});
+
 test("FEC receipt date outranks the Docquery image date and retrieval date never substitutes", () => {
   const sourceUrl = "https://docquery.fec.gov/pdf/642/202610229941012642/202610229941012642.pdf";
   assert.equal(filingDay({ sourceUrl, receiptDate: "2026-10-24T00:00:00" }), "2026-10-24");

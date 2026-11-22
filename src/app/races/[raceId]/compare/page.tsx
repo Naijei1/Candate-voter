@@ -56,9 +56,6 @@ export default async function ComparePage({ params }: PageProps) {
     : [];
   const direct = [...liveDirect, ...rosterDirect];
   const outside = selectOutside(finance.outside, null).filter((row) => ids.has(row.candidateId));
-  const stories = news.filter(
-    (story) => !/\b(wins|won|elected|victory)\b/i.test(story.title),
-  );
   const stateHref = "/";
 
   return (
@@ -89,7 +86,7 @@ export default async function ComparePage({ params }: PageProps) {
           summary={ballot ? null : roster.summary}
           finance={{ notice: ballot ? null : finance.notice, direct, outside }}
           issues={stanceIssues()}
-          updates={stories}
+          updates={news}
           candidates={
             ballot
               ? [...ballot.people].sort((a, b) => a.name.localeCompare(b.name)).map((person) => {
