@@ -35,10 +35,12 @@ import {
   isUpcomingElectionsQuestion,
   isVagueRunningQuestion,
   BALLOT_ROSTER,
+  cycleMentionedIn,
   stateMentionedIn,
   needsRaceClarification,
   chamberFromRaceId,
   stateFromRaceId,
+  visitorQuestion,
   yearFromRaceId,
 } from "./intent";
 import { polishChatAnswer, type AnswerScope } from "./polish";
@@ -105,9 +107,29 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
     return json({ error: "bad_request", message: parsed.message }, 400);
   }
 
+  const deadline = started + budgetMs(deps);
+  try {
+    return await withBudget(
+      (signal) => runWithReadAbort(signal, () => answerChat(request, parsed.value, deps, {
+        origin, started, deadline, signal,
+      })),
+      deadline - Date.now(),
+    );
+  } catch (error) {
+    return json(unavailableBody(error), 503);
+  }
+}
+
+async function answerChat(
+  request: Request,
+  parsed: ChatRequest,
+  deps: ChatDeps,
+  { origin, started, deadline, signal }: { origin: string; started: number; deadline: number; signal: AbortSignal },
+): Promise<Response> {
   const now = deps.now ?? new Date();
   const limiter = deps.rateLimiter ?? createAiLimits(deps.env).perIp;
   const decision = await limiter.take(trustedClientAddress(request), now.getTime());
+  signal.throwIfAborted();
   if (!decision.ok) {
     return json(
       { error: "rate_limited", message: "Too many chat requests. Try again later." },
@@ -120,8 +142,8 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
     return json({ error: "unavailable", message: "Chat is disabled" }, 503);
   }
 
-  const threadId = parsed.value.threadId ?? randomUUID();
-  if (isVotingAdvice(parsed.value.message)) {
+  const threadId = parsed.threadId ?? randomUUID();
+  if (isVotingAdvice(parsed.message)) {
     logOutcome({ refused: true, tools: [], latencyMs: Date.now() - started, mode: "factual" });
     return json(
       chatBody(
@@ -132,14 +154,15 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
           mode: "factual",
         },
         threadId,
-        parsed.value.message,
-        parsed.value,
+        parsed.message,
+        parsed,
         origin,
       ),
     );
   }
 
-  const scoped = await withZipState(parsed.value, deps);
+  const scoped = await withZipState(parsed, deps);
+  signal.throwIfAborted();
   const ballotRoster = BALLOT_ROSTER.test(scoped.message);
   const mentionedState = stateMentionedIn(scoped.message.replace(BALLOT_ROSTER, ""));
   const contextState = scoped.state ?? stateFromRaceId(scoped.raceId) ?? mentionedState;
@@ -203,62 +226,57 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
     }
   }
 
+  const question = visitorQuestion(asked.message);
+  const questionState = stateMentionedIn(question);
+  const questionCycle = cycleMentionedIn(question) ?? asked.cycle ?? yearFromRaceId(asked.raceId);
+  if (
+    !isSingleContestScope(asked) &&
+    (questionState ?? contextState ?? "KY") === "KY" &&
+    (questionCycle == null || questionCycle === 2026)
+  ) {
+    const district = kentuckyRunningAnswer(question, { districtOnly: true });
+    if (district) {
+      logOutcome({ refused: false, tools: ["kentucky"], latencyMs: Date.now() - started, mode: "factual" });
+      return json(chatBody(district, threadId, asked.message, asked, origin));
+    }
+  }
+
   if (isScopedRosterQuestion(asked)) {
     const siteRoot =
       deps.siteRoot ?? `${originFromRequest(request)}${basePathFromEnv(deps.env)}`;
-    try {
-      const answer = await withBudget(
-        (signal) =>
-          runWithReadAbort(signal, () =>
-            answerScopedRace({
-              request: asked,
-              ctx: chatCtx(deps, now, siteRoot, asked),
-            }),
-          ),
-        budgetMs(deps),
-      );
-      if ("unavailable" in answer) {
-        return json({ error: "unavailable", message: answer.message }, 503);
-      }
-      logOutcome({
-        refused: answer.refused,
-        tools: ["race"],
-        latencyMs: Date.now() - started,
-        mode: "factual",
-      });
-      return json(chatBody(answer, threadId, asked.message, asked, origin));
-    } catch (error) {
-      return json(unavailableBody(error), 503);
+    const answer = await answerScopedRace({
+      request: asked,
+      ctx: chatCtx(deps, now, siteRoot, asked),
+    });
+    if ("unavailable" in answer) {
+      return json({ error: "unavailable", message: answer.message }, 503);
     }
+    logOutcome({
+      refused: answer.refused,
+      tools: ["race"],
+      latencyMs: Date.now() - started,
+      mode: "factual",
+    });
+    return json(chatBody(answer, threadId, asked.message, asked, origin));
   }
 
   if (isStateRosterQuestion(asked.message, asked.state)) {
     const siteRoot =
       deps.siteRoot ?? `${originFromRequest(request)}${basePathFromEnv(deps.env)}`;
-    try {
-      const answer = await withBudget(
-        (signal) =>
-          runWithReadAbort(signal, () =>
-            answerStateRoster({
-              request: asked,
-              ctx: chatCtx(deps, now, siteRoot, asked),
-            }),
-          ),
-        budgetMs(deps),
-      );
-      if ("unavailable" in answer) {
-        return json({ error: "unavailable", message: answer.message }, 503);
-      }
-      logOutcome({
-        refused: answer.refused,
-        tools: ["roster"],
-        latencyMs: Date.now() - started,
-        mode: "factual",
-      });
-      return json(chatBody(answer, threadId, asked.message, asked, origin));
-    } catch (error) {
-      return json(unavailableBody(error), 503);
+    const answer = await answerStateRoster({
+      request: asked,
+      ctx: chatCtx(deps, now, siteRoot, asked),
+    });
+    if ("unavailable" in answer) {
+      return json({ error: "unavailable", message: answer.message }, 503);
     }
+    logOutcome({
+      refused: answer.refused,
+      tools: ["roster"],
+      latencyMs: Date.now() - started,
+      mode: "factual",
+    });
+    return json(chatBody(answer, threadId, asked.message, asked, origin));
   }
 
   const defined = definitionAnswer(asked.message);
@@ -307,33 +325,23 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
   ) {
     const siteRoot =
       deps.siteRoot ?? `${originFromRequest(request)}${basePathFromEnv(deps.env)}`;
-    try {
-      const answer = await withBudget(
-        (signal) =>
-          runWithReadAbort(signal, () =>
-            answerKnownPlace({
-              request: asked,
-              ctx: chatCtx(deps, now, siteRoot, asked),
-            }),
-          ),
-        budgetMs(deps),
-      );
-      if ("unavailable" in answer) {
-        return json({ error: "unavailable", message: answer.message }, 503);
-      }
-      logOutcome({
-        refused: answer.refused,
-        tools: ["place"],
-        latencyMs: Date.now() - started,
-        mode: "factual",
-      });
-      return json(chatBody(answer, threadId, asked.message, asked, origin));
-    } catch (error) {
-      return json(unavailableBody(error), 503);
+    const answer = await answerKnownPlace({
+      request: asked,
+      ctx: chatCtx(deps, now, siteRoot, asked),
+    });
+    if ("unavailable" in answer) {
+      return json({ error: "unavailable", message: answer.message }, 503);
     }
+    logOutcome({
+      refused: answer.refused,
+      tools: ["place"],
+      latencyMs: Date.now() - started,
+      mode: "factual",
+    });
+    return json(chatBody(answer, threadId, asked.message, asked, origin));
   }
 
-  const kentucky = kentuckyRunningAnswer(asked.message);
+  const kentucky = kentuckyRunningAnswer(question);
   if (kentucky) {
     logOutcome({ refused: false, tools: ["kentucky"], latencyMs: Date.now() - started, mode: "factual" });
     return json(chatBody(kentucky, threadId, asked.message, asked, origin));
@@ -361,6 +369,7 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
     deps.siteRoot ??
     `${originFromRequest(request)}${basePathFromEnv(deps.env)}`;
   const daily = await (deps.dailyLimiter ?? createAiLimits(deps.env).daily).take("daily", deps.now?.getTime() ?? Date.now());
+  signal.throwIfAborted();
   if (!daily.ok) {
     return json(
       { error: "rate_limited", message: DAILY_LIMIT_MESSAGE },
@@ -368,46 +377,35 @@ export async function postChat(request: Request, deps: ChatDeps): Promise<Respon
       { "Retry-After": String(daily.retryAfterSeconds) },
     );
   }
-  const budget = budgetMs(deps);
-  try {
-    let answer = await withBudget(
-      (signal) =>
-        runWithReadAbort(signal, () =>
-          runGroundedChat({
-            request: asked,
-            env: deps.env,
-            converse: deps.converse ?? createBedrockConverse(deps.env),
-            deadlineMs: Date.now() + budget,
-            signal,
-            ctx: chatCtx(deps, now, siteRoot, asked),
-          }),
-        ),
-      budget,
-    );
-    if (asksForAnotherState(answer.answer_markdown) && hasPlaceContext(asked)) {
-      const replaced = isSingleContestScope(asked)
-        ? await answerScopedRace({
-            request: asked,
-            ctx: chatCtx(deps, now, siteRoot, asked),
-          })
-        : await answerKnownPlace({
-            request: asked,
-            ctx: chatCtx(deps, now, siteRoot, asked),
-          });
-      if (!("unavailable" in replaced)) answer = { ...answer, ...replaced };
-    }
-    logOutcome({
-      refused: answer.refused,
-      tools: answer.tools,
-      latencyMs: Date.now() - started,
-      modelId: answer.modelId,
-      inputTokens: answer.usage.inputTokens,
-      outputTokens: answer.usage.outputTokens,
-    });
-    return json(chatBody(answer, threadId, asked.message, asked, origin));
-  } catch (error) {
-    return json(unavailableBody(error), 503);
+  let answer = await runGroundedChat({
+    request: asked,
+    env: deps.env,
+    converse: deps.converse ?? createBedrockConverse(deps.env),
+    deadlineMs: deadline,
+    signal,
+    ctx: chatCtx(deps, now, siteRoot, asked),
+  });
+  if (asksForAnotherState(answer.answer_markdown) && hasPlaceContext(asked)) {
+    const replaced = isSingleContestScope(asked)
+      ? await answerScopedRace({
+          request: asked,
+          ctx: chatCtx(deps, now, siteRoot, asked),
+        })
+      : await answerKnownPlace({
+          request: asked,
+          ctx: chatCtx(deps, now, siteRoot, asked),
+        });
+    if (!("unavailable" in replaced)) answer = { ...answer, ...replaced };
   }
+  logOutcome({
+    refused: answer.refused,
+    tools: answer.tools,
+    latencyMs: Date.now() - started,
+    modelId: answer.modelId,
+    inputTokens: answer.usage.inputTokens,
+    outputTokens: answer.usage.outputTokens,
+  });
+  return json(chatBody(answer, threadId, asked.message, asked, origin));
 }
 
 function chatBody(
@@ -516,9 +514,10 @@ async function withZipState(asked: ChatRequest, deps: ChatDeps): Promise<ChatReq
 }
 
 function withBudget<T>(
-  work: Promise<T> | ((signal: AbortSignal) => Promise<T>),
+  work: (signal: AbortSignal) => Promise<T>,
   budget: number,
 ): Promise<T> {
+  if (budget <= 0) return Promise.reject(new ChatUnavailableError(CHAT_TIMEOUT_MESSAGE, "timeout"));
   const controller = new AbortController();
   let timer: ReturnType<typeof setTimeout> | undefined;
   let settled = false;
@@ -529,7 +528,7 @@ function withBudget<T>(
       reject(new ChatUnavailableError(CHAT_TIMEOUT_MESSAGE, "timeout"));
     }, budget);
   });
-  const promise = typeof work === "function" ? work(controller.signal) : work;
+  const promise = work(controller.signal);
   const guarded = promise.then(
     (value) => {
       settled = true;

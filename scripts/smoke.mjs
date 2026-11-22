@@ -6,7 +6,7 @@ if (!target || !URL.canParse(target) || !["http:", "https:"].includes(new URL(ta
 
 const origin = new URL(target).origin;
 const pages = [
-  "/", "/finance", "/candidates", "/races/2026-senate-KY", "/races/2026-senate-KY/compare",
+  "/", "/states/ky", "/finance", "/candidates", "/races/2026-senate-KY", "/races/2026-senate-KY/compare",
   "/ask", "/sources", "/privacy", "/terms", "/api/health", "/robots.txt", "/sitemap.xml",
 ];
 const redirects = {

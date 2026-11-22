@@ -1586,6 +1586,29 @@ test("a Senate count or who-list returns the timeout code when the race read doe
   }
 });
 
+test("Ask applies its deadline to both counter waits", { timeout: 1_000 }, async () => {
+  for (const [message, limiter] of [
+    ["What is Form 2?", "rateLimiter"],
+    ["Summarize the Kentucky Senate race.", "dailyLimiter"],
+  ] as const) {
+    let calls = 0;
+    const converse = scripted([]);
+    const response = await postChat(post({ message }), chatDeps(new MemoryVoterRepository(), converse, {
+      budgetMs: 50,
+      [limiter]: {
+        take() {
+          calls++;
+          return new Promise(() => {});
+        },
+      },
+    }));
+    assert.equal(calls, 1, limiter);
+    assert.equal(response.status, 503, limiter);
+    assert.equal((await response.json()).code, "timeout", limiter);
+    assert.equal(converse.calls, 0, limiter);
+  }
+});
+
 test("a future row stamp is not the Ask as-of when the page refresh is known", async () => {
   const repo = new MemoryVoterRepository();
   const refresh = "2026-10-27T18:04:00.000Z";
@@ -1915,4 +1938,85 @@ test("state roster keeps Senate filers when House filers exceed the name cap", a
   const body = (await response.json()) as { answer_markdown: string };
   assert.match(body.answer_markdown, /Senate Filer/);
   assert.doesNotMatch(body.answer_markdown, /No Senate filing found/);
+});
+
+test("Kentucky District 3 questions use the ballot while statewide questions use the roster", async () => {
+  const repo = new MemoryVoterRepository();
+  const raceId = "2026-house-KY-01";
+  await repo.upsertRace(race({ raceId, office: "house", cycle: 2026, state: "KY", district: "01", title: "U.S. House District 1, Kentucky" }));
+  await repo.upsertCandidate(candidate({ raceId, candidateId: "H6KY01001", displayName: "District One Filer", office: "house" }));
+  const converse = scripted([]);
+  const deps = chatDeps(repo, converse);
+
+  for (const message of [
+    "Who is running in Kentucky House District 3?",
+    "Who is on the ballot in KY's District 3?",
+  ]) {
+    const response = await postChat(post({ message, cycle: 2026 }), deps);
+    assert.equal(response.status, 200, message);
+    const { answer_markdown: answer } = await response.json();
+    assert.match(answer, /U\.S\. House District 3/);
+    assert.match(answer, /Morgan McGarvey/);
+    assert.match(answer, /Maria Teresa Rodriguez/);
+    assert.doesNotMatch(answer, /District One Filer|Ed Gallrein/);
+  }
+
+  const statewide = await postChat(post({ message: "Who is running in Kentucky?", cycle: 2026 }), deps);
+  assert.equal(statewide.status, 200);
+  assert.match((await statewide.json()).answer_markdown, /District One Filer/);
+  assert.equal(converse.calls, 0);
+});
+
+test("a Senate page question about District 3 stays on the Senate race", async () => {
+  const repo = new MemoryVoterRepository();
+  await repo.upsertRace(race({
+    raceId: "2026-senate-KY",
+    office: "senate",
+    cycle: 2026,
+    state: "KY",
+    title: "U.S. Senate, Kentucky",
+  }));
+  await repo.upsertCandidate(candidate({
+    candidateId: "S0KY00123",
+    raceId: "2026-senate-KY",
+    displayName: "Ada Lovelace",
+    office: "senate",
+  }));
+  const response = await postChat(
+    post({
+      message: "Who is running in District 3?",
+      state: "KY",
+      raceId: "2026-senate-KY",
+      cycle: 2026,
+    }),
+    chatDeps(repo, scripted([])),
+  );
+  assert.equal(response.status, 200);
+  const { answer_markdown: answer } = await response.json();
+  assert.match(answer, /Ada Lovelace/);
+  assert.doesNotMatch(answer, /Morgan McGarvey|Maria Teresa Rodriguez/);
+});
+
+test("state roster distinguishes omitted House names from an empty House roster", async () => {
+  const repo = new MemoryVoterRepository();
+  const senateId = "2026-senate-KY";
+  const houseId = "2026-house-KY-01";
+  await repo.upsertRace(race({ raceId: senateId, office: "senate", cycle: 2026, state: "KY", title: "U.S. Senate, Kentucky" }));
+  await repo.upsertRace(race({ raceId: houseId, office: "house", cycle: 2026, state: "KY", district: "01", title: "U.S. House District 1, Kentucky" }));
+  for (const [i, name] of ["Adams", "Brooks", "Carter", "Dixon", "Ellis", "Foster", "Green", "Hill", "Irwin", "Jones", "King", "Lane", "Moore"].entries()) {
+    await repo.upsertCandidate(candidate({ raceId: senateId, candidateId: `S6KY00${100 + i}`, displayName: `Alex ${name}` }));
+  }
+  const deps = chatDeps(repo, scripted([]));
+  async function statewideAnswer() {
+    const response = await postChat(post({ message: "Who is running in Kentucky?", cycle: 2026 }), deps);
+    assert.equal(response.status, 200);
+    return (await response.json()).answer_markdown as string;
+  }
+  assert.match(await statewideAnswer(), /No House filing found\./);
+
+  await repo.upsertCandidate(candidate({ raceId: houseId, candidateId: "H6KY01001", displayName: "House Filer", office: "house" }));
+  const capped = await statewideAnswer();
+  assert.match(capped, /Alex Adams/);
+  assert.match(capped, /House names are omitted here\./);
+  assert.doesNotMatch(capped, /No House filing found\./);
 });
