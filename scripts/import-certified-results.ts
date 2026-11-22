@@ -16,6 +16,21 @@ const countyRow = /^([a-z][a-z .'-]*?)\s+([\d,]+(?:\s+[\d,]+)*)$/i;
 const partyLabels = /Write[- ]In\b|Independent\b|[A-Za-z][A-Za-z '-]*? Party\b/gi;
 const extractionArtifacts: Record<string, string> = { "FA RIS": "FARIS", "CA TLETT": "CATLETT", "SH ELLEY": "SHELLEY" };
 
+// Federal contests in the certified 2026 Kentucky primary results.
+const primaryParties: Record<(typeof KY_FEDERAL_RACES)[number], string[]> = {
+  "2026-senate-KY": ["Democratic Party", "Republican Party"],
+  "2026-house-KY-01": ["Republican Party"],
+  "2026-house-KY-02": ["Democratic Party", "Republican Party"],
+  "2026-house-KY-03": ["Republican Party"],
+  "2026-house-KY-04": ["Democratic Party", "Republican Party"],
+  "2026-house-KY-05": ["Republican Party"],
+  "2026-house-KY-06": ["Democratic Party", "Republican Party"],
+};
+
+function contestKey(election: Election, raceId: string, party: string) {
+  return election === "primary" ? `${raceId}:${party}` : raceId;
+}
+
 function splitParties(line: string) {
   const labels = line.match(partyLabels) ?? [];
   return labels.join(" ") === line ? labels.map((label) => /^write/i.test(label) ? "Write-in" : label) : [];
@@ -128,7 +143,7 @@ export function readSbeReports(text: string, election: Election, year = 2026) {
   const rejected = [];
   for (const report of reports) {
     const { raceId, parties, pages } = report;
-    const key = election === "primary" ? `${raceId}:${parties}` : raceId;
+    const key = contestKey(election, raceId, parties);
     if (seen.has(key)) throw new Error(`Duplicate contest: ${key}`);
     seen.add(key);
     try {
@@ -162,10 +177,15 @@ export function importResults(text: string, election: Election, certificationDat
     throw new Error("The general election import requires the verified certification date");
   }
   const { verified, rejected } = readSbeReports(text, election);
-  if (verified.length === 0) throw new Error(`No reconciled Kentucky federal contests: ${rejected.join("; ")}`);
-  if (election === "general" && verified.length !== KY_FEDERAL_RACES.length) {
-    throw new Error(`Expected seven reconciled general contests, found ${verified.length}. ${rejected.join("; ")}`);
-  }
+  if (rejected.length) throw new Error(`Could not reconcile certified contests: ${rejected.join("; ")}`);
+  const expected = new Set<string>(election === "general" ? KY_FEDERAL_RACES : KY_FEDERAL_RACES.flatMap(
+    (raceId) => primaryParties[raceId].map((party) => contestKey(election, raceId, party)),
+  ));
+  const actual = new Set(verified.map(({ raceId, party }) => contestKey(election, raceId, party)));
+  const missing = [...expected].filter((key) => !actual.has(key));
+  const unexpected = [...actual].filter((key) => !expected.has(key));
+  if (missing.length) throw new Error(`Missing certified ${election} contests: ${missing.join(", ")}`);
+  if (unexpected.length) throw new Error(`Unexpected certified ${election} contests: ${unexpected.join(", ")}`);
   const results: CertifiedResult[] = verified.map(({ raceId, party, pages, countyCount, candidates }) => {
     const base = { raceId, status: "certified" as const, sourceUrl, retrievedAt, candidates, sourcePages: pages, countyCount };
     if (election === "primary") return { ...base, election, party, certificationDate };
@@ -175,6 +195,20 @@ export function importResults(text: string, election: Election, certificationDat
     return { ...base, election, certificationDate };
   });
   return { results, rejected };
+}
+
+export async function replaceCertifiedResults(path: string, text: string, election: Election, date: string | null, sourceUrl: string, retrievedAt: string) {
+  const { results: fresh } = importResults(text, election, date, sourceUrl, retrievedAt);
+  const existing: (CertifiedResult | PendingResult)[] = JSON.parse(await readFile(path, "utf8"));
+  const kept = existing.filter((record) => record.election !== election);
+  const staged = `${path}.${process.pid}.tmp`;
+  try {
+    await writeFile(staged, `${JSON.stringify([...kept, ...fresh], null, 2)}\n`, { flag: "wx" });
+    await rename(staged, path);
+  } finally {
+    await rm(staged, { force: true });
+  }
+  return fresh.length;
 }
 
 async function main() {
@@ -198,19 +232,8 @@ async function main() {
     }
     const text = execFileSync(process.env.PDFTOTEXT ?? "pdftotext", ["-raw", resolve(pdf), "-"], { encoding: "utf8" });
     const retrievedAt = new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York", dateStyle: "short" }).format(new Date());
-    const { results: fresh, rejected } = importResults(text, election, date === "unknown" ? null : date, source.href, retrievedAt);
-    for (const problem of rejected) console.warn(`Skipped ${problem}`);
-    const path = resolve("data/ky-certified-results.json");
-    const existing: (CertifiedResult | PendingResult)[] = JSON.parse(await readFile(path, "utf8"));
-    const kept = existing.filter((record) => record.election !== election);
-    const staged = `${path}.${process.pid}.tmp`;
-    try {
-      await writeFile(staged, `${JSON.stringify([...kept, ...fresh], null, 2)}\n`, { flag: "wx" });
-      await rename(staged, path);
-    } finally {
-      await rm(staged, { force: true });
-    }
-    console.log(`Imported ${fresh.length} certified ${election} contests with reconciled county totals.`);
+    const count = await replaceCertifiedResults(resolve("data/ky-certified-results.json"), text, election, date === "unknown" ? null : date, source.href, retrievedAt);
+    console.log(`Imported ${count} certified ${election} contests with reconciled county totals.`);
   } finally {
     await rm(scratch, { recursive: true, force: true });
   }
