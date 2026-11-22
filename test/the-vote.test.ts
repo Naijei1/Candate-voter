@@ -292,7 +292,8 @@ test("compare summary uses the model only through validated claims, and refuses 
 
   const off = await summarizeRace(basis, { converse: null, modelId: "test" });
   assert.equal(off.mode, "records");
-  assert.equal(off.differRefusal, REFUSALS.unavailable);
+  assert.equal(off.differRefusal, null);
+  assert.equal(off.agreeRefusal, null);
 
   const toolCall: ConverseFn = async () => ({ stopReason: "tool_use", message: { role: "assistant", content: [] } });
   assert.equal((await summarizeRace(basis, { converse: toolCall, modelId: "test" })).mode, "records");
@@ -312,6 +313,35 @@ test("compare summary uses the model only through validated claims, and refuses 
   assert.equal(called, false);
   assert.equal(refused.differRefusal, REFUSALS.notEnough);
   assert.equal(refused.agreeRefusal, REFUSALS.notEnough);
+});
+
+test("the full Senate comparison allows enough output for cited differences and agreements", async () => {
+  const basis = senateBasis();
+  assert.equal(basis.people.length, 4);
+  const barr = basis.evidence.find((row) => row.personName === "Andy Barr" && row.text.includes("Ratepayer Protection Act"));
+  const booker = basis.evidence.find((row) => row.personName === "Charles Booker" && row.text.includes("pause"));
+  assert.ok(barr && booker);
+  const cites = [barr.id, booker.id];
+  const differ = [{ text: "Barr voted for the Ratepayer Protection Act. Booker supports a pause on new AI data centers.", cites }];
+  const agree = [{ text: "Barr and Booker both support addressing household costs.", cites: ["E1", "E15"] }];
+  const summary = await summarizeRace(basis, {
+    modelId: "test",
+    converse: async ({ maxTokens }) => {
+      const complete = maxTokens > 900;
+      return {
+        stopReason: complete ? "end_turn" : "max_tokens",
+        message: {
+          role: "assistant",
+          content: [{ text: complete ? JSON.stringify({ differ, agree }) : '{"differ":[' }],
+        },
+      };
+    },
+  });
+  assert.equal(summary.mode, "ai");
+  assert.deepEqual(summary.differ, differ);
+  assert.deepEqual(summary.agree, agree);
+  assert.ok([...differ, ...agree].every((claim) =>
+    claim.cites.every((id) => summary.evidence.some((row) => row.id === id && row.sourceUrl))));
 });
 
 test("home order is film, map, compare, news feed, money; ZIP link stays and nothing has a pause button", () => {

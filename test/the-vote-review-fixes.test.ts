@@ -191,13 +191,19 @@ test("rate-limit address comes from the CloudFront viewer hop", () => {
   assert.match(readFileSync("src/app/api/compare/route.ts", "utf8"), /trustedClientAddress\(request\)/);
 });
 
-test("comparison failures show evidence and the live region stays concise", () => {
+test("the shared race picker shows loading, hides empty sections, and retains evidence on failure", () => {
   const source = readFileSync("src/components/home/CompareSection.tsx", "utf8");
+  const ask = readFileSync("src/components/chat/ChatPage.tsx", "utf8");
+  assert.match(ask, /<CompareSection /);
   assert.equal((source.match(/aria-live/g) ?? []).length, 1);
+  assert.match(source, /fetch\(withBasePath\(`\/api\/compare\?race=/);
+  assert.match(source, /summary\?\.differ\.length \? \(/);
+  assert.match(source, /summary\?\.agree\.length \? \(/);
   assert.match(source, /candidateEvidence\(basis\)/);
   assert.match(source, /open=\{!hasSummary && !compact\}/);
-  assert.doesNotMatch(source, /compare-refusal|comparison ready/);
+  assert.doesNotMatch(source, /differRefusal|agreeRefusal|Summary unavailable|comparison ready/);
   assert.match(source, /role="status" aria-live="polite"/);
+  assert.match(source, /loading \? "Loading comparison…"/);
   assert.equal(/<div className="compare-cols" aria-live/.test(source), false);
   assert.match(source, /withBasePath\(`\/races\/\$\{option\.raceId\}\/compare`\)/);
 });

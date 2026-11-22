@@ -99,8 +99,11 @@ export function CompareSection({ options, initialRaceId, onRaceChange, compact =
     fetch(withBasePath(`/api/compare?race=${encodeURIComponent(raceId)}`), { signal: controller.signal })
       .then(async (response) => {
         const body = (await response.json()) as CompareSummary;
-        if (!body || !Array.isArray(body.know)) throw new Error("shape");
-        setState({ raceId, summary: { ...body, evidence: Array.isArray(body.evidence) ? body.evidence : [] }, failed: false });
+        if (!body || body.raceId !== raceId || !Array.isArray(body.know) ||
+            !Array.isArray(body.differ) || !Array.isArray(body.agree)) throw new Error("shape");
+        if (!controller.signal.aborted) {
+          setState({ raceId, summary: { ...body, evidence: Array.isArray(body.evidence) ? body.evidence : [] }, failed: false });
+        }
       })
       .catch(async (error: unknown) => {
         if (error instanceof DOMException && error.name === "AbortError") return;
@@ -138,7 +141,7 @@ export function CompareSection({ options, initialRaceId, onRaceChange, compact =
           ))}
         </select>
       </div>
-      <p className="sr-only" role="status" aria-live="polite">
+      <p className={loading ? "hint" : "sr-only"} role="status" aria-live="polite">
         {loading ? "Loading comparison…" : ""}
       </p>
       <div className="compare-cols" aria-busy={loading}>
@@ -146,20 +149,16 @@ export function CompareSection({ options, initialRaceId, onRaceChange, compact =
           <h3>What to know</h3>
           <ClaimList claims={option.know} byId={byId} />
         </section>
-        {summary?.differ.length || (compact && !loading) ? (
+        {summary?.differ.length ? (
           <section className="compare-col">
             <h3>Where they differ</h3>
-            {summary?.differ.length
-              ? <ClaimList claims={summary.differ} byId={byId} />
-              : <p className="hint">{summary?.differRefusal ?? "See the candidate records below."}</p>}
+            <ClaimList claims={summary.differ} byId={byId} />
           </section>
         ) : null}
-        {summary?.agree.length || (compact && !loading) ? (
+        {summary?.agree.length ? (
           <section className="compare-col">
             <h3>Where they agree</h3>
-            {summary?.agree.length
-              ? <ClaimList claims={summary.agree} byId={byId} />
-              : <p className="hint">{summary?.agreeRefusal ?? "See the candidate records below."}</p>}
+            <ClaimList claims={summary.agree} byId={byId} />
           </section>
         ) : null}
       </div>

@@ -100,8 +100,10 @@ export async function comparisonAnswer(
   }
   const lines = [summary.notice ?? "", "## What to know", claims(summary.know)];
   if (summary.mode === "ai" && (summary.differ.length || summary.agree.length)) lines.push("AI summary");
-  lines.push(`## Where they differ\n${claims(summary.differ) || summary.differRefusal || ""}`,
-    `## Where they agree\n${claims(summary.agree) || summary.agreeRefusal || ""}`);
+  const differ = claims(summary.differ) || summary.differRefusal;
+  const agree = claims(summary.agree) || summary.agreeRefusal;
+  if (differ) lines.push(`## Where they differ\n${differ}`);
+  if (agree) lines.push(`## Where they agree\n${agree}`);
   if (!summary.differ.length && !summary.agree.length) {
     const list = records(summary.evidence);
     if (list.length) lines.push("## Candidate records", list.join("\n"));
