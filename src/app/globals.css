@@ -1333,7 +1333,7 @@ td {
   pointer-events: none;
 }
 
-.cd-map .cd-label.compact { font-size: 19px; }
+.cd-map .cd-label.compact { font-size: 22px; }
 
 .cd-hover-label {
   font-size: 1rem;
@@ -2133,6 +2133,7 @@ td {
   .home-map .lede { font-size: 1rem; }
   .map-frame { padding: 0.5rem; }
   .cd-map .cd-label { font-size: 36px; }
+  .cd-map .cd-label.compact { font-size: 30px; }
   .zip-link a { display: inline-flex; align-items: center; min-height: 44px; }
   .zip-link { margin-top: 0.25rem; }
 
