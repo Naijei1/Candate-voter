@@ -22,7 +22,7 @@ export default async function NewsFeedPage({ searchParams }: PageProps) {
   return (
     <article className="wrap">
       <h1>News Feed</h1>
-      <div className="tabs" role="tablist" aria-label="News Feed lanes">
+      <div className="segmented" role="tablist" aria-label="News Feed lanes">
         <Link href="/news" aria-selected={lane === "activity"} role="tab">
           Activity
         </Link>
