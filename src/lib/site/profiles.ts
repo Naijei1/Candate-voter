@@ -51,6 +51,8 @@ const empty: KyProfile = {
 };
 const byId = data.candidates as Record<string, Partial<KyProfile>>;
 
+export const profileVoteSelection = { rule: data.voteSelection, checkedOn: data.checkedOn };
+
 export function profileFor(candidateId: string): KyProfile {
   return { ...empty, ...byId[candidateId] };
 }

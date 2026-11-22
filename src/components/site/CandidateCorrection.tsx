@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { withBasePath } from "@/lib/base-path";
 
 export function CandidateCorrection({ candidateId, raceId }: { candidateId: string; raceId?: string }) {
   const [status, setStatus] = useState("");
@@ -13,7 +14,7 @@ export function CandidateCorrection({ candidateId, raceId }: { candidateId: stri
     setSending(true);
     setStatus("");
     try {
-      const response = await fetch("/api/corrections", {
+      const response = await fetch(withBasePath("/api/corrections"), {
         method: "POST",
         headers: { "content-type": "application/json", accept: "application/json" },
         body: JSON.stringify({ candidateId, raceId, note: fields.get("note"), website: fields.get("website") }),

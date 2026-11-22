@@ -227,6 +227,12 @@ test("compare basis holds only cited records and ballot facts", () => {
   assert.ok(senate.know.some((claim) => /Open seat/.test(claim.text)));
 });
 
+test("compare vote evidence names the bill and retains its roll-call citation", () => {
+  const vote = senateBasis().evidence.find((row) => row.personId === "S6KY00286" && row.kind === "vote");
+  assert.equal(vote?.text, "Voted Yea on S. 2403 (Retire through Ownership Act).");
+  assert.equal(vote?.sourceUrl, "https://clerk.house.gov/evs/2026/roll314.xml");
+});
+
 test("claims without two candidates' citations, with unknown ids, or with predictions are dropped", () => {
   const basis = senateBasis();
   const barr = basis.evidence.find((row) => row.personName === "Andy Barr")?.id as string;
