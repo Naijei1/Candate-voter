@@ -1,8 +1,9 @@
 import { PARTY_LABELS } from "./data/party-codes";
+import { stateConfig } from "./states";
 import type { FederalOffice } from "./types";
 
 const INSTANT_FORMAT = new Intl.DateTimeFormat("en-US", {
-  timeZone: "America/New_York",
+  timeZone: stateConfig().displayTimeZone,
   month: "short",
   day: "numeric",
   year: "numeric",

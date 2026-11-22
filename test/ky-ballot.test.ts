@@ -110,8 +110,8 @@ test("Kentucky profile records cite verified results and a common House roll-cal
 test("statewide portraits have reusable files, thumbnails and source credits", () => {
   for (const person of kyStatewide().officers) {
     assert.ok(person.photo?.sourceUrl.startsWith("https://commons.wikimedia.org/"), person.name);
-    assert.ok(person.photo.credit && person.photo.license, person.name);
-    assert.ok(existsSync(`public${person.photo.src}`), person.name);
+    assert.ok(person.photo?.credit && person.photo.license, person.name);
+    assert.ok(existsSync(`public${person.photo?.src}`), person.name);
     assert.ok(existsSync(`public/photos/ky/sm/${person.id}.webp`), person.name);
   }
 });

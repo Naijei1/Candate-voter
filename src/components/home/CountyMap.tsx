@@ -3,6 +3,7 @@
 import { useEffect, useState, type KeyboardEvent } from "react";
 import counties from "../../../data/ky-counties.json";
 import { withBasePath } from "@/lib/base-path";
+import { stateConfig } from "@/lib/states";
 
 type Shape = { fips: string; d: string; x: number; y: number; radius: number };
 type Drawing = { viewBox: string; counties: Shape[] };
@@ -20,7 +21,7 @@ export default function CountyMap() {
 
   useEffect(() => {
     const controller = new AbortController();
-    fetch(withBasePath("/geo/counties/KY.json"), { signal: controller.signal })
+    fetch(withBasePath(stateConfig("KY").map.counties), { signal: controller.signal })
       .then(async (response) => { if (response.ok) setDrawing(await response.json()); })
       .catch(() => { /* The county selector also works without the drawing. */ });
     return () => controller.abort();

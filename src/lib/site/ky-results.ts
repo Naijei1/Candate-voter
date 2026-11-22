@@ -1,3 +1,7 @@
+import { stateConfig, type StateConfig } from "../states";
+
+const KY = stateConfig("KY");
+
 /**
  * Kentucky polls close at 6:00 p.m. local time. The state spans Eastern and
  * Central time, so every polling place is closed only at 6:00 p.m. Central.
@@ -19,20 +23,30 @@ function localClock(now: Date, timeZone: string): { day: string; clock: string }
   };
 }
 
-function closedAt(now: Date, timeZone: string): boolean {
+function closedAt(now: Date, state: StateConfig, timeZone: string): boolean {
   const { day, clock } = localClock(now, timeZone);
-  if (day > "2026-11-03") return true;
-  if (day < "2026-11-03") return false;
-  return clock >= "18:00";
+  if (day > state.generalElection) return true;
+  if (day < state.generalElection) return false;
+  return clock >= state.pollsClose;
+}
+
+/** Polls are closed in the zone that closes first. */
+export function firstPollsClosed(now: Date, state: StateConfig): boolean {
+  return closedAt(now, state, state.timeZones[0]);
+}
+
+/** Polls are closed everywhere in the state. */
+export function allPollsClosed(now: Date, state: StateConfig): boolean {
+  return closedAt(now, state, state.timeZones[state.timeZones.length - 1]);
 }
 
 /** Eastern Kentucky polls are closed. Central counties may still be open. */
 export function kentuckyEasternPollsClosed(now: Date): boolean {
-  return closedAt(now, "America/New_York");
+  return firstPollsClosed(now, KY);
 }
 
 export function kentuckyPollsClosed(now: Date): boolean {
-  return closedAt(now, "America/Chicago");
+  return allPollsClosed(now, KY);
 }
 
 export type ResultsPhase = "before" | "partial" | "closed";
@@ -43,13 +57,4 @@ export function kentuckyResultsPhase(now: Date): ResultsPhase {
   return "before";
 }
 
-export const KY_RESULTS_LINKS = [
-  {
-    href: "https://vrsws.sos.ky.gov/liveresults/",
-    label: "Election night results",
-  },
-  {
-    href: "https://elect.ky.gov/results/2020-2029/Pages/2026.aspx",
-    label: "State Board of Elections results",
-  },
-] as const;
+export const KY_RESULTS_LINKS = [KY.results.live, KY.results.official] as const;

@@ -10,3 +10,10 @@ Read [DESIGN.md](DESIGN.md) before changing the interface. The shared theme and 
 - Meet WCAG AA, keep visible focus and 44px controls, and check reflow down to 320px. Run axe on changed public views and respect reduced motion.
 - Preserve cached performance, server components and security headers. Use next/font for self-hosted type. Avoid new client libraries, icon packs and external CSS or font requests.
 - Keep design changes out of `.github/`, `infra/`, `amplify.yml`, authentication, API routes and ingestion. Preserve test meaning and identify intentional presentation-expectation changes. Leave Git writes to the operator.
+
+## Multi-state readiness
+
+- Kentucky is the only enabled state. Do not add other states' data, a US map or a state picker to public pages.
+- State facts (district count, time zones, election day, results and filing links, map files) live in `src/lib/states.ts`. Read them from `stateConfig()` instead of writing new Kentucky constants.
+- New race ids follow `{cycle}-senate-{ST}` and `{cycle}-house-{ST}-{DD}`, with `00` for at-large seats.
+- Public URLs stay unprefixed (`/races/2026-senate-KY`, `/states/ky`). A state segment, data pipeline or map change needs its own plan.

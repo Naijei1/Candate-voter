@@ -1,3 +1,5 @@
+import { isFederalRaceIdFor, stateConfig } from "@/lib/states";
+
 export function isKentuckyFederalRaceId(raceId: string): boolean {
-  return /^\d{4}-(?:senate-KY|house-KY-0[1-6])$/.test(raceId);
+  return isFederalRaceIdFor(stateConfig("KY"), raceId);
 }

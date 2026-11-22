@@ -1,5 +1,6 @@
 import { kyBallot } from "../site/ky-ballot";
 import { KY_RESULTS_LINKS } from "../site/ky-results";
+import { stateConfig } from "../states";
 import type { ChatAnswer } from "./types";
 
 /** Names on the November Kentucky ballot. Does not declare a winner. */
@@ -20,7 +21,7 @@ export function kentuckyRunningAnswer(message: string, { districtOnly = false } 
       lines.join("\n"),
       `[See official results](${results.href}).`,
     ].join("\n\n"),
-    sources: [{ title: "Kentucky Secretary of State filing list", url: "https://web.sos.ky.gov/candidatefilings/Default.aspx?id=3", as_of: "2026-11-03" }],
+    sources: [{ title: "Kentucky Secretary of State filing list", url: stateConfig("KY").filings.href, as_of: "2026-11-03" }],
     refused: false,
     mode: "factual",
   };

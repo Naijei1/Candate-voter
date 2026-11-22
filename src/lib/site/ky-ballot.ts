@@ -2,15 +2,18 @@ import { houseContestJurisdiction, houseContestTitle } from "@/lib/data/at-large
 import { stateName } from "@/lib/data/states";
 import type { FinanceDirect } from "@/lib/finance/model";
 import { candidateTotalsUrl, formatMoney } from "@/lib/finance/model";
+import { stateConfig } from "@/lib/states";
 import type { Candidate, Race } from "@/lib/types";
+
+const KY = stateConfig("KY");
 
 /** Kentucky November 3, 2026 federal ballot. Checked November 3, 2026. */
 export const KY_BALLOT_CHECKED = "2026-11-03";
 
 export const KY_BALLOT_SOURCES = [
   {
-    name: "Kentucky Secretary of State",
-    url: "https://web.sos.ky.gov/candidatefilings/Default.aspx?id=3",
+    name: KY.filings.name,
+    url: KY.filings.href,
     note: "General election filings · Nov 3, 2026.",
   },
   {
@@ -20,7 +23,7 @@ export const KY_BALLOT_SOURCES = [
   },
   {
     name: "FEC",
-    url: "https://www.fec.gov/data/candidates/?election_year=2026&state=KY",
+    url: `https://www.fec.gov/data/candidates/?election_year=${KY.cycle}&state=${KY.code}`,
     note: "Campaign totals through Oct 14, 2026.",
   },
 ] as const;
