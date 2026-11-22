@@ -23,7 +23,7 @@ export async function SiteHeader() {
           <details className="account-menu">
             <summary>{user.email}</summary>
             <div>
-              <Link href="/account">Saved races</Link>
+              <Link href="/account">My watchlist</Link>
               {isAdmin(user) ? <Link href="/admin">Admin</Link> : null}
               <form action={signOutAction}>
                 <button type="submit">Sign out</button>

@@ -304,6 +304,7 @@ Resources:
         authorize_scopes: email openid profile
       AttributeMapping:
         email: email
+        email_verified: email_verified
         username: sub
 
   UserPoolClient:

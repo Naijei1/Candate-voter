@@ -5,32 +5,49 @@ import Link from "next/link";
 import { useState } from "react";
 import type { Follow } from "@/lib/users/follows";
 
-const FOLLOW_LABEL = {
-  race: "Race",
-  candidate: "Person",
-  jurisdiction: "Place",
-  measure: "Ballot question",
-  issue: "Topic",
-} as const;
-
 export function AccountPanel({
   email,
   follows,
   loadError,
+  emailEnabled,
 }: {
   email: string;
-  follows: Follow[];
+  follows: Array<Follow & { label: string }>;
+  emailEnabled: boolean | null;
   loadError: boolean;
 }) {
-  const [saved, setSaved] = useState<Follow[]>(follows);
-  const [message, setMessage] = useState<string | null>(loadError ? "Saved races unavailable." : null);
+  const [saved, setSaved] = useState(follows);
+  const [message, setMessage] = useState<string | null>(loadError ? "Watchlist unavailable." : null);
+  const [alerts, setAlerts] = useState(emailEnabled);
+  const [busy, setBusy] = useState(false);
+
+  async function toggleAlerts() {
+    if (busy) return;
+    setBusy(true);
+    setMessage(null);
+    try {
+      const response = await fetch(withBasePath("/api/alerts/email"), {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ enabled: !alerts }),
+      });
+      if (!response.ok) throw new Error("Alert update unavailable");
+      setAlerts(!alerts);
+      if (!alerts) setMessage("Check your email to confirm alerts.");
+    } catch {
+      setMessage("Could not update email alerts.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function unfollow(follow: Follow) {
-    const response = await fetch(withBasePath("/api/follows"), {
+    const response = await fetch(withBasePath("/api/v1/me/follows"), {
       method: "DELETE",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ targetType: follow.targetType, targetId: follow.targetId }),
-    });
-    if (!response.ok) {
+    }).catch(() => null);
+    if (!response?.ok) {
       setMessage("Could not remove that follow.");
       return;
     }
@@ -42,7 +59,11 @@ export function AccountPanel({
   return (
     <div>
       <p>{email}</p>
-      <h2>Saved</h2>
+      {alerts !== null ? (
+        <button className={`btn ${alerts ? "btn-navy" : "btn-ghost"}`} type="button" aria-pressed={alerts} aria-disabled={busy} onClick={toggleAlerts}>
+          Email me about what I follow
+        </button>
+      ) : null}
       {saved.length === 0 ? (
         <p>
           <Link href="/">Find races to follow</Link>
@@ -53,14 +74,8 @@ export function AccountPanel({
             const href = followHref(follow);
             return (
               <li key={`${follow.targetType}:${follow.targetId}`}>
-                {FOLLOW_LABEL[follow.targetType]}
-                {href ? (
-                  <>
-                    {" · "}
-                    <Link href={href}>Open</Link>
-                  </>
-                ) : null}{" "}
-                <button className="btn btn-ghost" type="button" onClick={() => unfollow(follow)}>
+                {href ? <Link className="btn btn-ghost" href={href}>{follow.label}</Link> : follow.label}{" "}
+                <button className="btn btn-ghost" type="button" aria-label={`Remove ${follow.label}`} onClick={() => unfollow(follow)}>
                   Remove
                 </button>
               </li>
