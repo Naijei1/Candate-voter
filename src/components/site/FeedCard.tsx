@@ -1,3 +1,4 @@
+import { FeedCorrection } from "./FeedCorrection";
 import { thumbnail } from "@/lib/site/thumbnail";
 import { portraitFor } from "@/lib/site/stances";
 import type { TodayCard } from "@/lib/site/today";
@@ -26,16 +27,19 @@ export function FeedImage({ card }: { card: Pick<TodayCard, "personId" | "person
 
 export function FeedCard({ card }: { card: TodayCard }) {
   return (
-    <a className="feed-card has-thumb" href={card.sourceUrl}>
-      <FeedImage card={card} />
-      <span className="feed-body">
-        <span className="feed-title">{card.title}</span>
-        <span className="feed-text">{card.text}</span>
-        <span className="meta">
-          {card.sourceName} · {card.when}
+    <>
+      <a className="feed-card has-thumb" href={card.sourceUrl}>
+        <FeedImage card={card} />
+        <span className="feed-body">
+          <span className="feed-title">{card.title}</span>
+          <span className="feed-text">{card.text}</span>
+          <span className="meta">
+            Official record · {card.sourceName}{card.date ? <> · <time dateTime={card.date}>{card.when}</time></> : null}
+          </span>
         </span>
-      </span>
-    </a>
+      </a>
+      <FeedCorrection sourceUrl={card.sourceUrl} candidateId={card.personId} />
+    </>
   );
 }
 
@@ -43,7 +47,7 @@ export function FeedGrid({ cards }: { cards: readonly TodayCard[] }) {
   return (
     <ul className="card-grid feed-grid">
       {cards.map((card) => (
-        <li key={card.id}>
+        <li key={card.id} className="grid grid-rows-[1fr_auto]">
           <FeedCard card={card} />
         </li>
       ))}

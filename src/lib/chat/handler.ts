@@ -1,4 +1,7 @@
 import { citationLink } from "./ui";
+import { comparisonAnswer } from "./compare";
+import type { CompareService } from "../compare/service";
+import { liveCompare } from "../compare/live";
 import { randomUUID } from "node:crypto";
 import { basePathFromEnv } from "../base-path";
 import { createDynamoRepository, isLiveRepository, runWithReadAbort } from "../data/repository";
@@ -60,6 +63,7 @@ export type ChatDeps = {
   repository: () => ApiRepository;
   converse?: ConverseFn;
   rateLimiter?: RateLimiter;
+  compare?: CompareService;
   dailyLimiter?: RateLimiter;
   /** Origin plus base path. Tests set this; the route derives it from the request. */
   siteRoot?: string;
@@ -77,6 +81,7 @@ export function liveChatDeps(
     env,
     rateLimiter: limits.perIp,
     dailyLimiter: limits.daily,
+    compare: liveCompare,
     repository: () => createDynamoRepository(),
     converse: createBedrockConverse(env),
     lookupZip: censusZipDistricts,
@@ -177,6 +182,16 @@ async function answerChat(
   }
   const kentuckyRoster = ballotRoster || (mentionedState === "KY" && isVagueRunningQuestion(scoped.message));
   const asked = kentuckyRoster && !hasPlaceContext(scoped) ? { ...scoped, state: "KY" } : scoped;
+
+  const comparison = await comparisonAnswer(asked, trustedClientAddress(request), deps.compare);
+  if (comparison) {
+    logOutcome({ refused: false, tools: ["compare"], latencyMs: Date.now() - started, mode: "factual" });
+    if (comparison.status === 429) {
+      return json({ error: "rate_limited", message: "Too many requests. Try again later." }, 429, comparison.headers);
+    }
+    // The comparison already scopes its evidence to explicit candidate and race matches.
+    return json(chatBody(comparison.answer, threadId, asked.message, asked, origin, false));
+  }
 
   const notes = await notesAnswer(asked);
   if (notes) {
@@ -414,11 +429,10 @@ function chatBody(
   priorMessage: string,
   asked: ChatRequest,
   origin: string,
+  applyPageScope = true,
 ) {
-  const polished = limitAnswerToRaceScope(
-    polishChatAnswer(answer, priorMessage, answerScope(asked)),
-    asked,
-  );
+  const prepared = polishChatAnswer(answer, priorMessage, applyPageScope ? answerScope(asked) : undefined);
+  const polished = applyPageScope ? limitAnswerToRaceScope(prepared, asked) : prepared;
   const refreshedAt = polished.refreshedAt;
   return {
     answer_markdown: polished.answer_markdown,

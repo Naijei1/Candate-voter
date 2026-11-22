@@ -15,7 +15,7 @@ const BUDGET_MS = 15_000;
 export type CompareResult = { status: number; body: CompareSummary & { error?: "rate_limited"; message?: string }; headers?: Record<string, string> };
 
 export type CompareService = {
-  handle(raceId: string, clientKey: string): Promise<CompareResult | null>;
+  handle(raceId: string, clientKey: string, personIds?: readonly string[]): Promise<CompareResult | null>;
 };
 
 /**
@@ -34,19 +34,26 @@ export function createCompareService(deps: {
   const cache = new Map<string, { until: number; body: CompareSummary }>();
   const pending = new Map<string, Promise<CompareResult>>();
   return {
-    async handle(raceId, clientKey) {
+    async handle(raceId, clientKey, personIds) {
       const deadline = now() + BUDGET_MS;
-      const basis = compareBasis(raceId);
-      if (!basis) return null;
-      const hit = cache.get(raceId);
+      const full = compareBasis(raceId);
+      if (!full) return null;
+      const people = personIds?.length ? full.people.filter((person) => personIds.includes(person.id)) : full.people;
+      if (!people.length) return null;
+      const selected = new Set(people.map((person) => person.id));
+      const basis = people.length === full.people.length ? full : {
+        ...full, people, evidence: full.evidence.filter((row) => !row.personId || selected.has(row.personId)),
+      };
+      const key = basis === full ? raceId : `${raceId}:${[...selected].sort().join(",")}`;
+      const hit = cache.get(key);
       if (hit && now() < hit.until) return { status: 200, body: hit.body };
-      const inFlight = pending.get(raceId);
+      const inFlight = pending.get(key);
       if (inFlight) return inFlight;
       const perIp = await deps.limiter.take(`compare:${clientKey}`, now());
       if (!perIp.ok) return tooManyRequests(basis, perIp.retryAfterSeconds);
-      const filled = cache.get(raceId);
+      const filled = cache.get(key);
       if (filled && now() < filled.until) return { status: 200, body: filled.body };
-      return singleFlight(pending, raceId, async (): Promise<CompareResult> => {
+      return singleFlight(pending, key, async (): Promise<CompareResult> => {
         const global = await deps.globalLimiter.take("compare:all", now());
         if (!global.ok) return tooManyRequests(basis, global.retryAfterSeconds);
         if (deps.dailyLimiter && deps.usesModel?.(basis)) {
@@ -66,7 +73,7 @@ export function createCompareService(deps: {
         const remaining = deadline - now();
         if (remaining <= 0) return { status: 200, body: recordsOnlySummary(basis, null) };
         const summary = await deps.summarize(basis, remaining);
-        cache.set(raceId, { until: now() + (summary.mode === "ai" ? AI_CACHE_MS : FALLBACK_CACHE_MS), body: summary });
+        cache.set(key, { until: now() + (summary.mode === "ai" ? AI_CACHE_MS : FALLBACK_CACHE_MS), body: summary });
         return { status: 200, body: summary };
       });
     },

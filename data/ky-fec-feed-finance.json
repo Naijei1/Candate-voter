@@ -1,0 +1,1886 @@
+{
+  "committees": [
+    {
+      "candidateId": "S6KY00286",
+      "committeeId": "C00467571",
+      "name": "ANDY BARR FOR SENATE, INC.",
+      "sourceUrl": "https://www.fec.gov/data/candidate/S6KY00286/?cycle=2026&election_full=false",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "S6KY00385",
+      "committeeId": "C00929208",
+      "name": "BOOKER FOR THE COMMONWEALTH",
+      "sourceUrl": "https://www.fec.gov/data/candidate/S6KY00385/?cycle=2026&election_full=false",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "S6KY00377",
+      "committeeId": "C00954131",
+      "name": "CAMPBELL 4 CONGRESS 2026",
+      "sourceUrl": "https://www.fec.gov/data/candidate/S6KY00377/?cycle=2026&election_full=false",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY01110",
+      "committeeId": "C00588764",
+      "name": "COMER FOR CONGRESS",
+      "sourceUrl": "https://www.fec.gov/data/candidate/H6KY01110/?cycle=2026&election_full=false",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY01169",
+      "committeeId": "C00904243",
+      "name": "WILLIAMS FOR KENTUCKY CAMPAIGN",
+      "sourceUrl": "https://www.fec.gov/data/candidate/H6KY01169/?cycle=2026&election_full=false",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H8KY02031",
+      "committeeId": "C00445023",
+      "name": "GUTHRIE FOR CONGRESS",
+      "sourceUrl": "https://www.fec.gov/data/candidate/H8KY02031/?cycle=2026&election_full=false",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY02068",
+      "committeeId": "C00902130",
+      "name": "WINGFIELDFORCONGRESS",
+      "sourceUrl": "https://www.fec.gov/data/candidate/H6KY02068/?cycle=2026&election_full=false",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H2KY03206",
+      "committeeId": "C00791392",
+      "name": "MORGAN MCGARVEY FOR CONGRESS",
+      "sourceUrl": "https://www.fec.gov/data/candidate/H2KY03206/?cycle=2026&election_full=false",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY03223",
+      "committeeId": "C00938209",
+      "name": "MARIA RODRIGUEZ FOR US CONGRESS",
+      "sourceUrl": "https://www.fec.gov/data/candidate/H6KY03223/?cycle=2026&election_full=false",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY04171",
+      "committeeId": "C00923995",
+      "name": "GALLREIN FOR CONGRESS",
+      "sourceUrl": "https://www.fec.gov/data/candidate/H6KY04171/?cycle=2026&election_full=false",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY04189",
+      "committeeId": "C00925917",
+      "name": "CITIZENS FOR MELISSA STRANGE",
+      "sourceUrl": "https://www.fec.gov/data/candidate/H6KY04189/?cycle=2026&election_full=false",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY04205",
+      "committeeId": "C00954834",
+      "name": "JEREMY TODD FOR KENTUCKY",
+      "sourceUrl": "https://www.fec.gov/data/candidate/H6KY04205/?cycle=2026&election_full=false",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H0KY05015",
+      "committeeId": "C00116632",
+      "name": "HAL ROGERS FOR CONGRESS",
+      "sourceUrl": "https://www.fec.gov/data/candidate/H0KY05015/?cycle=2026&election_full=false",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY05152",
+      "committeeId": "C00907055",
+      "name": "NED FOR CONGRESS",
+      "sourceUrl": "https://www.fec.gov/data/candidate/H6KY05152/?cycle=2026&election_full=false",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H2KY05185",
+      "committeeId": "C00956342",
+      "name": "SERRANO FOR AMERICA",
+      "sourceUrl": "https://www.fec.gov/data/candidate/H2KY05185/?cycle=2026&election_full=false",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY05202",
+      "committeeId": "C00935551",
+      "name": "MIKEL WEIN CAMPAIGN",
+      "sourceUrl": "https://www.fec.gov/data/candidate/H6KY05202/?cycle=2026&election_full=false",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY06192",
+      "committeeId": "C00912303",
+      "name": "ALVARADO FOR KENTUCKY",
+      "sourceUrl": "https://www.fec.gov/data/candidate/H6KY06192/?cycle=2026&election_full=false",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY06184",
+      "committeeId": "C00912261",
+      "name": "ZACH DEMBO FOR CONGRESS",
+      "sourceUrl": "https://www.fec.gov/data/candidate/H6KY06184/?cycle=2026&election_full=false",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY06234",
+      "committeeId": "C00925206",
+      "name": "DBA BOWMAN2026",
+      "sourceUrl": "https://www.fec.gov/data/candidate/H6KY06234/?cycle=2026&election_full=false",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY06242",
+      "committeeId": "C00925354",
+      "name": "PETE LYNCH FOR KENTUCKY",
+      "sourceUrl": "https://www.fec.gov/data/candidate/H6KY06242/?cycle=2026&election_full=false",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY06283",
+      "committeeId": "C00944108",
+      "name": "ROBERT QUIGLEY FOR CONGRESS CAMPAIGN COMMITTEE",
+      "sourceUrl": "https://www.fec.gov/data/candidate/H6KY06283/?cycle=2026&election_full=false",
+      "retrievedAt": "2026-11-22"
+    }
+  ],
+  "reports": [
+    {
+      "candidateId": "S6KY00286",
+      "committeeId": "C00467571",
+      "start": "2026-10-01",
+      "end": "2026-10-14",
+      "receiptDate": "2026-10-26",
+      "receipts": 494920.72,
+      "fileNumber": "2042009",
+      "sourceUrl": "https://docquery.fec.gov/pdf/759/202610269945203759/202610269945203759.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "S6KY00286",
+      "committeeId": "C00467571",
+      "start": "2026-07-01",
+      "end": "2026-09-30",
+      "receiptDate": "2026-10-15",
+      "receipts": 2065384.96,
+      "fileNumber": "2024057",
+      "sourceUrl": "https://docquery.fec.gov/pdf/185/202610159909058185/202610159909058185.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "S6KY00286",
+      "committeeId": "C00467571",
+      "start": "2026-04-30",
+      "end": "2026-06-30",
+      "receiptDate": "2026-08-13",
+      "receipts": 1568240.21,
+      "fileNumber": "2006115",
+      "sourceUrl": "https://docquery.fec.gov/pdf/510/202608139899499510/202608139899499510.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "S6KY00286",
+      "committeeId": "C00467571",
+      "start": "2026-04-01",
+      "end": "2026-04-29",
+      "receiptDate": "2026-05-07",
+      "receipts": 380095.59,
+      "fileNumber": "1973250",
+      "sourceUrl": "https://docquery.fec.gov/pdf/551/202605079866860551/202605079866860551.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "S6KY00286",
+      "committeeId": "C00467571",
+      "start": "2026-01-01",
+      "end": "2026-03-31",
+      "receiptDate": "2026-04-30",
+      "receipts": 1478448.97,
+      "fileNumber": "1971891",
+      "sourceUrl": "https://docquery.fec.gov/pdf/944/202604309866769944/202604309866769944.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "S6KY00286",
+      "committeeId": "C00467571",
+      "start": "2025-10-01",
+      "end": "2025-12-31",
+      "receiptDate": "2026-01-30",
+      "receipts": 1399592.51,
+      "fileNumber": "1939410",
+      "sourceUrl": "https://docquery.fec.gov/pdf/898/202601309794729898/202601309794729898.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "S6KY00286",
+      "committeeId": "C00467571",
+      "start": "2025-07-01",
+      "end": "2025-09-30",
+      "receiptDate": "2026-01-28",
+      "receipts": 1820728.84,
+      "fileNumber": "1936448",
+      "sourceUrl": "https://docquery.fec.gov/pdf/052/202601289794254052/202601289794254052.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "S6KY00286",
+      "committeeId": "C00467571",
+      "start": "2025-04-01",
+      "end": "2025-06-30",
+      "receiptDate": "2025-10-06",
+      "receipts": 1416322.54,
+      "fileNumber": "1917723",
+      "sourceUrl": "https://docquery.fec.gov/pdf/659/202510069790701659/202510069790701659.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "S6KY00286",
+      "committeeId": "C00467571",
+      "start": "2025-01-01",
+      "end": "2025-03-31",
+      "receiptDate": "2025-06-25",
+      "receipts": 1853013.55,
+      "fileNumber": "1897165",
+      "sourceUrl": "https://docquery.fec.gov/pdf/993/202506259762541993/202506259762541993.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "S6KY00385",
+      "committeeId": "C00929208",
+      "start": "2026-10-01",
+      "end": "2026-10-14",
+      "receiptDate": "2026-10-22",
+      "receipts": 222063.09,
+      "fileNumber": "2037626",
+      "sourceUrl": "https://docquery.fec.gov/pdf/642/202610229941012642/202610229941012642.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "S6KY00385",
+      "committeeId": "C00929208",
+      "start": "2026-07-01",
+      "end": "2026-09-30",
+      "receiptDate": "2026-10-15",
+      "receipts": 614751.64,
+      "fileNumber": "2023356",
+      "sourceUrl": "https://docquery.fec.gov/pdf/492/202610159908902492/202610159908902492.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "S6KY00385",
+      "committeeId": "C00929208",
+      "start": "2026-04-30",
+      "end": "2026-06-30",
+      "receiptDate": "2026-07-15",
+      "receipts": 590825.16,
+      "fileNumber": "1996498",
+      "sourceUrl": "https://docquery.fec.gov/pdf/910/202607159875944910/202607159875944910.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "S6KY00385",
+      "committeeId": "C00929208",
+      "start": "2026-04-01",
+      "end": "2026-04-29",
+      "receiptDate": "2026-05-08",
+      "receipts": 140318.78,
+      "fileNumber": "1973522",
+      "sourceUrl": "https://docquery.fec.gov/pdf/618/202605089866898618/202605089866898618.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "S6KY00385",
+      "committeeId": "C00929208",
+      "start": "2026-01-01",
+      "end": "2026-03-31",
+      "receiptDate": "2026-04-15",
+      "receipts": 291210.38,
+      "fileNumber": "1966571",
+      "sourceUrl": "https://docquery.fec.gov/pdf/474/202604159862608474/202604159862608474.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "S6KY00385",
+      "committeeId": "C00929208",
+      "start": "2025-10-01",
+      "end": "2025-12-31",
+      "receiptDate": "2026-01-31",
+      "receipts": 77154.77,
+      "fileNumber": "1943191",
+      "sourceUrl": "https://docquery.fec.gov/pdf/798/202601319808565798/202601319808565798.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "S6KY00377",
+      "committeeId": "C00954131",
+      "start": "2026-09-30",
+      "end": "2026-10-14",
+      "receiptDate": "2026-10-26",
+      "receipts": 0,
+      "fileNumber": "2041988",
+      "sourceUrl": "https://docquery.fec.gov/pdf/393/202610269945203393/202610269945203393.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY01110",
+      "committeeId": "C00588764",
+      "start": "2026-10-01",
+      "end": "2026-10-14",
+      "receiptDate": "2026-10-22",
+      "receipts": 42528.7,
+      "fileNumber": "2038172",
+      "sourceUrl": "https://docquery.fec.gov/pdf/988/202610229943833988/202610229943833988.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY01110",
+      "committeeId": "C00588764",
+      "start": "2026-07-01",
+      "end": "2026-09-30",
+      "receiptDate": "2026-10-15",
+      "receipts": 376299.27,
+      "fileNumber": "2026612",
+      "sourceUrl": "https://docquery.fec.gov/pdf/907/202610159914682907/202610159914682907.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY01110",
+      "committeeId": "C00588764",
+      "start": "2026-04-30",
+      "end": "2026-06-30",
+      "receiptDate": "2026-07-15",
+      "receipts": 420828.95,
+      "fileNumber": "1995595",
+      "sourceUrl": "https://docquery.fec.gov/pdf/144/202607159875674144/202607159875674144.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY01110",
+      "committeeId": "C00588764",
+      "start": "2026-04-01",
+      "end": "2026-04-29",
+      "receiptDate": "2026-05-07",
+      "receipts": 59975.15,
+      "fileNumber": "1973343",
+      "sourceUrl": "https://docquery.fec.gov/pdf/562/202605079866886562/202605079866886562.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY01110",
+      "committeeId": "C00588764",
+      "start": "2026-01-01",
+      "end": "2026-03-31",
+      "receiptDate": "2026-04-15",
+      "receipts": 310247.16,
+      "fileNumber": "1965545",
+      "sourceUrl": "https://docquery.fec.gov/pdf/137/202604159862314137/202604159862314137.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY01110",
+      "committeeId": "C00588764",
+      "start": "2025-10-01",
+      "end": "2025-12-31",
+      "receiptDate": "2026-01-31",
+      "receipts": 353188.51,
+      "fileNumber": "1941634",
+      "sourceUrl": "https://docquery.fec.gov/pdf/341/202601319795309341/202601319795309341.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY01110",
+      "committeeId": "C00588764",
+      "start": "2025-07-01",
+      "end": "2025-09-30",
+      "receiptDate": "2025-10-14",
+      "receipts": 239373.46,
+      "fileNumber": "1919572",
+      "sourceUrl": "https://docquery.fec.gov/pdf/908/202510149790799908/202510149790799908.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY01110",
+      "committeeId": "C00588764",
+      "start": "2025-04-01",
+      "end": "2025-06-30",
+      "receiptDate": "2025-07-15",
+      "receipts": 256492.88,
+      "fileNumber": "1901770",
+      "sourceUrl": "https://docquery.fec.gov/pdf/265/202507159762926265/202507159762926265.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY01110",
+      "committeeId": "C00588764",
+      "start": "2025-01-01",
+      "end": "2025-03-31",
+      "receiptDate": "2025-04-15",
+      "receipts": 259426.73,
+      "fileNumber": "1886643",
+      "sourceUrl": "https://docquery.fec.gov/pdf/363/202504159755377363/202504159755377363.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY01169",
+      "committeeId": "C00904243",
+      "start": "2026-10-01",
+      "end": "2026-10-14",
+      "receiptDate": "2026-10-21",
+      "receipts": 12549.78,
+      "fileNumber": "2035550",
+      "sourceUrl": "https://docquery.fec.gov/pdf/342/202610219934388342/202610219934388342.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY01169",
+      "committeeId": "C00904243",
+      "start": "2026-07-01",
+      "end": "2026-09-30",
+      "receiptDate": "2026-10-13",
+      "receipts": 91875.18,
+      "fileNumber": "2020599",
+      "sourceUrl": "https://docquery.fec.gov/pdf/044/202610139908689044/202610139908689044.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY01169",
+      "committeeId": "C00904243",
+      "start": "2026-04-30",
+      "end": "2026-06-30",
+      "receiptDate": "2026-07-13",
+      "receipts": 39007.9,
+      "fileNumber": "1990801",
+      "sourceUrl": "https://docquery.fec.gov/pdf/275/202607139874897275/202607139874897275.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY01169",
+      "committeeId": "C00904243",
+      "start": "2026-04-01",
+      "end": "2026-04-29",
+      "receiptDate": "2026-05-07",
+      "receipts": 8545.49,
+      "fileNumber": "1973403",
+      "sourceUrl": "https://docquery.fec.gov/pdf/762/202605079866890762/202605079866890762.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY01169",
+      "committeeId": "C00904243",
+      "start": "2026-01-01",
+      "end": "2026-03-31",
+      "receiptDate": "2026-04-14",
+      "receipts": 42712.75,
+      "fileNumber": "1962030",
+      "sourceUrl": "https://docquery.fec.gov/pdf/008/202604149857188008/202604149857188008.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY01169",
+      "committeeId": "C00904243",
+      "start": "2025-10-01",
+      "end": "2025-12-31",
+      "receiptDate": "2026-01-31",
+      "receipts": 16012.45,
+      "fileNumber": "1944108",
+      "sourceUrl": "https://docquery.fec.gov/pdf/024/202601319825882024/202601319825882024.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY01169",
+      "committeeId": "C00904243",
+      "start": "2025-07-01",
+      "end": "2025-09-30",
+      "receiptDate": "2025-10-15",
+      "receipts": 8696.5,
+      "fileNumber": "1921753",
+      "sourceUrl": "https://docquery.fec.gov/pdf/862/202510159791601862/202510159791601862.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY01169",
+      "committeeId": "C00904243",
+      "start": "2025-04-01",
+      "end": "2025-06-30",
+      "receiptDate": "2025-10-15",
+      "receipts": 3779.85,
+      "fileNumber": "1920960",
+      "sourceUrl": "https://docquery.fec.gov/pdf/641/202510159791308641/202510159791308641.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H8KY02031",
+      "committeeId": "C00445023",
+      "start": "2026-10-01",
+      "end": "2026-10-14",
+      "receiptDate": "2026-10-21",
+      "receipts": 89419.09,
+      "fileNumber": "2034915",
+      "sourceUrl": "https://docquery.fec.gov/pdf/671/202610219928485671/202610219928485671.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H8KY02031",
+      "committeeId": "C00445023",
+      "start": "2026-07-01",
+      "end": "2026-09-30",
+      "receiptDate": "2026-10-15",
+      "receipts": 1189635.56,
+      "fileNumber": "2027623",
+      "sourceUrl": "https://docquery.fec.gov/pdf/411/202610159915779411/202610159915779411.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H8KY02031",
+      "committeeId": "C00445023",
+      "start": "2026-04-30",
+      "end": "2026-06-30",
+      "receiptDate": "2026-07-15",
+      "receipts": 514267.83,
+      "fileNumber": "1997053",
+      "sourceUrl": "https://docquery.fec.gov/pdf/886/202607159885301886/202607159885301886.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H8KY02031",
+      "committeeId": "C00445023",
+      "start": "2026-04-01",
+      "end": "2026-04-29",
+      "receiptDate": "2026-05-07",
+      "receipts": 213827.78,
+      "fileNumber": "1973478",
+      "sourceUrl": "https://docquery.fec.gov/pdf/617/202605079866897617/202605079866897617.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H8KY02031",
+      "committeeId": "C00445023",
+      "start": "2026-01-01",
+      "end": "2026-03-31",
+      "receiptDate": "2026-04-15",
+      "receipts": 835817.87,
+      "fileNumber": "1967348",
+      "sourceUrl": "https://docquery.fec.gov/pdf/571/202604159863062571/202604159863062571.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H8KY02031",
+      "committeeId": "C00445023",
+      "start": "2025-10-01",
+      "end": "2025-12-31",
+      "receiptDate": "2026-01-31",
+      "receipts": 576668.82,
+      "fileNumber": "1944128",
+      "sourceUrl": "https://docquery.fec.gov/pdf/108/202601319825883108/202601319825883108.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H8KY02031",
+      "committeeId": "C00445023",
+      "start": "2025-07-01",
+      "end": "2025-09-30",
+      "receiptDate": "2025-10-15",
+      "receipts": 391162.15,
+      "fileNumber": "1921633",
+      "sourceUrl": "https://docquery.fec.gov/pdf/858/202510159791587858/202510159791587858.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H8KY02031",
+      "committeeId": "C00445023",
+      "start": "2025-04-01",
+      "end": "2025-06-30",
+      "receiptDate": "2025-10-15",
+      "receipts": 1029966.06,
+      "fileNumber": "1921586",
+      "sourceUrl": "https://docquery.fec.gov/pdf/845/202510159791564845/202510159791564845.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H8KY02031",
+      "committeeId": "C00445023",
+      "start": "2025-01-01",
+      "end": "2025-03-31",
+      "receiptDate": "2025-04-15",
+      "receipts": 1145882.09,
+      "fileNumber": "1888082",
+      "sourceUrl": "https://docquery.fec.gov/pdf/048/202504159756064048/202504159756064048.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY02068",
+      "committeeId": "C00902130",
+      "start": "2026-10-01",
+      "end": "2026-10-14",
+      "receiptDate": "2026-10-22",
+      "receipts": 2045.49,
+      "fileNumber": "2038973",
+      "sourceUrl": "https://docquery.fec.gov/pdf/764/202610229944802764/202610229944802764.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY02068",
+      "committeeId": "C00902130",
+      "start": "2025-04-01",
+      "end": "2026-06-30",
+      "receiptDate": "2026-07-14",
+      "receipts": 7539,
+      "fileNumber": "1991945",
+      "sourceUrl": "https://docquery.fec.gov/pdf/484/202607149874979484/202607149874979484.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H2KY03206",
+      "committeeId": "C00791392",
+      "start": "2026-10-01",
+      "end": "2026-10-14",
+      "receiptDate": "2026-10-22",
+      "receipts": 32438.75,
+      "fileNumber": "2038081",
+      "sourceUrl": "https://docquery.fec.gov/pdf/580/202610229941041580/202610229941041580.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H2KY03206",
+      "committeeId": "C00791392",
+      "start": "2026-07-01",
+      "end": "2026-09-30",
+      "receiptDate": "2026-10-15",
+      "receipts": 332205.6,
+      "fileNumber": "2023721",
+      "sourceUrl": "https://docquery.fec.gov/pdf/213/202610159908970213/202610159908970213.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H2KY03206",
+      "committeeId": "C00791392",
+      "start": "2026-04-30",
+      "end": "2026-06-30",
+      "receiptDate": "2026-07-15",
+      "receipts": 184684.81,
+      "fileNumber": "1994232",
+      "sourceUrl": "https://docquery.fec.gov/pdf/271/202607159875242271/202607159875242271.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H2KY03206",
+      "committeeId": "C00791392",
+      "start": "2026-04-01",
+      "end": "2026-04-29",
+      "receiptDate": "2026-05-07",
+      "receipts": 80431.62,
+      "fileNumber": "1973243",
+      "sourceUrl": "https://docquery.fec.gov/pdf/248/202605079866860248/202605079866860248.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H2KY03206",
+      "committeeId": "C00791392",
+      "start": "2026-01-01",
+      "end": "2026-03-31",
+      "receiptDate": "2026-04-15",
+      "receipts": 197615.64,
+      "fileNumber": "1963755",
+      "sourceUrl": "https://docquery.fec.gov/pdf/224/202604159857312224/202604159857312224.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H2KY03206",
+      "committeeId": "C00791392",
+      "start": "2025-10-01",
+      "end": "2025-12-31",
+      "receiptDate": "2026-01-31",
+      "receipts": 411250.21,
+      "fileNumber": "1941915",
+      "sourceUrl": "https://docquery.fec.gov/pdf/257/202601319795530257/202601319795530257.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H2KY03206",
+      "committeeId": "C00791392",
+      "start": "2025-07-01",
+      "end": "2025-09-30",
+      "receiptDate": "2026-01-06",
+      "receipts": 304220.67,
+      "fileNumber": "1930992",
+      "sourceUrl": "https://docquery.fec.gov/pdf/446/202601069793914446/202601069793914446.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H2KY03206",
+      "committeeId": "C00791392",
+      "start": "2025-04-01",
+      "end": "2025-06-30",
+      "receiptDate": "2025-07-15",
+      "receipts": 256063.26,
+      "fileNumber": "1902054",
+      "sourceUrl": "https://docquery.fec.gov/pdf/431/202507159763097431/202507159763097431.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H2KY03206",
+      "committeeId": "C00791392",
+      "start": "2025-01-01",
+      "end": "2025-03-31",
+      "receiptDate": "2025-04-15",
+      "receipts": 199417.66,
+      "fileNumber": "1886758",
+      "sourceUrl": "https://docquery.fec.gov/pdf/813/202504159755384813/202504159755384813.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY03223",
+      "committeeId": "C00938209",
+      "start": "2026-10-01",
+      "end": "2026-10-14",
+      "receiptDate": "2026-10-29",
+      "receipts": 9070,
+      "fileNumber": "2043886",
+      "sourceUrl": "https://docquery.fec.gov/pdf/169/202610299945299169/202610299945299169.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY03223",
+      "committeeId": "C00938209",
+      "start": "2026-07-01",
+      "end": "2026-09-30",
+      "receiptDate": "2026-10-22",
+      "receipts": 37010,
+      "fileNumber": "2039304",
+      "sourceUrl": "https://docquery.fec.gov/pdf/364/202610229944883364/202610229944883364.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY03223",
+      "committeeId": "C00938209",
+      "start": "2026-05-01",
+      "end": "2026-06-30",
+      "receiptDate": "2026-07-20",
+      "receipts": 12409.7,
+      "fileNumber": "2000776",
+      "sourceUrl": "https://docquery.fec.gov/pdf/159/202607209894355159/202607209894355159.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY03223",
+      "committeeId": "C00938209",
+      "start": "2026-04-01",
+      "end": "2026-04-29",
+      "receiptDate": "2026-06-08",
+      "receipts": 7039,
+      "fileNumber": "1981847",
+      "sourceUrl": "https://docquery.fec.gov/pdf/735/202606089870439735/202606089870439735.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY03223",
+      "committeeId": "C00938209",
+      "start": "2026-01-01",
+      "end": "2026-03-31",
+      "receiptDate": "2026-04-15",
+      "receipts": 18620,
+      "fileNumber": "1965297",
+      "sourceUrl": "https://docquery.fec.gov/pdf/902/202604159862267902/202604159862267902.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY04171",
+      "committeeId": "C00923995",
+      "start": "2026-10-01",
+      "end": "2026-10-14",
+      "receiptDate": "2026-10-22",
+      "receipts": 90602.85,
+      "fileNumber": "2037961",
+      "sourceUrl": "https://docquery.fec.gov/pdf/068/202610229941031068/202610229941031068.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY04171",
+      "committeeId": "C00923995",
+      "start": "2026-07-01",
+      "end": "2026-09-30",
+      "receiptDate": "2026-10-15",
+      "receipts": 437857.7,
+      "fileNumber": "2025241",
+      "sourceUrl": "https://docquery.fec.gov/pdf/494/202610159909457494/202610159909457494.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY04171",
+      "committeeId": "C00923995",
+      "start": "2026-04-30",
+      "end": "2026-06-30",
+      "receiptDate": "2026-07-15",
+      "receipts": 403431.48,
+      "fileNumber": "1993475",
+      "sourceUrl": "https://docquery.fec.gov/pdf/556/202607159875074556/202607159875074556.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY04171",
+      "committeeId": "C00923995",
+      "start": "2026-04-01",
+      "end": "2026-04-29",
+      "receiptDate": "2026-05-07",
+      "receipts": 776392.8,
+      "fileNumber": "1973332",
+      "sourceUrl": "https://docquery.fec.gov/pdf/573/202605079866885573/202605079866885573.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY04171",
+      "committeeId": "C00923995",
+      "start": "2026-01-01",
+      "end": "2026-03-31",
+      "receiptDate": "2026-04-15",
+      "receipts": 1152010.05,
+      "fileNumber": "1964585",
+      "sourceUrl": "https://docquery.fec.gov/pdf/792/202604159857671792/202604159857671792.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY04171",
+      "committeeId": "C00923995",
+      "start": "2025-10-01",
+      "end": "2025-12-31",
+      "receiptDate": "2026-01-30",
+      "receipts": 1235489.26,
+      "fileNumber": "1940114",
+      "sourceUrl": "https://docquery.fec.gov/pdf/157/202601309794940157/202601309794940157.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY04189",
+      "committeeId": "C00925917",
+      "start": "2026-10-01",
+      "end": "2026-10-14",
+      "receiptDate": "2026-10-22",
+      "receipts": 11209.85,
+      "fileNumber": "2040031",
+      "sourceUrl": "https://docquery.fec.gov/pdf/464/202610229945123464/202610229945123464.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY04189",
+      "committeeId": "C00925917",
+      "start": "2026-07-16",
+      "end": "2026-09-30",
+      "receiptDate": "2026-10-14",
+      "receipts": 51656.73,
+      "fileNumber": "2022462",
+      "sourceUrl": "https://docquery.fec.gov/pdf/610/202610149908828610/202610149908828610.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY04189",
+      "committeeId": "C00925917",
+      "start": "2026-04-30",
+      "end": "2026-06-30",
+      "receiptDate": "2026-07-15",
+      "receipts": 25626.82,
+      "fileNumber": "1997319",
+      "sourceUrl": "https://docquery.fec.gov/pdf/559/202607159890128559/202607159890128559.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY04189",
+      "committeeId": "C00925917",
+      "start": "2026-04-01",
+      "end": "2026-04-29",
+      "receiptDate": "2026-05-07",
+      "receipts": 27091,
+      "fileNumber": "1973296",
+      "sourceUrl": "https://docquery.fec.gov/pdf/169/202605079866868169/202605079866868169.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY04189",
+      "committeeId": "C00925917",
+      "start": "2026-01-01",
+      "end": "2026-03-31",
+      "receiptDate": "2026-06-16",
+      "receipts": 20916,
+      "fileNumber": "1983831",
+      "sourceUrl": "https://docquery.fec.gov/pdf/127/202606169870695127/202606169870695127.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY04189",
+      "committeeId": "C00925917",
+      "start": "2025-10-01",
+      "end": "2025-12-31",
+      "receiptDate": "2026-06-16",
+      "receipts": 20830,
+      "fileNumber": "1983830",
+      "sourceUrl": "https://docquery.fec.gov/pdf/113/202606169870695113/202606169870695113.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY04205",
+      "committeeId": "C00954834",
+      "start": "2026-10-01",
+      "end": "2026-10-14",
+      "receiptDate": "2026-10-22",
+      "receipts": 2208.7,
+      "fileNumber": "2036272",
+      "sourceUrl": "https://docquery.fec.gov/pdf/233/202610229940904233/202610229940904233.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY04205",
+      "committeeId": "C00954834",
+      "start": "2026-07-01",
+      "end": "2026-09-30",
+      "receiptDate": "2026-10-12",
+      "receipts": 6236,
+      "fileNumber": "2020193",
+      "sourceUrl": "https://docquery.fec.gov/pdf/816/202610129908675816/202610129908675816.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY04205",
+      "committeeId": "C00954834",
+      "start": "2026-04-01",
+      "end": "2026-06-30",
+      "receiptDate": "2026-07-14",
+      "receipts": 22393.22,
+      "fileNumber": "1992805",
+      "sourceUrl": "https://docquery.fec.gov/pdf/060/202607149875040060/202607149875040060.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H0KY05015",
+      "committeeId": "C00116632",
+      "start": "2026-10-01",
+      "end": "2026-10-14",
+      "receiptDate": "2026-10-22",
+      "receipts": 53450,
+      "fileNumber": "2037409",
+      "sourceUrl": "https://docquery.fec.gov/pdf/784/202610229940998784/202610229940998784.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H0KY05015",
+      "committeeId": "C00116632",
+      "start": "2026-07-01",
+      "end": "2026-09-30",
+      "receiptDate": "2026-10-15",
+      "receipts": 122906.04,
+      "fileNumber": "2025161",
+      "sourceUrl": "https://docquery.fec.gov/pdf/417/202610159909440417/202610159909440417.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H0KY05015",
+      "committeeId": "C00116632",
+      "start": "2026-04-30",
+      "end": "2026-06-30",
+      "receiptDate": "2026-07-15",
+      "receipts": 102017.45,
+      "fileNumber": "1994822",
+      "sourceUrl": "https://docquery.fec.gov/pdf/240/202607159875359240/202607159875359240.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H0KY05015",
+      "committeeId": "C00116632",
+      "start": "2026-04-01",
+      "end": "2026-04-29",
+      "receiptDate": "2026-05-07",
+      "receipts": 65255.11,
+      "fileNumber": "1973276",
+      "sourceUrl": "https://docquery.fec.gov/pdf/134/202605079866866134/202605079866866134.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H0KY05015",
+      "committeeId": "C00116632",
+      "start": "2026-01-01",
+      "end": "2026-03-31",
+      "receiptDate": "2026-04-15",
+      "receipts": 247110.16,
+      "fileNumber": "1964676",
+      "sourceUrl": "https://docquery.fec.gov/pdf/527/202604159857681527/202604159857681527.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H0KY05015",
+      "committeeId": "C00116632",
+      "start": "2025-10-01",
+      "end": "2025-12-31",
+      "receiptDate": "2026-01-30",
+      "receipts": 58674.48,
+      "fileNumber": "1939314",
+      "sourceUrl": "https://docquery.fec.gov/pdf/379/202601309794690379/202601309794690379.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H0KY05015",
+      "committeeId": "C00116632",
+      "start": "2025-07-01",
+      "end": "2025-09-30",
+      "receiptDate": "2025-10-15",
+      "receipts": 110854.38,
+      "fileNumber": "1920173",
+      "sourceUrl": "https://docquery.fec.gov/pdf/346/202510159790912346/202510159790912346.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H0KY05015",
+      "committeeId": "C00116632",
+      "start": "2025-04-01",
+      "end": "2025-06-30",
+      "receiptDate": "2025-07-15",
+      "receipts": 201933.06,
+      "fileNumber": "1902270",
+      "sourceUrl": "https://docquery.fec.gov/pdf/992/202507159763200992/202507159763200992.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H0KY05015",
+      "committeeId": "C00116632",
+      "start": "2025-01-01",
+      "end": "2025-03-31",
+      "receiptDate": "2025-04-15",
+      "receipts": 63913.31,
+      "fileNumber": "1886801",
+      "sourceUrl": "https://docquery.fec.gov/pdf/945/202504159755396945/202504159755396945.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY05152",
+      "committeeId": "C00907055",
+      "start": "2026-10-01",
+      "end": "2026-10-14",
+      "receiptDate": "2026-10-22",
+      "receipts": 9210.49,
+      "fileNumber": "2036812",
+      "sourceUrl": "https://docquery.fec.gov/pdf/876/202610229940937876/202610229940937876.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY05152",
+      "committeeId": "C00907055",
+      "start": "2026-07-01",
+      "end": "2026-09-30",
+      "receiptDate": "2026-10-13",
+      "receipts": 185597.54,
+      "fileNumber": "2020432",
+      "sourceUrl": "https://docquery.fec.gov/pdf/126/202610139908684126/202610139908684126.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY05152",
+      "committeeId": "C00907055",
+      "start": "2026-04-30",
+      "end": "2026-06-30",
+      "receiptDate": "2026-07-28",
+      "receipts": 66698.71,
+      "fileNumber": "2002396",
+      "sourceUrl": "https://docquery.fec.gov/pdf/041/202607289894480041/202607289894480041.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY05152",
+      "committeeId": "C00907055",
+      "start": "2026-04-01",
+      "end": "2026-04-29",
+      "receiptDate": "2026-05-11",
+      "receipts": 8069.62,
+      "fileNumber": "1973972",
+      "sourceUrl": "https://docquery.fec.gov/pdf/358/202605119866914358/202605119866914358.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY05152",
+      "committeeId": "C00907055",
+      "start": "2026-01-01",
+      "end": "2026-03-31",
+      "receiptDate": "2026-04-13",
+      "receipts": 27938.36,
+      "fileNumber": "1960838",
+      "sourceUrl": "https://docquery.fec.gov/pdf/978/202604139857135978/202604139857135978.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY05152",
+      "committeeId": "C00907055",
+      "start": "2025-10-01",
+      "end": "2025-12-31",
+      "receiptDate": "2026-01-30",
+      "receipts": 18597,
+      "fileNumber": "1939082",
+      "sourceUrl": "https://docquery.fec.gov/pdf/842/202601309794642842/202601309794642842.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY05152",
+      "committeeId": "C00907055",
+      "start": "2025-07-01",
+      "end": "2025-09-30",
+      "receiptDate": "2025-10-14",
+      "receipts": 49932,
+      "fileNumber": "1919067",
+      "sourceUrl": "https://docquery.fec.gov/pdf/320/202510149790777320/202510149790777320.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY05152",
+      "committeeId": "C00907055",
+      "start": "2025-04-01",
+      "end": "2025-06-30",
+      "receiptDate": "2025-07-14",
+      "receipts": 11045,
+      "fileNumber": "1900885",
+      "sourceUrl": "https://docquery.fec.gov/pdf/168/202507149762818168/202507149762818168.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY05202",
+      "committeeId": "C00935551",
+      "start": "2026-10-01",
+      "end": "2026-10-14",
+      "receiptDate": "2026-10-18",
+      "receipts": 2000,
+      "fileNumber": "2029854",
+      "sourceUrl": "https://docquery.fec.gov/pdf/558/202610189916178558/202610189916178558.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY05202",
+      "committeeId": "C00935551",
+      "start": "2026-07-01",
+      "end": "2026-09-30",
+      "receiptDate": "2026-10-06",
+      "receipts": 50,
+      "fileNumber": "2017310",
+      "sourceUrl": "https://docquery.fec.gov/pdf/610/202610069908539610/202610069908539610.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY05202",
+      "committeeId": "C00935551",
+      "start": "2026-04-01",
+      "end": "2026-06-30",
+      "receiptDate": "2026-07-07",
+      "receipts": 0,
+      "fileNumber": "1988459",
+      "sourceUrl": "https://docquery.fec.gov/pdf/050/202607079874772050/202607079874772050.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY05202",
+      "committeeId": "C00935551",
+      "start": "2026-01-01",
+      "end": "2026-03-31",
+      "receiptDate": "2026-04-05",
+      "receipts": 2200,
+      "fileNumber": "1957929",
+      "sourceUrl": "https://docquery.fec.gov/pdf/319/202604059856982319/202604059856982319.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY06192",
+      "committeeId": "C00912303",
+      "start": "2026-10-01",
+      "end": "2026-10-14",
+      "receiptDate": "2026-10-22",
+      "receipts": 119425.32,
+      "fileNumber": "2038846",
+      "sourceUrl": "https://docquery.fec.gov/pdf/209/202610229944757209/202610229944757209.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY06192",
+      "committeeId": "C00912303",
+      "start": "2026-07-01",
+      "end": "2026-09-30",
+      "receiptDate": "2026-11-13",
+      "receipts": 666131.12,
+      "fileNumber": "2047554",
+      "sourceUrl": "https://docquery.fec.gov/pdf/813/202611139945410813/202611139945410813.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY06192",
+      "committeeId": "C00912303",
+      "start": "2026-04-30",
+      "end": "2026-06-30",
+      "receiptDate": "2026-07-15",
+      "receipts": 346627.47,
+      "fileNumber": "1993981",
+      "sourceUrl": "https://docquery.fec.gov/pdf/075/202607159875198075/202607159875198075.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY06192",
+      "committeeId": "C00912303",
+      "start": "2026-04-01",
+      "end": "2026-04-29",
+      "receiptDate": "2026-05-07",
+      "receipts": 366381.15,
+      "fileNumber": "1973313",
+      "sourceUrl": "https://docquery.fec.gov/pdf/384/202605079866868384/202605079866868384.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY06192",
+      "committeeId": "C00912303",
+      "start": "2026-01-01",
+      "end": "2026-03-31",
+      "receiptDate": "2026-04-13",
+      "receipts": 213744.59,
+      "fileNumber": "1961167",
+      "sourceUrl": "https://docquery.fec.gov/pdf/103/202604139857141103/202604139857141103.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY06192",
+      "committeeId": "C00912303",
+      "start": "2025-10-01",
+      "end": "2025-12-31",
+      "receiptDate": "2026-01-30",
+      "receipts": 218073.05,
+      "fileNumber": "1940425",
+      "sourceUrl": "https://docquery.fec.gov/pdf/324/202601309795076324/202601309795076324.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY06192",
+      "committeeId": "C00912303",
+      "start": "2025-07-01",
+      "end": "2025-09-30",
+      "receiptDate": "2025-10-15",
+      "receipts": 376986.57,
+      "fileNumber": "1920640",
+      "sourceUrl": "https://docquery.fec.gov/pdf/044/202510159791124044/202510159791124044.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY06184",
+      "committeeId": "C00912261",
+      "start": "2026-10-01",
+      "end": "2026-10-14",
+      "receiptDate": "2026-10-22",
+      "receipts": 334220.97,
+      "fileNumber": "2039918",
+      "sourceUrl": "https://docquery.fec.gov/pdf/163/202610229945103163/202610229945103163.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY06184",
+      "committeeId": "C00912261",
+      "start": "2026-07-01",
+      "end": "2026-09-30",
+      "receiptDate": "2026-10-15",
+      "receipts": 1404711.14,
+      "fileNumber": "2027256",
+      "sourceUrl": "https://docquery.fec.gov/pdf/437/202610159915578437/202610159915578437.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY06184",
+      "committeeId": "C00912261",
+      "start": "2026-04-30",
+      "end": "2026-06-30",
+      "receiptDate": "2026-10-15",
+      "receipts": 507425.27,
+      "fileNumber": "2025615",
+      "sourceUrl": "https://docquery.fec.gov/pdf/618/202610159909595618/202610159909595618.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY06184",
+      "committeeId": "C00912261",
+      "start": "2026-04-01",
+      "end": "2026-04-29",
+      "receiptDate": "2026-10-15",
+      "receipts": 120887.07,
+      "fileNumber": "2025542",
+      "sourceUrl": "https://docquery.fec.gov/pdf/645/202610159909578645/202610159909578645.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY06184",
+      "committeeId": "C00912261",
+      "start": "2026-01-01",
+      "end": "2026-03-31",
+      "receiptDate": "2026-10-15",
+      "receipts": 286035.14,
+      "fileNumber": "2025380",
+      "sourceUrl": "https://docquery.fec.gov/pdf/685/202610159909530685/202610159909530685.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY06184",
+      "committeeId": "C00912261",
+      "start": "2025-10-01",
+      "end": "2025-12-31",
+      "receiptDate": "2026-01-30",
+      "receipts": 262131.81,
+      "fileNumber": "1940746",
+      "sourceUrl": "https://docquery.fec.gov/pdf/168/202601309795194168/202601309795194168.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY06184",
+      "committeeId": "C00912261",
+      "start": "2025-06-13",
+      "end": "2025-09-30",
+      "receiptDate": "2025-10-15",
+      "receipts": 290050.48,
+      "fileNumber": "1921122",
+      "sourceUrl": "https://docquery.fec.gov/pdf/810/202510159791405810/202510159791405810.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY06234",
+      "committeeId": "C00925206",
+      "start": "2026-10-01",
+      "end": "2026-10-14",
+      "receiptDate": "2026-10-19",
+      "receipts": 2095,
+      "fileNumber": "2030558",
+      "sourceUrl": "https://docquery.fec.gov/pdf/677/202610199916205677/202610199916205677.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY06234",
+      "committeeId": "C00925206",
+      "start": "2026-07-01",
+      "end": "2026-09-30",
+      "receiptDate": "2026-10-12",
+      "receipts": 9434,
+      "fileNumber": "2019882",
+      "sourceUrl": "https://docquery.fec.gov/pdf/248/202610129908645248/202610129908645248.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY06234",
+      "committeeId": "C00925206",
+      "start": "2026-04-01",
+      "end": "2026-06-30",
+      "receiptDate": "2026-07-01",
+      "receipts": 2684.66,
+      "fileNumber": "1987416",
+      "sourceUrl": "https://docquery.fec.gov/pdf/172/202607019874306172/202607019874306172.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY06234",
+      "committeeId": "C00925206",
+      "start": "2026-01-01",
+      "end": "2026-03-31",
+      "receiptDate": "2026-04-02",
+      "receipts": 1694.15,
+      "fileNumber": "1957218",
+      "sourceUrl": "https://docquery.fec.gov/pdf/725/202604029856932725/202604029856932725.pdf",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY06234",
+      "committeeId": "C00925206",
+      "start": "2025-10-21",
+      "end": "2025-12-31",
+      "receiptDate": "2026-01-05",
+      "receipts": 3050,
+      "fileNumber": "1930757",
+      "sourceUrl": "https://docquery.fec.gov/pdf/583/202601059793905583/202601059793905583.pdf",
+      "retrievedAt": "2026-11-22"
+    }
+  ],
+  "contributions": [
+    {
+      "candidateId": "S6KY00286",
+      "committeeId": "C00467571",
+      "start": "2026-10-01",
+      "end": "2026-10-14",
+      "sourceUrl": "https://docquery.fec.gov/pdf/759/202610269945203759/202610269945203759.pdf",
+      "dataUrl": "https://docquery.fec.gov/dcdev/posted/2042009.fec",
+      "retrievedAt": "2026-11-22",
+      "committees": [
+        {
+          "name": "31 DAYS PAC",
+          "committeeId": "C00786368",
+          "total": 5000
+        },
+        {
+          "name": "CONSERVATIVE SERVICE ACTION RESULTS (CSAR) PAC",
+          "committeeId": "C00880724",
+          "total": 5000
+        },
+        {
+          "name": "CREATING OPPORTUNITIES, MARKETS AND ENTHUSIASM IN RURAL KENTUCKY PAC",
+          "committeeId": "C00650853",
+          "total": 5000
+        },
+        {
+          "name": "ENTERPRISE HOLDINGS, INC. POLITICAL ACTION COMMITTEE",
+          "committeeId": "C00219642",
+          "total": 5000
+        },
+        {
+          "name": "FROGMAN PAC",
+          "committeeId": "C00809012",
+          "total": 5000
+        },
+        {
+          "name": "KEEP TEXAS TEXAS PAC",
+          "committeeId": "C00808717",
+          "total": 5000
+        },
+        {
+          "name": "LEAD ENCOURAGE ELECT PAC",
+          "committeeId": "C00494302",
+          "total": 5000
+        },
+        {
+          "name": "NEBRASKA SANDHILLS PAC",
+          "committeeId": "C00540054",
+          "total": 5000
+        }
+      ]
+    },
+    {
+      "candidateId": "S6KY00385",
+      "committeeId": "C00929208",
+      "start": "2026-10-01",
+      "end": "2026-10-14",
+      "sourceUrl": "https://docquery.fec.gov/pdf/642/202610229941012642/202610229941012642.pdf",
+      "dataUrl": "https://docquery.fec.gov/dcdev/posted/2037626.fec",
+      "retrievedAt": "2026-11-22",
+      "committees": [
+        {
+          "name": "In This Together PAC",
+          "committeeId": "C00864785",
+          "total": 5000
+        },
+        {
+          "name": "United Food And Commercial Workers International Union Active Ballot Club",
+          "committeeId": "C00002766",
+          "total": 2500
+        },
+        {
+          "name": "Morgan McGarvey For Congress",
+          "committeeId": "C00791392",
+          "total": 2000
+        }
+      ]
+    },
+    {
+      "candidateId": "H6KY01110",
+      "committeeId": "C00588764",
+      "start": "2026-10-01",
+      "end": "2026-10-14",
+      "sourceUrl": "https://docquery.fec.gov/pdf/988/202610229943833988/202610229943833988.pdf",
+      "dataUrl": "https://docquery.fec.gov/dcdev/posted/2038172.fec",
+      "retrievedAt": "2026-11-22",
+      "committees": [
+        {
+          "name": "BUILDING AMERICA'S REPUBLICAN REPRESENTATION PAC",
+          "committeeId": "C00572271",
+          "total": 5000
+        },
+        {
+          "name": "AMERICAN BANKERS ASSOCIATION PAC",
+          "committeeId": "C00004275",
+          "total": 2500
+        },
+        {
+          "name": "AMERICAN CHEMISTRY COUNCIL PAC",
+          "committeeId": "C00252338",
+          "total": 2500
+        },
+        {
+          "name": "HOLLAND & KNIGHT COMMITTEE FOR EFFECTIVE GOVERNMENT",
+          "committeeId": "C00171330",
+          "total": 2500
+        }
+      ]
+    },
+    {
+      "candidateId": "H6KY01169",
+      "committeeId": "C00904243",
+      "start": "2026-07-01",
+      "end": "2026-09-30",
+      "sourceUrl": "https://docquery.fec.gov/pdf/044/202610139908689044/202610139908689044.pdf",
+      "dataUrl": "https://docquery.fec.gov/dcdev/posted/2020599.fec",
+      "retrievedAt": "2026-11-22",
+      "committees": [
+        {
+          "name": "IBEW PAC - Federal",
+          "committeeId": null,
+          "total": 5000
+        },
+        {
+          "name": "UAW - V - CAP (UAW VOLUNTARY COMMUNITY ACTION PROGRAM) 'INT'L UNION UNITED AUTOMOBILE AERO",
+          "committeeId": "C00002840",
+          "total": 5000
+        },
+        {
+          "name": "Plumbers & Steamfitters Local 184 PAC",
+          "committeeId": null,
+          "total": 1000
+        },
+        {
+          "name": "Boilermakers-Blacksmiths Legislative Education-Action Program",
+          "committeeId": null,
+          "total": 500
+        }
+      ]
+    },
+    {
+      "candidateId": "H8KY02031",
+      "committeeId": "C00445023",
+      "start": "2026-10-01",
+      "end": "2026-10-14",
+      "sourceUrl": "https://docquery.fec.gov/pdf/671/202610219928485671/202610219928485671.pdf",
+      "dataUrl": "https://docquery.fec.gov/dcdev/posted/2034915.fec",
+      "retrievedAt": "2026-11-22",
+      "committees": [
+        {
+          "name": "America's Credit Unions PAC of Credit Union National Association, Inc.",
+          "committeeId": "C00007880",
+          "total": 5000
+        },
+        {
+          "name": "American Revival PAC",
+          "committeeId": "C00639229",
+          "total": 5000
+        },
+        {
+          "name": "Bnsf Railpac",
+          "committeeId": null,
+          "total": 5000
+        },
+        {
+          "name": "Mutual of Omaha Companies PAC (IMPAC)",
+          "committeeId": "C00094581",
+          "total": 5000
+        },
+        {
+          "name": "National Association of Home Builders - Build PAC",
+          "committeeId": null,
+          "total": 5000
+        },
+        {
+          "name": "National Cattlemen's Beef Association Political Action Committee (NCBA-PAC)",
+          "committeeId": "C00028787",
+          "total": 5000
+        },
+        {
+          "name": "Regeneron Pharmaceuticals, Inc. PAC",
+          "committeeId": null,
+          "total": 5000
+        },
+        {
+          "name": "Meta Platforms, INC PAC",
+          "committeeId": "C00502906",
+          "total": 4000
+        }
+      ]
+    },
+    {
+      "candidateId": "H2KY03206",
+      "committeeId": "C00791392",
+      "start": "2026-10-01",
+      "end": "2026-10-14",
+      "sourceUrl": "https://docquery.fec.gov/pdf/580/202610229941041580/202610229941041580.pdf",
+      "dataUrl": "https://docquery.fec.gov/dcdev/posted/2038081.fec",
+      "retrievedAt": "2026-11-22",
+      "committees": [
+        {
+          "name": "ALLIANCE FOR RETIRED AMERICANS POLITICAL ACTION FUND",
+          "committeeId": "C00436188",
+          "total": 2500
+        },
+        {
+          "name": "United Food & Commercial Workers International Union",
+          "committeeId": "C00002766",
+          "total": 2500
+        },
+        {
+          "name": "DEFEND THE DREAM",
+          "committeeId": "C00771238",
+          "total": 2500
+        },
+        {
+          "name": "KNIGHT HEALTH HOLDINGS, LLC SCIONHEALTH PAC",
+          "committeeId": "C00812701",
+          "total": 1500
+        },
+        {
+          "name": "ATU COPE Voluntary Account",
+          "committeeId": "C90021163",
+          "total": 1000
+        },
+        {
+          "name": "DAVITA INC. POLITICAL ACTION COMMITTEE (DAPAC)",
+          "committeeId": "C00340943",
+          "total": 1000
+        },
+        {
+          "name": "REPRODUCTIVE RIGHTS FOR KENTUCKY PAC",
+          "committeeId": "C00542704",
+          "total": 1000
+        },
+        {
+          "name": "PHARMACEUTICAL RESEARCH & MANUFACTURERS OF AMERICA BETTER GOVERNMENT COMMITTEE",
+          "committeeId": "C00021972",
+          "total": 1000
+        }
+      ]
+    },
+    {
+      "candidateId": "H6KY04171",
+      "committeeId": "C00923995",
+      "start": "2026-10-01",
+      "end": "2026-10-14",
+      "sourceUrl": "https://docquery.fec.gov/pdf/068/202610229941031068/202610229941031068.pdf",
+      "dataUrl": "https://docquery.fec.gov/dcdev/posted/2037961.fec",
+      "retrievedAt": "2026-11-22",
+      "committees": [
+        {
+          "name": "DEFENDING THE AMERICAN DREAM PAC",
+          "committeeId": "C00822833",
+          "total": 5000
+        },
+        {
+          "name": "MR. SOUTHERN MISSOURIAN IN THE HOUSE PAC",
+          "committeeId": "C00563726",
+          "total": 5000
+        },
+        {
+          "name": "MVL PAC",
+          "committeeId": "C00817338",
+          "total": 5000
+        },
+        {
+          "name": "ELEVANCE HEALTH, INC. POLITICAL ACTION COMMITTEE (ELEVANCE H",
+          "committeeId": "C00197228",
+          "total": 1000
+        },
+        {
+          "name": "JOBS AND THE ECONOMY PAC",
+          "committeeId": "C00752790",
+          "total": 1000
+        },
+        {
+          "name": "NATIONAL FEDERATION OF INDEPENDENT BUSINESS FEDERAL POLITICA",
+          "committeeId": "C00101105",
+          "total": 500
+        }
+      ]
+    },
+    {
+      "candidateId": "H6KY04205",
+      "committeeId": "C00954834",
+      "start": "2026-10-01",
+      "end": "2026-10-14",
+      "sourceUrl": "https://docquery.fec.gov/pdf/233/202610229940904233/202610229940904233.pdf",
+      "dataUrl": "https://docquery.fec.gov/dcdev/posted/2036272.fec",
+      "retrievedAt": "2026-11-22",
+      "committees": [
+        {
+          "name": "ABOLISH ABORTION PAC",
+          "committeeId": "C00781849",
+          "total": 750
+        }
+      ]
+    },
+    {
+      "candidateId": "H0KY05015",
+      "committeeId": "C00116632",
+      "start": "2026-10-01",
+      "end": "2026-10-14",
+      "sourceUrl": "https://docquery.fec.gov/pdf/784/202610229940998784/202610229940998784.pdf",
+      "dataUrl": "https://docquery.fec.gov/dcdev/posted/2037409.fec",
+      "retrievedAt": "2026-11-22",
+      "committees": [
+        {
+          "name": "NATIONAL MULTIFAMILY HOUSING COUNCIL AND REAL ESTATE TECHNOLOGY AND TRANSFORMATION CENTER POLITICAL ACTION COMMITTEE (NMHC PAC)",
+          "committeeId": "C00130773",
+          "total": 5000
+        },
+        {
+          "name": "Waterpac - National Rural Water Association Political Committee",
+          "committeeId": "C00202184",
+          "total": 5000
+        },
+        {
+          "name": "Build Political Action Committee of the National Association of Home Builders (BUILDPAC)",
+          "committeeId": "C00000901",
+          "total": 3500
+        },
+        {
+          "name": "Delta Air Lines Political Action Committee",
+          "committeeId": "C00104802",
+          "total": 2500
+        },
+        {
+          "name": "Duncan for Congress",
+          "committeeId": "C00229104",
+          "total": 2000
+        },
+        {
+          "name": "Akin Gump Strauss Hauer & Feld LLP Civic Action Committee (aka Akin Gump Pac)",
+          "committeeId": "C00104901",
+          "total": 1000
+        },
+        {
+          "name": "Ppl Corporation People for Good Government",
+          "committeeId": "C00228106",
+          "total": 1000
+        },
+        {
+          "name": "United Mine Workers of America - Coal Miners Political Action Committee",
+          "committeeId": "C00013342",
+          "total": 1000
+        }
+      ]
+    },
+    {
+      "candidateId": "H6KY06192",
+      "committeeId": "C00912303",
+      "start": "2026-10-01",
+      "end": "2026-10-14",
+      "sourceUrl": "https://docquery.fec.gov/pdf/209/202610229944757209/202610229944757209.pdf",
+      "dataUrl": "https://docquery.fec.gov/dcdev/posted/2038846.fec",
+      "retrievedAt": "2026-11-22",
+      "committees": [
+        {
+          "name": "31 DAYS PAC",
+          "committeeId": "C00786368",
+          "total": 5000
+        },
+        {
+          "name": "AMERICAN SOCIETY OF INTERVENTIONAL PAIN PHYSICIAN PAC",
+          "committeeId": "C00351197",
+          "total": 5000
+        },
+        {
+          "name": "KOCH, INC. PAC (KOCHPAC)",
+          "committeeId": "C00236489",
+          "total": 5000
+        },
+        {
+          "name": "OLD NORTH LEADERSHIP PAC",
+          "committeeId": "C00577288",
+          "total": 5000
+        },
+        {
+          "name": "AMERICAN PHYSICAL THERAPY ASSOCIATION PHYSICAL THERAPY PAC (PT-PAC)",
+          "committeeId": "C00012880",
+          "total": 3500
+        },
+        {
+          "name": "BLUEGRASS COMMITTEE",
+          "committeeId": "C00235655",
+          "total": 2500
+        },
+        {
+          "name": "MIKE KENNEDY FOR UTAH",
+          "committeeId": "C00864488",
+          "total": 2000
+        },
+        {
+          "name": "REPUBLICAN PARTY OF FAYETTE COUNTY",
+          "committeeId": "C00138933",
+          "total": 2000
+        }
+      ]
+    },
+    {
+      "candidateId": "H6KY06184",
+      "committeeId": "C00912261",
+      "start": "2026-10-01",
+      "end": "2026-10-14",
+      "sourceUrl": "https://docquery.fec.gov/pdf/163/202610229945103163/202610229945103163.pdf",
+      "dataUrl": "https://docquery.fec.gov/dcdev/posted/2039918.fec",
+      "retrievedAt": "2026-11-22",
+      "committees": [
+        {
+          "name": "American Federation Of State County & Municipal Employees People",
+          "committeeId": "C00011114",
+          "total": 5000
+        },
+        {
+          "name": "UA Union Plumbers & Pipefitters Vote! PAC (United Association of Journeymen and Apprentices of the Plumbing & Pipefitting Industry of the United States and Canada)",
+          "committeeId": "C00012476",
+          "total": 5000
+        },
+        {
+          "name": "Alliance For Retired Americans Political Action Fund",
+          "committeeId": "C00436188",
+          "total": 2500
+        },
+        {
+          "name": "United Steelworkers Political Action Fund",
+          "committeeId": "C00003590",
+          "total": 2500
+        },
+        {
+          "name": "Oceans PAC",
+          "committeeId": "C00431601",
+          "total": 2500
+        },
+        {
+          "name": "Ben Samuels for Congress",
+          "committeeId": "C00784074",
+          "total": 2000
+        },
+        {
+          "name": "Association of Professional Flight Attendants (APFA PAC) Political Action Committee",
+          "committeeId": "C00246421",
+          "total": 1000
+        },
+        {
+          "name": "Ready to Fight PAC",
+          "committeeId": "C00912873",
+          "total": 1000
+        }
+      ]
+    }
+  ],
+  "outside": [
+    {
+      "candidateId": "S6KY00286",
+      "support": 7187608.85,
+      "oppose": 8317508.27,
+      "sourceUrl": "https://www.fec.gov/data/candidate/S6KY00286/?cycle=2026&election_full=false#independent-expenditures",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H8KY02031",
+      "support": 80276,
+      "oppose": 0,
+      "sourceUrl": "https://www.fec.gov/data/candidate/H8KY02031/?cycle=2026&election_full=false#independent-expenditures",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H2KY03206",
+      "support": 764.73,
+      "oppose": 0,
+      "sourceUrl": "https://www.fec.gov/data/candidate/H2KY03206/?cycle=2026&election_full=false#independent-expenditures",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY04171",
+      "support": 5378133.28,
+      "oppose": 7000030.4,
+      "sourceUrl": "https://www.fec.gov/data/candidate/H6KY04171/?cycle=2026&election_full=false#independent-expenditures",
+      "retrievedAt": "2026-11-22"
+    },
+    {
+      "candidateId": "H6KY06184",
+      "support": 893595.12,
+      "oppose": 1258217.03,
+      "sourceUrl": "https://www.fec.gov/data/candidate/H6KY06184/?cycle=2026&election_full=false#independent-expenditures",
+      "retrievedAt": "2026-11-22"
+    }
+  ]
+}

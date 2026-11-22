@@ -45,7 +45,7 @@ const TABS = [
   "Statements",
   "Voting Record",
   "Campaign Finance",
-  "Updates",
+  "News",
 ] as const;
 
 type Tab = (typeof TABS)[number];
@@ -62,7 +62,7 @@ export function visibleCompareTabs({ hasStances, hasVotes, hasFinance, hasUpdate
     Statements: hasStances,
     "Voting Record": hasVotes,
     "Campaign Finance": hasFinance,
-    Updates: hasUpdates,
+    News: hasUpdates,
   };
   return TABS.filter((tab) => visible[tab]);
 }
@@ -192,7 +192,7 @@ function TabBody({
           return (
             <li key={issue.id}>
               <p>{issue.label}</p>
-              <p>{stance.text} <a href={stance.sourceUrl}>Source ↗</a></p>
+              <p>{stance.text} <a href={stance.sourceUrl}>{stance.sourceName}</a></p>
             </li>
           );
         })}
@@ -207,7 +207,7 @@ function TabBody({
           <li key={note.issueId}>
             <p>{note.text}</p>
             <p className="hint">
-              <a href={note.sourceUrl}>{note.sourceName}</a> · {dayLabel(note.sourceDate)}
+              Candidate says · <a href={note.sourceUrl}>{note.sourceName}</a> · {dayLabel(note.sourceDate)}
             </p>
           </li>
         ))}
@@ -221,13 +221,13 @@ function TabBody({
       <ul className="plain-list">
         {votes.map((vote) => (
           <li key={`${vote.bill}-${vote.date}`}>
-            {dayLabel(vote.date)}: {vote.vote} on {vote.bill}. <a href={vote.sourceUrl}>{vote.sourceName}</a>
+            Official record · {dayLabel(vote.date)} · {vote.vote} on {vote.bill}. <a href={vote.sourceUrl}>{vote.sourceName}</a>
           </li>
         ))}
       </ul>
     );
   }
-  if (tab === "Updates") {
+  if (tab === "News") {
     if (updates.length === 0) return null;
     return (
       <ul className="plain-list">
@@ -236,7 +236,7 @@ function TabBody({
             <a href={story.url}>{story.title}</a>
             <span className="hint">
               {" "}
-              {story.source}
+              Reporting · {story.source}
               {story.date ? ` · ${dayLabel(story.date)}` : ""}
             </span>
           </li>

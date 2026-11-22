@@ -57,7 +57,7 @@ export function validateClaims(raw: unknown, basis: CompareBasis): Claim[] {
     const cites = Array.isArray((item as { cites?: unknown }).cites)
       ? [...new Set(((item as { cites: unknown[] }).cites).filter((id): id is string => typeof id === "string" && owner.has(id)))]
       : [];
-    if (!text || text.length > MAX_TEXT || banned(text)) continue;
+    if (!text || text.length > MAX_TEXT || banned(text) || /https?:\/\/|\]\(/i.test(text)) continue;
     const people = new Set(cites.map((id) => owner.get(id)));
     if (cites.length === 0 || people.size < 2) continue;
     out.push({ text, cites });

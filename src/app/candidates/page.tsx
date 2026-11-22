@@ -1,9 +1,10 @@
+import { DatasetUpdated } from "@/components/site/DatasetUpdated";
 import { ShortList } from "@/components/site/ShortList";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CandidateCard } from "@/components/site/CandidateCard";
 import { candidateCards, raceCardTitle as titleFor } from "@/lib/site/candidate-cards";
-import { KY_BALLOT_SOURCES, kyBallot } from "@/lib/site/ky-ballot";
+import { KY_BALLOT_CHECKED, KY_BALLOT_SOURCES, kyBallot } from "@/lib/site/ky-ballot";
 
 export const metadata: Metadata = { alternates: { canonical: "/candidates" }, title: "Candidates" };
 
@@ -22,6 +23,7 @@ export default function CandidatesPage() {
   return (
     <article className="wrap">
       <h1>Candidates</h1>
+      <DatasetUpdated date={KY_BALLOT_CHECKED} />
       <p className="lede">Kentucky&apos;s U.S. Senate and House candidates, Nov 3, 2026.</p>
       <nav className="chip-row" aria-label="Jump to a race">
         {races.map((race) => (

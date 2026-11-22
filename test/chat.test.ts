@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { createCompareService } from "../src/lib/compare/service";
+import { summarizeRace } from "../src/lib/compare/summarize";
 import { llmsText } from "../src/lib/api/llms";
 import { openApiDocument } from "../src/lib/api/openapi-document";
 import {
@@ -2019,4 +2021,41 @@ test("state roster distinguishes omitted House names from an empty House roster"
   assert.match(capped, /Alex Adams/);
   assert.match(capped, /House names are omitted here\./);
   assert.doesNotMatch(capped, /No House filing found\./);
+});
+
+
+test("candidate comparisons in Ask reuse the race comparison and return sourced records across races", async () => {
+  const repo = new MemoryVoterRepository();
+  const fallback = scripted([]);
+  let compares = 0;
+  const compare = createCompareService({
+    limiter: createRateLimiter({ limit: 5, windowMs: 60_000 }),
+    globalLimiter: createRateLimiter({ limit: 5, windowMs: 60_000 }),
+    async summarize(basis) {
+      compares += 1;
+      assert.deepEqual(basis.people.map((person) => person.name), ["Andy Barr", "Charles Booker"]);
+      const cites = basis.people.map((person) => basis.evidence.find((row) => row.personId === person.id)?.id);
+      const result = JSON.stringify({
+        differ: [{ text: "Barr and Booker addressed the cost of living in different ways.", cites }],
+        agree: [{ text: "Both candidates discussed costs.", cites }],
+      });
+      return summarizeRace(basis, { converse: scripted([{ stopReason: "end_turn", message: { role: "assistant", content: [{ text: result }] } }]), modelId: "test" });
+    },
+  });
+  const deps = chatDeps(repo, fallback, { compare });
+  const response = await postChat(post({ message: "Where do Barr and Booker differ, and where do they agree?" }), deps);
+  const body = await response.json();
+  assert.equal(response.status, 200);
+  assert.match(body.answer_markdown, /What to know[\s\S]+Where they differ[\s\S]+Where they agree/);
+  assert.match(body.answer_markdown, /Both candidates discussed costs/);
+  assert.ok(body.sources.length > 1);
+  const across = await postChat(post({ message: "Where do Barr and Zach Dembo agree?", raceId: "2026-senate-KY" }), deps);
+  const acrossBody = await across.json();
+  assert.equal(across.status, 200);
+  assert.match(acrossBody.answer_markdown, /Andy Barr/);
+  assert.match(acrossBody.answer_markdown, /Zach Dembo/);
+  assert.match(acrossBody.answer_markdown, /2026-house-KY-06\/compare/);
+  assert.ok(acrossBody.sources.length > 1);
+  assert.equal(compares, 1);
+  assert.equal(fallback.calls, 0);
 });

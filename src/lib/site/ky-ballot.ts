@@ -20,7 +20,7 @@ export const KY_BALLOT_SOURCES = [
   },
   {
     name: "FEC",
-    url: "https://api.open.fec.gov/v1/candidates/totals/",
+    url: "https://www.fec.gov/data/candidates/?election_year=2026&state=KY",
     note: "Campaign totals through Oct 14, 2026.",
   },
 ] as const;

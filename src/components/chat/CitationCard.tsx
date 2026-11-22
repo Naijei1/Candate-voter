@@ -4,25 +4,17 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { basePathFromEnv } from "@/lib/base-path";
-import { instantDateTime } from "@/lib/format";
+import { dayLabel, instantDateTime } from "@/lib/format";
 import { citationLabel, citationLink, formatAsOf } from "@/lib/chat/ui";
 import type { ChatSource } from "@/lib/chat/types";
 
 export function CitationCard({ source }: { source: ChatSource }) {
   const origin = useClientOrigin();
   const link = citationLink(source.url, { origin, basePath: basePathFromEnv() });
-  const dateTime = instantDateTime(source.as_of);
-  const freshness = formatAsOf(source.as_of);
+  const sourceDay = /^\d{4}-\d{2}-\d{2}$/.test(source.as_of) ? source.as_of : null;
+  const dateTime = sourceDay ?? instantDateTime(source.as_of);
+  const freshness = sourceDay ? dayLabel(sourceDay) : formatAsOf(source.as_of);
   const label = citationLabel(source);
-
-  const text = (
-    <>
-      {label}
-      {link?.external ? (
-        <span className="ml-2 text-xs font-medium tracking-wide text-muted uppercase">External</span>
-      ) : null}
-    </>
-  );
 
   return (
     <li className="rounded-lg border border-line bg-card px-3 py-2 text-sm">
@@ -34,22 +26,24 @@ export function CitationCard({ source }: { source: ChatSource }) {
             rel="noopener noreferrer"
             className="font-semibold text-accent underline decoration-accent/40 underline-offset-4 hover:decoration-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           >
-            {text}
+            {label}
           </a>
         ) : (
           <Link
             href={link.href}
             className="font-semibold text-accent underline decoration-accent/40 underline-offset-4 hover:decoration-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           >
-            {text}
+            {label}
           </Link>
         )
       ) : (
         <p className="font-semibold text-ink">{label}</p>
       )}
-      <p className="mt-1 text-xs text-muted">
-        {dateTime ? <time dateTime={dateTime}>{freshness}</time> : freshness}
-      </p>
+      {source.as_of !== "unknown" ? (
+        <p className="mt-1 text-xs text-muted">
+          {dateTime ? <time dateTime={dateTime}>{freshness}</time> : freshness}
+        </p>
+      ) : null}
     </li>
   );
 }

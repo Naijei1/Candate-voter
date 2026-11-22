@@ -270,7 +270,8 @@ test("ask, navigation, and map copy stay plain", () => {
   assert.equal(header.includes("Polls"), false);
   assert.equal(header.includes(">Explore<"), false);
   assert.equal(header.includes("map-chrome-info"), false);
-  assert.match(footer, /does not endorse/);
+  assert.doesNotMatch(footer, /does not endorse/);
+  assert.match(readFileSync(new URL("../src/app/terms/page.tsx", import.meta.url), "utf8"), /does not endorse/);
   assert.match(footer, /Privacy/);
   assert.match(footer, /Sources/);
   assert.equal(footer.includes("Agent API"), false);

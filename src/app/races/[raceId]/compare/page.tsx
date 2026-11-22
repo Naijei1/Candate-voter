@@ -1,3 +1,4 @@
+import { DatasetUpdated } from "@/components/site/DatasetUpdated";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -9,7 +10,7 @@ import { loadFinance } from "@/lib/finance/load";
 import { selectDirect, selectOutside } from "@/lib/finance/present";
 import { ElectionDayBanner } from "@/components/site/ElectionDayBanner";
 import { formatMoney } from "@/lib/finance/model";
-import { kyBallot, rosterMoney } from "@/lib/site/ky-ballot";
+import { KY_BALLOT_CHECKED, kyBallot, rosterMoney } from "@/lib/site/ky-ballot";
 import { newsForNames } from "@/lib/site/ky-news";
 import { linkLabel, profileFor } from "@/lib/site/profiles";
 import { photoAttribution, portraitFor, stanceIssues, stancesFor } from "@/lib/site/stances";
@@ -70,6 +71,7 @@ export default async function ComparePage({ params }: PageProps) {
         ]}
       />
       <h1>Compare</h1>
+      <DatasetUpdated date={[ballot ? KY_BALLOT_CHECKED : "", loaded.refreshedAt ?? ""].sort().at(-1)} />
       <p className="lede">{race.title}</p>
       {ballot || loaded.filingsLoaded ? null : roster.fecList ? (
         <p className="notice" role="status">
