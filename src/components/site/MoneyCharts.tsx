@@ -1,7 +1,7 @@
 "use client";
 
 import { ShortList } from "@/components/site/ShortList";
-import { useId, useState } from "react";
+import { type CSSProperties, useId, useState } from "react";
 import { targetLines } from "@/lib/site/money-chart-lines";
 import type { ChartCommittee, ChartRace, MoneyChartData } from "@/lib/site/money-charts";
 
@@ -15,6 +15,12 @@ export function shortMoney(value: number): string {
   return FULL.format(value);
 }
 
+/** Bar share as a plain number for scaleX(); percentages in scale() are not supported by older browsers. */
+function share(value: number, max: number): number {
+  if (max <= 0 || value <= 0) return 0;
+  return Number(Math.max(0.01, value / max).toFixed(3));
+}
+
 function pct(value: number, max: number): string {
   if (max <= 0 || value <= 0) return "0%";
   return `${Math.max(1, (value / max) * 100).toFixed(1)}%`;
@@ -26,10 +32,15 @@ const SERIES = [
   { key: "cash", label: "Cash on hand" },
 ] as const;
 
-function RaceChart({ race }: { race: ChartRace }) {
-  const max = Math.max(1, ...race.people.flatMap((person) => [person.raised, person.spent, person.cash ?? 0]));
+function raceMaximum(race: ChartRace) {
+  return Math.max(1, ...race.people.flatMap((person) => [person.raised, person.spent, person.cash ?? 0]));
+}
+
+function RaceChart({ race, previous }: { race: ChartRace; previous?: ChartRace }) {
+  const max = raceMaximum(race);
+  const previousMax = previous ? raceMaximum(previous) : 1;
   return (
-    <figure className="chart">
+    <figure className={previous ? "chart chart-switched" : "chart"}>
       <figcaption className="chart-title">{race.title}</figcaption>
       <ul className="chart-legend" aria-hidden="true">
         {SERIES.map((series) => (
@@ -41,18 +52,22 @@ function RaceChart({ race }: { race: ChartRace }) {
       </ul>
       <ShortList
         className="chart-rows"
-        items={race.people.map((person) => (
+        items={race.people.map((person, index) => (
           <li key={person.id} className="chart-row">
             <p className="chart-label">
               <a href={`/candidates/${person.id}`}>{person.name}</a>
             </p>
             {SERIES.map((series) => {
               const value = person[series.key];
+              const barStyle = {
+                transform: `scaleX(${share(value ?? 0, max)})`,
+                ...(previous && { "--previous-share": share(previous.people[index]?.[series.key] ?? 0, previousMax) }),
+              } as CSSProperties;
               return (
                 <div key={series.key} className="chart-bar-line">
                   <span className="chart-bar-name">{series.label}</span>
                   <span className="chart-track" aria-hidden="true">
-                    {value != null ? <span className={`chart-bar s-${series.key}`} style={{ width: pct(value, max) }} /> : null}
+                    <span className={`chart-bar s-${series.key}`} style={barStyle} />
                   </span>
                   <span className="chart-value">{value == null ? "—" : shortMoney(value)}</span>
                 </div>
@@ -181,6 +196,7 @@ export function MoneyCharts({ data, showAll = false }: { data: MoneyChartData; s
   const selectId = useId();
   const races = data.races.filter((race) => race.people.length > 0);
   const [selectedRace, setRaceId] = useState(races[0]?.raceId ?? "");
+  const [previousId, setPreviousId] = useState<string>();
   const raceId = races.some((race) => race.raceId === selectedRace) ? selectedRace : races[0]?.raceId;
   const shown = showAll ? races : races.filter((race) => race.raceId === raceId);
   if (!races.length && !data.committees.length) return null;
@@ -189,7 +205,10 @@ export function MoneyCharts({ data, showAll = false }: { data: MoneyChartData; s
       {showAll || !races.length ? null : (
         <label className="chart-picker" htmlFor={selectId}>
           Race
-          <select id={selectId} value={raceId} onChange={(event) => setRaceId(event.target.value)}>
+          <select id={selectId} value={raceId} onChange={(event) => {
+            setPreviousId(raceId);
+            setRaceId(event.target.value);
+          }}>
             {races.map((race) => (
               <option key={race.raceId} value={race.raceId}>
                 {race.title}
@@ -201,7 +220,7 @@ export function MoneyCharts({ data, showAll = false }: { data: MoneyChartData; s
       <div className="chart-grid">
         {shown.length > 0 ? <div>
           {shown.map((race) => (
-            <RaceChart key={race.raceId} race={race} />
+            <RaceChart key={race.raceId} race={race} previous={races.find((item) => item.raceId === previousId)} />
           ))}
           <p className="chart-foot">
             Source: <a href={data.candidateSource.url}>{data.candidateSource.name}</a>{data.candidateAsOf}.

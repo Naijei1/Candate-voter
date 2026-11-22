@@ -325,7 +325,7 @@ a {
   align-items: end;
   color: #fff;
   overflow: hidden;
-  background: var(--color-navy-deep);
+  background: radial-gradient(ellipse at 15% 100%, rgb(168 18 62 / 28%), transparent 70%), var(--color-navy-deep);
 }
 
 .hero-poster,
@@ -563,22 +563,6 @@ a {
   margin: 0;
   padding: 0;
   list-style: none;
-}
-
-.tabs a[aria-selected="true"] {
-  background: var(--color-navy);
-  color: #fff;
-  text-decoration: none;
-}
-
-.tabs a {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-  margin-right: 0.5rem;
-  padding: 0.25rem 0.75rem;
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius-control);
 }
 
 .home-map,
@@ -1527,40 +1511,56 @@ td {
   color: var(--color-brand-red) !important;
 }
 
-/* Map toggle */
+/* The indicator shares the first tab's grid cell and moves one column. */
 .segmented {
-  display: inline-flex;
-  flex-wrap: wrap;
-  gap: 0.25rem;
+  position: relative;
+  isolation: isolate;
+  display: inline-grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  max-width: 100%;
   padding: 0.25rem;
   margin: 0.5rem 0 1rem;
   background: #e9e8e2;
   border-radius: 10px;
 }
 
-.segmented button {
+.segmented [role="tab"] {
+  display: grid;
+  place-items: center;
   min-height: 44px;
   padding: 0.5rem 1rem;
   border: 0;
-  border-radius: var(--radius-control);
+  border-radius: 6px;
   background: transparent;
   color: var(--color-navy);
   font: inherit;
   font-weight: 600;
+  text-align: center;
+  text-decoration: none;
   cursor: pointer;
 }
 
-.segmented button[aria-selected="true"] {
-  color: white;
-  background: var(--color-navy);
+.segmented [aria-selected="true"] { background: white; }
+.segmented [role="tab"]:focus-visible { outline: 3px solid var(--color-navy); outline-offset: -4px; }
+
+@supports selector(:has(*)) {
+  .segmented::before {
+    content: "";
+    position: absolute;
+    grid-area: 1 / 1 / 2 / 2;
+    inset: 0;
+    z-index: -1;
+    border-radius: 6px;
+    border-bottom: 2px solid var(--color-navy);
+    background: white;
+  }
+  .segmented:has(> :nth-child(2)[aria-selected="true"])::before { transform: translateX(100%); }
+  .segmented [aria-selected="true"] { background: transparent; }
 }
 
-.segmented button:focus-visible {
-  outline: 3px solid #fff;
-  outline-offset: -5px;
+@media (prefers-reduced-motion: no-preference) {
+  .segmented::before { transition: transform var(--response); }
 }
-
-.segmented button:not([aria-selected="true"]):focus-visible { outline-color: var(--color-navy); }
 
 /* Statewide officeholders */
 .statewide h3 {
@@ -1757,7 +1757,16 @@ td {
   display: block;
   height: 100%;
   border-radius: 3px;
+  transform-origin: left center;
 }
+
+@media (prefers-reduced-motion: no-preference) {
+  .chart-switched > .chart-rows .chart-bar { animation: race-bar 360ms var(--ease); }
+  .chart-switched > .chart-rows .chart-value { animation: race-value 320ms var(--ease); }
+}
+
+@keyframes race-bar { from { transform: scaleX(var(--previous-share)); } }
+@keyframes race-value { from { opacity: 0.75; transform: translateY(0.2em); } }
 
 .s-raised { background: var(--color-navy); }
 .s-spent { background: var(--color-brand-red); }
@@ -2117,12 +2126,9 @@ td {
   .home-map { padding-block: 0; }
   .home-map .segmented {
     display: grid;
-    grid-template-columns: 2fr 3fr;
     margin: 0.75rem 0;
-    background: #e9e8e2;
   }
-  .segmented button { padding-inline: 0.5rem; color: var(--color-navy); font-size: 1rem; }
-  .segmented button[aria-selected="true"] { color: white; background: var(--color-navy); }
+  .segmented [role="tab"] { padding-inline: 0.5rem; }
 
   .home-map .lede { font-size: 1rem; }
   .map-frame { padding: 0.5rem; }
@@ -2295,12 +2301,12 @@ summary { cursor: pointer; align-content: center; }
 .feed-body .meta { margin-top: auto; }
 .feed-card.has-thumb { align-items: stretch; }
 .person-face-name, .official-name { font: 400 1.5rem/1.15 var(--serif); }
-.btn, .btn-ghost, .chip, .segmented button, .tabs a { transition: background-color var(--response), border-color var(--response), transform var(--response); }
-.btn:active:not(:disabled) { transform: translateY(1px); }
+.btn, .btn-ghost, .chip, .segmented [role="tab"] { transition: background-color var(--response), border-color var(--response), transform var(--response); }
+:is(.btn, .chip):active:not(:disabled) { transform: translateY(1px); }
 .cand-link, a.person-face, .choice-card, a.feed-card, .cand-photo img { transition: transform var(--response), border-color var(--response); }
 @media (hover: hover) {
   .btn:is(.btn-navy, .btn-primary, .btn-film, .btn-cta):hover { background: var(--color-brand-red-deep); }
-  .btn-ghost:hover, .btn-quiet:hover, .chip:hover, .segmented button:not([aria-selected="true"]):hover, .tabs a:not([aria-selected="true"]):hover { background: #eae9e3; }
+  .btn-ghost:hover, .btn-quiet:hover, .chip:hover, .segmented [aria-selected="false"]:hover { background: #eae9e3; }
   .section-more, .footer-links a, .nav-desktop a, .cand-cta {
     background-image: linear-gradient(currentColor, currentColor);
     background-position: left bottom 6px;
@@ -2312,7 +2318,8 @@ summary { cursor: pointer; align-content: center; }
   .btn-film-ghost:hover { background: rgb(255 255 255 / 15%); }
   .cand-link:hover, a.person-face:hover, a.feed-card:hover, .choice-card:hover { transform: translateY(-2px); border-color: #a5a9a7; }
   .cand-link:hover .cand-photo img { transform: scale(1.02); }
-  a:not(.btn, .chip, .cand-link, .feed-card, .person-face):hover { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 0.18em; }
+  :is(.cand-link, a.person-face, a.feed-card, .choice-card):active { transform: none; }
+  a:not(.btn, .chip, .cand-link, .feed-card, .person-face, [role="tab"]):hover { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 0.18em; }
 }
 @media (max-width: 800px) {
   .page-main > :is(article.wrap, .ballot-page, .ask-page, section.wrap:not(.home-section), div.wrap:has(> h1)) { padding-top: 2rem; }
@@ -2324,5 +2331,5 @@ summary { cursor: pointer; align-content: center; }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   *, *::before, *::after { transition-duration: 0s !important; }
-  .cand-link:hover, a.person-face:hover, a.feed-card:hover, .choice-card:hover, .cand-link:hover .cand-photo img, .btn:active:not(:disabled) { transform: none; }
+  .cand-link:hover, a.person-face:hover, a.feed-card:hover, .choice-card:hover, .cand-link:hover .cand-photo img, :is(.btn, .chip):active:not(:disabled) { transform: none; }
 }

@@ -8,6 +8,10 @@ Use the theme in `src/app/globals.css`. The page is warm paper `#f8f7f3`, cards 
 
 Keep Republican `#b8321f` and Democratic `#1d4ed8` distinct from the brand. Spell out the affiliation. For small party labels use dark party ink (`#8a2412` or `#1a3a6b`) on a pale party tint (`#fbe7e1` or `#e4eaf6`). Finance charts identify their series in words and retain the opposition hatch. Districts with data use `#bec9c4` and darken to navy on interaction.
 
+## Hero backdrop
+
+A single static radial wash of crimson over deep navy fills the hero before its media paints. Keep the high-priority poster, film and contrast overlay above it. The wash uses CSS alone.
+
 ## Type and measure
 
 Newsreader regular sets the article title (40–72px), section title (28–40px), candidate name (24–32px) and filing headline (24px). Source Sans 3 sets reading text (18px), controls (16–18px) and supporting text (14–16px). Use tabular numerals for financial figures, dates in the feed and table cells. Big Shoulders at 800 belongs to THE VOTE and the hero’s “Vote.” All three faces use next/font, Latin preload and swap.
@@ -26,5 +30,9 @@ Align the masthead, hero copy, sections and footer to the 1120px wrapper with at
 ## Interaction and copy
 
 Hover and press use 160ms and `cubic-bezier(0.22, 1, 0.36, 1)`. On hover-capable inputs a linked card rises 2px, a candidate image scales to 1.02 inside its frame, and action links draw an underline. Keep keyboard focus independent of hover. Reduced motion removes translation, zoom, transitions and smooth scrolling. The film keeps its existing poster fallback.
+
+The map and News Feed share a two-segment control. Its white indicator slides under the selected label in 160ms. Candidate race links jump to headings and give press feedback. A linked card settles back to its resting position on press.
+
+When a reader chooses a race in Follow the money, each visible bar moves from the previous row’s proportion to the new one in 360ms. The final tabular amount moves up slightly and gains opacity over 320ms in a fixed column. Use the same easing as the controls. Render the actual values on the server. Initial loads, scrolling and the all-races finance page show settled figures. Reduced motion switches every state immediately.
 
 Use sentence case and source names. Keep the official results link, and keep totals and positions traceable to their records. Avoid promotional badges, placeholder portraits, gradients on type, colored glows, automatic reveals and unsourced statistics.
