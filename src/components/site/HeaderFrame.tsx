@@ -29,6 +29,7 @@ export function HeaderFrame({
         {wordmark}
         <nav className="nav-desktop" aria-label="Primary">
           <Link href={findHref}>Find my races</Link>
+          <Link href="/candidates" aria-current={active(path, "/candidates") ? "page" : undefined}>Candidates</Link>
           {NAV_LINKS.map((item) => (
             <Link key={item.href} href={item.href} aria-current={active(path, item.href) ? "page" : undefined}>
               {item.short === item.label ? (

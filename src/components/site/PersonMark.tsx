@@ -3,7 +3,8 @@ export function partyMark(party: string): { letter: string; tone: "rep" | "dem" 
   if (/republican/i.test(party)) return { letter: "R", tone: "rep" };
   if (/democrat/i.test(party)) return { letter: "D", tone: "dem" };
   if (/libertarian/i.test(party)) return { letter: "L", tone: "lib" };
-  if (/independent|kentucky/i.test(party)) return { letter: "I", tone: "ind" };
+  if (/kentucky party/i.test(party)) return { letter: "KP", tone: "oth" };
+  if (/independent/i.test(party)) return { letter: "I", tone: "ind" };
   if (/write-in/i.test(party)) return { letter: "W", tone: "oth" };
   return { letter: "·", tone: "oth" };
 }

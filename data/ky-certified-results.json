@@ -1,0 +1,567 @@
+[
+  {
+    "raceId": "2026-senate-KY",
+    "election": "general",
+    "status": "pending",
+    "scheduledCertificationDate": "2026-11-23",
+    "sourceUrl": "https://elect.ky.gov/Resources/Documents/2026%20Election%20Calendar%20Final%20Version%2010_6_2025.pdf",
+    "retrievedAt": "2026-11-22"
+  },
+  {
+    "raceId": "2026-house-KY-01",
+    "election": "general",
+    "status": "pending",
+    "scheduledCertificationDate": "2026-11-23",
+    "sourceUrl": "https://elect.ky.gov/Resources/Documents/2026%20Election%20Calendar%20Final%20Version%2010_6_2025.pdf",
+    "retrievedAt": "2026-11-22"
+  },
+  {
+    "raceId": "2026-house-KY-02",
+    "election": "general",
+    "status": "pending",
+    "scheduledCertificationDate": "2026-11-23",
+    "sourceUrl": "https://elect.ky.gov/Resources/Documents/2026%20Election%20Calendar%20Final%20Version%2010_6_2025.pdf",
+    "retrievedAt": "2026-11-22"
+  },
+  {
+    "raceId": "2026-house-KY-03",
+    "election": "general",
+    "status": "pending",
+    "scheduledCertificationDate": "2026-11-23",
+    "sourceUrl": "https://elect.ky.gov/Resources/Documents/2026%20Election%20Calendar%20Final%20Version%2010_6_2025.pdf",
+    "retrievedAt": "2026-11-22"
+  },
+  {
+    "raceId": "2026-house-KY-04",
+    "election": "general",
+    "status": "pending",
+    "scheduledCertificationDate": "2026-11-23",
+    "sourceUrl": "https://elect.ky.gov/Resources/Documents/2026%20Election%20Calendar%20Final%20Version%2010_6_2025.pdf",
+    "retrievedAt": "2026-11-22"
+  },
+  {
+    "raceId": "2026-house-KY-05",
+    "election": "general",
+    "status": "pending",
+    "scheduledCertificationDate": "2026-11-23",
+    "sourceUrl": "https://elect.ky.gov/Resources/Documents/2026%20Election%20Calendar%20Final%20Version%2010_6_2025.pdf",
+    "retrievedAt": "2026-11-22"
+  },
+  {
+    "raceId": "2026-house-KY-06",
+    "election": "general",
+    "status": "pending",
+    "scheduledCertificationDate": "2026-11-23",
+    "sourceUrl": "https://elect.ky.gov/Resources/Documents/2026%20Election%20Calendar%20Final%20Version%2010_6_2025.pdf",
+    "retrievedAt": "2026-11-22"
+  },
+  {
+    "raceId": "2026-senate-KY",
+    "status": "certified",
+    "sourceUrl": "https://elect.ky.gov/Documents/2026%20Primary%20Certification%20of%20Vote%20Totals%20Final.pdf",
+    "retrievedAt": "2026-11-22",
+    "candidates": [
+      {
+        "name": "Andy Barr",
+        "party": "Republican Party",
+        "votes": 283833,
+        "winner": true,
+        "candidateId": "S6KY00286"
+      },
+      {
+        "name": "Daniel Cameron",
+        "party": "Republican Party",
+        "votes": 144592,
+        "winner": false
+      },
+      {
+        "name": "Michael James Faris",
+        "party": "Republican Party",
+        "votes": 11219,
+        "winner": false
+      },
+      {
+        "name": "George Washington",
+        "party": "Republican Party",
+        "votes": 7190,
+        "winner": false
+      },
+      {
+        "name": "Valerie \"Dr Val\" Fredrick",
+        "party": "Republican Party",
+        "votes": 5267,
+        "winner": false
+      },
+      {
+        "name": "Anissa Catlett",
+        "party": "Republican Party",
+        "votes": 4892,
+        "winner": false
+      },
+      {
+        "name": "James D. Duncan",
+        "party": "Republican Party",
+        "votes": 3773,
+        "winner": false
+      },
+      {
+        "name": "Jonathan M. Holliday",
+        "party": "Republican Party",
+        "votes": 3757,
+        "winner": false
+      },
+      {
+        "name": "A. Nick Shelley",
+        "party": "Republican Party",
+        "votes": 2771,
+        "winner": false
+      },
+      {
+        "name": "Other Donald Wenzel",
+        "party": "Republican Party",
+        "votes": 1014,
+        "winner": false
+      },
+      {
+        "name": "Jimmy I. Leon",
+        "party": "Republican Party",
+        "votes": 864,
+        "winner": false
+      }
+    ],
+    "sourcePages": [
+      2,
+      3,
+      4,
+      5
+    ],
+    "countyCount": 120,
+    "election": "primary",
+    "party": "Republican Party",
+    "certificationDate": null
+  },
+  {
+    "raceId": "2026-senate-KY",
+    "status": "certified",
+    "sourceUrl": "https://elect.ky.gov/Documents/2026%20Primary%20Certification%20of%20Vote%20Totals%20Final.pdf",
+    "retrievedAt": "2026-11-22",
+    "candidates": [
+      {
+        "name": "Charles Booker",
+        "party": "Democratic Party",
+        "votes": 155577,
+        "winner": true,
+        "candidateId": "S6KY00385"
+      },
+      {
+        "name": "Amy McGrath",
+        "party": "Democratic Party",
+        "votes": 119296,
+        "winner": false
+      },
+      {
+        "name": "Pamela Stevenson",
+        "party": "Democratic Party",
+        "votes": 20610,
+        "winner": false
+      },
+      {
+        "name": "Dale Lewis Romans",
+        "party": "Democratic Party",
+        "votes": 13696,
+        "winner": false
+      },
+      {
+        "name": "Logan Forsythe",
+        "party": "Democratic Party",
+        "votes": 9648,
+        "winner": false
+      },
+      {
+        "name": "Vincent Anthony Thompson",
+        "party": "Democratic Party",
+        "votes": 6962,
+        "winner": false
+      },
+      {
+        "name": "Joshua Blanton Sr.",
+        "party": "Democratic Party",
+        "votes": 6948,
+        "winner": false
+      }
+    ],
+    "sourcePages": [
+      6,
+      7,
+      8,
+      9
+    ],
+    "countyCount": 120,
+    "election": "primary",
+    "party": "Democratic Party",
+    "certificationDate": null
+  },
+  {
+    "raceId": "2026-house-KY-01",
+    "status": "certified",
+    "sourceUrl": "https://elect.ky.gov/Documents/2026%20Primary%20Certification%20of%20Vote%20Totals%20Final.pdf",
+    "retrievedAt": "2026-11-22",
+    "candidates": [
+      {
+        "name": "James R. Comer",
+        "party": "Republican Party",
+        "votes": 77678,
+        "winner": true,
+        "candidateId": "H6KY01110"
+      },
+      {
+        "name": "David Sims",
+        "party": "Republican Party",
+        "votes": 5068,
+        "winner": false
+      },
+      {
+        "name": "Robert James Sutherby",
+        "party": "Republican Party",
+        "votes": 2774,
+        "winner": false
+      },
+      {
+        "name": "Penny Arcos",
+        "party": "Republican Party",
+        "votes": 2645,
+        "winner": false
+      }
+    ],
+    "sourcePages": [
+      11,
+      12
+    ],
+    "countyCount": 35,
+    "election": "primary",
+    "party": "Republican Party",
+    "certificationDate": null
+  },
+  {
+    "raceId": "2026-house-KY-02",
+    "status": "certified",
+    "sourceUrl": "https://elect.ky.gov/Documents/2026%20Primary%20Certification%20of%20Vote%20Totals%20Final.pdf",
+    "retrievedAt": "2026-11-22",
+    "candidates": [
+      {
+        "name": "S. Brett Guthrie",
+        "party": "Republican Party",
+        "votes": 65176,
+        "winner": true,
+        "candidateId": "H8KY02031"
+      },
+      {
+        "name": "Joshua M. Ferguson",
+        "party": "Republican Party",
+        "votes": 7187,
+        "winner": false
+      },
+      {
+        "name": "G. \"Shay\" Perry-Adelmann",
+        "party": "Republican Party",
+        "votes": 3963,
+        "winner": false
+      }
+    ],
+    "sourcePages": [
+      13
+    ],
+    "countyCount": 20,
+    "election": "primary",
+    "party": "Republican Party",
+    "certificationDate": null
+  },
+  {
+    "raceId": "2026-house-KY-02",
+    "status": "certified",
+    "sourceUrl": "https://elect.ky.gov/Documents/2026%20Primary%20Certification%20of%20Vote%20Totals%20Final.pdf",
+    "retrievedAt": "2026-11-22",
+    "candidates": [
+      {
+        "name": "Megan Wingfield",
+        "party": "Democratic Party",
+        "votes": 16330,
+        "winner": true,
+        "candidateId": "H6KY02068"
+      },
+      {
+        "name": "Hank Linderman",
+        "party": "Democratic Party",
+        "votes": 8401,
+        "winner": false
+      },
+      {
+        "name": "David S. Hatfield",
+        "party": "Democratic Party",
+        "votes": 8254,
+        "winner": false
+      },
+      {
+        "name": "William Dakota Compton",
+        "party": "Democratic Party",
+        "votes": 7126,
+        "winner": false
+      }
+    ],
+    "sourcePages": [
+      14
+    ],
+    "countyCount": 20,
+    "election": "primary",
+    "party": "Democratic Party",
+    "certificationDate": null
+  },
+  {
+    "raceId": "2026-house-KY-03",
+    "status": "certified",
+    "sourceUrl": "https://elect.ky.gov/Documents/2026%20Primary%20Certification%20of%20Vote%20Totals%20Final.pdf",
+    "retrievedAt": "2026-11-22",
+    "candidates": [
+      {
+        "name": "Maria Teresa Rodriguez",
+        "party": "Republican Party",
+        "votes": 15855,
+        "winner": true,
+        "candidateId": "H6KY03223"
+      },
+      {
+        "name": "David Joseph Nichter",
+        "party": "Republican Party",
+        "votes": 6807,
+        "winner": false
+      },
+      {
+        "name": "Daniel Cobble",
+        "party": "Republican Party",
+        "votes": 5893,
+        "winner": false
+      },
+      {
+        "name": "Donald Pay",
+        "party": "Republican Party",
+        "votes": 4313,
+        "winner": false
+      }
+    ],
+    "sourcePages": [
+      15
+    ],
+    "countyCount": 1,
+    "election": "primary",
+    "party": "Republican Party",
+    "certificationDate": null
+  },
+  {
+    "raceId": "2026-house-KY-04",
+    "status": "certified",
+    "sourceUrl": "https://elect.ky.gov/Documents/2026%20Primary%20Certification%20of%20Vote%20Totals%20Final.pdf",
+    "retrievedAt": "2026-11-22",
+    "candidates": [
+      {
+        "name": "Ed Gallrein",
+        "party": "Republican Party",
+        "votes": 57822,
+        "winner": true,
+        "candidateId": "H6KY04171"
+      },
+      {
+        "name": "Thomas Massie",
+        "party": "Republican Party",
+        "votes": 47539,
+        "winner": false,
+        "candidateId": "H2KY04121"
+      }
+    ],
+    "sourcePages": [
+      16
+    ],
+    "countyCount": 21,
+    "election": "primary",
+    "party": "Republican Party",
+    "certificationDate": null
+  },
+  {
+    "raceId": "2026-house-KY-04",
+    "status": "certified",
+    "sourceUrl": "https://elect.ky.gov/Documents/2026%20Primary%20Certification%20of%20Vote%20Totals%20Final.pdf",
+    "retrievedAt": "2026-11-22",
+    "candidates": [
+      {
+        "name": "Melissa Claire Strange",
+        "party": "Democratic Party",
+        "votes": 30108,
+        "winner": true,
+        "candidateId": "H6KY04189"
+      },
+      {
+        "name": "Jesse Russell Brewer",
+        "party": "Democratic Party",
+        "votes": 11461,
+        "winner": false
+      }
+    ],
+    "sourcePages": [
+      17
+    ],
+    "countyCount": 21,
+    "election": "primary",
+    "party": "Democratic Party",
+    "certificationDate": null
+  },
+  {
+    "raceId": "2026-house-KY-05",
+    "status": "certified",
+    "sourceUrl": "https://elect.ky.gov/Documents/2026%20Primary%20Certification%20of%20Vote%20Totals%20Final.pdf",
+    "retrievedAt": "2026-11-22",
+    "candidates": [
+      {
+        "name": "Hal Rogers",
+        "party": "Republican Party",
+        "votes": 81554,
+        "winner": true,
+        "candidateId": "H0KY05015"
+      },
+      {
+        "name": "Kevin Smith",
+        "party": "Republican Party",
+        "votes": 12312,
+        "winner": false
+      },
+      {
+        "name": "Benjamin Hurley",
+        "party": "Republican Party",
+        "votes": 5537,
+        "winner": false
+      },
+      {
+        "name": "Brandon R. Monhollen",
+        "party": "Republican Party",
+        "votes": 3458,
+        "winner": false
+      },
+      {
+        "name": "Jerry Lee Shelton",
+        "party": "Republican Party",
+        "votes": 2464,
+        "winner": false
+      }
+    ],
+    "sourcePages": [
+      18,
+      19
+    ],
+    "countyCount": 33,
+    "election": "primary",
+    "party": "Republican Party",
+    "certificationDate": null
+  },
+  {
+    "raceId": "2026-house-KY-06",
+    "status": "certified",
+    "sourceUrl": "https://elect.ky.gov/Documents/2026%20Primary%20Certification%20of%20Vote%20Totals%20Final.pdf",
+    "retrievedAt": "2026-11-22",
+    "candidates": [
+      {
+        "name": "Ralph Alvarado",
+        "party": "Republican Party",
+        "votes": 36217,
+        "winner": true,
+        "candidateId": "H6KY06192"
+      },
+      {
+        "name": "Ryan Dotson",
+        "party": "Republican Party",
+        "votes": 16897,
+        "winner": false
+      },
+      {
+        "name": "Gregory George Plucinski",
+        "party": "Republican Party",
+        "votes": 5670,
+        "winner": false
+      },
+      {
+        "name": "Steve Shannon",
+        "party": "Republican Party",
+        "votes": 3980,
+        "winner": false
+      },
+      {
+        "name": "Adam Perez Arquette",
+        "party": "Republican Party",
+        "votes": 1332,
+        "winner": false
+      }
+    ],
+    "sourcePages": [
+      20
+    ],
+    "countyCount": 16,
+    "election": "primary",
+    "party": "Republican Party",
+    "certificationDate": null
+  },
+  {
+    "raceId": "2026-house-KY-06",
+    "status": "certified",
+    "sourceUrl": "https://elect.ky.gov/Documents/2026%20Primary%20Certification%20of%20Vote%20Totals%20Final.pdf",
+    "retrievedAt": "2026-11-22",
+    "candidates": [
+      {
+        "name": "Zach Dembo",
+        "party": "Democratic Party",
+        "votes": 26858,
+        "winner": true,
+        "candidateId": "H6KY06184"
+      },
+      {
+        "name": "Cherlynn Stevenson",
+        "party": "Democratic Party",
+        "votes": 21312,
+        "winner": false
+      },
+      {
+        "name": "Erin Petrey",
+        "party": "Democratic Party",
+        "votes": 10703,
+        "winner": false
+      },
+      {
+        "name": "David Kloiber",
+        "party": "Democratic Party",
+        "votes": 3041,
+        "winner": false
+      },
+      {
+        "name": "Corey Edwards",
+        "party": "Democratic Party",
+        "votes": 2952,
+        "winner": false
+      },
+      {
+        "name": "Harvey Carroll Jr.",
+        "party": "Democratic Party",
+        "votes": 1958,
+        "winner": false
+      },
+      {
+        "name": "Jimmy Clifton Ausbrooks",
+        "party": "Democratic Party",
+        "votes": 940,
+        "winner": false
+      }
+    ],
+    "sourcePages": [
+      21
+    ],
+    "countyCount": 16,
+    "election": "primary",
+    "party": "Democratic Party",
+    "certificationDate": null
+  }
+]

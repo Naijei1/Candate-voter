@@ -1,6 +1,7 @@
 import { KY_RESULTS_LINKS } from "@/lib/site/ky-results";
 import { kentuckyPollsClosed } from "@/lib/site/ky-results";
 import { ResultsNote } from "@/components/site/ResultsNote";
+import { generalResult, shortElectionDate } from "@/lib/site/certified-results";
 
 const OFFICIAL = KY_RESULTS_LINKS[1];
 
@@ -31,13 +32,12 @@ export function ElectionStatus({ compact = false, now = new Date() }: { compact?
       </p>
     );
   }
+  const general = generalResult("2026-senate-KY");
   return (
     <aside className="election-banner" aria-label="Election results">
       <p>
-        <strong>The Nov 3, 2026 election is over.</strong>
-      </p>
-      <p>
-        <a className="btn btn-navy" href={OFFICIAL.href}>See official results</a>
+        {general?.status === "pending" ? <>Certification due {shortElectionDate(general.scheduledCertificationDate)}. </> : null}
+        <a href={OFFICIAL.href}>See official results</a>
       </p>
     </aside>
   );

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CheckHistory } from "@/components/site/CheckHistory";
 import { Crumbs } from "@/components/site/Crumbs";
+import { CandidateElectionStatus } from "@/components/site/CandidateElectionStatus";
 import { ElectionDayBanner } from "@/components/site/ElectionDayBanner";
 import { DirectList, orgLabel, OutsideList } from "@/components/site/FinanceLists";
 import { FollowControl } from "@/components/site/FollowControl";
@@ -20,6 +21,8 @@ import { PersonMark } from "@/components/site/PersonMark";
 import { KY_BALLOT_SOURCES, kyPerson } from "@/lib/site/ky-ballot";
 import { jobLine, linkLabel, profileFor } from "@/lib/site/profiles";
 import { seatStatus } from "@/lib/site/seat";
+import { candidateElectionStatus, CONGRESSIONAL_TERM_START, KY_RESULTS_SOURCE, primaryCandidateById } from "@/lib/site/certified-results";
+import { raceCardTitle } from "@/lib/site/candidate-cards";
 import { photoAttribution, portraitFor, stanceIssues, stancesFor } from "@/lib/site/stances";
 import { showcaseCandidate, showcaseRace, type ShowcaseCandidate } from "@/lib/site/showcase";
 import type { Filing, Race } from "@/lib/types";
@@ -33,6 +36,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const id = (await params).candidateId;
   const alternates = { canonical: `/candidates/${encodeURIComponent(id)}` };
   const ballot = kyPerson(id);
+  const primary = primaryCandidateById(id);
+  if (primary && !ballot) return { alternates, title: primary.candidate.name };
   const snap = showcaseCandidate(ballot?.person.fecCandidateId ?? id);
   if (ballot) return { alternates, title: ballot.person.name };
   if (snap) return { alternates, title: snap.displayName };
@@ -43,8 +48,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function CandidatePage({ params }: PageProps) {
   const id = (await params).candidateId;
   const ballot = kyPerson(id);
+  const primary = primaryCandidateById(id);
+  if (primary && !ballot && !primary.candidate.candidateId) return <PrimaryProfile primary={primary} />;
   const snap = showcaseCandidate(ballot?.person.fecCandidateId ?? id);
   const loaded = await loadProfile(ballot?.person.fecCandidateId ?? id);
+  if (!loaded.ok && primary && !ballot) return <PrimaryProfile primary={primary} />;
   if (!loaded.ok && loaded.missing && !snap && !ballot) notFound();
   if (!loaded.ok && !loaded.missing && !snap && !ballot) {
     return (
@@ -78,6 +86,16 @@ export default async function CandidatePage({ params }: PageProps) {
   const hasVerified = filings.length > 0 || Boolean(snap?.filingPdf && snap.filingDate) ||
     Boolean(retrieved && (snap?.incumbentLabel || snap?.statusLabel || (snap?.committeeName && snap.committeeUrl)));
   const status = seatStatus({ holds: Boolean(ballot?.person.holdsOffice), writeIn: ballot?.person.role === "write-in" });
+  const filedRaceId = race?.raceId ?? (snap ? showcaseRace()?.raceId : undefined);
+  const electionStatus = ballot ? candidateElectionStatus(ballot.race.raceId, ballot.person) :
+    primary ? candidateElectionStatus(primary.raceId, {
+      id: primary.candidate.candidateId,
+      name: primary.candidate.name,
+      party: primary.result.party,
+    }) : filedRaceId ? candidateElectionStatus(filedRaceId, { id, name, party }) : undefined;
+  const officeElect = electionStatus?.elected && !ballot?.person.holdsOffice && Date.now() < Date.parse(CONGRESSIONAL_TERM_START)
+    ? (ballot?.race.raceId ?? primary?.raceId)?.includes("senate") ? "Senator-elect" : "Rep.-elect"
+    : null;
 
   return (
     <article className="wrap">
@@ -95,7 +113,8 @@ export default async function CandidatePage({ params }: PageProps) {
         </figure>
         <div>
           <h1>{name}</h1>
-          <p className="profile-meta">{[...new Set([party, status, race ? race.title : ballot ? ballotTitle(ballot.race.raceId) : snap ? "U.S. Senate, Kentucky · 2026" : null].filter(Boolean))].join(" · ")}</p>
+          <p className="profile-meta">{[...new Set([party, status, officeElect, race ? race.title : ballot ? ballotTitle(ballot.race.raceId) : snap ? "U.S. Senate, Kentucky · 2026" : null].filter(Boolean))].join(" · ")}</p>
+          <CandidateElectionStatus status={electionStatus} />
           <div className="actions">
             {raceHref ? (
               <Link className="btn btn-navy" href={`${raceHref}/compare`}>
@@ -333,6 +352,25 @@ function ballotTitle(raceId: string): string {
   if (raceId.includes("senate")) return "U.S. Senate, Kentucky · 2026";
   const district = Number(raceId.split("-").at(-1));
   return `U.S. House, Kentucky District ${district} · 2026`;
+}
+
+function PrimaryProfile({ primary }: { primary: NonNullable<ReturnType<typeof primaryCandidateById>> }) {
+  const { candidate, result, raceId } = primary;
+  return (
+    <article className="wrap">
+      <Crumbs items={[{ href: "/candidates", label: "Candidates" }, { label: candidate.name }]} />
+      <header className="profile-head">
+        <PersonMark name={candidate.name} photo={null} party={result.party} size="lg" />
+        <div>
+          <h1>{candidate.name}</h1>
+          <p className="profile-meta">{result.party} · {raceCardTitle(raceId)}</p>
+          <CandidateElectionStatus status={{ primary: candidate.winner ? "won" : "lost" }} />
+          <p>{candidate.votes.toLocaleString("en-US")} certified primary votes · <a href={result.sourceUrl}>{KY_RESULTS_SOURCE}</a></p>
+          <Link className="action-link" href={`/races/${raceId}`}>Race details</Link>
+        </div>
+      </header>
+    </article>
+  );
 }
 
 function shortBallot(raceId: string): string {
