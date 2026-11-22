@@ -1,111 +1,218 @@
 {
-  "checkedOn": "2026-11-04",
-  "note": "Local copies only. Credit and source URL are required. Missing ids use a party-tinted initial.",
+  "checkedOn": "2026-11-22",
+  "note": "Kentucky candidate and statewide officer portraits with verified reuse rights and credits.",
   "photos": {
     "S6KY00286": {
       "src": "/photos/ky/S6KY00286.jpg",
       "credit": "Official U.S. House photograph",
       "sourceUrl": "https://clerk.house.gov/members/B001282",
       "license": "Public domain",
-      "author": "Office of the Clerk, U.S. House of Representatives"
+      "author": "Office of the Clerk, U.S. House of Representatives",
+      "sourceDate": "2026-11-04"
     },
     "H6KY01110": {
       "src": "/photos/ky/H6KY01110.jpg",
       "credit": "Official U.S. House photograph",
       "sourceUrl": "https://clerk.house.gov/members/C001108",
       "license": "Public domain",
-      "author": "Office of the Clerk, U.S. House of Representatives"
+      "author": "Office of the Clerk, U.S. House of Representatives",
+      "sourceDate": "2026-11-04"
     },
     "H8KY02031": {
       "src": "/photos/ky/H8KY02031.jpg",
       "credit": "Official U.S. House photograph",
       "sourceUrl": "https://clerk.house.gov/members/G000558",
       "license": "Public domain",
-      "author": "Office of the Clerk, U.S. House of Representatives"
+      "author": "Office of the Clerk, U.S. House of Representatives",
+      "sourceDate": "2026-11-04"
     },
     "H2KY03206": {
       "src": "/photos/ky/H2KY03206.jpg",
       "credit": "Official U.S. House photograph",
       "sourceUrl": "https://clerk.house.gov/members/M001220",
       "license": "Public domain",
-      "author": "Office of the Clerk, U.S. House of Representatives"
+      "author": "Office of the Clerk, U.S. House of Representatives",
+      "sourceDate": "2026-11-04"
     },
     "H0KY05015": {
       "src": "/photos/ky/H0KY05015.jpg",
       "credit": "Official U.S. House photograph",
       "sourceUrl": "https://clerk.house.gov/members/R000395",
       "license": "Public domain",
-      "author": "Office of the Clerk, U.S. House of Representatives"
+      "author": "Office of the Clerk, U.S. House of Representatives",
+      "sourceDate": "2026-11-04"
     },
     "S6KY00385": {
       "src": "/photos/ky/S6KY00385.jpg",
       "credit": "Breadwin, CC BY-SA 4.0, via Wikimedia Commons",
       "sourceUrl": "https://commons.wikimedia.org/wiki/File:Charles_solar_panels_(cropped).jpg",
       "license": "CC BY-SA 4.0",
-      "author": "Breadwin"
+      "author": "Breadwin",
+      "sourceDate": "2026-11-04"
     },
     "H6KY06192": {
       "src": "/photos/ky/H6KY06192.jpg",
       "credit": "Gage Skidmore, CC BY-SA 3.0, via Wikimedia Commons",
       "sourceUrl": "https://commons.wikimedia.org/wiki/File:Ralph_Alvarado_by_Gage_Skidmore.jpg",
       "license": "CC BY-SA 3.0",
-      "author": "Gage Skidmore"
+      "author": "Gage Skidmore",
+      "sourceDate": "2026-11-04"
     },
     "H6KY04171": {
       "src": "/photos/ky/H6KY04171.jpg",
       "credit": "Gage Skidmore, CC BY-SA 4.0, via Wikimedia Commons",
       "sourceUrl": "https://commons.wikimedia.org/wiki/File:Ed_Gallrein_(55505179851)_(cropped).jpg",
       "license": "CC BY-SA 4.0",
-      "author": "Gage Skidmore"
+      "author": "Gage Skidmore",
+      "sourceDate": "2026-11-04"
     },
     "H6KY06184": {
       "src": "/photos/ky/H6KY06184.jpg",
       "credit": "U.S. Navy, public domain, via Wikimedia Commons",
       "sourceUrl": "https://commons.wikimedia.org/wiki/File:Zach_Dembo_(cropped).jpg",
       "license": "Public domain",
-      "author": "U.S. Navy"
+      "author": "U.S. Navy",
+      "sourceDate": "2026-11-04"
     },
     "H6KY01169": {
       "src": "/photos/ky/H6KY01169.jpg",
-      "credit": "Photo: campaign website",
-      "sourceUrl": "https://williamsforky.com",
-      "license": "Campaign website",
-      "author": "williamsforky.com"
+      "credit": "EPalmer221 · CC0 · 4:5 crop",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:John_Drew_Williams_Headshot.jpg",
+      "license": "CC0",
+      "author": "EPalmer221",
+      "sourceDate": "2026-11-22",
+      "imageSourceUrl": "https://upload.wikimedia.org/wikipedia/commons/6/66/John_Drew_Williams_Headshot.jpg",
+      "crop": "4:5 crop",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "ky-secretary-of-state": {
+      "src": "/photos/ky/ky-secretary-of-state.jpg",
+      "credit": "UK College of Agriculture, Food and Environment · CC BY 3.0 · 4:5 crop",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Michael_Adams.jpg",
+      "license": "CC BY 3.0",
+      "author": "UK College of Agriculture, Food and Environment",
+      "sourceDate": "2026-11-22",
+      "imageSourceUrl": "https://upload.wikimedia.org/wikipedia/commons/b/bd/Michael_Adams.jpg",
+      "crop": "4:5 crop",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/"
+    },
+    "ky-governor": {
+      "src": "/photos/ky/ky-governor.jpg",
+      "credit": "Dale Greer · Public domain",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Kentucky_Air_Guard_supports_governor%27s_inauguration_(1)_(cropped).jpg",
+      "license": "Public domain",
+      "author": "Dale Greer",
+      "sourceDate": "2026-11-22",
+      "imageSourceUrl": "https://upload.wikimedia.org/wikipedia/commons/a/aa/Kentucky_Air_Guard_supports_governor%27s_inauguration_%281%29_%28cropped%29.jpg",
+      "crop": "4:5 crop"
+    },
+    "ky-lt-governor": {
+      "src": "/photos/ky/ky-lt-governor.jpg",
+      "credit": "Dale Greer, U.S. Air National Guard · Public domain",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Jacqueline_Coleman_speaks_to_an_audience_from_the_Capitol_steps_in_Frankfort_(cropped).jpg",
+      "license": "Public domain",
+      "author": "Dale Greer, U.S. Air National Guard",
+      "sourceDate": "2026-11-22",
+      "imageSourceUrl": "https://upload.wikimedia.org/wikipedia/commons/b/b2/Jacqueline_Coleman_speaks_to_an_audience_from_the_Capitol_steps_in_Frankfort_%28cropped%29.jpg",
+      "crop": "4:5 crop"
+    },
+    "ky-attorney-general": {
+      "src": "/photos/ky/ky-attorney-general.jpg",
+      "credit": "United States Department of Justice · Public domain",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Russell_Coleman_official_photo.jpg",
+      "license": "Public domain",
+      "author": "United States Department of Justice",
+      "sourceDate": "2026-11-22",
+      "imageSourceUrl": "https://upload.wikimedia.org/wikipedia/commons/c/ca/Russell_Coleman_official_photo.jpg",
+      "crop": "4:5 crop"
+    },
+    "ky-treasurer": {
+      "src": "/photos/ky/ky-treasurer.jpg",
+      "credit": "William R. Wilks II · CC0 · 4:5 crop",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Mark_Metcalf,_(Kentucky_Politician).jpg",
+      "license": "CC0",
+      "author": "William R. Wilks II",
+      "sourceDate": "2026-11-22",
+      "imageSourceUrl": "https://upload.wikimedia.org/wikipedia/commons/3/30/Mark_Metcalf%2C_%28Kentucky_Politician%29.jpg",
+      "crop": "4:5 crop",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "ky-auditor": {
+      "src": "/photos/ky/ky-auditor.jpg",
+      "credit": "UK College of Agriculture, Food and Environment · CC BY 3.0 · 4:5 crop",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Allison_Ball.jpg",
+      "license": "CC BY 3.0",
+      "author": "UK College of Agriculture, Food and Environment",
+      "sourceDate": "2026-11-22",
+      "imageSourceUrl": "https://upload.wikimedia.org/wikipedia/commons/1/1a/Allison_Ball.jpg",
+      "crop": "4:5 crop",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/"
+    },
+    "ky-agriculture": {
+      "src": "/photos/ky/ky-agriculture.jpg",
+      "credit": "William R. Wilks II · CC0 · 4:5 crop",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Jonathan_Shell.jpg",
+      "license": "CC0",
+      "author": "William R. Wilks II",
+      "sourceDate": "2026-11-22",
+      "imageSourceUrl": "https://upload.wikimedia.org/wikipedia/commons/3/37/Jonathan_Shell.jpg",
+      "crop": "4:5 crop",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "H6KY06283": {
+      "src": "/photos/ky/H6KY06283.jpg",
+      "credit": "RobertQuigleyForPresident · CC BY-SA 4.0 · 4:5 crop",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Robert_Quigley_For_President.jpg",
+      "license": "CC BY-SA 4.0",
+      "author": "RobertQuigleyForPresident",
+      "sourceDate": "2026-11-22",
+      "imageSourceUrl": "https://upload.wikimedia.org/wikipedia/commons/d/d4/Robert_Quigley_For_President.jpg",
+      "crop": "4:5 crop",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "identitySourceUrls": [
+        "https://docquery.fec.gov/pdf/153/202311019598920153/202311019598920153.pdf",
+        "https://docquery.fec.gov/pdf/962/202603189853626962/202603189853626962.pdf"
+      ]
     },
     "H6KY02068": {
       "src": "/photos/ky/H6KY02068.jpg",
       "credit": "Photo: campaign website",
       "sourceUrl": "https://wingfieldforcongress.com",
       "license": "Campaign website",
-      "author": "wingfieldforcongress.com"
+      "author": "wingfieldforcongress.com",
+      "sourceDate": "2026-11-04"
     },
     "H6KY03223": {
       "src": "/photos/ky/H6KY03223.jpg",
       "credit": "Photo: campaign website",
       "sourceUrl": "https://mariaforuscongress.com",
       "license": "Campaign website",
-      "author": "mariaforuscongress.com"
+      "author": "mariaforuscongress.com",
+      "sourceDate": "2026-11-04"
     },
     "H6KY04189": {
       "src": "/photos/ky/H6KY04189.jpg",
       "credit": "Photo: campaign website",
       "sourceUrl": "https://strangeforky.com",
       "license": "Campaign website",
-      "author": "strangeforky.com"
+      "author": "strangeforky.com",
+      "sourceDate": "2026-11-04"
     },
     "H6KY05202": {
       "src": "/photos/ky/H6KY05202.jpg",
       "credit": "Photo: campaign website",
       "sourceUrl": "https://weinforky5.com",
       "license": "Campaign website",
-      "author": "weinforky5.com"
+      "author": "weinforky5.com",
+      "sourceDate": "2026-11-04"
     },
     "H6KY06234": {
       "src": "/photos/ky/H6KY06234.jpg",
       "credit": "Photo: campaign website",
       "sourceUrl": "https://bowman2026.com",
       "license": "Campaign website",
-      "author": "bowman2026.com"
+      "author": "bowman2026.com",
+      "sourceDate": "2026-11-04"
     }
   }
 }

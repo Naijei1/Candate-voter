@@ -14,7 +14,7 @@ export type Issue = { id: string; label: string };
 const issues = data.issues as Issue[];
 const byCandidate = data.candidates as Record<string, Stance[]>;
 
-type PhotoRow = { src: string; credit: string; sourceUrl: string; license: string; author: string };
+type PhotoRow = { src: string; credit: string; sourceUrl: string; license: string; author: string; crop?: string };
 
 const portraits = photos.photos as Record<string, PhotoRow>;
 
@@ -46,9 +46,11 @@ export function matchScore(candidateId: string, selected: readonly string[]): { 
 
 export function photoAttribution(photo: PhotoRow | null): string | null {
   if (!photo || photo.license === "Public domain") return null;
-  return photo.license.startsWith("CC ") ? `${photo.author}, ${photo.license}` : photo.author;
+  return photo.license.startsWith("CC")
+    ? [photo.author, photo.license, photo.crop].filter(Boolean).join(" · ")
+    : photo.author;
 }
 
 export function creativeCommonsPortraits() {
-  return Object.entries(portraits).filter(([, photo]) => photo.license.startsWith("CC "));
+  return Object.entries(portraits).filter(([, photo]) => photo.license.startsWith("CC"));
 }

@@ -247,6 +247,10 @@ test("Ask stays Kentucky only and the map tabs say what they show", () => {
 test("comparison hides empty tabs and shows topics with data", () => {
   assert.deepEqual(visibleCompareTabs({ hasStances: false, hasVotes: false, hasFinance: false, hasUpdates: false }), ["Overview"]);
   assert.deepEqual(visibleCompareTabs({ hasStances: true, hasVotes: false, hasFinance: true, hasUpdates: false }), ["Overview", "Issues", "Statements", "Campaign Finance"]);
+  assert.deepEqual(
+    visibleCompareTabs({ hasStances: false, hasVotes: false, hasFinance: false, hasUpdates: false, hasExperience: true, hasPriorResults: true }),
+    ["Overview", "Experience", "Prior results"],
+  );
 });
 
 test("a comparison point links each source once", () => {

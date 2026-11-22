@@ -4,12 +4,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CheckHistory } from "@/components/site/CheckHistory";
+import { CandidateCorrection } from "@/components/site/CandidateCorrection";
 import { Crumbs } from "@/components/site/Crumbs";
 import { CandidateElectionStatus } from "@/components/site/CandidateElectionStatus";
 import { ElectionDayBanner } from "@/components/site/ElectionDayBanner";
 import { DirectList, orgLabel, OutsideList } from "@/components/site/FinanceLists";
 import { FollowControl } from "@/components/site/FollowControl";
 import { RosterMoney } from "@/components/site/RosterMoney";
+import { CareerTimeline, EducationList, PriorResults, RecordSource, VoteList } from "@/components/site/ProfileRecords";
 import { dayLabel, formatInstant, httpsUrl, partyCue, partyLabel } from "@/lib/format";
 import { formatMoney } from "@/lib/finance/model";
 import { financeForCandidate, loadFinance } from "@/lib/finance/load";
@@ -19,7 +21,8 @@ import { loadProfile } from "@/lib/site/contest";
 import { BallotBar } from "@/components/site/BallotBar";
 import { PersonMark } from "@/components/site/PersonMark";
 import { KY_BALLOT_SOURCES, kyPerson } from "@/lib/site/ky-ballot";
-import { jobLine, linkLabel, profileFor } from "@/lib/site/profiles";
+import { newsForNames } from "@/lib/site/ky-news";
+import { careerTimeline, jobLine, linkLabel, profileFor } from "@/lib/site/profiles";
 import { seatStatus } from "@/lib/site/seat";
 import { candidateElectionStatus, CONGRESSIONAL_TERM_START, KY_RESULTS_SOURCE, primaryCandidateById } from "@/lib/site/certified-results";
 import { raceCardTitle } from "@/lib/site/candidate-cards";
@@ -72,11 +75,16 @@ export default async function CandidatePage({ params }: PageProps) {
   const raceLabel = ballot ? shortBallot(ballot.race.raceId) : race ? shortRace(race) : snap ? "Senate" : "Race";
   const retrieved = showcaseRace()?.retrievedAt ?? null;
   const financeKey = ballot?.person.fecCandidateId ?? id;
-  const [bundle, checks] = await Promise.all([loadFinance(race?.cycle ?? 2026), loadChecks("candidate", id)]);
+  const [bundle, checks, news] = await Promise.all([
+    loadFinance(race?.cycle ?? 2026),
+    loadChecks("candidate", id),
+    ballot ? newsForNames([name]) : [],
+  ]);
   const finance = financeForCandidate(bundle, financeKey);
   const direct = selectDirect(finance.direct.filter(isKentuckyFinanceRow), null);
   const outside = selectOutside(finance.outside.filter(isKentuckyFinanceRow), null);
   const profile = ballot ? profileFor(ballot.person.id) : profileFor(id);
+  const timeline = careerTimeline(profile);
   const photo = portraitFor(ballot?.person.id ?? id);
   const notes = stancesFor(ballot?.person.id ?? id);
 
@@ -143,6 +151,40 @@ export default async function CandidatePage({ params }: PageProps) {
           <p><a href={profile.website.url}>{linkLabel(profile.website)}</a></p>
         </div> : null}
       </div>
+      {timeline.length > 0 ? (
+        <section>
+          <h2>Career timeline</h2>
+          <CareerTimeline entries={timeline} />
+        </section>
+      ) : null}
+      {profile.education.length > 0 ? (
+        <section>
+          <h2>Education</h2>
+          <EducationList entries={profile.education} />
+        </section>
+      ) : null}
+      {profile.results.length > 0 ? (
+        <section>
+          <h2>Prior election results</h2>
+          <PriorResults entries={profile.results} />
+        </section>
+      ) : null}
+      {profile.social.length > 0 ? (
+        <section>
+          <h2>Social accounts</h2>
+          <ul className="plain-list">
+            {profile.social.map((account) => {
+              const label = `${account.platform} · ${account.kind === "office" ? "Official" : "Campaign"}`;
+              return (
+                <li key={account.url}>
+                  <a href={account.url} aria-label={`${label} · ${name}`}>{label}</a>
+                  <RecordSource source={account} />
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      ) : null}
       {notes.length > 0 ? <>
       <h2>Issues</h2>
       <table className="stance-table">
@@ -182,14 +224,21 @@ export default async function CandidatePage({ params }: PageProps) {
       </> : null}
       {profile.votes.length > 0 ? <>
         <h2>Votes</h2>
-        <ul className="plain-list">
-          {profile.votes.map((vote) => (
-            <li key={`${vote.bill}-${vote.date}`}>
-              {dayLabel(vote.date)}: {vote.vote} on {vote.bill}. <a href={vote.sourceUrl}>{vote.sourceName}</a>
-            </li>
-          ))}
-        </ul>
+        <VoteList entries={profile.votes} />
       </> : null}
+      {news.length > 0 ? (
+        <section>
+          <h2>News</h2>
+          <ul className="plain-list">
+            {news.map((story) => (
+              <li key={story.url}>
+                <p><a href={story.url}>{story.title}</a></p>
+                <p className="hint">{story.source}{story.date ? ` · ${dayLabel(story.date)}` : ""}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
       <details>
         <summary>More details</summary>
 
@@ -260,6 +309,7 @@ export default async function CandidatePage({ params }: PageProps) {
         </p>
       ) : null}
       </details>
+      <CandidateCorrection candidateId={ballot?.person.id ?? id} raceId={ballot?.race.raceId ?? race?.raceId} />
       {ballot ? <ElectionDayBanner compact /> : null}
       {raceHref ? (
         <BallotBar place="candidate" backHref={raceHref} nextHref={`${raceHref}/compare`} nextLabel="Compare candidates" />
