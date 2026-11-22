@@ -140,6 +140,47 @@ test("compare shares one daily check for concurrent misses and skips cache hits"
   assert.equal(checks, 2);
 });
 
+test("concurrent requests for one race spend one global slot and keep separate IP limits", async () => {
+  let summaries = 0;
+  const service = createCompareService({
+    limiter: createRateLimiter({ limit: 1, windowMs: 60_000 }),
+    globalLimiter: createRateLimiter({ limit: 2, windowMs: 60_000 }),
+    async summarize(basis) {
+      summaries += 1;
+      return recordsOnlySummary(basis, null);
+    },
+  });
+  const raceId = "2026-senate-KY";
+  const results = await Promise.all(
+    ["a", "b", "c", "d"].map((ip) => service.handle(raceId, ip)),
+  );
+  assert.deepEqual(results.map((result) => result?.status), [200, 200, 200, 200]);
+  assert.equal(summaries, 1);
+
+  const otherRace = "2026-house-KY-01";
+  assert.equal((await service.handle(otherRace, "a"))?.status, 429);
+  assert.equal((await service.handle(otherRace, "b"))?.status, 429);
+  assert.equal((await service.handle(otherRace, "e"))?.status, 200);
+  assert.equal(summaries, 2);
+  assert.equal((await service.handle("2026-house-KY-02", "f"))?.status, 429);
+});
+
+test("compare subtracts both counter waits from the summary budget", async () => {
+  let clock = 1_000_000;
+  const service = createCompareService({
+    now: () => clock,
+    limiter: { take: () => { clock += 1_000; return { ok: true }; } },
+    globalLimiter: createRateLimiter({ limit: 2, windowMs: 60_000 }),
+    dailyLimiter: { take: () => { clock += 1_500; return { ok: true }; } },
+    usesModel: () => true,
+    async summarize(basis, budgetMs) {
+      assert.equal(budgetMs, 12_500);
+      return recordsOnlySummary(basis, null);
+    },
+  });
+  assert.equal((await service.handle("2026-senate-KY", "a"))?.status, 200);
+});
+
 test("rate-limit address comes from the CloudFront viewer hop", () => {
   const req = (xff: string) => new Request("https://example.com/api/compare", { headers: { "x-forwarded-for": xff } });
   assert.equal(trustedClientAddress(req("203.0.113.9, 64.252.67.70")), "203.0.113.9");

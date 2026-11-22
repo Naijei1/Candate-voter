@@ -72,6 +72,14 @@ test("federal general election labels and district hover styles stay in sync wit
   assert.match(css, /\.cd-map \.cd-district:hover,\s*\.cd-map \.cd-district:focus-visible\s*\{[^}]*fill:\s*var\(--color-map\)/);
 });
 
+test("both district path variants expose filing status in their accessible names", () => {
+  const map = readFileSync(new URL("../src/components/DistrictMap.tsx", import.meta.url), "utf8");
+  assert.match(map, /accessibleName = `\$\{label\}, \$\{has \? "filings on file" : "no filings on file"\}`/);
+  assert.match(map, /role="link"\s+tabIndex=\{0\}\s+aria-label=\{accessibleName\}/);
+  assert.match(map, /role="img" aria-label=\{accessibleName\}/);
+  assert.match(map, /onMouseEnter=\{\(\) => setHover\(label\)\}/);
+});
+
 function filing(filingId: string, imageNumber: string): Filing {
   return {
     filingId,

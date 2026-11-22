@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { cognitoSettings } from "./lib/auth/cognito-settings";
-import { refreshIdToken } from "./lib/auth/cognito-session";
+import { InvalidRefreshTokenError, refreshIdToken } from "./lib/auth/cognito-session";
 import { ID_COOKIE, ID_MAX_AGE, REFRESH_COOKIE, sessionCookie, shouldRefresh } from "./lib/auth/session-cookies";
 
 export async function middleware(request: NextRequest) {
@@ -17,11 +17,11 @@ export async function middleware(request: NextRequest) {
     const response = NextResponse.next({ request: { headers: request.headers } });
     response.cookies.set(ID_COOKIE, token, { ...sessionCookie, maxAge: ID_MAX_AGE });
     return response;
-  } catch {
-    request.cookies.delete(ID_COOKIE);
-    request.cookies.delete(REFRESH_COOKIE);
+  } catch (error) {
+    const names = error instanceof InvalidRefreshTokenError ? [ID_COOKIE, REFRESH_COOKIE] : [ID_COOKIE];
+    for (const name of names) request.cookies.delete(name);
     const response = NextResponse.next({ request: { headers: request.headers } });
-    for (const name of [ID_COOKIE, REFRESH_COOKIE]) {
+    for (const name of names) {
       response.cookies.set(name, "", { ...sessionCookie, maxAge: 0 });
     }
     return response;

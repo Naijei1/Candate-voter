@@ -10,6 +10,7 @@ export const AI_CACHE_MS = 60 * 60 * 1000;
 export const FALLBACK_CACHE_MS = 5 * 60 * 1000;
 /** Model calls one server instance may start per minute, whoever asks. */
 export const MODEL_CALLS_PER_MINUTE = 20;
+const BUDGET_MS = 15_000;
 
 export type CompareResult = { status: number; body: CompareSummary & { error?: "rate_limited"; message?: string }; headers?: Record<string, string> };
 
@@ -22,7 +23,7 @@ export type CompareService = {
  * Order: cached answer, shared in-flight answer, per-address cap, global cap, then one model call.
  */
 export function createCompareService(deps: {
-  summarize: (basis: CompareBasis) => Promise<CompareSummary>;
+  summarize: (basis: CompareBasis, budgetMs: number) => Promise<CompareSummary>;
   limiter: RateLimiter;
   globalLimiter: RateLimiter;
   dailyLimiter?: RateLimiter;
@@ -34,26 +35,20 @@ export function createCompareService(deps: {
   const pending = new Map<string, Promise<CompareResult>>();
   return {
     async handle(raceId, clientKey) {
+      const deadline = now() + BUDGET_MS;
       const basis = compareBasis(raceId);
       if (!basis) return null;
       const hit = cache.get(raceId);
       if (hit && now() < hit.until) return { status: 200, body: hit.body };
       const inFlight = pending.get(raceId);
       if (inFlight) return inFlight;
-      for (const [limiter, key] of [
-        [deps.limiter, `compare:${clientKey}`],
-        [deps.globalLimiter, "compare:all"],
-      ] as const) {
-        const decision = await limiter.take(key, now());
-        if (!decision.ok) {
-          return {
-            status: 429,
-            body: recordsOnlySummary(basis, "Too many requests. Try again in a minute."),
-            headers: { "retry-after": String(decision.retryAfterSeconds) },
-          };
-        }
-      }
+      const perIp = await deps.limiter.take(`compare:${clientKey}`, now());
+      if (!perIp.ok) return tooManyRequests(basis, perIp.retryAfterSeconds);
+      const filled = cache.get(raceId);
+      if (filled && now() < filled.until) return { status: 200, body: filled.body };
       return singleFlight(pending, raceId, async (): Promise<CompareResult> => {
+        const global = await deps.globalLimiter.take("compare:all", now());
+        if (!global.ok) return tooManyRequests(basis, global.retryAfterSeconds);
         if (deps.dailyLimiter && deps.usesModel?.(basis)) {
           const decision = await deps.dailyLimiter.take("daily", now());
           if (!decision.ok) {
@@ -68,10 +63,20 @@ export function createCompareService(deps: {
             };
           }
         }
-        const summary = await deps.summarize(basis);
+        const remaining = deadline - now();
+        if (remaining <= 0) return { status: 200, body: recordsOnlySummary(basis, null) };
+        const summary = await deps.summarize(basis, remaining);
         cache.set(raceId, { until: now() + (summary.mode === "ai" ? AI_CACHE_MS : FALLBACK_CACHE_MS), body: summary });
         return { status: 200, body: summary };
       });
     },
+  };
+}
+
+function tooManyRequests(basis: CompareBasis, retryAfterSeconds: number): CompareResult {
+  return {
+    status: 429,
+    body: recordsOnlySummary(basis, "Too many requests. Try again in a minute."),
+    headers: { "retry-after": String(retryAfterSeconds) },
   };
 }

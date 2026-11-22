@@ -130,8 +130,12 @@ function renderRoster(input: {
   const senate = shown.filter((row) => row.race.office === "senate");
   const house = shown.filter((row) => row.race.office === "house");
   const blocks = [`**${name}, ${input.cycle}.** FEC Form 2 filings.`];
-  if (office !== "house") blocks.push(senateBlock(senate));
-  if (office !== "senate") blocks.push(houseBlock(house));
+  if (office !== "house") {
+    blocks.push(chamberBlock("Senate", senate, people.some((row) => row.race.office === "senate")));
+  }
+  if (office !== "senate") {
+    blocks.push(chamberBlock("House", house, people.some((row) => row.race.office === "house")));
+  }
   const extra = people.length - shown.length;
   if (extra > 0) {
     blocks.push(
@@ -152,14 +156,14 @@ function renderRoster(input: {
   };
 }
 
-function senateBlock(rows: ReadonlyArray<{ race: Race; candidate: PublicCandidate }>): string {
-  if (rows.length === 0) return "**U.S. Senate**\n\nNo Senate filing found.";
-  return `**U.S. Senate**\n\n${rows.map((row) => personLine(row.candidate, row.race)).join("\n")}`;
-}
-
-function houseBlock(rows: ReadonlyArray<{ race: Race; candidate: PublicCandidate }>): string {
-  if (rows.length === 0) return "**U.S. House**\n\nNo House filing found.";
-  return `**U.S. House**\n\n${rows.map((row) => personLine(row.candidate, row.race)).join("\n")}`;
+function chamberBlock(
+  chamber: "Senate" | "House",
+  rows: ReadonlyArray<{ race: Race; candidate: PublicCandidate }>,
+  hasFilings: boolean,
+): string {
+  const heading = `**U.S. ${chamber}**\n\n`;
+  if (rows.length > 0) return heading + rows.map((row) => personLine(row.candidate, row.race)).join("\n");
+  return heading + (hasFilings ? `${chamber} names are omitted here.` : `No ${chamber} filing found.`);
 }
 
 function personLine(candidate: PublicCandidate, race: Race): string {

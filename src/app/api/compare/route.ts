@@ -10,7 +10,6 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 const converse = chatEnabled(process.env) ? createBedrockConverse(process.env) : null;
-const BUDGET_MS = 15_000;
 
 const limits = createAiLimits();
 const service = createCompareService({
@@ -18,9 +17,9 @@ const service = createCompareService({
   dailyLimiter: limits.daily,
   usesModel: (basis) => converse !== null && candidatesWithEvidence(basis) >= 2,
   globalLimiter: createRateLimiter({ limit: MODEL_CALLS_PER_MINUTE, windowMs: 60_000 }),
-  async summarize(basis) {
+  async summarize(basis, budgetMs) {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), BUDGET_MS);
+    const timer = setTimeout(() => controller.abort(), budgetMs);
     try {
       return await summarizeRace(basis, { converse, modelId: chatModelId(process.env), signal: controller.signal });
     } finally {

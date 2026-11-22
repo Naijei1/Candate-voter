@@ -100,6 +100,7 @@ export function DistrictMap({
                   districtHasCandidates(race) && (race?.cycle == null || race.cycle === year);
                 const hereDistrict = yours.has(shape.district);
                 const label = shape.district === "00" ? `${stateName(postal)} at-large` : `District ${Number(shape.district)}`;
+                const accessibleName = `${label}, ${has ? "filings on file" : "no filings on file"}`;
                 const className = [
                   "cd-district",
                   has ? "has-data" : "",
@@ -120,7 +121,7 @@ export function DistrictMap({
                         fillRule="evenodd"
                         role="link"
                         tabIndex={0}
-                        aria-label={label}
+                        aria-label={accessibleName}
                         onFocus={() => setHover(label)}
                         onBlur={() => setHover(null)}
                         onClick={() => openRace(race.raceId)}
@@ -132,7 +133,7 @@ export function DistrictMap({
                         }}
                       />
                     ) : (
-                      <path d={shape.d} className={className} fillRule="evenodd" aria-label={label} />
+                      <path d={shape.d} className={className} fillRule="evenodd" role="img" aria-label={accessibleName} />
                     )}
                   </g>
                 );

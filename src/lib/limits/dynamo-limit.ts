@@ -5,10 +5,11 @@ import type { RateLimiter } from "../chat/rate-limit";
 import { usersTableName } from "../users/store";
 
 const DAY_MS = 86_400_000;
+const COUNTER_TIMEOUT_MS = 1_500;
 export const DAILY_LIMIT_MESSAGE = "Ask is busy today. Try again tomorrow.";
 
 type CounterClient = {
-  send(command: UpdateCommand): Promise<{ Attributes?: Record<string, unknown> }>;
+  send(command: UpdateCommand, options: { abortSignal: AbortSignal }): Promise<{ Attributes?: Record<string, unknown> }>;
 };
 
 let client: CounterClient | undefined;
@@ -31,8 +32,16 @@ export function createCounterLimiter(
       const start = Math.floor(nowMs / windowMs) * windowMs;
       const end = start + windowMs;
       const retryAfterSeconds = Math.ceil((end - nowMs) / 1000);
+      const controller = new AbortController();
+      let timer: ReturnType<typeof setTimeout> | undefined;
       try {
-        const { Attributes } = await dynamo.send(new UpdateCommand({
+        const timeout = new Promise<never>((_, reject) => {
+          timer = setTimeout(() => {
+            controller.abort();
+            reject(new Error("Counter write timed out"));
+          }, COUNTER_TIMEOUT_MS);
+        });
+        const write = dynamo.send(new UpdateCommand({
           TableName: table,
           Key: {
             pk: key ? `LIMIT#${scope}#${key}` : `LIMIT#${scope}`,
@@ -42,13 +51,17 @@ export function createCounterLimiter(
           ExpressionAttributeNames: { "#ttl": "ttl" },
           ExpressionAttributeValues: { ":exp": Math.ceil(end / 1000), ":one": 1 },
           ReturnValues: "UPDATED_NEW",
-        }));
+        }), { abortSignal: controller.signal });
+        void write.catch(() => {});
+        const { Attributes } = await Promise.race([write, timeout]);
         const hits = Attributes?.hits;
         if (typeof hits !== "number") throw new Error("Missing counter value");
         return hits <= limit ? { ok: true } : { ok: false, retryAfterSeconds };
       } catch {
         console.warn(`Counter unavailable: ${scope}`);
         return failOpen ? { ok: true } : { ok: false, retryAfterSeconds };
+      } finally {
+        clearTimeout(timer);
       }
     },
   };

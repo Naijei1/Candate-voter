@@ -1,5 +1,7 @@
 import type { CognitoSettings } from "./cognito-settings";
 
+export class InvalidRefreshTokenError extends Error {}
+
 async function cognitoRequest(settings: CognitoSettings, action: string, body: object): Promise<Response> {
   const response = await fetch(`https://cognito-idp.${settings.region}.amazonaws.com/`, {
     method: "POST",
@@ -10,8 +12,28 @@ async function cognitoRequest(settings: CognitoSettings, action: string, body: o
     body: JSON.stringify(body),
     signal: AbortSignal.timeout(5_000),
   });
-  if (!response.ok) throw new Error(`Cognito ${action} failed (${response.status})`);
+  if (!response.ok) {
+    if (action === "InitiateAuth" && await rejectsRefreshToken(response)) {
+      throw new InvalidRefreshTokenError("Cognito rejected the refresh token");
+    }
+    throw new Error(`Cognito ${action} failed (${response.status})`);
+  }
   return response;
+}
+
+async function rejectsRefreshToken(response: Response): Promise<boolean> {
+  if (![400, 401, 403].includes(response.status)) return false;
+  const body = await response.json().catch(() => null) as {
+    __type?: string; error?: string; message?: string; Message?: string; error_description?: string;
+  } | null;
+  const code = body?.__type ?? response.headers.get("x-amzn-errortype");
+  if (body?.error === "invalid_grant" ||
+      (typeof code === "string" && code.split(":")[0].split("#").at(-1) === "NotAuthorizedException")) {
+    return true;
+  }
+  const message = body?.message ?? body?.Message ?? body?.error_description;
+  return typeof message === "string" &&
+    /\b(?:(?:invalid|expired|revoked) refresh token|refresh token (?:is |has (?:been )?)?(?:invalid|expired|revoked))\b/i.test(message);
 }
 
 export async function refreshIdToken(settings: CognitoSettings, token: string): Promise<string> {
