@@ -27,7 +27,7 @@ export function ChatPage() {
   }, [ask.chat, searchParams]);
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col">
+    <div className="wrap ask-page">
       <ChatShell mode="page" context={located} chat={ask.chat} />
     </div>
   );

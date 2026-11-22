@@ -77,7 +77,7 @@ export function DistrictMap({
 
   return (
     <div className="state-map-pane" data-testid="district-map">
-      <div className="cd-canvas" style={shapes?.[0] ? { aspectRatio: `${shapes[0].viewWidth} / ${shapes[0].viewHeight}` } : undefined}>
+      <div className="cd-canvas" data-state={postal} style={shapes?.[0] ? { aspectRatio: `${shapes[0].viewWidth} / ${shapes[0].viewHeight}` } : undefined}>
         {!covered ? (
           <p className="cd-note">House district maps cover the 50 states.</p>
         ) : failed ? (
@@ -138,21 +138,18 @@ export function DistrictMap({
                 );
               })}
               <g className="cd-labels" aria-hidden="true">
-                {shapes.map((shape) => {
-                  const callout = postal === "KY" && shape.district === "03";
-                  const x = shape.labelX - (callout ? 29 : 0);
-                  const y = shape.labelY - (callout ? 34 : 0);
-                  return (
-                    <g key={shape.district}>
-                      {callout ? (
-                        <path className="cd-label-leader" d={`M${shape.labelX} ${shape.labelY}L${x + 8} ${y + 10}`} />
-                      ) : null}
-                      <text className="cd-label" x={x} y={y} dominantBaseline="central" textAnchor="middle">
-                        {Number(shape.district)}
-                      </text>
-                    </g>
-                  );
-                })}
+                {shapes.map((shape) => (
+                  <text
+                    key={shape.district}
+                    className={`cd-label${postal === "KY" && shape.district === "03" ? " compact" : ""}`}
+                    x={shape.labelX}
+                    y={shape.labelY}
+                    dominantBaseline="central"
+                    textAnchor="middle"
+                  >
+                    {Number(shape.district)}
+                  </text>
+                ))}
               </g>
             </svg>
           </MapGesture>

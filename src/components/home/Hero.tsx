@@ -116,8 +116,7 @@ export function Hero() {
       ) : null}
       <div className="hero-shade" />
       <div className="hero-copy">
-        <h1>{homeHero.headline}</h1>
-        <p className="hero-sub">{homeHero.subline}</p>
+        <h1><span className="hero-word">{homeHero.headline}</span> <span className="hero-sub">{homeHero.subline}</span></h1>
         <div className="hero-actions">
           <a className="btn btn-film" href="#map">
             Find my races ↓

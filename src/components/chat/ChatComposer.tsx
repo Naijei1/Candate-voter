@@ -48,13 +48,13 @@ export function ChatComposer({
           disabled={pending}
           onChange={(event) => onChange(event.target.value)}
           onKeyDown={onKeyDown}
-          className="max-h-32 min-h-11 flex-1 resize-none rounded-lg border border-line bg-card px-3 py-2 text-sm text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:opacity-60"
+          className="max-h-32 min-h-11 min-w-0 flex-1 resize-none rounded-lg border border-line bg-card px-3 py-2 text-sm text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:opacity-60"
         />
         {pending ? (
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-lg border border-line px-3 py-2 text-sm font-semibold text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            className="btn btn-ghost focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           >
             Cancel
           </button>
@@ -62,7 +62,7 @@ export function ChatComposer({
           <button
             type="submit"
             disabled={!canSend}
-            className="rounded-lg bg-accent px-3 py-2 text-sm font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-45"
+            className="btn btn-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-45"
           >
             Send
           </button>

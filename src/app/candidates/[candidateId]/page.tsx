@@ -88,21 +88,26 @@ export default async function CandidatePage({ params }: PageProps) {
           { label: name },
         ]}
       />
-      <PersonMark name={name} photo={photo?.src ?? null} party={party} size="lg" priority />
-      {photo && attribution ? <p className="hint">Photo: <a href={photo.sourceUrl}>{attribution}</a></p> : null}
-      <h1>{name}</h1>
-      {party || status ? <p className="lede">{[...new Set([party, status].filter(Boolean))].join(" · ")}</p> : null}
-      <p>{race ? race.title : ballot ? ballotTitle(ballot.race.raceId) : snap ? "U.S. Senate, Kentucky · 2026" : null}</p>
-      <div className="actions sticky-mobile">
-        {raceHref ? (
-          <Link className="btn btn-navy" href={`${raceHref}/compare`}>
-            Compare
-          </Link>
-        ) : null}
-        <Link className="btn btn-ghost" href="/ballot">
-          Your ballot
-        </Link>
-      </div>
+      <header className="profile-head">
+        <figure>
+          <PersonMark name={name} photo={photo?.src ?? null} party={party} size="lg" priority />
+          {photo && attribution ? <figcaption>Photo: <a href={photo.sourceUrl}>{attribution}</a></figcaption> : null}
+        </figure>
+        <div>
+          <h1>{name}</h1>
+          <p className="profile-meta">{[...new Set([party, status, race ? race.title : ballot ? ballotTitle(ballot.race.raceId) : snap ? "U.S. Senate, Kentucky · 2026" : null].filter(Boolean))].join(" · ")}</p>
+          <div className="actions">
+            {raceHref ? (
+              <Link className="btn btn-navy" href={`${raceHref}/compare`}>
+                Compare
+              </Link>
+            ) : null}
+            <Link className="btn btn-ghost" href="/ballot">
+              Your ballot
+            </Link>
+          </div>
+        </div>
+      </header>
       <div className="fact-grid">
         {job ? <div><p className="hint">Current job</p><p>{job}{profile.bio ? <> · <a href={profile.bio.sourceUrl}>Source ↗</a></> : null}</p></div> : null}
         {ballot?.person.finance ? (

@@ -24,7 +24,7 @@ export function PersonMark({
   const mark = partyMark(party);
   const px = size === "lg" ? 160 : size === "sm" ? 72 : 96;
   if (photo) {
-    return <img className={`person-photo ${size}`} src={priority ? photo : thumbnail(photo)} alt="" width={px} height={px} loading={priority ? undefined : "lazy"} decoding={priority ? undefined : "async"} />;
+    return <img className={`person-photo ${size}`} src={priority ? photo : thumbnail(photo)} alt="" width={px} height={px * 1.25} loading={priority ? undefined : "lazy"} decoding={priority ? undefined : "async"} />;
   }
   return (
     <span className={`person-initials ${mark.tone} ${size}`} aria-hidden>
