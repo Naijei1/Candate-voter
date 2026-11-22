@@ -10,6 +10,8 @@
   --color-navy-deep: #0b1a2a;
   --color-hero-sub: #e8eef4;
   --color-accent: #142b49;
+  --color-navy-surface: #142b49;
+  --color-control-ink: var(--color-slate-900);
   /* Brand red (crimson, hue ~343°). Kept clearly apart from the warm Republican red below. */
   --color-brand-red: #a8123e;
   --color-brand-red-deep: #7d0d2e;
@@ -30,12 +32,93 @@
 }
 
 :root {
+  color-scheme: light dark;
+  --neutral-ink: #2c3340;
+  --neutral-chip: #ececee;
+  --initials-ink: #62665f;
+  --soft-surface: #eae9e3;
+  --segment-track: #e9e8e2;
+  --party-neutral: #efeeea;
+  --status-surface: #f1f0eb;
+  --chart-track: #eeeee9;
+  --chart-cash: #6b84a3;
+  --chart-hatch: #5f6b7a;
+  --chart-hatch-alt: #8a95a3;
+  --hero-error: #b32635;
+  --hero-form: rgba(255, 255, 255, 0.94);
+  --chart-support: var(--color-navy-deep);
+  --focus-band: var(--color-navy-deep);
+  --district-border: #fff;
+  --county-border: #546760;
+  --map-label-halo: #fff;
+  --hero-shade: linear-gradient(180deg, rgba(11, 26, 42, 0.28) 0%, rgba(11, 26, 42, 0.42) 46%, rgba(11, 26, 42, 0.88) 100%);
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
   --response: 160ms var(--ease);
   --radius-tag: 4px;
   --radius-control: 8px;
   --radius-card: 12px;
   --content: min(1120px, calc(100% - 2rem));
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-paper: #0b1a2a;
+    --color-card: #162a3d;
+    --color-ink: #eff3f7;
+    --color-muted: #b9c6d1;
+    --color-line: rgb(197 215 230 / 24%);
+    --color-navy: #bddbfa;
+    --color-accent: var(--color-navy);
+    --color-navy-surface: #294761;
+    --color-navy-deep: #071320;
+    --color-cta: #ff91ae;
+    --color-error: #ffaca8;
+    --color-party-rep-ink: #ffc4ae;
+    --color-party-rep-tint: #552c24;
+    --color-party-dem-ink: #bed8ff;
+    --color-party-dem-tint: #213c60;
+    --neutral-ink: var(--color-ink);
+    --neutral-chip: #304457;
+    --initials-ink: var(--color-muted);
+    --soft-surface: #2b4053;
+    --segment-track: #283b4e;
+    --party-neutral: var(--neutral-chip);
+    --status-surface: var(--soft-surface);
+    --focus-band: #203b55;
+    --hero-form: var(--color-card);
+    --hero-error: #fff;
+    --hero-shade: linear-gradient(180deg, rgb(7 19 32 / 46%), rgb(7 19 32 / 56%) 46%, rgb(7 19 32 / 92%));
+
+    --color-map: #607782;
+    --color-map-data: #93a9a9;
+    --color-map-hover: #10243b;
+    --color-map-label: #fff;
+    --map-label-halo: #142b49;
+    --district-border: #25394b;
+    --county-border: var(--district-border);
+    --chart-track: #293c4e;
+    --chart-cash: #8ca8c7;
+    --chart-support: #a0cfc5;
+    --chart-hatch: #8797aa;
+    --chart-hatch-alt: #c5ceda;
+
+    /* Tailwind utility colors used by the guide, badges and chat. */
+    --color-slate-50: var(--color-card);
+    --color-slate-100: var(--soft-surface);
+    --color-slate-200: var(--segment-track);
+    --color-slate-300: #8395a5;
+    --color-slate-500: var(--color-muted);
+    --color-slate-600: var(--color-muted);
+    --color-slate-700: var(--color-ink);
+    --color-slate-800: var(--color-ink);
+    --color-control-ink: var(--color-ink);
+    --color-amber-50: #48391f;
+    --color-amber-950: #ffe1a2;
+    --color-blue-100: var(--color-party-dem-tint);
+    --color-blue-900: var(--color-party-dem-ink);
+    --color-red-100: var(--color-party-rep-tint);
+    --color-red-900: var(--color-party-rep-ink);
+  }
 }
 
 html {
@@ -73,7 +156,7 @@ a {
   top: calc(100% + 0.35rem);
   width: min(18rem, 80vw);
   padding: 0.5rem 0.75rem;
-  background: var(--color-navy);
+  background: var(--color-navy-surface);
   color: #fff;
   border-radius: var(--radius-tag);
   font-size: 0.875rem;
@@ -101,7 +184,7 @@ a {
   top: 0.75rem;
   z-index: 80;
   transform: translateY(-150%);
-  background: #fff;
+  background: var(--color-card);
   color: var(--color-navy);
   padding: 0.5rem 0.75rem;
 }
@@ -211,7 +294,7 @@ a {
   display: grid;
   min-width: 14rem;
   padding: 0.25rem;
-  background: var(--color-navy);
+  background: var(--color-navy-surface);
   border: 1px solid rgb(255 255 255 / 25%);
   border-radius: 0.5rem;
 }
@@ -247,7 +330,7 @@ a {
   display: grid;
   min-width: 14rem;
   padding: 0.25rem;
-  background: var(--color-navy);
+  background: var(--color-navy-surface);
   border: 1px solid rgb(255 255 255 / 25%);
   border-radius: 0.5rem;
 }
@@ -299,7 +382,7 @@ a {
 }
 
 .btn-cta {
-  background: var(--color-cta);
+  background: var(--color-brand-red);
   color: #fff;
   white-space: nowrap;
 }
@@ -307,7 +390,7 @@ a {
 .btn-quiet { background: transparent; color: var(--color-navy); }
 
 .btn-ghost {
-  background: #fff;
+  background: var(--color-card);
   color: var(--color-navy);
   border-color: #818985;
 }
@@ -340,7 +423,7 @@ a {
 .hero-shade {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(11, 26, 42, 0.28) 0%, rgba(11, 26, 42, 0.42) 46%, rgba(11, 26, 42, 0.88) 100%);
+  background: var(--hero-shade);
 }
 
 .hero-copy {
@@ -400,7 +483,7 @@ a {
   gap: 0.75rem;
   padding: 1rem;
   border-radius: 1rem;
-  background: rgba(255, 255, 255, 0.94);
+  background: var(--hero-form);
   color: var(--color-ink);
 }
 
@@ -411,7 +494,7 @@ a {
 .hero-error {
   margin: 0;
   font-weight: 700;
-  color: #b32635;
+  color: var(--hero-error);
 }
 
 .hero-credit {
@@ -440,7 +523,7 @@ a {
   align-items: center;
   justify-content: space-between;
   padding: 1rem max(1rem, calc((100% - 1120px) / 2));
-  background: var(--color-navy);
+  background: var(--color-navy-surface);
   color: #fff;
 }
 
@@ -456,7 +539,7 @@ a {
 }
 
 .map-frame {
-  background: #fff;
+  background: var(--color-card);
   border: 1px solid var(--color-line);
   border-radius: var(--radius-card);
   padding: 0.75rem;
@@ -471,7 +554,7 @@ a {
   display: block;
   height: 100%;
   padding: 1rem;
-  background: #fff;
+  background: var(--color-card);
   border: 1px solid var(--color-line);
   border-radius: var(--radius-card);
   color: inherit;
@@ -513,7 +596,7 @@ a {
   width: 100%;
   min-height: 44px;
   padding: 0.75rem;
-  background: #fff;
+  background: var(--color-card);
   border: 1px solid var(--color-line);
   border-radius: var(--radius-card);
   color: inherit;
@@ -555,7 +638,7 @@ a {
 .party-badge.rep { color: var(--color-party-rep-ink); background: var(--color-party-rep-tint); }
 .party-badge.dem { color: var(--color-party-dem-ink); background: var(--color-party-dem-tint); }
 .party-badge.oth,
-.status-chip { color: #2c3340; background: #ececee; }
+.status-chip { color: var(--neutral-ink); background: var(--neutral-chip); }
 
 .person-list {
   display: grid;
@@ -599,7 +682,7 @@ a {
   padding: 1rem 1rem;
   border: 1px solid var(--color-line);
   border-radius: 1rem;
-  background: #fff;
+  background: var(--color-card);
   color: inherit;
   text-align: left;
   text-decoration: none;
@@ -637,7 +720,7 @@ button.choice-card {
   min-height: 64px;
   max-height: 64px;
   padding: 0.5rem 0.75rem calc(0.5rem + env(safe-area-inset-bottom));
-  background: #fff;
+  background: var(--color-card);
   border-top: 1px solid var(--color-line);
 }
 
@@ -675,7 +758,7 @@ button.choice-card {
     bottom: 0;
     margin: 0;
     padding: 0.75rem 0.75rem calc(0.75rem + env(safe-area-inset-bottom));
-    background: #fff;
+    background: var(--color-card);
     border-top: 1px solid var(--color-line);
   }
 
@@ -685,7 +768,7 @@ button.choice-card {
 }
 
 .hero {
-  background: #fff;
+  background: var(--color-card);
   border-bottom: 1px solid var(--color-line);
 }
 
@@ -812,13 +895,13 @@ a.contest-link h2 {
   max-height: min(80dvh, 36rem);
   overflow: auto;
   padding: 1rem 1rem calc(1rem + env(safe-area-inset-bottom));
-  background: #fff;
+  background: var(--color-card);
   border-top: 1px solid var(--color-line);
   box-shadow: 0 -4px 12px rgb(20 43 73 / 6%);
 }
 
 .election-banner {
-  background: #fff;
+  background: var(--color-card);
   border: 1px solid var(--color-line);
   border-radius: var(--radius-card);
   padding: 1rem 1rem;
@@ -878,7 +961,7 @@ a.contest-link h2 {
 }
 .person-photo.sm, .person-initials.sm { width: 4.5rem; }
 .person-photo.lg, .person-initials.lg { width: 10rem; }
-.person-initials { font: 400 2rem var(--serif); color: #62665f; background: #eae9e3; }
+.person-initials { font: 400 2rem var(--serif); color: var(--initials-ink); background: var(--soft-surface); }
 .cand-photo .person-initials { width: 100%; height: 100%; font-size: 2.5rem; }
 
 .fact-grid {
@@ -906,7 +989,7 @@ select {
   min-height: 44px;
   font: inherit;
   color: var(--color-ink);
-  background: #fff;
+  background: var(--color-card);
 }
 
 .card-grid,
@@ -931,7 +1014,7 @@ select {
   margin-right: 0.5rem;
   padding: 0.25rem 0.5rem;
   border-radius: var(--radius-control);
-  background: #fff;
+  background: var(--color-card);
   border: 1px solid var(--color-cta);
   color: var(--color-cta);
   font-size: 0.875rem;
@@ -940,7 +1023,7 @@ select {
 }
 
 .notice {
-  background: #fff;
+  background: var(--color-card);
   border-left: 4px solid var(--color-navy);
   padding: 0.75rem 1rem;
   margin: 1rem 0;
@@ -962,7 +1045,7 @@ select,
 textarea {
   font: inherit;
   color: var(--color-ink);
-  background: #fff;
+  background: var(--color-card);
   border: 1px solid #77838b;
   border-radius: var(--radius-control);
   min-height: 44px;
@@ -1000,7 +1083,7 @@ textarea {
   width: 2rem;
   height: 2rem;
   border-radius: var(--radius-control);
-  background: var(--color-navy);
+  background: var(--color-navy-surface);
   color: #fff;
   font-weight: 700;
 }
@@ -1019,12 +1102,12 @@ textarea {
   padding: 0.25rem 0.75rem;
   border-radius: var(--radius-control);
   border: 1px solid var(--color-line);
-  background: #fff;
+  background: var(--color-card);
   text-decoration: none;
 }
 
 .filters a[aria-current="page"] {
-  background: var(--color-navy);
+  background: var(--color-navy-surface);
   color: #fff;
   border-color: var(--color-navy);
 }
@@ -1045,7 +1128,7 @@ textarea {
 }
 
 .tabs button[aria-selected="true"] {
-  background: var(--color-navy);
+  background: var(--color-navy-surface);
   color: #fff;
 }
 
@@ -1122,7 +1205,7 @@ td {
 }
 
 .map-panel {
-  background: #fff;
+  background: var(--color-card);
   border: 1px solid var(--color-line);
   border-radius: 0.75rem;
   padding: 0.75rem;
@@ -1155,7 +1238,7 @@ td {
 
 .us-map .us-state {
   fill: var(--color-map);
-  stroke: #ffffff;
+  stroke: var(--district-border);
   stroke-width: 1.25;
   cursor: pointer;
 }
@@ -1175,7 +1258,7 @@ td {
 }
 
 .us-map .us-state[aria-pressed="true"] {
-  fill: var(--color-navy);
+  fill: var(--color-map-hover);
 }
 
 .us-map .us-state:focus-visible,
@@ -1207,12 +1290,12 @@ td {
   font-weight: 700;
   cursor: pointer;
   paint-order: stroke fill;
-  stroke: #ffffff;
+  stroke: var(--map-label-halo);
   stroke-width: 3px;
 }
 
 .us-map .us-label-plate {
-  fill: #ffffff;
+  fill: var(--map-label-halo);
   stroke: none;
 }
 
@@ -1264,7 +1347,7 @@ td {
 
 .cd-map .cd-district {
   fill: var(--color-map);
-  stroke: #ffffff;
+  stroke: var(--district-border);
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
   cursor: pointer;
@@ -1324,9 +1407,9 @@ td {
 .cd-labels { pointer-events: none; }
 
 .cd-map .cd-label {
-  fill: var(--color-navy);
+  fill: var(--color-map-label);
   font: 600 30px var(--font-sans);
-  stroke: white;
+  stroke: var(--map-label-halo);
   stroke-width: 3;
   stroke-linejoin: round;
   paint-order: stroke fill;
@@ -1367,7 +1450,7 @@ td {
   height: 0.9rem;
   margin-right: 0.25rem;
   background: var(--color-map);
-  border: 1px solid #fff;
+  border: 1px solid var(--district-border);
   vertical-align: -0.1rem;
 }
 
@@ -1463,7 +1546,7 @@ td {
 
 .nav-desktop a[aria-current="page"],
 .nav-mobile a[aria-current="page"] {
-  box-shadow: inset 0 -3px 0 var(--color-brand-red);
+  box-shadow: inset 0 -3px 0 var(--color-cta);
 }
 
 .label-short {
@@ -1508,7 +1591,7 @@ td {
 
 .section-more {
   font-weight: 700;
-  color: var(--color-brand-red) !important;
+  color: var(--color-cta) !important;
 }
 
 /* The indicator shares the first tab's grid cell and moves one column. */
@@ -1520,7 +1603,7 @@ td {
   max-width: 100%;
   padding: 0.25rem;
   margin: 0.5rem 0 1rem;
-  background: #e9e8e2;
+  background: var(--segment-track);
   border-radius: 10px;
 }
 
@@ -1540,7 +1623,7 @@ td {
   cursor: pointer;
 }
 
-.segmented [aria-selected="true"] { background: white; }
+.segmented [aria-selected="true"] { background: var(--color-card); }
 .segmented [role="tab"]:focus-visible { outline: 3px solid var(--color-navy); outline-offset: -4px; }
 
 @supports selector(:has(*)) {
@@ -1552,7 +1635,7 @@ td {
     z-index: -1;
     border-radius: 6px;
     border-bottom: 2px solid var(--color-navy);
-    background: white;
+    background: var(--color-card);
   }
   .segmented:has(> :nth-child(2)[aria-selected="true"])::before { transform: translateX(100%); }
   .segmented [aria-selected="true"] { background: transparent; }
@@ -1587,7 +1670,7 @@ td {
   gap: 0.75rem;
   align-items: flex-start;
   padding: 1rem;
-  background: #fff;
+  background: var(--color-card);
   border: 1px solid var(--color-line);
   border-radius: var(--radius-card);
 }
@@ -1651,7 +1734,7 @@ td {
 .feed-mark {
   display: grid;
   place-items: center;
-  background: #eae9e3;
+  background: var(--soft-surface);
   color: var(--color-muted);
   font: 400 1.5rem var(--serif);
 }
@@ -1678,7 +1761,7 @@ td {
 .chart {
   margin: 0 0 1rem;
   padding: 1rem 1rem 1rem;
-  background: #fff;
+  background: var(--color-card);
   border: 1px solid var(--color-line);
   border-radius: var(--radius-card);
 }
@@ -1748,7 +1831,7 @@ td {
 .chart-track {
   display: block;
   height: 0.5rem;
-  background: #eeeee9;
+  background: var(--chart-track);
   border-radius: 3px;
   overflow: hidden;
 }
@@ -1769,12 +1852,12 @@ td {
 @keyframes race-value { from { opacity: 0.75; transform: translateY(0.2em); } }
 
 .s-raised { background: var(--color-navy); }
-.s-spent { background: var(--color-brand-red); }
-.s-cash { background: #6b84a3; }
-.s-outside { background: var(--color-navy-deep); }
-.s-support { background: var(--color-navy-deep); }
+.s-spent { background: var(--color-cta); }
+.s-cash { background: var(--chart-cash); }
+.s-outside { background: var(--chart-support); }
+.s-support { background: var(--chart-support); }
 /* Gray with stripes so "oppose" never depends on color alone, and never reads as a party color. */
-.s-oppose { background: repeating-linear-gradient(135deg, #5f6b7a 0 4px, #8a95a3 4px 8px); }
+.s-oppose { background: repeating-linear-gradient(135deg, var(--chart-hatch) 0 4px, var(--chart-hatch-alt) 4px 8px); }
 
 .chart-target {
   display: grid;
@@ -1835,7 +1918,7 @@ td {
 
 .compare-col {
   padding: 1rem 1rem;
-  background: #fff;
+  background: var(--color-card);
   border: 1px solid var(--color-line);
   border-radius: var(--radius-card);
 }
@@ -1885,7 +1968,7 @@ td {
 .side-by-side {
   margin-top: 1rem;
   padding: 0.25rem 1rem 0.75rem;
-  background: #fff;
+  background: var(--color-card);
   border: 1px solid var(--color-line);
   border-radius: var(--radius-card);
 }
@@ -1915,7 +1998,7 @@ td {
   padding: 0.25rem 0.75rem;
   border: 1px solid var(--color-line);
   border-radius: var(--radius-control);
-  background: #fff;
+  background: var(--color-card);
   font-size: 1rem;
   font-weight: 600;
   text-decoration: none;
@@ -1950,7 +2033,7 @@ td {
   flex-direction: column;
   height: 100%;
   overflow: hidden;
-  background: #fff;
+  background: var(--color-card);
   border: 1px solid var(--color-line);
   border-radius: var(--radius-card);
   color: inherit;
@@ -1963,7 +2046,7 @@ td {
   place-items: center;
   aspect-ratio: 4 / 5;
   overflow: hidden;
-  background: #eae9e3;
+  background: var(--soft-surface);
 }
 
 /* Absolutely placed so every photo fills the same portrait frame, whatever its own shape. */
@@ -1983,7 +2066,7 @@ td {
   font-size: 0.875rem;
   font-weight: 600;
   color: var(--color-muted);
-  background: #efeeea;
+  background: var(--party-neutral);
 }
 
 .cand-party.rep { background: var(--color-party-rep-tint); color: var(--color-party-rep-ink); }
@@ -2014,7 +2097,7 @@ td {
   margin-top: 0.25rem;
   padding: 0.25rem 0.5rem;
   border-radius: var(--radius-tag);
-  background: #f1f0eb;
+  background: var(--status-surface);
   color: var(--color-muted);
   font-size: 0.875rem;
   font-weight: 600;
@@ -2024,7 +2107,7 @@ td {
   margin-top: auto;
   padding-top: 0.5rem;
   font-weight: 700;
-  color: var(--color-brand-red);
+  color: var(--color-cta);
 }
 
 @media (max-width: 900px) {
@@ -2085,7 +2168,7 @@ td {
     color: var(--color-muted);
   }
 
-  .mobile-tabs a[aria-current] { color: var(--color-brand-red); }
+  .mobile-tabs a[aria-current] { color: var(--color-cta); }
   .mobile-tabs a[aria-current]::before {
     content: "";
     position: absolute;
@@ -2194,7 +2277,7 @@ td {
     bottom: var(--tab-space);
     margin: 0;
     padding: 0.5rem 0.75rem;
-    background: #fff;
+    background: var(--color-card);
     border-top: 1px solid var(--color-line);
     box-shadow: 0 -2px 10px rgb(11 26 42 / 6%);
   }
@@ -2242,7 +2325,7 @@ td {
   inline-size: 1.25em;
   block-size: 1.25em;
   margin: 0;
-  accent-color: #a8123e;
+  accent-color: var(--color-cta);
 }
 .compare-board .tabs {
   flex-wrap: nowrap;
@@ -2345,7 +2428,7 @@ summary { cursor: pointer; align-content: center; }
 .cand-link, a.person-face, .choice-card, a.feed-card, .cand-photo img { transition: transform var(--response), border-color var(--response); }
 @media (hover: hover) {
   .btn:is(.btn-navy, .btn-primary, .btn-film, .btn-cta):hover { background: var(--color-brand-red-deep); }
-  .btn-ghost:hover, .btn-quiet:hover, .chip:hover, .segmented [aria-selected="false"]:hover { background: #eae9e3; }
+  .btn-ghost:hover, .btn-quiet:hover, .chip:hover, .segmented [aria-selected="false"]:hover { background: var(--soft-surface); }
   .section-more, .footer-links a, .nav-desktop a, .cand-cta {
     background-image: linear-gradient(currentColor, currentColor);
     background-position: left bottom 6px;

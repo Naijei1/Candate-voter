@@ -7,9 +7,9 @@
 
 .county-atlas { display: grid; grid-template-columns: minmax(0, 1fr) minmax(16rem, .36fr); align-items: center; gap: 2rem; }
 .county-drawing svg { display: block; width: 100%; height: auto; aspect-ratio: 1000 / 445.6; }
-.county-drawing path { fill: var(--color-map-data); stroke: #546760; stroke-width: .75; vector-effect: non-scaling-stroke; cursor: pointer; }
-.county-drawing path:is(:hover, :focus, [aria-pressed="true"]) { fill: var(--color-navy); }
-.county-drawing path:focus-visible { outline: none; stroke: var(--color-brand-red); stroke-width: 3; }
+.county-drawing path { fill: var(--color-map-data); stroke: var(--county-border); stroke-width: .75; vector-effect: non-scaling-stroke; cursor: pointer; }
+.county-drawing path:is(:hover, :focus, [aria-pressed="true"]) { fill: var(--color-map-hover); }
+.county-drawing path:focus-visible { outline: none; stroke: var(--color-cta); stroke-width: 3; }
 .county-caption { display: grid; }
 .county-caption > * { grid-area: 1 / 1; }
 .county-mark { fill: white; font-weight: 600; pointer-events: none; }
@@ -18,15 +18,15 @@
   .county-mark.has-room text { display: block; }
   .county-mark.has-room circle { display: none; }
 }
-.county-detail { padding: 1rem 1.25rem; border-top: 2px solid var(--color-navy); background: white; }
+.county-detail { padding: 1rem 1.25rem; border-top: 2px solid var(--color-navy); background: var(--color-card); }
 .county-detail label, .county-detail p { display: block; margin: 0; font-size: .9375rem; color: var(--color-muted); }
-.county-detail select { width: 100%; min-height: 44px; padding-inline: .625rem; margin: .25rem 0 1rem; border: 1px solid #6b7981; border-radius: 6px; background: white; color: var(--color-ink); font: 1.375rem var(--serif); }
+.county-detail select { width: 100%; min-height: 44px; padding-inline: .625rem; margin: .25rem 0 1rem; border: 1px solid #6b7981; border-radius: 6px; background: var(--color-card); color: var(--color-ink); font: 1.375rem var(--serif); }
 .county-detail h3 { margin: 0 0 .5rem; }
 .county-detail a { display: inline-flex; gap: .35rem; align-items: center; min-height: 44px; font-weight: 600; }
 .county-races { display: flex; flex-wrap: wrap; column-gap: 1rem; }
 .county-detail .county-clerk { margin-bottom: .25rem; }
 
-.focus-band { padding-block: clamp(2rem, 4vw, 3.5rem); margin-block: 2rem; background: var(--color-navy-deep); color: #fff; }
+.focus-band { padding-block: clamp(2rem, 4vw, 3.5rem); margin-block: 2rem; background: var(--focus-band); color: #fff; }
 .focus-band h2 { margin: 0 0 1.25rem; }
 .focus-stories { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2rem; list-style: none; padding: 0; margin: 0; }
 .focus-stories li { display: flex; flex-direction: column; border-top: 1px solid #718391; padding-top: 1.25rem; }

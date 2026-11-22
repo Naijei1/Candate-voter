@@ -289,7 +289,7 @@ export function GuideFlow({ races, signedIn }: { races: GuideRace[]; signedIn: b
             <p className="text-left">
               <Link href="/#map">Pick a district on the map</Link>
             </p>
-            {note ? <p id="zip-error" role="alert" className="font-semibold text-[#9b1c2e]">{note}</p> : null}
+            {note ? <p id="zip-error" role="alert" className="font-semibold text-error">{note}</p> : null}
           </Card>
           <div className="mt-4">
             <ElectionStatus />
@@ -366,7 +366,7 @@ export function GuideFlow({ races, signedIn }: { races: GuideRace[]; signedIn: b
             {stanceIssues().map((issue) => {
               const on = issues.includes(issue.id);
               return (
-                <button key={issue.id} type="button" className={`min-h-11 rounded-lg px-4 ${on ? "bg-navy text-white" : "bg-white text-slate-900 ring-1 ring-slate-300"}`} aria-pressed={on} aria-disabled={!issuesReady || savingIssue} onClick={() => void chooseIssue(issue.id)}>
+                <button key={issue.id} type="button" className={`min-h-11 rounded-lg px-4 ${on ? "bg-navy-surface text-white" : "bg-card text-control-ink ring-1 ring-slate-300"}`} aria-pressed={on} aria-disabled={!issuesReady || savingIssue} onClick={() => void chooseIssue(issue.id)}>
                   {issue.label}
                 </button>
               );

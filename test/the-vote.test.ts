@@ -90,6 +90,27 @@ test("brand red is AA with white text and clearly apart from the Republican red"
   assert.notEqual(brandRed.toLowerCase(), rep.toLowerCase());
 });
 
+test("dark text, party chips and chart series retain contrast on their own surfaces", () => {
+  const css = readFileSync("src/app/globals.css", "utf8");
+  const dark = css.split("@media (prefers-color-scheme: dark)")[1].split("}")[0];
+  const pairs = [
+    ["color-muted", "color-card", 4.5],
+    ["color-cta", "color-card", 4.5],
+    ["color-party-rep-ink", "color-party-rep-tint", 4.5],
+    ["color-party-dem-ink", "color-party-dem-tint", 4.5],
+    ["color-navy", "chart-track", 3],
+    ["color-cta", "chart-track", 3],
+    ["chart-cash", "chart-track", 3],
+    ["chart-support", "chart-track", 3],
+    ["chart-hatch", "chart-track", 3],
+    ["color-map-data", "color-map-hover", 3],
+  ] as const;
+  for (const [lighter, darker, minimum] of pairs) {
+    const ratio = (luminance(token(dark, lighter)) + 0.05) / (luminance(token(dark, darker)) + 0.05);
+    assert.ok(ratio >= minimum, `${lighter} on ${darker}: ${ratio}`);
+  }
+});
+
 test("statewide panel lists 2 senators and the 7 constitutional officers with sources", () => {
   assert.equal(KY_SENATORS.length, 2);
   assert.deepEqual(

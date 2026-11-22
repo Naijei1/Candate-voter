@@ -17,9 +17,9 @@ export function SheetContent({ children, title }: { children: ReactNode; title: 
   return (
     <Dialog.Portal>
       <Dialog.Overlay className="fixed inset-0 z-50 bg-slate-900/40" />
-      <Dialog.Content className={cn("fixed inset-x-0 bottom-0 z-50 max-h-[85vh] overflow-auto rounded-t-2xl bg-white p-6 sm:inset-y-0 sm:right-0 sm:left-auto sm:w-[28rem] sm:rounded-none")}>
+      <Dialog.Content className={cn("fixed inset-x-0 bottom-0 z-50 max-h-[85vh] overflow-auto rounded-t-2xl bg-card p-6 sm:inset-y-0 sm:right-0 sm:left-auto sm:w-[28rem] sm:rounded-none")}>
         <div className="mb-4 flex items-center justify-between gap-3">
-          <Dialog.Title className="text-xl font-semibold text-slate-900">{title}</Dialog.Title>
+          <Dialog.Title className="text-xl font-semibold text-control-ink">{title}</Dialog.Title>
           <Dialog.Close className="min-h-11 min-w-11 rounded-lg p-3 text-slate-700 hover:bg-slate-100" aria-label="Close">
             <X className="size-5" />
           </Dialog.Close>

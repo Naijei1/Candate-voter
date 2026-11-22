@@ -36,7 +36,11 @@ const display = localFont({
 });
 
 export const viewport: Viewport = {
-  themeColor: "#0b1a2a",
+  colorScheme: "light dark",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#0b1a2a" },
+    { media: "(prefers-color-scheme: dark)", color: "#071320" },
+  ],
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
