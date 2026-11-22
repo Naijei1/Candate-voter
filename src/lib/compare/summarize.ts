@@ -8,7 +8,7 @@ export type CompareSummary = {
   know: Claim[];
   differ: Claim[];
   agree: Claim[];
-  /** Shown instead of an empty section. Null when the section has claims. */
+  /** Optional explanation for an empty section. */
   differRefusal: string | null;
   agreeRefusal: string | null;
   notice: string | null;
@@ -16,20 +16,24 @@ export type CompareSummary = {
   evidence: Evidence[];
 };
 
-export const COMPARE_PROMPT_VERSION = "2026-11-19.1";
+export const COMPARE_PROMPT_VERSION = "2026-11-22.1";
 
 export const COMPARE_SYSTEM_PROMPT = `You compare candidates in one Kentucky race for voters who are short on time and new to politics.
 Use ONLY the numbered records you are given. Do not use outside knowledge. Do not guess.
 If the user message specifies a topic, limit the comparison to that topic.
 Write plain, neutral sentences of 40 words or fewer. Name the candidates. Never say who is better, who to vote for, or who will win. No ratings or predictions.
 "differ": points where two or more candidates took different positions or votes on the same topic.
-"agree": points where two or more candidates took the same position or vote on the same topic.
+"agree": points where two or more candidates took the same position or vote, or explicitly pursued the same policy goal. When their proposals differ, name only the shared goal. Mentioning the same topic is not agreement.
+Compare candidates wherever the records support a point. A point need not cover everyone in the race.
+Give up to three points per list, starting with the clearest.
 Every claim must cite the record ids it relies on, and the cited records must come from at least two different candidates.
 If the records do not support a point, leave that list empty. An empty list is a correct answer.
 Reply with JSON only, no prose: {"differ":[{"text":"...","cites":["E1","E4"]}],"agree":[{"text":"...","cites":["E2","E5"]}]}`;
 
 const MAX_CLAIMS = 4;
 const MAX_TEXT = 320;
+// Leave room for full-race answers and any reasoning tokens the model uses.
+const MAX_OUTPUT_TOKENS = 1_800;
 /** Endorsements, predictions and ratings. A claim that matches any of these is dropped, citations or not. */
 const BANNED: readonly RegExp[] = [
   /\b(vote for|should vote|should (?:pick|choose|support)|we recommend|recommended)\b/i,
@@ -89,8 +93,8 @@ export function recordsOnlySummary(basis: CompareBasis, notice: string | null): 
     know: basis.know,
     differ: [],
     agree: [],
-    differRefusal: enough ? REFUSALS.unavailable : REFUSALS.notEnough,
-    agreeRefusal: enough ? REFUSALS.unavailable : REFUSALS.notEnough,
+    differRefusal: enough ? null : REFUSALS.notEnough,
+    agreeRefusal: enough ? null : REFUSALS.notEnough,
     notice,
     evidence: candidateEvidence(basis),
   };
@@ -111,16 +115,22 @@ export async function summarizeRace(
       modelId: deps.modelId,
       system: COMPARE_SYSTEM_PROMPT,
       messages: [{ role: "user", content: [{ text: compareUserMessage(basis) }] }],
-      maxTokens: 900,
+      maxTokens: MAX_OUTPUT_TOKENS,
       signal: deps.signal,
       noTools: true,
     });
-    if (response.stopReason !== "end_turn") return recordsOnlySummary(basis, null);
+    if (response.stopReason !== "end_turn") {
+      console.warn("compare summary ended early:", basis.raceId, response.stopReason);
+      return recordsOnlySummary(basis, null);
+    }
     const text = response.message.content
       .map((block) => ("text" in block ? block.text : ""))
       .join("");
     const parsed = parseModelJson(text);
-    if (!parsed) return recordsOnlySummary(basis, null);
+    if (!parsed) {
+      console.warn("compare summary returned invalid JSON:", basis.raceId);
+      return recordsOnlySummary(basis, null);
+    }
     const differ = validateClaims(parsed.differ, basis);
     const agree = validateClaims(parsed.agree, basis);
     return {

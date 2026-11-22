@@ -6,5 +6,4 @@ export const REFUSALS = {
   topic: "The records don’t support a comparison on this issue.",
   differ: "No clear difference found.",
   agree: "No agreement found.",
-  unavailable: "Summary unavailable.",
 } as const;
