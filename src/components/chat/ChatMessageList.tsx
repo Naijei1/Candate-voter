@@ -65,8 +65,8 @@ function AssistantBubble({
     return (
       <div className="max-w-[95%] rounded-xl rounded-bl-sm border border-line bg-paper px-3 py-2" aria-busy="true">
         <LoadingCopy />
-        <div className="mt-2 h-2.5 w-[90%] rounded bg-line motion-safe:animate-pulse" />
-        <div className="mt-2 h-2.5 w-[70%] rounded bg-line motion-safe:animate-pulse" />
+        <div className="mt-2 h-2.5 w-[90%] rounded bg-line" />
+        <div className="mt-2 h-2.5 w-[70%] rounded bg-line" />
       </div>
     );
   }

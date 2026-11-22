@@ -84,7 +84,7 @@ export function ChatShell({
     <section className={mode === "page" ? "flex min-h-[70vh] flex-col" : "flex h-full min-h-0 flex-col"} aria-labelledby={titleId}>
       <header className="flex items-center gap-2 border-b border-line px-4 py-3">
         {mode === "page" ? (
-          <h1 id={titleId} className="text-lg font-semibold tracking-tight">
+          <h1 id={titleId}>
             Ask
           </h1>
         ) : (
@@ -97,7 +97,7 @@ export function ChatShell({
           <Link
             href={chatPageHref(active, chat.draft)}
             onClick={onClose}
-            className="rounded-md border border-line px-2 py-1 text-xs font-medium text-muted hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            className="min-h-11 min-w-11 rounded-lg border border-line px-2 py-1 text-xs font-medium text-muted hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           >
             Open in full page
           </Link>
@@ -106,7 +106,7 @@ export function ChatShell({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-md border border-line px-2 py-1 text-xs font-medium text-muted hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            className="min-h-11 min-w-11 rounded-lg border border-line px-2 py-1 text-xs font-medium text-muted hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           >
             Close
           </button>
@@ -116,7 +116,7 @@ export function ChatShell({
         <div className="px-4 pt-3">
           <p
             data-testid="ask-context"
-            className="inline-flex max-w-full items-center gap-2 rounded-full border border-accent/20 bg-accent/10 px-3 py-1 text-sm text-accent"
+            className="inline-flex max-w-full items-center gap-2 rounded-md border border-accent/20 bg-accent/10 px-3 py-1 text-sm text-accent"
           >
             <span className="min-w-0">
               <span className="font-semibold">Asking about </span>
@@ -126,7 +126,7 @@ export function ChatShell({
               type="button"
               onClick={() => setDismissed(true)}
               aria-label="Clear context"
-              className="shrink-0 rounded-full border border-accent/30 bg-card px-2 py-0.5 text-xs font-semibold text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+              className="min-h-11 min-w-11 shrink-0 rounded-lg border border-accent/30 bg-card px-2 py-0.5 text-xs font-semibold text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
             >
               Clear
             </button>

@@ -48,7 +48,7 @@ test("homepage is a document in the navy and red palette, not a map shell", () =
   assert.equal(page.includes("Explore by state"), false);
   assert.match(css, /--color-navy:\s*#142b49/);
   assert.match(css, /--color-error:\s*#9b1c2e/);
-  assert.match(css, /--color-paper:\s*#f3f5f7/);
+  assert.match(css, /--color-paper:\s*#f8f7f3/);
   assert.match(css, /--color-ink:\s*#122033/);
   assert.match(css, /--color-navy-deep:\s*#0b1a2a/);
   assert.equal(/prefers-color-scheme:\s*dark/.test(css), false);

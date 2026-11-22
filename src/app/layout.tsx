@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
-import { Source_Sans_3 } from "next/font/google";
+import { Newsreader, Source_Sans_3 } from "next/font/google";
 import { Suspense } from "react";
 import { AskProvider } from "@/components/chat/AskProvider";
 import { SiteFooter } from "@/components/SiteFooter";
@@ -16,12 +16,17 @@ import "./globals.css";
 
 const sourceSans = Source_Sans_3({
   subsets: ["latin"],
-  weight: ["400", "600", "700"],
+  display: "swap",
   variable: "--font-sans",
+});
+const newsreader = Newsreader({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-editorial",
+  display: "swap",
 });
 const display = localFont({
   src: [
-    { path: "../fonts/big-shoulders-latin.woff2", weight: "700", style: "normal" },
     { path: "../fonts/big-shoulders-latin.woff2", weight: "800", style: "normal" },
   ],
   variable: "--font-display",
@@ -68,7 +73,7 @@ export default function RootLayout({
   const cycles = cyclesFromEnv();
   return (
     <html lang="en">
-      <body className={`${sourceSans.variable} ${display.variable}`}>
+      <body className={`${sourceSans.variable} ${newsreader.variable} ${display.variable}`}>
         <Suspense fallback={null}>
           <GoatCounter />
         </Suspense>

@@ -18,7 +18,7 @@ export default function SourcesPage() {
         <li><a href="https://www.fec.gov/data/independent-expenditures/">FEC outside spending</a></li>
       </ul>
       <DistrictVintageNote />
-      <p><a href={withBasePath("/openapi.yaml")}>API documentation</a></p>
+      <p><a className="action-link" href={withBasePath("/openapi.yaml")}>API documentation</a></p>
       <h2>Media credits</h2>
       <ul className="plain-list">
         <li>

@@ -37,9 +37,9 @@ export function CandidateCard({ person }: { person: CardPerson }) {
           ) : (
             <PersonMark name={person.name} photo={null} party={person.party} size="lg" />
           )}
-          <span className={`cand-party ${badge.tone}`}>{badge.label}</span>
         </span>
         <span className="cand-body">
+          <span className={`cand-party ${badge.tone}`}>{badge.label}</span>
           <span className="cand-name">{person.name}</span>
           <span className="cand-office">{person.office}</span>
           {label ? <span className={`cand-status${person.holdsOffice ? " is-incumbent" : ""}`}>{label}</span> : null}

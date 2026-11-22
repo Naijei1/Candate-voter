@@ -25,8 +25,8 @@ export default function CandidatesPage() {
       <p className="lede">Kentucky&apos;s U.S. Senate and House candidates, Nov 3, 2026.</p>
       <nav className="chip-row" aria-label="Jump to a race">
         {races.map((race) => (
-          <a key={race.raceId} className="chip" href={`#${race.raceId}`}>
-            {titleFor(race.raceId)}
+          <a key={race.raceId} className="chip" aria-label={titleFor(race.raceId)} href={`#${race.raceId}`}>
+            {titleFor(race.raceId).replace("U.S. House ", "")}
           </a>
         ))}
         <Link className="chip" href="/?map=statewide#map">
@@ -52,7 +52,7 @@ export default function CandidatesPage() {
       ))}
       <p className="hint">Source: <a href={KY_BALLOT_SOURCES[0].url}>Kentucky Secretary of State ↗</a></p>
       <p>
-        <Link href="/officeholders">Officeholders</Link>
+        <Link className="action-link" href="/officeholders">Officeholders</Link>
       </p>
     </article>
   );
