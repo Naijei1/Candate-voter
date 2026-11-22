@@ -34,7 +34,7 @@ export function ChatMessageList({
         {turns.map((turn) =>
           turn.role === "user" ? (
             <div key={turn.id} id={`chat-turn-${turn.id}`} className="flex justify-end">
-              <p className="max-w-[95%] rounded-xl rounded-br-sm bg-accent px-3 py-2 text-sm leading-6 text-white">
+              <p className="max-w-[95%] rounded-xl rounded-br-sm bg-navy-surface px-3 py-2 text-sm leading-6 text-white">
                 {turn.text}
               </p>
             </div>

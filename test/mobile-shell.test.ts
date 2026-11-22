@@ -10,7 +10,7 @@ test("public shell scrolls and keeps large navigation targets", () => {
   assert.match(css, /font-size:\s*18px/);
   assert.equal(/body\s*\{[^}]*overflow:\s*hidden/.test(css), false);
   assert.equal(/\.national-shell/.test(css), false);
-  assert.equal(/prefers-color-scheme:\s*dark/.test(css), false);
+  assert.match(css, /:root\s*\{[^}]*color-scheme:\s*light dark/);
 });
 
 test("race and candidate pages return to the state journey", () => {
