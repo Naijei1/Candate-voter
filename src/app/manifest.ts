@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { withBasePath } from "@/lib/base-path";
 import { brand } from "@/content/brand";
 
 export default function manifest(): MetadataRoute.Manifest {
@@ -6,10 +7,15 @@ export default function manifest(): MetadataRoute.Manifest {
     name: brand.name,
     short_name: brand.shortName,
     description: brand.description,
-    start_url: "/",
-    display: "browser",
-    background_color: "#f3f5f7",
+    start_url: withBasePath("/"),
+    scope: withBasePath("/"),
+    display: "standalone",
+    background_color: "#f8f7f3",
     theme_color: "#0b1a2a",
-    icons: [{ src: "/favicon.ico", sizes: "any", type: "image/x-icon" }],
+    icons: [
+      { src: withBasePath("/icons/icon-192.png"), sizes: "192x192", type: "image/png" },
+      { src: withBasePath("/icons/icon-512.png"), sizes: "512x512", type: "image/png" },
+      { src: withBasePath("/icons/maskable-512.png"), sizes: "512x512", type: "image/png", purpose: "maskable" },
+    ],
   };
 }

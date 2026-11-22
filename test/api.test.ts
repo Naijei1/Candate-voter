@@ -29,6 +29,7 @@ const KEY = "test-key";
 
 function freshnessBody(watermark: IngestWatermark | null) {
   return {
+    version: 1,
     watermark,
     scope: "fec-efile-form2",
     filingsSoFarOnly: true,
@@ -614,6 +615,8 @@ test("openapi and llms.txt describe the public read surface", () => {
     "/api/v1/candidates/{candidateId}/filings:",
     "/api/v1/freshness:",
     "/api/v1/lookup/zip:",
+    "/api/v1/me/follows:",
+    "/api/v1/me/preferences:",
     "/api/chat:",
   ]) {
     assert.equal(spec.includes(path), true, path);
@@ -627,8 +630,8 @@ test("openapi and llms.txt describe the public read surface", () => {
   assert.match(spec, /does not expose district geometry/);
   assert.equal(spec.includes("/api/v1/geo:"), false);
   assert.match(spec, /Default 100/);
-  assert.match(spec, /required: \[cycles, races, nextCursor, refreshedAt\]/);
-  assert.match(spec, /required: \[race, candidates, refreshedAt\]/);
+  assert.match(spec, /required: \[version, cycles, races, nextCursor, refreshedAt\]/);
+  assert.match(spec, /required: \[version, race, candidates, refreshedAt\]/);
   assert.equal(spec.includes("FEC_API_KEY"), false);
   assert.equal(spec.includes("__SERVER_URL__"), false);
 

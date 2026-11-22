@@ -1,16 +1,17 @@
+import { cache } from "react";
 import { cookies } from "next/headers";
 import { cognitoSettings, verifyIdToken, type VerifiedUser } from "./cognito";
 import { revokeRefreshToken } from "./cognito-session";
 import { ID_COOKIE, ID_MAX_AGE, REFRESH_COOKIE, REFRESH_MAX_AGE, sessionCookie } from "./session-cookies";
 
-export async function currentUser(): Promise<VerifiedUser | null> {
+export const currentUser = cache(async (): Promise<VerifiedUser | null> => {
   const jar = await cookies();
   const settings = cognitoSettings();
   if (!settings) return null;
   const token = jar.get(ID_COOKIE)?.value;
   if (!token) return null;
   return verifyIdToken(settings, token);
-}
+});
 
 export async function setSessionCookies(idToken: string, refreshToken: string): Promise<void> {
   const jar = await cookies();
