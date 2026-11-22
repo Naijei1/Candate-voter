@@ -110,7 +110,8 @@ test("statewide panel lists 2 senators and the 7 constitutional officers with so
     assert.match(row.officialSite, /^https:\/\//);
     assert.match(row.term, /\d{4}/);
     if (row.photo) {
-      assert.equal(row.photo.license, "Public domain");
+      assert.match(row.photo.license, /^(Public domain|CC0|CC BY(?:-SA)? \d+\.\d+)$/);
+      assert.match(row.photo.sourceUrl, /^https:\/\//);
       assert.ok(existsSync(join("public", row.photo.src)), row.photo.src);
     }
   }
@@ -119,7 +120,7 @@ test("statewide panel lists 2 senators and the 7 constitutional officers with so
   const text = `${beshear?.term} ${beshear?.note}`;
   assert.equal(/seeking|re-?election|running for/i.test(text), false);
   assert.match(text, /Term-limited in 2027/);
-  assert.ok(KY_CONSTITUTIONAL_OFFICERS.every((row) => row.photo === null));
+  assert.ok(KY_CONSTITUTIONAL_OFFICERS.every((row) => row.photo?.credit));
 });
 
 test("map view parses only the two Kentucky views", () => {
