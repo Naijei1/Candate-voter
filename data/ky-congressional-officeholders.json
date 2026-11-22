@@ -1,0 +1,123 @@
+[
+  {
+    "name": "Mitch McConnell",
+    "bioguide": "M000355",
+    "office": "senate",
+    "district": null,
+    "party": "Republican",
+    "termStart": "2021-01-03",
+    "termEnd": "2027-01-03",
+    "url": "https://www.mcconnell.senate.gov",
+    "sourceUrl": "https://unitedstates.github.io/congress-legislators/legislators-current.json",
+    "retrievedAt": "2026-11-22",
+    "fecIds": [
+      "S2KY00012"
+    ]
+  },
+  {
+    "name": "Rand Paul",
+    "bioguide": "P000603",
+    "office": "senate",
+    "district": null,
+    "party": "Republican",
+    "termStart": "2023-01-03",
+    "termEnd": "2029-01-03",
+    "url": "https://www.paul.senate.gov",
+    "sourceUrl": "https://unitedstates.github.io/congress-legislators/legislators-current.json",
+    "retrievedAt": "2026-11-22",
+    "fecIds": [
+      "S0KY00156"
+    ]
+  },
+  {
+    "name": "James Comer",
+    "bioguide": "C001108",
+    "office": "house",
+    "district": 1,
+    "party": "Republican",
+    "termStart": "2025-01-03",
+    "termEnd": "2027-01-03",
+    "url": "https://comer.house.gov",
+    "sourceUrl": "https://unitedstates.github.io/congress-legislators/legislators-current.json",
+    "retrievedAt": "2026-11-22",
+    "fecIds": [
+      "H6KY01110"
+    ]
+  },
+  {
+    "name": "Brett Guthrie",
+    "bioguide": "G000558",
+    "office": "house",
+    "district": 2,
+    "party": "Republican",
+    "termStart": "2025-01-03",
+    "termEnd": "2027-01-03",
+    "url": "https://guthrie.house.gov",
+    "sourceUrl": "https://unitedstates.github.io/congress-legislators/legislators-current.json",
+    "retrievedAt": "2026-11-22",
+    "fecIds": [
+      "H8KY02031"
+    ]
+  },
+  {
+    "name": "Morgan McGarvey",
+    "bioguide": "M001220",
+    "office": "house",
+    "district": 3,
+    "party": "Democratic",
+    "termStart": "2025-01-03",
+    "termEnd": "2027-01-03",
+    "url": "https://mcgarvey.house.gov",
+    "sourceUrl": "https://unitedstates.github.io/congress-legislators/legislators-current.json",
+    "retrievedAt": "2026-11-22",
+    "fecIds": [
+      "H2KY03206"
+    ]
+  },
+  {
+    "name": "Thomas Massie",
+    "bioguide": "M001184",
+    "office": "house",
+    "district": 4,
+    "party": "Republican",
+    "termStart": "2025-01-03",
+    "termEnd": "2027-01-03",
+    "url": "https://massie.house.gov",
+    "sourceUrl": "https://unitedstates.github.io/congress-legislators/legislators-current.json",
+    "retrievedAt": "2026-11-22",
+    "fecIds": [
+      "H2KY04121"
+    ]
+  },
+  {
+    "name": "Harold Rogers",
+    "bioguide": "R000395",
+    "office": "house",
+    "district": 5,
+    "party": "Republican",
+    "termStart": "2025-01-03",
+    "termEnd": "2027-01-03",
+    "url": "https://halrogers.house.gov",
+    "sourceUrl": "https://unitedstates.github.io/congress-legislators/legislators-current.json",
+    "retrievedAt": "2026-11-22",
+    "fecIds": [
+      "H0KY05015"
+    ]
+  },
+  {
+    "name": "Andy Barr",
+    "bioguide": "B001282",
+    "office": "house",
+    "district": 6,
+    "party": "Republican",
+    "termStart": "2025-01-03",
+    "termEnd": "2027-01-03",
+    "url": "https://barr.house.gov",
+    "sourceUrl": "https://unitedstates.github.io/congress-legislators/legislators-current.json",
+    "retrievedAt": "2026-11-22",
+    "fecIds": [
+      "H0KY06104",
+      "S6KY00286"
+    ]
+  }
+]

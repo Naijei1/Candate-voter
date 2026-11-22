@@ -1,0 +1,30 @@
+[
+  {
+    "label": "Primary",
+    "date": "2026-05-19",
+    "sourceUrl": "https://elect.ky.gov/Resources/Documents/2026%20Election%20Calendar%20Final%20Version%2010_6_2025.pdf",
+    "sourceName": "KY State Board of Elections",
+    "retrievedAt": "2026-11-22"
+  },
+  {
+    "label": "General election",
+    "date": "2026-11-03",
+    "sourceUrl": "https://elect.ky.gov/Resources/Documents/2026%20Election%20Calendar%20Final%20Version%2010_6_2025.pdf",
+    "sourceName": "KY State Board of Elections",
+    "retrievedAt": "2026-11-22"
+  },
+  {
+    "label": "General election certification deadline",
+    "date": "2026-11-23",
+    "sourceUrl": "https://elect.ky.gov/Resources/Documents/2026%20Election%20Calendar%20Final%20Version%2010_6_2025.pdf",
+    "sourceName": "KY State Board of Elections",
+    "retrievedAt": "2026-11-22"
+  },
+  {
+    "label": "Congressional terms begin",
+    "date": "2027-01-03",
+    "sourceUrl": "https://www.archives.gov/founding-docs/amendments-11-27#xx",
+    "sourceName": "20th Amendment",
+    "retrievedAt": "2026-11-22"
+  }
+]

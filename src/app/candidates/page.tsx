@@ -1,59 +1,36 @@
-import { ShortList } from "@/components/site/ShortList";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CandidateCard } from "@/components/site/CandidateCard";
-import { candidateCards, raceCardTitle as titleFor } from "@/lib/site/candidate-cards";
+import { CandidateDirectory } from "@/components/site/CandidateDirectory";
+import { candidateCards, primaryCandidateCards, raceCardTitle } from "@/lib/site/candidate-cards";
+import { KY_FEDERAL_RACES, primaryResults } from "@/lib/site/certified-results";
 import { KY_BALLOT_SOURCES, kyBallot } from "@/lib/site/ky-ballot";
+import { KY_CONGRESSIONAL_ROSTER_SOURCE } from "@/lib/site/ky-officeholders";
 
 export const metadata: Metadata = { alternates: { canonical: "/candidates" }, title: "Candidates" };
-
-const RACE_IDS = [
-  "2026-senate-KY",
-  "2026-house-KY-01",
-  "2026-house-KY-02",
-  "2026-house-KY-03",
-  "2026-house-KY-04",
-  "2026-house-KY-05",
-  "2026-house-KY-06",
-];
+export const revalidate = 3600;
 
 export default function CandidatesPage() {
-  const races = RACE_IDS.map((id) => kyBallot(id)).filter((race) => race != null);
+  const general = KY_FEDERAL_RACES.map((id) => ({
+    id,
+    title: raceCardTitle(id),
+    note: kyBallot(id)?.note,
+    groups: [{ people: candidateCards(id) }],
+  }));
+  const primary = KY_FEDERAL_RACES.flatMap((id) => {
+    const groups = primaryCandidateCards(id);
+    return groups.length ? [{ id, title: raceCardTitle(id), groups }] : [];
+  });
+  const primarySources = Array.from(new Set(KY_FEDERAL_RACES.flatMap((id) => primaryResults(id).map((result) => result.sourceUrl))));
   return (
     <article className="wrap">
       <h1>Candidates</h1>
-      <p className="lede">Kentucky&apos;s U.S. Senate and House candidates, Nov 3, 2026.</p>
-      <nav className="chip-row" aria-label="Jump to a race">
-        {races.map((race) => (
-          <a key={race.raceId} className="chip" aria-label={titleFor(race.raceId)} href={`#${race.raceId}`}>
-            {titleFor(race.raceId).replace("U.S. House ", "")}
-          </a>
-        ))}
-        <Link className="chip" href="/?map=statewide#map">
-          Statewide officeholders
-        </Link>
-      </nav>
-      {races.map((race) => (
-        <section key={race.raceId} id={race.raceId} className="race-cards" aria-labelledby={`${race.raceId}-heading`}>
-          <div className="section-head">
-            <h2 id={`${race.raceId}-heading`}>{titleFor(race.raceId)}</h2>
-            <Link className="section-more" href={`/races/${race.raceId}`}>
-              Race details <span aria-hidden="true">→</span>
-            </Link>
-          </div>
-          {race.note ? <p className="hint">{race.note}</p> : null}
-          <ShortList
-            className="cand-grid"
-            items={candidateCards(race.raceId).map((person) => (
-              <CandidateCard key={person.id} person={person} />
-            ))}
-          />
-        </section>
-      ))}
-      <p className="hint">Source: <a href={KY_BALLOT_SOURCES[0].url}>Kentucky Secretary of State ↗</a></p>
-      <p>
+      <p className="lede">Kentucky’s U.S. Senate and House candidates.</p>
+      <CandidateDirectory general={general} primary={primary} generalSources={KY_BALLOT_SOURCES.slice(0, 2)} primarySources={primarySources} />
+      <p className="hint"><a href={KY_CONGRESSIONAL_ROSTER_SOURCE}>Congress Legislators roster</a></p>
+      <div className="actions">
         <Link className="action-link" href="/officeholders">Officeholders</Link>
-      </p>
+        <Link className="action-link" href="/?map=statewide#map">Statewide officeholders</Link>
+      </div>
     </article>
   );
 }

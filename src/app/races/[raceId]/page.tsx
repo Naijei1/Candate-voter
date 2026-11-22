@@ -10,6 +10,8 @@ import { FollowControl } from "@/components/site/FollowControl";
 import { ElectionDayBanner } from "@/components/site/ElectionDayBanner";
 import { BallotBar } from "@/components/site/BallotBar";
 import { PersonFace } from "@/components/site/PersonFace";
+import { RaceResults } from "@/components/site/RaceResults";
+import { candidateElectionStatus } from "@/lib/site/certified-results";
 import { raceCardTitle } from "@/lib/site/candidate-cards";
 import { openSeatLine } from "@/lib/site/seat";
 import { KY_BALLOT_SOURCES, kyBallot, kyBallotIds } from "@/lib/site/ky-ballot";
@@ -56,7 +58,7 @@ export default async function RacePage({ params }: PageProps) {
         ]}
       />
       <h1>{race.title}</h1>
-      {ballot ? null : <ElectionDayBanner />}
+      {ballot ? <RaceResults raceId={race.raceId} /> : <ElectionDayBanner />}
       {!ballot && sourceHref ? <p className="hint"><a href={sourceHref}>Source ↗</a></p> : null}
       {ballot || loaded.filingsLoaded ? null : roster.fecList ? (
         <p className="notice" role="status">
@@ -98,6 +100,7 @@ export default async function RacePage({ params }: PageProps) {
                     photo={photo?.src ?? null}
                     holds={person.holdsOffice}
                     writeIn={person.role === "write-in"}
+                    electionStatus={candidateElectionStatus(race.raceId, person)}
                     href={`/candidates/${person.id}`}
                     credit={photoAttribution(photo)}
                   />
@@ -122,7 +125,6 @@ export default async function RacePage({ params }: PageProps) {
                 </ul>
               </details>
             ) : null}
-            {ballot ? <ElectionDayBanner compact /> : null}
           </>
         ) : (
           <>

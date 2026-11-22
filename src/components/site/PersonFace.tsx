@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { PersonMark } from "@/components/site/PersonMark";
+import { CandidateElectionStatus } from "@/components/site/CandidateElectionStatus";
+import type { ElectionStatus } from "@/lib/site/certified-results";
 import { seatStatus } from "@/lib/site/seat";
 
 export function partyBadge(party: string): { label: string; tone: "rep" | "dem" | "oth" } {
@@ -22,6 +24,7 @@ export function PersonFace({
   writeIn,
   href,
   credit,
+  electionStatus,
 }: {
   name: string;
   party: string;
@@ -32,6 +35,7 @@ export function PersonFace({
   href?: string;
   /** Photo credit, shown inside the card so it stays with the photo. */
   credit?: string | null;
+  electionStatus?: ElectionStatus;
 }) {
   const badge = partyBadge(party);
   const rawStatus = seatStatus({ holds, writeIn });
@@ -46,6 +50,7 @@ export function PersonFace({
         <span className="person-face-meta">
           <span className={`party-badge ${badge.tone}`}>{badge.label}</span>
           {status ? <span className="status-chip">{status}</span> : null}
+          <CandidateElectionStatus status={electionStatus} />
         </span>
         {credit ? <span className="hint person-face-credit">Photo: {credit.replace(/^Photo:\s*/i, "")}</span> : null}
       </span>
