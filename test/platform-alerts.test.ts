@@ -1,9 +1,15 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import fsPromises from "node:fs/promises";
+import { syncBuiltinESMExports } from "node:module";
 import test from "node:test";
 import { canDispatch, DISPATCH_HEADER, sendNewEvents } from "../src/lib/alerts/dispatch";
 import { certifiedEvents, fecReportEvents, parseSosFilings, sosEvents, SOS_SENATE, type SosFiling } from "../src/lib/alerts/events";
-import { ALERT_FOLLOW_LIMIT, followFilter, MUTED_FILTER } from "../src/lib/alerts/filter";
+import { followFilter, MUTED_FILTER } from "../src/lib/alerts/filter";
+import { DynamoDBDocumentClient, GetCommand, PutCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
+import { PublishCommand, SNSClient } from "@aws-sdk/client-sns";
+import { POST as dispatch } from "../src/app/api/alerts/dispatch/route";
+import { toDirectItem } from "../src/lib/finance/keys";
 import type { FinanceDirect } from "../src/lib/finance/model";
 
 const sourceRows = JSON.parse(readFileSync("data/ky-sos-filing-snapshot.json", "utf8")) as SosFiling[];
@@ -14,7 +20,7 @@ const report: FinanceDirect = {
   fileNumber: "1234", sourceLabel: "FEC committee report", sourceUrl: "https://docquery.fec.gov/report.pdf", updatedAt: "2026-11-22T00:00:00Z",
 };
 
-test("SNS filters use unique follow keys, cap at 100, and match nothing without eligible follows", () => {
+test("SNS filters cover every saved race and candidate, including legacy watchlists over 100", () => {
   assert.equal(followFilter([{ targetType: "issue", targetId: "health" }]), MUTED_FILTER);
   const sample = [
     { targetType: "race" as const, targetId: "2026-senate-KY" },
@@ -24,7 +30,7 @@ test("SNS filters use unique follow keys, cap at 100, and match nothing without 
     follow: ["candidate:S6KY00286", "race:2026-senate-KY"],
   });
   const long = Array.from({ length: 110 }, (_, id) => ({ targetType: "race" as const, targetId: String(id) }));
-  assert.equal(JSON.parse(followFilter(long)).follow.length, ALERT_FOLLOW_LIMIT);
+  assert.equal(JSON.parse(followFilter(long)).follow.length, 110);
 });
 
 test("only stored finance periods, SOS entries and explicitly certified results produce events", () => {
@@ -73,4 +79,45 @@ test("alert dispatch requires the configured secret header", () => {
   assert.equal(canDispatch(req("different length"), "secret"), false);
   assert.equal(canDispatch(req(), "secret"), false);
   assert.equal(canDispatch(req("secret"), ""), false);
+});
+
+test("a missing certified file is reported independently and does not seed a baseline or stop FEC alerts", async (t) => {
+  const topic = "arn:aws:sns:us-east-1:123456789012:platform-test";
+  const settings = { CANDATE_CYCLES: "2026", THEVOTE_ALERTS_TOPIC_ARN: topic, THEVOTE_ALERTS_SECRET: "dispatch-test" };
+  const previous = Object.fromEntries(Object.keys(settings).map((key) => [key, process.env[key]]));
+  Object.assign(process.env, settings);
+  t.after(() => {
+    for (const [key, value] of Object.entries(previous)) {
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    }
+  });
+  const readFile = t.mock.method(fsPromises, "readFile", async () => {
+    throw Object.assign(new Error("missing certified file"), { code: "ENOENT" });
+  });
+  syncBuiltinESMExports();
+  t.after(() => { readFile.mock.restore(); syncBuiltinESMExports(); });
+  t.mock.method(globalThis, "fetch", async () => new Response(
+    '<option selected="selected">2026 General Election</option><div id="ctl00_MainContent_pOfficeResults"></div>',
+  ));
+  const writes: string[] = [];
+  t.mock.method(DynamoDBDocumentClient.prototype, "send", async (command: GetCommand | QueryCommand | PutCommand) => {
+    if (command instanceof GetCommand && command.input.Key?.sk === "BASELINE#fec:2026") return { Item: { ids: [] } };
+    if (command instanceof QueryCommand && command.input.IndexName) return { Items: [toDirectItem(report)] };
+    if (command instanceof PutCommand) writes.push(command.input.Item?.sk);
+    return {};
+  });
+  const subjects: string[] = [];
+  t.mock.method(SNSClient.prototype, "send", async (command: PublishCommand) => {
+    assert.ok(command.input.Subject);
+    subjects.push(command.input.Subject);
+    return {};
+  });
+  const response = await dispatch(new Request("https://voter.example/api/alerts/dispatch", {
+    method: "POST", headers: { [DISPATCH_HEADER]: settings.THEVOTE_ALERTS_SECRET },
+  }));
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), { published: 1, sources: { certified: "unavailable" } });
+  assert.deepEqual(subjects, ["New FEC report: Andy Barr"]);
+  assert.ok(!writes.includes("BASELINE#certified"));
 });

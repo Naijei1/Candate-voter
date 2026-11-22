@@ -10,8 +10,8 @@ export async function POST(request: Request): Promise<Response> {
   const topic = alertsTopic();
   if (!topic) return json({ error: "unavailable" }, 503);
   try {
-    const { published, failed } = await dispatchAlerts(topic);
-    return json({ published }, failed ? 503 : 200);
+    const { published, failed, sources } = await dispatchAlerts(topic);
+    return json({ published, sources }, failed ? 503 : 200);
   } catch (error) {
     console.error("alert dispatch failed", error instanceof Error ? error.name : "Error");
     return json({ error: "unavailable" }, 503);

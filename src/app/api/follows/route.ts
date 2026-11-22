@@ -1,5 +1,6 @@
 import { currentUser } from "@/lib/auth/session";
 import { changeFollow } from "@/lib/users/follow-actions";
+import { FOLLOW_LIMIT_MESSAGE } from "@/lib/users/follows";
 import { listFollows } from "@/lib/users/store";
 
 export const dynamic = "force-dynamic";
@@ -30,7 +31,9 @@ async function writeFollow(request: Request, mode: "save" | "delete"): Promise<R
   if (!user) return Response.json({ reason: "sign_in" }, { status: 401 });
   const body = await readBody(request);
   try {
-    if (!await changeFollow(user.sub, body, mode === "delete")) {
+    const result = await changeFollow(user.sub, body, mode === "delete");
+    if (result === "follow_limit") return Response.json({ reason: result, message: FOLLOW_LIMIT_MESSAGE }, { status: 409 });
+    if (result === "bad_request") {
       return Response.json({ reason: "bad_request" }, { status: 400 });
     }
   } catch (error) {

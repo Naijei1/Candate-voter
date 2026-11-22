@@ -91,28 +91,28 @@ async function loadSos(url: string, baseline: string, repo: VoterRepository): Pr
   return sosEvents(newRows, roster.flat());
 }
 
-async function loadCertified(): Promise<AlertEvent[]> {
+async function loadCertified(): Promise<AlertEvent[] | null> {
   try {
     const file = await readFile(join(process.cwd(), "data", "ky-certified-results.json"), "utf8");
     return certifiedEvents(JSON.parse(file));
   } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "ENOENT") return [];
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return null;
     throw error;
   }
 }
 
-export async function dispatchAlerts(topic: string): Promise<{ published: number; failed: boolean }> {
+export async function dispatchAlerts(topic: string): Promise<{ published: number; failed: boolean; sources: { certified: "available" | "unavailable" } }> {
   const repo = createDynamoRepository();
-  const sources = await Promise.allSettled([
+  const [certified, ...otherSources] = await Promise.allSettled([
+    loadCertified().then((events) => events === null ? null : afterBaseline("certified", events)),
     ...cyclesFromEnv().map(async (cycle) => afterBaseline(`fec:${cycle}`, fecReportEvents((await repo.listFinance(cycle)).direct))),
     loadSos(SOS_SENATE, "sos:senate", repo),
     loadSos(SOS_HOUSE, "sos:house", repo),
-    loadCertified().then((events) => afterBaseline("certified", events)),
     reconcileEmailSubscriptions(topic).then(() => []),
   ]);
   let failed = false;
-  const events = sources.flatMap((source) => {
-    if (source.status === "fulfilled") return source.value;
+  const events = [certified, ...otherSources].flatMap((source) => {
+    if (source.status === "fulfilled") return source.value ?? [];
     failed = true;
     console.error("alert source failed", source.reason instanceof Error ? source.reason.name : "Error");
     return [];
@@ -120,5 +120,6 @@ export async function dispatchAlerts(topic: string): Promise<{ published: number
   const published = await sendNewEvents(events, (event) => putOnce(`EVENT#${event.id}`, {
     claimedAt: new Date().toISOString(), sourceUrl: event.source,
   }), (event) => publishEvent(topic, event));
-  return { published, failed };
+  const available = certified.status === "fulfilled" && certified.value !== null;
+  return { published, failed, sources: { certified: available ? "available" : "unavailable" } };
 }

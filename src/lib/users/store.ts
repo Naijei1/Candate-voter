@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import {
   DeleteCommand,
@@ -26,6 +27,25 @@ export function usersClient(): DynamoDBDocumentClient {
     marshallOptions: { removeUndefinedValues: true },
   });
   return cached;
+}
+
+export async function withFollowLock<T>(sub: string, action: () => Promise<T>): Promise<T> {
+  const key = { pk: userPartition(sub), sk: "ALERT_LOCK" };
+  const owner = randomUUID();
+  const now = Date.now();
+  await usersClient().send(new PutCommand({
+    TableName: usersTableName(), Item: { ...key, owner, lockedUntil: now + 120_000 },
+    ConditionExpression: "attribute_not_exists(pk) OR lockedUntil < :now", ExpressionAttributeValues: { ":now": now },
+  }));
+  try {
+    return await action();
+  } finally {
+    await usersClient().send(new DeleteCommand({
+      TableName: usersTableName(), Key: key,
+      ConditionExpression: "#owner = :owner", ExpressionAttributeNames: { "#owner": "owner" },
+      ExpressionAttributeValues: { ":owner": owner },
+    }));
+  }
 }
 
 export async function listFollows(userId: string): Promise<Follow[]> {

@@ -76,6 +76,12 @@ paths:
                 $ref: "#/components/schemas/WriteResult"
         "401":
           $ref: "#/components/responses/Unauthorized"
+        "409":
+          description: You can follow up to 100 races and candidates.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
         "503":
           $ref: "#/components/responses/Unavailable"
         "400":

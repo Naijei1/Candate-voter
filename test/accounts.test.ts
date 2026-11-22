@@ -82,6 +82,7 @@ test("account infrastructure stays least privilege and separate from filings", (
   assert.match(template, /dynamodb:UpdateItem/);
   assert.match(template, /GoogleClientId:/);
   assert.match(template, /Condition: HasGoogle/);
+  assert.match(template, /AttributeMapping:\s*\n\s*email: email\s*\n\s*email_verified: email_verified/);
   assert.match(template, /Default: ""/);
   assert.match(template, /!Ref GoogleProvider/);
   assert.equal(template.includes("DependsOn: !If"), false);

@@ -1,35 +1,14 @@
-import { randomUUID } from "node:crypto";
 import { GetSubscriptionAttributesCommand, SetSubscriptionAttributesCommand, SubscribeCommand, UnsubscribeCommand } from "@aws-sdk/client-sns";
 import { DeleteCommand, GetCommand, PutCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 import type { VerifiedUser } from "../auth/cognito";
 import { userPartition } from "../users/follows";
-import { listFollows, usersClient, usersTableName } from "../users/store";
+import { listFollows, usersClient, usersTableName, withFollowLock } from "../users/store";
 import { followFilter, MUTED_FILTER } from "./filter";
 import { alertsClient, alertsTopic } from "./sns";
 
 const CANCELED = "ALERTS#CANCELED";
 const FILTERS = "ALERTS#FILTERS";
 const recordKey = (sub: string) => ({ pk: userPartition(sub), sk: "EMAIL_ALERTS" });
-
-export async function withAlertLock<T>(sub: string, action: () => Promise<T>): Promise<T> {
-  if (!alertsTopic()) return action();
-  const key = { pk: userPartition(sub), sk: "ALERT_LOCK" };
-  const owner = randomUUID();
-  const now = Date.now();
-  await usersClient().send(new PutCommand({
-    TableName: usersTableName(), Item: { ...key, owner, lockedUntil: now + 120_000 },
-    ConditionExpression: "attribute_not_exists(pk) OR lockedUntil < :now", ExpressionAttributeValues: { ":now": now },
-  }));
-  try {
-    return await action();
-  } finally {
-    await usersClient().send(new DeleteCommand({
-      TableName: usersTableName(), Key: key,
-      ConditionExpression: "#owner = :owner", ExpressionAttributeNames: { "#owner": "owner" },
-      ExpressionAttributeValues: { ":owner": owner },
-    }));
-  }
-}
 
 export async function getEmailSubscription(sub: string): Promise<string | null> {
   const result = await usersClient().send(new GetCommand({
@@ -53,18 +32,17 @@ async function setFilter(topic: string, arn: string, policy: string) {
   }));
 }
 
+// The caller holds the follow lock while saving the follow and syncing its filter.
 export async function changeAlertFollows(sub: string, write: () => Promise<void>): Promise<void> {
   const topic = alertsTopic();
   if (!topic) return write();
-  await withAlertLock(sub, async () => {
-    const arn = await getEmailSubscription(sub);
-    if (!arn?.startsWith(`${topic}:`)) return write();
-    await usersClient().send(new PutCommand({
-      TableName: usersTableName(), Item: { pk: FILTERS, sk: sub },
-    }));
-    await write();
-    await syncEmailFilter(sub, topic, arn);
-  });
+  const arn = await getEmailSubscription(sub);
+  if (!arn?.startsWith(`${topic}:`)) return write();
+  await usersClient().send(new PutCommand({
+    TableName: usersTableName(), Item: { pk: FILTERS, sk: sub },
+  }));
+  await write();
+  await syncEmailFilter(sub, topic, arn);
 }
 
 async function syncEmailFilter(sub: string, topic: string, arn: string | null): Promise<void> {
@@ -81,7 +59,7 @@ async function syncEmailFilter(sub: string, topic: string, arn: string | null): 
 }
 
 export async function setEmailAlerts(user: VerifiedUser, enabled: boolean, topic: string): Promise<void> {
-  await withAlertLock(user.sub, async () => {
+  await withFollowLock(user.sub, async () => {
     const existing = await getEmailSubscription(user.sub);
     const arn = existing?.startsWith(`${topic}:`) ? existing : null;
     const current = arn ? await attributes(topic, arn) : undefined;
@@ -123,11 +101,11 @@ export async function reconcileEmailSubscriptions(topic: string): Promise<void> 
   const results = await Promise.allSettled([
     forEachPending(FILTERS, async ({ sk: sub }) => {
       if (typeof sub !== "string") return;
-      await withAlertLock(sub, async () => syncEmailFilter(sub, topic, await getEmailSubscription(sub)));
+      await withFollowLock(sub, async () => syncEmailFilter(sub, topic, await getEmailSubscription(sub)));
     }),
     forEachPending(CANCELED, async ({ sk: arn, sub }) => {
       if (typeof arn !== "string" || !arn.startsWith(`${topic}:`) || typeof sub !== "string") return;
-      await withAlertLock(sub, async () => {
+      await withFollowLock(sub, async () => {
         if (await getEmailSubscription(sub) !== arn) {
           const current = await attributes(topic, arn);
           if (current?.PendingConfirmation === "true") return;

@@ -4,7 +4,9 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { FollowsResponse } from "@/lib/api/v1-types";
 import { withBasePath } from "@/lib/base-path";
-import type { FollowType } from "@/lib/users/follows";
+import { FOLLOW_LIMIT_MESSAGE, type FollowType } from "@/lib/users/follows";
+
+const UPDATE_ERROR = "Could not update this follow.";
 
 export function FollowControl({ what, targetId, signedIn, returnPath }: {
   what: FollowType;
@@ -15,7 +17,7 @@ export function FollowControl({ what, targetId, signedIn, returnPath }: {
   const [following, setFollowing] = useState(false);
   const [busy, setBusy] = useState(signedIn);
   const [expired, setExpired] = useState(false);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const endpoint = withBasePath("/api/v1/me/follows");
   const signIn = `/sign-in?returnTo=${encodeURIComponent(returnPath)}`;
   const label = what === "race" ? "Follow this race" : what === "candidate" ? "Follow this candidate" : "Follow Kentucky";
@@ -29,14 +31,14 @@ export function FollowControl({ what, targetId, signedIn, returnPath }: {
       if (!response.ok) throw new Error("Follow status unavailable");
       const { follows } = await response.json() as FollowsResponse;
       if (active) setFollowing(follows.some((row) => row.targetId === targetId && row.targetType === what));
-    }).catch(() => { if (active) setError(true); }).finally(() => { if (active) setBusy(false); });
+    }).catch(() => { if (active) setError(UPDATE_ERROR); }).finally(() => { if (active) setBusy(false); });
     return () => { active = false; };
   }, [endpoint, signedIn, targetId, what]);
 
   async function toggle() {
     if (busy) return;
     setBusy(true);
-    setError(false);
+    setError(null);
     try {
       const response = await fetch(endpoint, {
         method: following ? "DELETE" : "PUT",
@@ -47,10 +49,14 @@ export function FollowControl({ what, targetId, signedIn, returnPath }: {
         window.location.assign(withBasePath(signIn));
         return;
       }
+      if (response.status === 409) {
+        setError(FOLLOW_LIMIT_MESSAGE);
+        return;
+      }
       if (!response.ok) throw new Error("Follow update unavailable");
       setFollowing(!following);
     } catch {
-      setError(true);
+      setError(UPDATE_ERROR);
     } finally {
       setBusy(false);
     }
@@ -62,7 +68,7 @@ export function FollowControl({ what, targetId, signedIn, returnPath }: {
       <button className={`btn ${following ? "btn-navy" : "btn-ghost"}`} type="button" aria-pressed={following} aria-disabled={busy} onClick={toggle}>
         {label}
       </button>
-      {error ? <p className="hint" role="status">Could not update this follow.</p> : null}
+      <div role="status">{error ? <p className="hint">{error}</p> : null}</div>
     </div>
   );
 }
