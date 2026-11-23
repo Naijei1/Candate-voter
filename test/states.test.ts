@@ -19,6 +19,7 @@ test("registry reproduces the Kentucky race ids and results links", () => {
     "2026-senate-KY", "2026-house-KY-01", "2026-house-KY-02", "2026-house-KY-03",
     "2026-house-KY-04", "2026-house-KY-05", "2026-house-KY-06",
   ]);
+  assert.deepEqual([...KY_FEDERAL_RACES], federalRaceIds(stateConfig("KY")));
   assert.equal(KY_RESULTS_SOURCE, "KY State Board of Elections");
   assert.equal(KY_RESULTS_LINKS[1].href, "https://elect.ky.gov/results/2020-2029/Pages/2026.aspx");
   assert.equal(KY_RESULTS_LINKS[0].href, "https://vrsws.sos.ky.gov/liveresults/");
