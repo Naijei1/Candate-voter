@@ -1,13 +1,12 @@
 import type { ReactNode } from "react";
 import { dayLabel } from "@/lib/format";
 import { electionLabel, profileVoteSelection, type CareerEntry, type PriorResult, type ProfileNote, type ProfileSource, type ProfileVote, type SocialAccount } from "@/lib/site/profiles";
+import { splitRecordRows, VISIBLE_ROWS } from "@/lib/site/record-rows";
 import styles from "./ProfileRecords.module.css";
 
 const wholeNumber = new Intl.NumberFormat("en-US");
 const percent = new Intl.NumberFormat("en-US", { style: "percent", maximumFractionDigits: 2 });
 
-/** Rows shown before the rest move behind “Show all”. */
-const VISIBLE_ROWS = 6;
 
 export function RecordSource({ source }: { source: ProfileSource }) {
   return <p className={styles.source}><a href={source.sourceUrl}>{source.sourceName}</a> · <time dateTime={source.sourceDate}>{dayLabel(source.sourceDate)}</time></p>;
@@ -16,10 +15,7 @@ export function RecordSource({ source }: { source: ProfileSource }) {
 /** Hairline rows. Long lists keep every row in the page, the rest behind a native disclosure. */
 function RecordRows({ rows, ordered = false }: { rows: readonly ReactNode[]; ordered?: boolean }) {
   const List = ordered ? "ol" : "ul";
-  /** Hiding one or two rows behind a control costs more than it saves. */
-  const cut = rows.length > VISIBLE_ROWS + 2 ? VISIBLE_ROWS : rows.length;
-  const head = rows.slice(0, cut);
-  const rest = rows.slice(cut);
+  const { head, rest } = splitRecordRows(rows);
   return (
     <div className={styles.frame}>
       <List className={styles.records} role="list">{head}</List>

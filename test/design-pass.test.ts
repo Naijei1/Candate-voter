@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import { splitRecordRows } from "../src/lib/site/record-rows";
 
 test("race page puts the November candidates before primary tables", () => {
   const race = readFileSync("src/app/races/[raceId]/page.tsx", "utf8");
@@ -12,8 +13,6 @@ test("race page puts the November candidates before primary tables", () => {
 
 test("profile records keep every row in the page and collapse only long lists", () => {
   const records = readFileSync("src/components/site/ProfileRecords.tsx", "utf8");
-  assert.match(records, /const VISIBLE_ROWS = 6;/);
-  assert.match(records, /rows\.length > VISIBLE_ROWS \+ 2/);
   assert.match(records, /<details className="more">/);
   assert.equal(/"use client"/.test(records), false);
 });
@@ -29,4 +28,16 @@ test("focus ring turns white on dark bands and controls get a halo", () => {
   assert.match(css, /:focus-visible \{\s*outline: 3px solid var\(--focus-ring\);/);
   assert.match(css, /:where\(\.site-header, \.site-footer, \.hero-stage, \.results-bar, \.focus-band\) \{\s*--focus-ring: #fff;/);
   assert.match(css, /box-shadow: 0 0 0 2px var\(--focus-halo\)/);
+});
+
+test("long profile lists keep every row, six shown and the rest behind Show all", () => {
+  for (const [count, shown] of [[6, 6], [8, 8], [9, 6], [20, 6]] as const) {
+    const rows = Array.from({ length: count }, (_, i) => i);
+    const { head, rest } = splitRecordRows(rows);
+    assert.equal(head.length, shown, `${count} rows`);
+    assert.deepEqual([...head, ...rest], rows, `${count} rows all rendered in order`);
+  }
+  const records = readFileSync("src/components/site/ProfileRecords.tsx", "utf8");
+  assert.match(records, /const \{ head, rest \} = splitRecordRows\(rows\);/);
+  assert.match(records, /<details className="more">[\s\S]*\{rest\}[\s\S]*<\/details>/);
 });
