@@ -16,4 +16,4 @@ Read [DESIGN.md](DESIGN.md) before changing the interface. The shared theme and 
 - Kentucky is the only enabled state. Do not add other states' data, a US map or a state picker to public pages.
 - State facts (district count, time zones, election day, results and filing links, map files) live in `src/lib/states.ts`. Read them from `stateConfig()` instead of writing new Kentucky constants.
 - New race ids follow `{cycle}-senate-{ST}` and `{cycle}-house-{ST}-{DD}`, with `00` for at-large seats.
-- Public URLs stay unprefixed (`/races/2026-senate-KY`, `/states/ky`). A state segment, data pipeline or map change needs its own plan.
+- Public URLs stay unprefixed (`/races/2026-senate-KY`, `/states/ky`). A state segment, data pipeline or map change needs its own plan; the phased plan is in `docs/us-ready-plan.md`.
