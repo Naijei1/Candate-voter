@@ -32,7 +32,7 @@ export default function SourcesPage() {
         <li><a href="https://guthrie.house.gov/news/rss.aspx">Office of Rep. Brett Guthrie RSS</a></li>
       </ul>
       <h2>Media credits</h2>
-      <p>The homepage film uses trimmed, muted excerpts. The opening landscape and archival shots are cropped.</p>
+      <p>The homepage film uses trimmed, muted excerpts. Aerials, archival voting footage, and official addresses are cropped and color graded.</p>
       <ul className="plain-list">
         {film.map((clip) => (
           <li key={clip.sourceUrl}>

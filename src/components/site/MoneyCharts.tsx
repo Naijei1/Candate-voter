@@ -5,7 +5,8 @@ import { type CSSProperties, useId, useState } from "react";
 import { shortMoney } from "@/lib/finance/model";
 import { dayLabel } from "@/lib/format";
 import { targetLines } from "@/lib/site/money-chart-lines";
-import type { ChartCommittee, ChartRace, MoneyChartData } from "@/lib/site/money-charts";
+import type { ChartCommittee, ChartPerson, ChartRace, MoneyChartData } from "@/lib/site/money-charts";
+import { moneyReportState } from "@/lib/site/money-status";
 
 export { shortMoney } from "@/lib/finance/model";
 
@@ -28,8 +29,13 @@ const SERIES = [
   { key: "cash", label: "Cash on hand" },
 ] as const;
 
+function barsFor(person: ChartPerson) {
+  return moneyReportState({ receipts: person.raised, disbursements: person.spent, cash: person.cash }) === "reported";
+}
+
 function raceMaximum(race: ChartRace) {
-  return Math.max(1, ...race.people.flatMap((person) => [person.raised, person.spent, person.cash ?? 0]));
+  const reported = race.people.filter(barsFor);
+  return Math.max(1, ...reported.flatMap((person) => [person.raised, person.spent, person.cash ?? 0]));
 }
 
 function RaceChart({ race, previous, showHeadline }: { race: ChartRace; previous?: ChartRace; showHeadline: boolean }) {
@@ -60,7 +66,7 @@ function RaceChart({ race, previous, showHeadline }: { race: ChartRace; previous
             <p className="chart-label">
               <a href={`/candidates/${person.id}`}>{person.name}</a>
             </p>
-            {SERIES.map((series) => {
+            {barsFor(person) ? SERIES.map((series) => {
               const value = person[series.key];
               const barStyle = {
                 transform: `scaleX(${share(value ?? 0, max)})`,
@@ -75,10 +81,15 @@ function RaceChart({ race, previous, showHeadline }: { race: ChartRace; previous
                   <span className="chart-value">{value == null ? "—" : shortMoney(value)}</span>
                 </div>
               );
-            })}
+            }) : <p>Reported $0 · <a href={person.sourceUrl}>FEC</a> · {dayLabel(person.coverageEnd)}</p>}
           </li>
         ))}
       />
+      {race.missing.length > 0 ? (
+        <ul className="plain-list">
+          {race.missing.map((name) => <li key={name}>{name}: No report on file</li>)}
+        </ul>
+      ) : null}
       <details className="chart-table">
         <summary>View as table</summary>
         <div className="table-scroll" tabIndex={0} role="region" aria-label={`${race.title}: money each campaign reported, table`}>
@@ -97,9 +108,9 @@ function RaceChart({ race, previous, showHeadline }: { race: ChartRace; previous
               {race.people.map((person) => (
                 <tr key={person.id}>
                   <th scope="row">{person.name}</th>
-                  <td>{FULL.format(person.raised)}</td>
-                  <td>{FULL.format(person.spent)}</td>
-                  <td>{person.cash == null ? "—" : FULL.format(person.cash)}</td>
+                  <td>{barsFor(person) ? FULL.format(person.raised) : "Reported $0"}</td>
+                  <td>{barsFor(person) ? FULL.format(person.spent) : "Reported $0"}</td>
+                  <td>{barsFor(person) ? (person.cash == null ? "—" : FULL.format(person.cash)) : "Reported $0"}</td>
                   <td>
                     <a href={person.sourceUrl}>FEC</a>
                   </td>

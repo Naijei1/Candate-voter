@@ -4,6 +4,7 @@ import { House, Landmark, MessageCircle, Newspaper, Wallet } from "lucide-react"
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
+import { useSession } from "@/components/site/SessionProvider";
 
 export const MOBILE_TABS = [
   { href: "/", label: "Home", icon: House },
@@ -65,8 +66,10 @@ function useKeyboardFlag() {
   }, []);
 }
 
-export function MobileNavigation({ signedIn = false }: { signedIn?: boolean }) {
+export function MobileNavigation({ signedIn: signedInProp }: { signedIn?: boolean } = {}) {
   const path = usePathname();
+  const session = useSession();
+  const signedIn = signedInProp ?? session.signedIn;
   useKeyboardFlag();
   return (
     <nav className="mobile-tabs" aria-label="Primary">

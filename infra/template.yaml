@@ -19,7 +19,8 @@ Parameters:
     Description: >
       api.data.gov key sent as api_key. DEMO_KEY is the public demo key
       (about 10 calls per hour). A free key allows 1,000 calls per hour.
-      Do not commit this value.
+      Ask APIinfo@fec.gov to raise it to 7,200 per hour, then set
+      FEC_HOURLY_LIMIT to that number. Do not commit this value.
   ScheduleExpression:
     Type: String
     Default: rate(6 hours)
@@ -121,7 +122,8 @@ Resources:
           CANDATE_TABLE_NAME: !Ref TableName
           FEC_API_KEY: !Ref FecApiKey
           FEC_API_BASE_URL: https://api.open.fec.gov/v1
-          FEC_MIN_DELAY_MS: "250"
+          FEC_HOURLY_LIMIT: "1000"
+          FEC_MIN_DELAY_MS: "0"
           CANDATE_STATES: KY
       Policies:
         - Version: "2012-10-17"
@@ -183,7 +185,8 @@ Resources:
           CANDATE_TABLE_NAME: !Ref TableName
           FEC_API_KEY: !Ref FecApiKey
           FEC_API_BASE_URL: https://api.open.fec.gov/v1
-          FEC_MIN_DELAY_MS: "250"
+          FEC_HOURLY_LIMIT: "1000"
+          FEC_MIN_DELAY_MS: "0"
           CANDATE_STATES: KY
       Policies:
         - Version: "2012-10-17"

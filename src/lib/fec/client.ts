@@ -27,6 +27,8 @@ export type FecClientOptions = {
   apiKey: string;
   baseUrl?: string;
   minDelayMs?: number;
+  /** api.data.gov hourly cap. 1,000 is the free key. 7,200 is the raised key from APIinfo@fec.gov. */
+  hourlyLimit?: number;
   fetch?: typeof fetch;
   sleep?: (ms: number) => Promise<void>;
   now?: () => number;
@@ -62,10 +64,15 @@ export class FecClient {
   private readonly apiKey: string;
   private readonly baseUrl: string;
   private readonly minDelayMs: number;
+  private readonly hourlyLimit: number | null;
+  private readonly paceMs: number;
   private readonly fetchImpl: typeof fetch;
   private readonly sleepImpl: (ms: number) => Promise<void>;
   private readonly now: () => number;
   private readonly random: () => number;
+  private windowStarted: number | null = null;
+  private callsInWindow = 0;
+  private lastCallAt: number | null = null;
 
   constructor(options: FecClientOptions) {
     const apiKey = options.apiKey.trim();
@@ -79,6 +86,8 @@ export class FecClient {
     this.apiKey = apiKey;
     this.baseUrl = (options.baseUrl ?? FEC_API_BASE_URL).replace(/\/+$/, "");
     this.minDelayMs = options.minDelayMs ?? 250;
+    this.hourlyLimit = options.hourlyLimit ?? null;
+    this.paceMs = this.hourlyLimit ? Math.max(this.minDelayMs, Math.ceil(3_600_000 / this.hourlyLimit)) : 0;
     this.fetchImpl = options.fetch ?? fetch;
     this.sleepImpl = options.sleep ?? delay;
     this.now = options.now ?? Date.now;
@@ -134,6 +143,29 @@ export class FecClient {
       );
     }
     return url;
+  }
+
+  /**
+   * Cycle totals for many candidates in one state. One page is up to 100 candidates.
+   * https://api.open.fec.gov/developers/#/candidate/get_v1_candidates_totals_
+   */
+  async *iterateCandidateTotals(query: { cycle: number; state: string; maxPages?: number }): AsyncGenerator<Record<string, unknown>[]> {
+    const cap = Math.min(Math.max(query.maxPages ?? 20, 1), 20);
+    for (let page = 1; page <= cap; page += 1) {
+      const url = this.endpoint("/candidates/totals/", {
+        cycle: String(query.cycle),
+        state: query.state,
+        per_page: "100",
+        page: String(page),
+        sort: "candidate_id",
+      });
+      const body = await this.fetchJson(url);
+      const results = asRecords(body.results);
+      if (results.length === 0) return;
+      yield results;
+      const pages = typeof body.pagination?.pages === "number" ? body.pagination.pages : page;
+      if (page >= pages) return;
+    }
   }
 
   async getCandidateTotals(candidateId: string, cycle: number): Promise<Record<string, unknown> | null> {
@@ -196,10 +228,35 @@ export class FecClient {
     return asRecords(body.results);
   }
 
+  private async pace(): Promise<void> {
+    if (this.hourlyLimit == null) return;
+    const now = this.now();
+    if (this.windowStarted == null || now - this.windowStarted >= 3_600_000) {
+      this.windowStarted = now;
+      this.callsInWindow = 0;
+    }
+    if (this.callsInWindow >= this.hourlyLimit) {
+      const retryAfterMs = Math.max(0, this.windowStarted + 3_600_000 - now);
+      throw new FecApiError(
+        `FEC hourly limit of ${this.hourlyLimit} reached. Set FEC_HOURLY_LIMIT after FEC raises the key.`,
+        429,
+        true,
+        retryAfterMs,
+      );
+    }
+    if (this.lastCallAt != null && this.paceMs > 0) {
+      const wait = this.lastCallAt + this.paceMs - now;
+      if (wait > 0) await this.sleepImpl(wait);
+    }
+    this.lastCallAt = this.now();
+    this.callsInWindow += 1;
+  }
+
   private async fetchJson(url: URL): Promise<{
     results?: unknown[];
     pagination?: { pages?: number };
   }> {
+    await this.pace();
     const path = `${url.pathname}${redactQuery(url)}`;
 
     let lastRetryAfter: number | null = null;

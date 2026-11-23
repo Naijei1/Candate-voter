@@ -9,7 +9,7 @@ import { GoatCounter } from "@/components/site/GoatCounter";
 import { MobileNavigation } from "@/components/site/MobileNavigation";
 import { ServiceWorker } from "@/components/site/ServiceWorker";
 import { PlaceSync } from "@/components/site/PlaceSync";
-import { currentUser } from "@/lib/auth/session";
+import { SessionProvider } from "@/components/site/SessionProvider";
 import { brand } from "@/content/brand";
 import { cyclesFromEnv } from "@/lib/data/cycles";
 import { withBasePath } from "@/lib/base-path";
@@ -62,7 +62,7 @@ export const metadata: Metadata = {
     title: brand.name,
     description: brand.description,
     locale: "en_US",
-    images: [{ url: "/video/vote-hero.jpg", alt: "Fields in the Knobs region of Kentucky." }],
+    images: [{ url: "/video/vote-hero.jpg", alt: "A U.S. city skyline at night." }],
   },
   twitter: {
     card: "summary_large_image",
@@ -89,21 +89,19 @@ export default function RootLayout({
           Skip to content
         </a>
         <AskProvider cycles={cycles}>
-          <Suspense fallback={null}>
-            <PlaceSync />
-          </Suspense>
-          <SiteHeader />
-          <main id="main" className="page-main">
-            {children}
-          </main>
-          <SiteFooter />
-          <WatchlistNavigation />
+          <SessionProvider>
+            <Suspense fallback={null}>
+              <PlaceSync />
+            </Suspense>
+            <SiteHeader />
+            <main id="main" className="page-main">
+              {children}
+            </main>
+            <SiteFooter />
+            <MobileNavigation />
+          </SessionProvider>
         </AskProvider>
       </body>
     </html>
   );
-}
-
-async function WatchlistNavigation() {
-  return <MobileNavigation signedIn={Boolean(await currentUser())} />;
 }

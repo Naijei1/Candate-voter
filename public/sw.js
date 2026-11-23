@@ -1,5 +1,5 @@
 const prefix = `the-vote:${self.registration.scope}:`;
-const version = `${prefix}1:`;
+const version = `${prefix}2:`;
 const shell = `${version}shell`;
 const assets = `${version}assets`;
 const scope = new URL(self.registration.scope);

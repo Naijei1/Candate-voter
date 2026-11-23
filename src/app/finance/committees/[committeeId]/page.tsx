@@ -6,7 +6,7 @@ import { DirectList, orgLabel, OutsideList } from "@/components/site/FinanceList
 import { financeForCommittee, loadFinance } from "@/lib/finance/load";
 import { selectDirect, selectOutside } from "@/lib/finance/present";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
 
 type PageProps = { params: Promise<{ committeeId: string }> };
 

@@ -1,5 +1,4 @@
 import { DatasetUpdated } from "@/components/site/DatasetUpdated";
-import { currentUser } from "@/lib/auth/session";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -10,9 +9,10 @@ import { Crumbs } from "@/components/site/Crumbs";
 import { FollowControl } from "@/components/site/FollowControl";
 import { ElectionDayBanner } from "@/components/site/ElectionDayBanner";
 import { BallotBar } from "@/components/site/BallotBar";
+import { RaceChanges } from "@/components/site/RaceChanges";
 import { PersonFace } from "@/components/site/PersonFace";
 import { RaceResults } from "@/components/site/RaceResults";
-import { candidateElectionStatus } from "@/lib/site/certified-results";
+import { candidateElectionStatus, KY_FEDERAL_RACES } from "@/lib/site/certified-results";
 import { raceCardTitle } from "@/lib/site/candidate-cards";
 import { openSeatLine } from "@/lib/site/seat";
 import { KY_BALLOT_CHECKED, KY_BALLOT_SOURCES, kyBallot, kyBallotIds } from "@/lib/site/ky-ballot";
@@ -22,12 +22,17 @@ import { personFilingNote } from "@/lib/data/filing-note";
 import { httpsUrl } from "@/lib/format";
 import { loadChecks } from "@/lib/content/store";
 import { loadContest } from "@/lib/site/contest";
+import { raceChanges } from "@/lib/site/race-changes";
 import type { Race } from "@/lib/types";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
 export const runtime = "nodejs";
 
 type PageProps = { params: Promise<{ raceId: string }> };
+
+export function generateStaticParams() {
+  return KY_FEDERAL_RACES.map((raceId) => ({ raceId }));
+}
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const id = (await params).raceId;
@@ -84,7 +89,7 @@ export default async function RacePage({ params }: PageProps) {
               <Link className="btn btn-navy" href={`/races/${race.raceId}/compare`}>
                 Compare candidates
               </Link>
-              <FollowControl signedIn={Boolean(await currentUser())} what="race" targetId={race.raceId} returnPath={`/races/${race.raceId}`} />
+              <FollowControl what="race" targetId={race.raceId} returnPath={`/races/${race.raceId}`} />
               <Link className="btn btn-ghost" href="/ballot">
                 Your ballot
               </Link>
@@ -159,16 +164,17 @@ export default async function RacePage({ params }: PageProps) {
           <Link className="btn btn-navy" href={`/races/${race.raceId}/compare`}>
             Compare candidates
           </Link>
-          <FollowControl signedIn={Boolean(await currentUser())} what="race" targetId={race.raceId} returnPath={`/races/${race.raceId}`} />
+          <FollowControl what="race" targetId={race.raceId} returnPath={`/races/${race.raceId}`} />
         </div>
           </>
         )}
       </section>
       {ballot ? <RaceResults raceId={race.raceId} show="primary" /> : null}
+      <RaceChanges events={raceChanges(race.raceId)} />
       <AskPanel raceId={race.raceId} cycle={race.cycle} state={race.state} />
       </div>
       {ballot ? (
-        <BallotBar place="races" backHref="/" nextHref={`/races/${race.raceId}/compare`} nextLabel="Compare candidates" />
+        <BallotBar step={2} backHref="/" nextHref={`/races/${race.raceId}/compare`} nextLabel="Compare candidates" nextShort="Compare" />
       ) : null}
     </article>
   );

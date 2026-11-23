@@ -39,7 +39,8 @@ test("the home page leads with the hero, the Kentucky map, and FEC activity", ()
   assert.match(page, /HomeNewsFeed/);
   assert.equal(page.includes("Kentucky Lantern"), false);
   assert.equal(page.includes("<input"), false);
-  assert.match(page, /redirect\(`\/ballot/);
+  assert.match(page, /GuideHandoff/);
+  assert.match(readFileSync("src/components/home/GuideHandoff.tsx", "utf8"), /\/ballot\?/);
   assert.equal(page.includes("latestNews"), false);
   assert.match(hero, /prefers-reduced-motion/);
   assert.match(hero, /Find my races/);

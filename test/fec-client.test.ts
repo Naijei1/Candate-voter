@@ -109,6 +109,34 @@ test("refuses to sleep through a long rate-limit window", async () => {
   );
 });
 
+test("paces HTTP calls to the hourly limit and stops when the window is full", async () => {
+  let now = 1_000_000;
+  const sleeps: number[] = [];
+  const client = new FecClient({
+    apiKey: API_KEY,
+    minDelayMs: 0,
+    hourlyLimit: 2,
+    now: () => now,
+    sleep: async (ms) => {
+      sleeps.push(ms);
+      now += ms;
+    },
+    fetch: async () => new Response(JSON.stringify({ results: [] }), { status: 200 }),
+  });
+
+  await client.getForm2Page({ page: 1 });
+  await client.getForm2Page({ page: 1 });
+  assert.deepEqual(sleeps, [1_800_000]);
+  await assert.rejects(
+    () => client.getForm2Page({ page: 1 }),
+    (error: unknown) => {
+      assert.ok(error instanceof FecApiError);
+      assert.equal(error.status, 429);
+      return true;
+    },
+  );
+});
+
 test("a non-retryable HTTP error redacts the api key", async () => {
   const client = new FecClient({
     apiKey: API_KEY,

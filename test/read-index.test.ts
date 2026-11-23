@@ -140,8 +140,13 @@ test("production pages do not import placeholders", () => {
   for (const page of pages) {
     const source = readFileSync(page, "utf8");
     assert.equal(source.includes("placeholders"), false, page);
-    assert.equal(source.includes("generateStaticParams"), false, page);
     assert.equal(source.includes("SampleBanner"), false, page);
+    if (page.includes("[raceId]") || page.includes("[candidateId]")) {
+      assert.match(source, /generateStaticParams/);
+      assert.match(source, /KY_FEDERAL_RACES/);
+    } else {
+      assert.equal(source.includes("generateStaticParams"), false, page);
+    }
   }
   const readers = readFileSync("src/lib/data/read.ts", "utf8");
   assert.match(readers, /createDynamoRepository\(/);

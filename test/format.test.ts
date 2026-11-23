@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  calendarDay,
+  dayLabel,
   fecCandidateLabel,
   formatInstant,
   httpsUrl,
@@ -9,6 +11,16 @@ import {
   partyLabel,
   partyToneClass,
 } from "../src/lib/format";
+
+test("calendar days use the state zone for timestamps and keep date-only values", () => {
+  assert.equal(calendarDay("2026-11-22"), "2026-11-22");
+  assert.equal(dayLabel("2026-11-22"), "Nov 22, 2026");
+  // 02:00 UTC on Nov 23 is 9:00 p.m. Eastern on Nov 22.
+  assert.equal(calendarDay("2026-11-23T02:00:00.000Z"), "2026-11-22");
+  assert.equal(dayLabel("2026-11-23T02:00:00.000Z"), "Nov 22, 2026");
+  assert.equal(calendarDay("2026-11-23T05:30:00.000Z"), "2026-11-23");
+  assert.equal(dayLabel("not-a-date"), "not-a-date");
+});
 
 test("formatInstant renders Eastern Time and keeps an unparseable value visible", () => {
   assert.equal(formatInstant(null), null);

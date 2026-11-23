@@ -1,41 +1,88 @@
 [
   {
-    "title": "Kentucky 1007",
-    "author": "Chris Light",
-    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Kentucky_1007.ogv",
+    "title": "Downtown Vegas Night Drone video",
+    "author": "Don Ramey Logan",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Downtown_Vegas_Night_Drone_video_by_Don_Ramey_Logan.webm",
+    "assetUrl": "https://upload.wikimedia.org/wikipedia/commons/0/00/Downtown_Vegas_Night_Drone_video_by_Don_Ramey_Logan.webm",
+    "license": "CC BY 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+    "retrieved": "2026-11-23",
+    "edit": "Night aerial excerpt, cropped to 16:9, color graded, and muted. Credit Don Ramey Logan."
+  },
+  {
+    "title": "Times Square, New York, May 2017",
+    "author": "Nesnad",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:TimesSquare-NewYork-may25-2017.webm",
+    "assetUrl": "https://upload.wikimedia.org/wikipedia/commons/f/ff/TimesSquare-NewYork-may25-2017.webm",
     "license": "CC BY-SA 4.0",
     "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-    "retrieved": "2026-11-22",
-    "edit": "Opening excerpt, trimmed, cropped and muted. This excerpt is licensed under CC BY-SA 4.0."
+    "retrieved": "2026-11-23",
+    "edit": "Night street excerpt, cropped from a vertical frame, color graded, and muted. This excerpt stays CC BY-SA 4.0. Credit Nesnad. The file also offers the GNU Free Documentation License; this site uses CC BY-SA only."
   },
   {
-    "title": "Downtown Lexington, 4k Kentucky Drone Footage",
-    "author": "Booney Moonrock",
-    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Downtown_Lexington,_4k_Kentucky_Drone_Footage.webm",
-    "license": "CC BY 3.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
-    "retrieved": "2026-11-22",
-    "edit": "Trimmed and muted."
-  },
-  {
-    "title": "FDR 1932 Campaign and Election",
-    "author": "Fox Movietone News, FDR Presidential Library, via Public.Resource.Org",
-    "sourceUrl": "https://archive.org/details/gov.fdr.277",
-    "assetPage": "https://commons.wikimedia.org/wiki/File:FDR_1932_Campaign_and_Election.webm",
+    "title": "Tuesday in November",
+    "author": "U.S. Office of War Information",
+    "sourceUrl": "https://archive.org/details/Tuesdayi1945",
+    "assetUrl": "https://archive.org/download/Tuesdayi1945/Tuesdayi1945_512kb.mp4",
     "license": "Public domain",
-    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
-    "retrieved": "2026-11-22",
-    "edit": "Voting booth excerpt, trimmed, cropped and muted."
+    "licenseUrl": "http://creativecommons.org/publicdomain/mark/1.0/",
+    "retrieved": "2026-11-23",
+    "edit": "Two excerpts: voters at a polling-place door, and a voter at a voting machine. Cropped, graded, and muted. Internet Archive license URL is http://creativecommons.org/licenses/publicdomain/."
   },
   {
-    "title": "Woman putting his vote on a ballot box",
-    "author": "Edmond Dantès",
-    "sourceUrl": "https://www.pexels.com/video/woman-putting-his-vote-on-a-ballot-box-7103427/",
-    "assetUrl": "https://videos.pexels.com/video-files/7103427/7103427-hd_1280_720_25fps.mp4",
-    "license": "Pexels License",
-    "licenseUrl": "https://www.pexels.com/license/",
-    "retrieved": "2026-11-22",
-    "edit": "Closing polling-place excerpt retained from the existing film.",
-    "licenseEvidence": "https://help.pexels.com/hc/en-us/articles/360042295174-What-is-the-license-of-the-photos-and-videos-on-Pexels"
+    "title": "Raising the Flag on Iwo Jima",
+    "author": "U.S. war newsreel",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Raising_the_Flag_on_Iwo_Jima.ogv",
+    "assetUrl": "https://upload.wikimedia.org/wikipedia/commons/5/51/Raising_the_Flag_on_Iwo_Jima.ogv",
+    "license": "Public domain",
+    "licenseUrl": "https://commons.wikimedia.org/wiki/Template:PD-US",
+    "retrieved": "2026-11-23",
+    "edit": "Flag-raising excerpt from the public-domain newsreel 1945-03-19 Carriers Hit Tokyo on archive.org. Cropped, graded, and muted."
+  },
+  {
+    "title": "President Eisenhower's Second Inauguration",
+    "author": "U.S. Information Service",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:President_Eisenhower%27s_Second_Inauguration.webm",
+    "license": "Public domain (U.S. government work, USIA)",
+    "licenseUrl": "https://commons.wikimedia.org/wiki/Template:PD-USGov-USIA",
+    "retrieved": "2026-11-23",
+    "edit": "Excerpt of President Eisenhower speaking at the 1957 inaugural address. Cropped, graded, and muted. Official ceremony, not a campaign film."
+  },
+  {
+    "title": "Address Before a Joint Session of Congress, February 24, 2009",
+    "author": "The White House",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Address_Before_a_Joint_Session_of_Congress_(February_24,_2009)_-_Barack_Obama_(WhiteHouse.gov).ogv",
+    "license": "Public domain (U.S. government work)",
+    "licenseUrl": "https://commons.wikimedia.org/wiki/Template:PD-USGov-POTUS",
+    "retrieved": "2026-11-23",
+    "edit": "Excerpt of President Obama speaking to a joint session of Congress. Cropped, graded, and muted."
+  },
+  {
+    "title": "Ramstein Voting Assistance Spot",
+    "author": "Airman 1st Class Reese Page, U.S. Air Force",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Ramstein_Voting_Assistance_Spot_(1012717).webm",
+    "assetPage": "https://www.dvidshub.net/video/1012717",
+    "license": "Public domain (U.S. Air Force work)",
+    "licenseUrl": "https://commons.wikimedia.org/wiki/Template:PD-USGov-Military-Air_Force",
+    "retrieved": "2026-11-23",
+    "edit": "Excerpt of an airman in the DVIDS voting-assistance spot, DVIDS id 1012717. Cropped, graded, and muted."
+  },
+  {
+    "title": "Remarks on the Signing of the Voting Rights Act, August 6, 1965",
+    "author": "Lyndon Baines Johnson",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Remarks_on_the_Signing_of_the_Voting_Rights_Act_(August_6,_1965)_Lyndon_Baines_Johnson.ogv",
+    "license": "Public domain (U.S. government work)",
+    "licenseUrl": "https://commons.wikimedia.org/wiki/Template:PD-USGov",
+    "retrieved": "2026-11-23",
+    "edit": "Excerpt of President Johnson speaking at the Voting Rights Act signing. Cropped, graded, and muted."
+  },
+  {
+    "title": "The 50th Presidential Inauguration Ceremony",
+    "author": "Joint Congressional Committee on Inaugural Ceremonies",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:The_50th_Presidential_Inauguration_Ceremony.webm",
+    "license": "Public domain (U.S. government work)",
+    "licenseUrl": "https://commons.wikimedia.org/wiki/Template:PD-USGov-Congress",
+    "retrieved": "2026-11-23",
+    "edit": "Excerpt of President Reagan speaking at the January 21, 1985 inaugural ceremony. Cropped, graded, and muted. Official ceremony, not a campaign film."
   }
 ]
