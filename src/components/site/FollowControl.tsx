@@ -3,17 +3,18 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { FollowsResponse } from "@/lib/api/v1-types";
+import { useSession } from "@/components/site/SessionProvider";
 import { withBasePath } from "@/lib/base-path";
 import { FOLLOW_LIMIT_MESSAGE, type FollowType } from "@/lib/users/follows";
 
 const UPDATE_ERROR = "Could not update this follow.";
 
-export function FollowControl({ what, targetId, signedIn, returnPath }: {
+export function FollowControl({ what, targetId, returnPath }: {
   what: FollowType;
   targetId: string;
-  signedIn: boolean;
   returnPath: string;
 }) {
+  const signedIn = useSession().signedIn;
   const [following, setFollowing] = useState(false);
   const [busy, setBusy] = useState(signedIn);
   const [expired, setExpired] = useState(false);
@@ -24,6 +25,7 @@ export function FollowControl({ what, targetId, signedIn, returnPath }: {
 
   useEffect(() => {
     if (!signedIn) return;
+    setBusy(true);
     let active = true;
     fetch(endpoint).then(async (response) => {
       if (!active) return;

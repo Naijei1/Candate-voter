@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useId, useState, type KeyboardEvent, type ReactNode } from "react";
 import { PersonMark } from "@/components/site/PersonMark";
 import { orgLabel } from "@/components/site/FinanceLists";
+import { SourcePeek } from "@/components/site/SourcePeek";
 import { coverageLabel, formatMoney, type FinanceDirect, type FinanceOutside } from "@/lib/finance/model";
 
 export type CompareStance = {
@@ -30,6 +31,7 @@ export type CompareCandidate = {
   experience?: ReactNode;
   priorResults?: ReactNode;
   raised?: string | null;
+  raisedChange?: string | null;
   moneyIds?: string[];
   raisedSource?: string;
 };
@@ -91,6 +93,9 @@ export function CompareBoard({
 }) {
   const [selectedTab, setTab] = useState<Tab>("Overview");
   const [excluded, setExcluded] = useState<string[]>([]);
+  const opening = candidates.slice(0, 2).map((candidate) => candidate.candidateId);
+  const [draftPair, setDraftPair] = useState<string[]>(opening);
+  const [pair, setPair] = useState<string[]>(opening);
   const id = useId();
   const selected = candidates.filter((candidate) => !excluded.includes(candidate.candidateId));
   const moneyIds = new Set(selected.flatMap((candidate) => candidate.moneyIds ?? [candidate.candidateId]));
@@ -119,6 +124,37 @@ export function CompareBoard({
 
   return (
     <div className="compare-board">
+      {candidates.length > 1 ? (
+        <form
+          className="compare-pair"
+          onSubmit={(event) => {
+            event.preventDefault();
+            const [first, second] = draftPair;
+            if (!first) return;
+            const other = candidates.find((candidate) => candidate.candidateId !== first)?.candidateId ?? first;
+            setPair(!second || second === first ? [first, other] : [first, second]);
+          }}
+        >
+          {(["Left", "Right"] as const).map((side, index) => (
+            <label key={side}>
+              {side}
+              <select
+                value={draftPair[index] ?? ""}
+                onChange={(event) => {
+                  const next = [...draftPair];
+                  next[index] = event.currentTarget.value;
+                  setDraftPair(next);
+                }}
+              >
+                {candidates.map((candidate) => (
+                  <option key={candidate.candidateId} value={candidate.candidateId}>{candidate.displayName}</option>
+                ))}
+              </select>
+            </label>
+          ))}
+          <button className="btn btn-navy" type="submit">Apply</button>
+        </form>
+      ) : null}
       {candidates.length > 1 ? (
         <fieldset className="compare-selection">
           <legend>Candidates to compare</legend>
@@ -157,7 +193,7 @@ export function CompareBoard({
       {summary ? <p>{summary}</p> : filingsLoaded ? <p>{filedLine(candidates.length)}</p> : null}
       <div className="compare-grid" role="tabpanel" aria-labelledby={tabId(tab)} tabIndex={selected.length ? undefined : 0}>
         {selected.map((candidate) => (
-          <article className="person-card" key={candidate.candidateId}>
+          <article className={pair.includes(candidate.candidateId) ? "person-card is-paired" : "person-card"} key={candidate.candidateId}>
             <PersonMark name={candidate.displayName} photo={candidate.photo ?? null} party={candidate.partyLabel} size="lg" />
             <h2>
               <Link href={`/candidates/${candidate.candidateId}`}>{candidate.displayName}</Link>
@@ -218,7 +254,8 @@ function TabBody({
             <a className="action-link" href={candidate.website.url}>{candidate.website.label}</a>
           </p>
         ) : null}
-        {candidate.raised ? <p>Raised {candidate.raised}{candidate.raisedSource ? <> · <a href={candidate.raisedSource}>FEC</a></> : null}</p> : null}
+        {candidate.raised ? <p>{candidate.raised === "No report on file" || candidate.raised === "Reported $0" ? candidate.raised : <>Raised {candidate.raised}</>}{candidate.raisedSource ? <> · <a href={candidate.raisedSource}>FEC</a></> : null}</p> : null}
+        {candidate.raisedChange ? <p className="hint">{candidate.raisedChange}</p> : null}
       </div>
     );
   }
@@ -228,11 +265,15 @@ function TabBody({
       <ul className="plain-list">
         {rows.map((issue) => {
           const stance = notes.find((note) => note.issueId === issue.id);
-          if (!stance) return null;
           return (
             <li key={issue.id}>
               <p>{issue.label}</p>
-              <p>{stance.text} <a href={stance.sourceUrl}>{stance.sourceName}</a></p>
+              {stance ? (
+                <p>
+                  {stance.text}{" "}
+                  <SourcePeek name={stance.sourceName} url={stance.sourceUrl} date={stance.sourceDate} excerpt={stance.text} />
+                </p>
+              ) : <p>No statement on record</p>}
             </li>
           );
         })}

@@ -1,4 +1,3 @@
-import { currentUser } from "@/lib/auth/session";
 import { isKentuckyFinanceRow } from "@/lib/site/ky-finance";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -19,21 +18,35 @@ import { selectDirect, selectOutside } from "@/lib/finance/present";
 import { loadChecks } from "@/lib/content/store";
 import { loadProfile } from "@/lib/site/contest";
 import { BallotBar } from "@/components/site/BallotBar";
+import { SourcePeek } from "@/components/site/SourcePeek";
 import { PersonMark } from "@/components/site/PersonMark";
-import { KY_BALLOT_SOURCES, kyPerson } from "@/lib/site/ky-ballot";
+import { KY_BALLOT_SOURCES, kyBallot, kyPerson } from "@/lib/site/ky-ballot";
 import { newsForNames } from "@/lib/site/ky-news";
 import { careerTimeline, jobLine, linkLabel, profileFor } from "@/lib/site/profiles";
 import { seatStatus } from "@/lib/site/seat";
-import { candidateElectionStatus, CONGRESSIONAL_TERM_START, KY_RESULTS_SOURCE, primaryCandidateById } from "@/lib/site/certified-results";
+import { candidateElectionStatus, CONGRESSIONAL_TERM_START, KY_FEDERAL_RACES, KY_RESULTS_SOURCE, primaryCandidateById } from "@/lib/site/certified-results";
 import { raceCardTitle } from "@/lib/site/candidate-cards";
+import { filingPeriods } from "@/lib/site/fec-reports";
+import { moneyReportState, sinceLastFiling } from "@/lib/site/money-status";
 import { photoAttribution, portraitFor, stanceIssues, stancesFor } from "@/lib/site/stances";
 import { showcaseCandidate, showcaseRace, type ShowcaseCandidate } from "@/lib/site/showcase";
 import type { Filing, Race } from "@/lib/types";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
 export const runtime = "nodejs";
 
 type PageProps = { params: Promise<{ candidateId: string }> };
+
+export function generateStaticParams() {
+  const ids = new Set<string>();
+  for (const raceId of KY_FEDERAL_RACES) {
+    for (const person of kyBallot(raceId)?.people ?? []) {
+      ids.add(person.id);
+      if (person.fecCandidateId) ids.add(person.fecCandidateId);
+    }
+  }
+  return [...ids].map((candidateId) => ({ candidateId }));
+}
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const id = (await params).candidateId;
@@ -81,8 +94,11 @@ export default async function CandidatePage({ params }: PageProps) {
     ballot ? newsForNames([name]) : [],
   ]);
   const finance = financeForCandidate(bundle, financeKey);
-  const direct = selectDirect(finance.direct.filter(isKentuckyFinanceRow), null);
+  const kentuckyFinance = finance.direct.filter(isKentuckyFinanceRow);
+  const direct = selectDirect(kentuckyFinance, null);
   const outside = selectOutside(finance.outside.filter(isKentuckyFinanceRow), null);
+  const filingDelta = sinceLastFiling(filingPeriods(kentuckyFinance, financeKey));
+  const reportState = moneyReportState(ballot?.person.finance ?? null);
   const profile = ballot ? profileFor(ballot.person.id) : profileFor(id);
   const timeline = careerTimeline(profile);
   const photo = portraitFor(ballot?.person.id ?? id);
@@ -129,7 +145,7 @@ export default async function CandidatePage({ params }: PageProps) {
                 Compare
               </Link>
             ) : null}
-            <FollowControl signedIn={Boolean(await currentUser())} what="candidate" targetId={ballot?.person.fecCandidateId ?? (loaded.ok ? loaded.candidate.candidateId : id)} returnPath={`/candidates/${id}`} />
+            <FollowControl what="candidate" targetId={ballot?.person.fecCandidateId ?? (loaded.ok ? loaded.candidate.candidateId : id)} returnPath={`/candidates/${id}`} />
             <Link className="btn btn-ghost" href="/ballot">
               Your ballot
             </Link>
@@ -138,12 +154,21 @@ export default async function CandidatePage({ params }: PageProps) {
       </header>
       <div className="fact-grid">
         {job ? <div><p className="hint">Current job</p><p>{job}{profile.bio ? <> · <a href={profile.bio.sourceUrl}>Source ↗</a></> : null}</p></div> : null}
-        {ballot?.person.finance ? (
+        {ballot ? (
         <div>
           <p className="hint">Campaign finance</p>
-          <p>
-            {shortMoney(ballot.person.finance.receipts)} raised{ballot.person.finance.cash != null ? ` · ${shortMoney(ballot.person.finance.cash)} cash on hand` : ""} · <a href={ballot.person.finance.sourceUrl}>FEC</a>
-          </p>
+          {reportState === "missing" ? <p>No report on file</p> : reportState === "zero" ? (
+            <p>Reported $0 · <a href={ballot.person.finance?.sourceUrl}>FEC</a></p>
+          ) : (
+            <p>
+              {shortMoney(ballot.person.finance?.receipts ?? 0)} raised{ballot.person.finance?.cash != null ? ` · ${shortMoney(ballot.person.finance.cash)} cash on hand` : ""} · <a href={ballot.person.finance?.sourceUrl}>FEC</a>
+            </p>
+          )}
+          {filingDelta && reportState === "reported" ? (
+            <p className="hint">
+              {filingDelta.amount > 0 ? `+${shortMoney(filingDelta.amount)}` : "Reported $0"} since the {dayLabel(filingDelta.since)} report · <a href={filingDelta.sourceUrl}>FEC</a>
+            </p>
+          ) : null}
         </div>
         ) : null}
         {profile.website ? <div>
@@ -192,7 +217,8 @@ export default async function CandidatePage({ params }: PageProps) {
               <tr key={issue.id}>
                 <th scope="row">{issue.label}</th>
                 <td>
-                      {stance.text} <a href={stance.sourceUrl}>{stance.sourceName}</a>
+                      {stance.text}{" "}
+                      <SourcePeek name={stance.sourceName} url={stance.sourceUrl} date={stance.sourceDate} excerpt={stance.text} />
                       <span className="hint"> · {dayLabel(stance.sourceDate)}</span>
                 </td>
               </tr>
@@ -302,7 +328,7 @@ export default async function CandidatePage({ params }: PageProps) {
       <CandidateCorrection candidateId={ballot?.person.id ?? id} raceId={ballot?.race.raceId ?? race?.raceId} />
       {ballot ? <ElectionDayBanner compact /> : null}
       {raceHref ? (
-        <BallotBar place="candidate" backHref={raceHref} nextHref={`${raceHref}/compare`} nextLabel="Compare candidates" />
+        <BallotBar step={3} backHref={raceHref} nextHref={`${raceHref}/compare`} nextLabel="Compare candidates" nextShort="Compare" />
       ) : null}
     </article>
   );

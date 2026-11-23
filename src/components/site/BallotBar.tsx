@@ -1,35 +1,37 @@
 "use client";
 
 import Link from "next/link";
+import type { CSSProperties } from "react";
 
+const STEPS = 4;
+
+/** One 44px row: Back, the step, and Next. */
 export function BallotBar({
-  place,
+  step,
   backHref,
   nextHref,
   nextLabel,
-  district = null,
+  nextShort,
 }: {
-  place: "races" | "candidate";
+  step: 2 | 3 | 4;
   backHref: string;
   nextHref: string;
   nextLabel: string;
-  district?: string | null;
+  nextShort?: string;
 }) {
-
-  const districtLabel = district ? `KY-${String(district).padStart(2, "0")}` : "Your district";
+  const short = nextShort ?? nextLabel;
+  const style = { "--guide-progress": `${(step / STEPS) * 100}%` } as CSSProperties;
   return (
-    <nav className="ballot-bar" aria-label="Where you are on the ballot">
-      <p className="ballot-crumbs">
-        <Link href="/ballot">{districtLabel}</Link>
-        <span aria-hidden="true"> › </span>
-        <span className={place === "races" ? "is-here" : undefined}>Your races</span>
-        <span aria-hidden="true"> › </span>
-        <span className={place === "candidate" ? "is-here" : undefined}>Compare</span>
+    <nav className="ballot-bar" style={style} aria-label="Where you are on the ballot">
+      <Link className="btn btn-ghost ballot-back" href={backHref}>Back</Link>
+      <p className="ballot-step">
+        <span className="sr-only">Step </span>
+        {step} of {STEPS}
       </p>
-      <div className="ballot-actions">
-        <Link className="btn btn-ghost" href={backHref}>Back</Link>
-        <Link className="btn btn-navy" href={nextHref}>{nextLabel}</Link>
-      </div>
+      <Link className="btn btn-navy ballot-next" href={nextHref}>
+        <span className="ballot-label-long">{nextLabel}</span>
+        <span className="ballot-label-short">{short}</span>
+      </Link>
     </nav>
   );
 }

@@ -1,9 +1,9 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useState, type KeyboardEvent, type ReactNode } from "react";
+import { useEffect, useState, type KeyboardEvent, type ReactNode } from "react";
 
-import type { MapView } from "@/lib/site/map-view";
+import { parseMapView, type MapView } from "@/lib/site/map-view";
 
 const CountyMap = dynamic(() => import("./CountyMap"));
 
@@ -14,15 +14,17 @@ const VIEWS: { id: MapView; label: string }[] = [
 ];
 
 export function HomeMap({
-  initial,
   congressional,
   statewide,
 }: {
-  initial: MapView;
   congressional: ReactNode;
   statewide: ReactNode;
 }) {
-  const [view, setView] = useState<MapView>(initial);
+  const [view, setView] = useState<MapView>("congressional");
+  useEffect(() => {
+    const next = parseMapView(new URLSearchParams(window.location.search).get("map"));
+    if (next !== "congressional") setView(next);
+  }, []);
 
   function choose(next: MapView) {
     setView(next);

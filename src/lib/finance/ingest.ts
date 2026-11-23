@@ -25,6 +25,11 @@ type WorkItem = {
   fecId: string;
   raceId: string;
   name: string;
+  state: string;
+};
+
+type TotalsClient = Pick<FecClient, "getCandidateTotals" | "getCandidateCommittees" | "getScheduleEByCandidate" | "iterateCommitteeReports"> & {
+  iterateCandidateTotals?: FecClient["iterateCandidateTotals"];
 };
 
 /**
@@ -33,7 +38,7 @@ type WorkItem = {
  */
 export async function runTotalsIngest(options: {
   repo: VoterRepository;
-  fec: Pick<FecClient, "getCandidateTotals" | "getCandidateCommittees" | "getScheduleEByCandidate" | "iterateCommitteeReports">;
+  fec: TotalsClient;
   cycles: number[];
   states?: ReadonlySet<string>;
   now?: () => Date;
@@ -94,6 +99,7 @@ export async function runTotalsIngest(options: {
 
   try {
     const work = await listWork(options.repo, options.cycles, options.states);
+    const listedTotals = await listedTotalsByCandidate(options.fec, work);
     for (const item of work) {
       if (isAtOrBeforeCursor(item, cursorCycle, cursorCandidateId)) continue;
       if (!shouldContinue()) {
@@ -103,7 +109,10 @@ export async function runTotalsIngest(options: {
       const updatedAt = now().toISOString();
       const committees = await options.fec.getCandidateCommittees(item.fecId, item.cycle);
       const principal = principalCommittee(committees);
-      const totals = await options.fec.getCandidateTotals(item.fecId, item.cycle);
+      const listedKey = `${item.cycle}#${item.fecId}`;
+      const totals = listedTotals
+        ? (listedTotals.get(listedKey) ?? null)
+        : await options.fec.getCandidateTotals(item.fecId, item.cycle);
       if (totals) {
         const direct = mapCandidateCycleTotal(totals, {
           raceId: item.raceId,
@@ -210,12 +219,38 @@ async function listWork(repo: VoterRepository, cycles: number[], states?: Readon
         const key = `${cycle}#${fecId}`;
         if (seen.has(key)) continue;
         seen.add(key);
-        work.push({ cycle, fecId, raceId: candidate.raceId, name: candidate.displayName });
+        work.push({ cycle, fecId, raceId: candidate.raceId, name: candidate.displayName, state: race.state ?? "" });
       }
     }
   }
   work.sort((a, b) => a.cycle - b.cycle || a.fecId.localeCompare(b.fecId));
   return work;
+}
+
+/** One OpenFEC page covers up to 100 candidates in a state, instead of one call each. */
+async function listedTotalsByCandidate(
+  fec: TotalsClient,
+  work: readonly WorkItem[],
+): Promise<Map<string, Record<string, unknown> | null> | null> {
+  if (!fec.iterateCandidateTotals) return null;
+  const totals = new Map<string, Record<string, unknown> | null>();
+  const groups = new Set(work.map((item) => `${item.cycle}#${item.state}`));
+  for (const group of groups) {
+    const [cycleText, state] = group.split("#");
+    if (!state) continue;
+    const cycle = Number(cycleText);
+    for await (const page of fec.iterateCandidateTotals({ cycle, state: state ?? "" })) {
+      for (const row of page) {
+        const id = typeof row.candidate_id === "string" ? row.candidate_id : "";
+        if (id) totals.set(`${cycle}#${id}`, row);
+      }
+    }
+  }
+  for (const item of work) {
+    const key = `${item.cycle}#${item.fecId}`;
+    if (!totals.has(key)) totals.set(key, null);
+  }
+  return totals;
 }
 
 function isAtOrBeforeCursor(item: WorkItem, cycle: number | null, candidateId: string | null): boolean {

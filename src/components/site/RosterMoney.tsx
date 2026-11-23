@@ -1,10 +1,19 @@
 import { formatMoney } from "@/lib/finance/model";
 import { calendarDay, type KyFinance } from "@/lib/site/ky-ballot";
+import { moneyReportState } from "@/lib/site/money-status";
 
 export function RosterMoney({ finance }: { finance: KyFinance }) {
   const start = finance.coverageStart ? calendarDay(finance.coverageStart) : null;
   const end = calendarDay(finance.coverageEnd);
   const window = start ? `${start} to ${end}` : `through ${end}`;
+  if (moneyReportState(finance) === "zero") {
+    return (
+      <div className="card">
+        <p>Reported $0</p>
+        <p className="hint"><a href={finance.sourceUrl}>FEC</a> · {window}</p>
+      </div>
+    );
+  }
   return (
     <div className="card">
       <p>Raised {formatMoney(finance.receipts)}</p>

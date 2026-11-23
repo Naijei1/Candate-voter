@@ -115,6 +115,9 @@
     --hero-error: #fff;
     --hero-shade: linear-gradient(180deg, rgb(7 19 32 / 46%), rgb(7 19 32 / 56%) 46%, rgb(7 19 32 / 92%));
 
+    --focus-ring: var(--color-cta);
+    --color-line: rgb(255 255 255 / 10%);
+    --color-raised: #1e364c;
     --color-map: #607782;
     --color-map-data: #93a9a9;
     --color-map-hover: #10243b;
@@ -836,41 +839,49 @@ button.choice-card {
   left: 0;
   right: 0;
   bottom: 0;
-  display: flex;
-  flex-wrap: nowrap;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  min-height: 64px;
-  max-height: 64px;
-  padding: 0.5rem 0.75rem calc(0.5rem + env(safe-area-inset-bottom));
+  gap: 0.25rem;
+  height: 44px;
+  min-height: 44px;
+  max-height: 44px;
+  padding: 0 0.25rem;
+  overflow: hidden;
   background: var(--color-card);
   border-top: 1px solid var(--color-line);
 }
 
-@media (max-width: 640px) {
-  .ballot-crumbs {
-    display: none;
-  }
-
-  .ballot-actions .hide-narrow {
-    display: none;
-  }
+.ballot-bar::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 3px;
+  width: var(--guide-progress, 0%);
+  background: var(--color-cta);
 }
 
-.ballot-crumbs {
+.ballot-step {
   margin: 0;
+  overflow: hidden;
   font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
 }
 
-.ballot-crumbs .is-here {
-  text-decoration: underline;
+.ballot-bar .btn {
+  min-height: 44px;
+  padding-inline: 0.75rem;
+  white-space: nowrap;
 }
 
-.ballot-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
+.ballot-label-short { display: none; }
+
+@media (max-width: 360px) {
+  .ballot-label-long { display: none; }
+  .ballot-label-short { display: inline; }
+  .ballot-bar .btn { padding-inline: 0.5rem; }
 }
 
 @media (max-width: 760px) {
@@ -1653,7 +1664,7 @@ td {
 /* ---------- THE VOTE: red, navy, and white ---------- */
 
 .site-header:not(.is-overlay) {
-  border-bottom: 2px solid var(--color-brand-red);
+  border-bottom: 2px solid var(--color-cta);
 }
 
 .brand {
@@ -2303,7 +2314,7 @@ td {
   .mobile-tabs a:focus-visible { outline-offset: -4px; }
 
   /* Home keeps the header over the film; other pages get the red rule. */
-  .site-header:not(.is-overlay) { border-bottom: 2px solid var(--color-brand-red); }
+  .site-header:not(.is-overlay) { border-bottom: 2px solid var(--color-cta); }
   .nav-bar { min-height: 52px; }
   .nav-mobile { display: none; }
   .nav-signin { display: inline-flex; align-items: center; min-height: 44px; font-size: .95rem; }
@@ -2403,7 +2414,13 @@ td {
     padding: 0.5rem 0.75rem;
     background: var(--color-card);
     border-top: 1px solid var(--color-line);
-    box-shadow: 0 -2px 10px rgb(11 26 42 / 6%);
+    box-shadow: none;
+  }
+  .ballot-bar {
+    height: 44px;
+    min-height: 44px;
+    max-height: 44px;
+    padding: 0 0.25rem;
   }
   /* Race and profile pages also have the Back/Next bar: keep their extra buttons in the page, not a second pinned bar. */
   .page-main:has(.ballot-bar) .sticky-mobile {
@@ -2414,7 +2431,7 @@ td {
     box-shadow: none;
   }
   body:has(.ballot-bar) .site-footer,
-  body:has(.sticky-mobile) .site-footer { padding-bottom: calc(2rem + env(safe-area-inset-bottom) + 4.5rem); }
+  body:has(.sticky-mobile) .site-footer { padding-bottom: calc(2rem + env(safe-area-inset-bottom) + 3rem); }
   .page-main:has(.sticky-mobile) { padding-bottom: 2rem; }
 
   /* On-screen keyboard open: hide the tab bar so it can't cover the field (Android resizes the page). */
@@ -2473,8 +2490,33 @@ td {
   .compare-layout { grid-template-columns: minmax(0, 1fr); }
 }
 
-@media (max-width: 640px) {
-  .compare-board .compare-grid { display: grid; grid-template-columns: minmax(0, 1fr); }
+.compare-pair { display: none; }
+
+@media (max-width: 800px) {
+  .compare-selection { display: none; }
+  .compare-pair {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 0.5rem;
+    align-items: end;
+    margin-bottom: 0.75rem;
+  }
+  .compare-pair label {
+    display: grid;
+    gap: 0.25rem;
+    min-width: 0;
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+  .compare-pair select, .compare-pair .btn { width: 100%; min-height: 44px; }
+  .compare-pair .btn { grid-column: 1 / -1; }
+  .compare-board .compare-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 0.5rem;
+  }
+  .compare-board .compare-grid > .person-card { display: none; }
+  .compare-board .compare-grid > .person-card.is-paired { display: flex; min-width: 0; }
 }
 
 .list-tail {
@@ -2572,8 +2614,61 @@ summary { cursor: pointer; align-content: center; }
   .profile-head { grid-template-columns: minmax(0, 5rem) minmax(0, 1fr); align-items: start; column-gap: 1rem; }
   .fact-grid { gap: 0; grid-template-columns: 1fr; }
   .profile-meta { font-size: 1rem; }
-  html:has(.ballot-bar, .sticky-mobile) { scroll-padding-bottom: calc(var(--tab-space) + 5rem); }
+  html:has(.ballot-bar, .sticky-mobile) { scroll-padding-bottom: calc(var(--tab-space) + 3rem); }
 }
+.source-peek-btn {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-navy);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+  cursor: pointer;
+}
+
+.source-peek {
+  width: min(24rem, calc(100% - 2rem));
+  margin: auto;
+  padding: 1rem;
+  border: 1px solid var(--color-line);
+  border-radius: 12px;
+  background: var(--color-raised, var(--color-card));
+  color: var(--color-ink);
+}
+
+.source-peek::backdrop { background: rgb(11 26 42 / 45%); }
+.source-peek-name { margin: 0 0 0.5rem; font-weight: 700; }
+.source-peek a { display: inline-flex; align-items: center; min-height: 44px; }
+
+@media (max-width: 800px) {
+  .source-peek {
+    width: 100%;
+    max-width: none;
+    margin: auto 0 0;
+    border-radius: 16px 16px 0 0;
+  }
+}
+
+.change-list { list-style: none; margin: 0; padding: 0; }
+.change-list li {
+  display: grid;
+  grid-template-columns: 7.5rem minmax(0, 1fr);
+  gap: 0.25rem 0.75rem;
+  padding: 0.5rem 0;
+  border-top: 1px solid var(--color-line);
+}
+.change-list time { white-space: nowrap; }
+.change-list p { margin: 0; }
+@media (max-width: 360px) {
+  .change-list li { grid-template-columns: minmax(0, 1fr); }
+}
+
 /* Page layer (2026 design pass). Uses the tokens above. */
 
 /* Profile: each record group opens with air; a heading sits close to its list. */

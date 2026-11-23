@@ -81,7 +81,7 @@ test("Back/Next and page action bars stay pinned above the tab bar", () => {
   assert.match(phone, /\.ballot-bar,\s*\.sticky-mobile \{\s*position: fixed;[\s\S]*?bottom: var\(--tab-space\);/);
   assert.equal(/position: static;\s*max-height: none/.test(phone), false);
   assert.match(phone, /body \{ padding-bottom: var\(--tab-space\); \}/);
-  assert.match(phone, /body:has\(\.ballot-bar\) \.site-footer,\s*body:has\(\.sticky-mobile\) \.site-footer \{ padding-bottom: calc\(2rem \+ env\(safe-area-inset-bottom\) \+ 4\.5rem\); \}/);
+  assert.match(phone, /body:has\(\.ballot-bar\) \.site-footer,\s*body:has\(\.sticky-mobile\) \.site-footer \{ padding-bottom: calc\(2rem \+ env\(safe-area-inset-bottom\) \+ 3rem\); \}/);
 });
 
 test("race cards keep the photo credit inside the card", () => {

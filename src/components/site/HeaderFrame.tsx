@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
+import { useSession } from "@/components/site/SessionProvider";
 
 /** `short` shows on narrow desktop widths. The mobile menu always uses the full label. */
 export const NAV_LINKS = [
@@ -14,13 +15,12 @@ export const NAV_LINKS = [
 export function HeaderFrame({
   wordmark,
   account,
-  signedIn,
 }: {
   wordmark: ReactNode;
   account: ReactNode;
-  signedIn: boolean;
 }) {
   const path = usePathname();
+  const { signedIn } = useSession();
   const overlay = path === "/";
   const findHref = overlay ? "/#map" : "/ballot";
   return (

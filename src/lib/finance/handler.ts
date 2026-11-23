@@ -16,10 +16,12 @@ let repo: ReturnType<typeof createDynamoRepository> | undefined;
 export async function handler(event: unknown = {}, context?: LambdaContext): Promise<TotalsIngestSummary> {
   void event;
   repo ??= createDynamoRepository();
+  const hourlyLimit = numberFromEnv(process.env.FEC_HOURLY_LIMIT) ?? 1000;
   const fec = new FecClient({
     apiKey: fecApiKeyFromEnv(),
     baseUrl: process.env.FEC_API_BASE_URL,
-    minDelayMs: numberFromEnv(process.env.FEC_MIN_DELAY_MS) ?? 250,
+    minDelayMs: numberFromEnv(process.env.FEC_MIN_DELAY_MS) ?? 0,
+    hourlyLimit,
   });
   return runTotalsIngest({
     repo,

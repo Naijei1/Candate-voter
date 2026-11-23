@@ -1,41 +1,20 @@
 import Link from "next/link";
+import { AccountMenu } from "@/components/site/AccountMenu";
 import { HeaderFrame } from "@/components/site/HeaderFrame";
 import { brand } from "@/content/brand";
-import { isAdmin } from "@/lib/auth/admin";
 import { loadSiteCopy } from "@/lib/content/store";
-import { signOutAction } from "@/lib/auth/actions";
-import { currentUser } from "@/lib/auth/session";
 
 export async function SiteHeader() {
-  const user = await currentUser();
   const copy = await loadSiteCopy();
   return (
     <HeaderFrame
-      signedIn={user != null}
       wordmark={
         <Link href="/" className="brand">
           {copy.logoKey ? <img src="/media/logo" alt="" width={28} height={28} /> : <span className="brand-flag" aria-hidden="true" />}
           <span className="brand-name">{brand.name}</span>
         </Link>
       }
-      account={
-        user ? (
-          <details className="account-menu">
-            <summary>{user.email}</summary>
-            <div>
-              <Link href="/account">My watchlist</Link>
-              {isAdmin(user) ? <Link href="/admin">Admin</Link> : null}
-              <form action={signOutAction}>
-                <button type="submit">Sign out</button>
-              </form>
-            </div>
-          </details>
-        ) : (
-          <Link href="/sign-in" className="nav-signin">
-            Sign in
-          </Link>
-        )
-      }
+      account={<AccountMenu />}
     />
   );
 }

@@ -21,12 +21,18 @@ test("watchlist can remove follows and separately update email alerts", () => {
   assert.equal(existsSync("src/app/api/alerts/route.ts"), false);
 });
 
-test("follow controls receive server sign-in state and guard signed-out requests", () => {
+test("follow controls read the client session and guard signed-out requests", () => {
   const follow = readFileSync("src/components/site/FollowControl.tsx", "utf8");
   assert.match(follow, /if \(!signedIn\) return;[\s\S]*?fetch\(endpoint\)/);
   assert.match(follow, /if \(!signedIn \|\| expired\) return <Link[^>]*href=\{signIn\}/);
+  assert.match(follow, /useSession\(\)/);
+  const layout = readFileSync("src/app/layout.tsx", "utf8");
+  assert.match(layout, /SessionProvider/);
+  assert.equal(layout.includes("currentUser"), false);
   for (const page of ["states/ky", "races/[raceId]", "candidates/[candidateId]"]) {
-    assert.match(readFileSync(`src/app/${page}/page.tsx`, "utf8"), /<FollowControl signedIn=\{Boolean\(await currentUser\(\)\)\}/);
+    const source = readFileSync(`src/app/${page}/page.tsx`, "utf8");
+    assert.match(source, /<FollowControl /);
+    assert.equal(source.includes("currentUser"), false);
   }
 });
 
