@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { withBasePath } from "@/lib/base-path";
 import styles from "./reading.module.css";
 
 export function CiteShare({ title, path, updated }: { title: string; path: string; updated?: string | null }) {
@@ -38,6 +39,7 @@ export function CiteShare({ title, path, updated }: { title: string; path: strin
 }
 
 function absolute(path: string): string {
-  if (typeof window === "undefined") return path;
-  return new URL(path, window.location.origin).href;
+  const prefixed = withBasePath(path);
+  if (typeof window === "undefined") return prefixed;
+  return new URL(prefixed, window.location.origin).href;
 }

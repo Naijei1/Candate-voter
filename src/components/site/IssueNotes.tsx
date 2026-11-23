@@ -1,10 +1,10 @@
-"use client";
-
-import { useState } from "react";
+import Link from "next/link";
+import { SourcePeek } from "@/components/site/SourcePeek";
 import { dayLabel } from "@/lib/format";
 import type { Issue, Stance } from "@/lib/site/stances";
 import styles from "./reading.module.css";
 
+/** Every stance is in the page. The disclosures open without JavaScript. */
 export function IssueNotes({
   notes,
   issues,
@@ -18,46 +18,37 @@ export function IssueNotes({
     const stance = notes.find((note) => note.issueId === issue.id);
     return stance ? [{ issue, stance }] : [];
   });
-  const [open, setOpen] = useState(rows[0]?.issue.id ?? "");
-  const index = Math.max(0, rows.findIndex((row) => row.issue.id === open));
-  const current = rows[index];
-  const next = rows[index + 1] ?? rows[0];
-  if (!current) return null;
+  if (rows.length === 0) return null;
   return (
     <div className={styles.issues}>
-      <ul className={styles.issueList}>
-        {rows.map((row) => (
-          <li key={row.issue.id}>
-            <button
-              type="button"
-              aria-current={row.issue.id === current.issue.id ? "true" : undefined}
-              onClick={() => setOpen(row.issue.id)}
-            >
-              {row.issue.label}
-            </button>
-          </li>
-        ))}
-      </ul>
-      <div className={styles.detail}>
-        <p className="hint">Candidate says</p>
-        <p>{current.stance.text}</p>
-        <p className="hint">
-          <time dateTime={current.stance.sourceDate}>{dayLabel(current.stance.sourceDate)}</time>
-          {" · "}
-          <a href={current.stance.sourceUrl}>{current.stance.sourceName} ↗</a>
-        </p>
-        <p>
-          {compareHref ? <a href={compareHref}>Compare this issue</a> : null}
-          {next && next.issue.id !== current.issue.id ? (
-            <>
-              {compareHref ? " · " : null}
-              <button type="button" className="btn btn-ghost" onClick={() => setOpen(next.issue.id)}>
-                Next: {next.issue.label}
-              </button>
-            </>
-          ) : null}
-        </p>
-      </div>
+      {rows.map((row, index) => {
+        const next = rows[index + 1];
+        return (
+          <details key={row.issue.id} id={`issue-${row.issue.id}`} open={index === 0} className={styles.issue}>
+            <summary>{row.issue.label}</summary>
+            <div className={styles.detail}>
+              <p className="hint">Candidate says</p>
+              <p>{row.stance.text}</p>
+              <p className="hint">
+                <time dateTime={row.stance.sourceDate}>{dayLabel(row.stance.sourceDate)}</time>
+                {" · "}
+                <SourcePeek name={row.stance.sourceName} url={row.stance.sourceUrl} date={row.stance.sourceDate} excerpt={row.stance.text} />
+              </p>
+              {compareHref || next ? (
+                <p>
+                  {compareHref ? <Link href={`${compareHref}#issue-${row.issue.id}`}>Compare this issue</Link> : null}
+                  {next ? (
+                    <>
+                      {compareHref ? " · " : null}
+                      <a href={`#issue-${next.issue.id}`}>Next: {next.issue.label}</a>
+                    </>
+                  ) : null}
+                </p>
+              ) : null}
+            </div>
+          </details>
+        );
+      })}
     </div>
   );
 }

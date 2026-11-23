@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 import { ageLabel } from "../src/lib/format";
 import { kyBallot } from "../src/lib/site/ky-ballot";
@@ -24,6 +25,15 @@ test("search finds candidates, counties, and a ZIP without inventing a miss", ()
   assert.ok(searchSite("Adair").some((hit) => hit.kind === "County" && hit.title === "Adair County"));
   assert.deepEqual(searchSite("40502"), [{ kind: "ZIP", title: "ZIP 40502", detail: "Find the races for this ZIP", href: "/ballot?zip=40502" }]);
   assert.equal(searchSite("zzzz-not-a-candidate").length, 0);
+});
+
+test("citations keep the base path and every issue stance is in the page", () => {
+  const cite = readFileSync("src/components/site/CiteShare.tsx", "utf8");
+  assert.match(cite, /withBasePath\(path\)/);
+  const notes = readFileSync("src/components/site/IssueNotes.tsx", "utf8");
+  assert.equal(/"use client"/.test(notes), false);
+  assert.match(notes, /<details/);
+  assert.match(notes, /<Link href=\{`\$\{compareHref\}#issue-\$\{row\.issue\.id\}`\}>Compare this issue<\/Link>/);
 });
 
 test("recent feed dates read as an age and older dates keep the calendar day", () => {
