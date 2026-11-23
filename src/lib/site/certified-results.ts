@@ -1,6 +1,10 @@
 import data from "../../../data/ky-certified-results.json";
 import calendar from "../../../data/ky-election-calendar.json";
+import { stateConfig } from "../states";
 
+const KY = stateConfig("KY");
+
+// Literal list keeps exact race-id types for the results importer; a test checks it matches the registry.
 export const KY_FEDERAL_RACES = [
   "2026-senate-KY",
   "2026-house-KY-01",
@@ -13,7 +17,7 @@ export const KY_FEDERAL_RACES = [
 
 export const KY_ELECTION_CALENDAR = calendar;
 export const CONGRESSIONAL_TERM_START = "2027-01-03T17:00:00Z";
-export const KY_RESULTS_SOURCE = "KY State Board of Elections";
+export const KY_RESULTS_SOURCE = KY.results.sourceName;
 
 export type CertifiedCandidate = {
   name: string;
