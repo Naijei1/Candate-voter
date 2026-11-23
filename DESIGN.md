@@ -18,6 +18,14 @@ Newsreader regular sets the article title (40–72px), section title (28–40px)
 
 Align the masthead, hero copy, sections and footer to the 1120px wrapper with at least 16px on each side. Give an interior page 48px above the title, 32px on phones. The ballot and chat have a narrower reading measure. Use 4, 8, 12, 16, 24, 32, 48, 64 and 96px for spacing. Keep a label close to its value and use larger gaps between races. Fixed bars include space for the device’s safe area.
 
+## Tokens
+
+`globals.css` names the scale so new rules use it: `--space-1` to `--space-9` (4 to 96px), `--step--1` to `--step-4` (14px to the fluid 40–72px title), `--radius-*`, `--line-strong` (ink mixed at 22% with `color-mix`, so dark mode follows), and `--focus-ring` / `--focus-halo`. Headings balance their lines and reading text uses `text-wrap: pretty`. Table cells, `time` and `.num` use tabular numerals. `.flow` spaces a column of mixed content and gives a new section 48px. `.link-quiet` is the muted utility link (Report an error). `details.more` is the native disclosure for long record lists.
+
+## Focus
+
+Keyboard focus is a 3px ring 2px off the element. Buttons and form controls add a 2px halo in the surface colour, so the ring separates from crimson, navy and the film. On the masthead, footer, hero, results bar and Races in focus the ring is white with a deep-navy halo. Map districts keep their path-shaped focus.
+
 ## Surfaces and controls
 
 - Use 1px rules at 10% ink for card boundaries. A full-width ink rule opens a group of races or a home section. Shadows belong to floating sheets or fixed navigation and stay faint.
@@ -36,3 +44,7 @@ The map has Congressional, Statewide and County segments. The News Feed uses two
 When a reader chooses a race in Follow the money, each visible bar moves from the previous row’s proportion to the new one in 360ms. The final tabular amount moves up slightly and gains opacity over 320ms in a fixed column. Use the same easing as the controls. Render the actual values on the server. Initial loads, scrolling and the all-races finance page show settled figures. Reduced motion switches every state immediately.
 
 Use sentence case and source names. Keep the official results link, and keep totals and positions traceable to their records. Avoid promotional badges, placeholder portraits, gradients on type, colored glows, automatic reveals and unsourced statistics.
+
+## Sources
+
+The 2026 design pass used these as references, not as code: the react-components-for-claude-code index (Motion-Primitives, Animata and Cult UI disclosure, tab and skeleton patterns, rebuilt in CSS), the taste-skill system rules (one button pair, one card recipe, 16px reading text, two boxes deep at most), the unslop “20 UI tricks” checklist, Sara Soueidan’s focus-indicator guide and MDN on `text-wrap`. Rejected: effect components (spotlights, marquees, number tickers), entrance animations, View Transitions and Newsreader’s optical-size axis (131.8 KB against 22.5 KB). Notices are in `THIRD_PARTY_NOTICES.md`.

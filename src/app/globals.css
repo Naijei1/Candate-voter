@@ -58,6 +58,32 @@
   --radius-control: 8px;
   --radius-card: 12px;
   --content: min(1120px, calc(100% - 2rem));
+
+  /* Spacing scale (DESIGN.md): 4, 8, 12, 16, 24, 32, 48, 64, 96. */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4rem;
+  --space-9: 6rem;
+
+  /* Type steps. Fluid between a 390px phone and the 1120px wrapper. */
+  --step--1: 0.875rem;
+  --step-0: 1.125rem;
+  --step-1: 1.25rem;
+  --step-2: clamp(1.5rem, 1.33rem + 0.55vw, 2rem);
+  --step-3: clamp(1.75rem, 1.43rem + 1.1vw, 2.5rem);
+  --step-4: clamp(2.5rem, 1.86rem + 2.6vw, 4.5rem);
+
+  /* Hairlines derived from ink, so dark mode follows. */
+  --line-strong: color-mix(in oklab, var(--color-ink) 22%, transparent);
+
+  /* Focus: ring plus a halo in the surface colour, so it separates from fills. */
+  --focus-ring: var(--color-navy);
+  --focus-halo: var(--color-paper);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -174,8 +200,106 @@ a {
 }
 
 :focus-visible {
-  outline: 3px solid var(--color-navy);
+  outline: 3px solid var(--focus-ring);
   outline-offset: 2px;
+}
+
+/* Controls also get a halo, so the ring reads over crimson, navy and the film. */
+:where(.btn, button, select, input, textarea, summary):focus-visible {
+  box-shadow: 0 0 0 2px var(--focus-halo);
+}
+
+/* Dark bands: masthead, footer, hero film, results bar, Races in focus. */
+:where(.site-header, .site-footer, .hero-stage, .results-bar, .focus-band) {
+  --focus-ring: #fff;
+  --focus-halo: var(--color-navy-deep);
+}
+
+::selection {
+  background: color-mix(in oklab, var(--color-brand-red) 22%, transparent);
+}
+
+input[type="radio"],
+input[type="checkbox"] {
+  accent-color: var(--color-brand-red);
+}
+
+@media (prefers-color-scheme: dark) {
+  input[type="radio"],
+  input[type="checkbox"] {
+    accent-color: var(--color-cta);
+  }
+}
+
+/* Headings balance; reading text avoids one-word last lines. */
+h1, h2, h3, .h1 {
+  text-wrap: balance;
+}
+
+p, li, dd {
+  text-wrap: pretty;
+}
+
+td, time, .num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Vertical rhythm for a column of mixed content. */
+.flow > * + * {
+  margin-block-start: var(--flow-space, var(--space-4));
+}
+
+.flow > * + :is(h2, section) {
+  --flow-space: var(--space-7);
+}
+
+/* A quiet utility link: muted, not bold, underline on hover. Still a 44px target. */
+.page-main a.link-quiet {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--color-muted);
+  font-size: var(--step--1);
+  font-weight: 400;
+  text-decoration-color: var(--line-strong);
+  text-underline-offset: 0.2em;
+}
+
+@media (hover: hover) {
+  .page-main a.link-quiet:hover {
+    color: var(--color-navy);
+    text-decoration-color: currentColor;
+  }
+}
+
+/* Native disclosure for long record lists. The marker turns; nothing else moves. */
+details.more > summary {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  cursor: pointer;
+  color: var(--color-navy);
+  font-weight: 600;
+  list-style: none;
+}
+
+details.more > summary::-webkit-details-marker {
+  display: none;
+}
+
+details.more > summary::before {
+  content: "";
+  inline-size: 0.45em;
+  block-size: 0.45em;
+  border-inline-end: 2px solid currentColor;
+  border-block-end: 2px solid currentColor;
+  transform: translateY(-0.1em) rotate(-45deg);
+  transition: transform var(--response);
+}
+
+details.more[open] > summary::before {
+  transform: translateY(-0.15em) rotate(45deg);
 }
 
 .skip-link {
@@ -789,8 +913,8 @@ h1,
 .h1 {
   font-family: var(--serif);
   font-weight: 400;
-  font-size: clamp(2.5rem, 4.8vw, 4.5rem);
-  line-height: 1.15;
+  font-size: var(--step-4);
+  line-height: 1.1;
   letter-spacing: -0.02em;
   margin: 0 0 0.75rem;
 }
@@ -798,7 +922,7 @@ h1,
 h2 {
   font-family: var(--serif);
   font-weight: 400;
-  font-size: clamp(1.75rem, 3vw, 2.5rem);
+  font-size: var(--step-3);
   line-height: 1.25;
   margin: 0 0 0.5rem;
 }
@@ -806,7 +930,7 @@ h2 {
 h3 {
   font-family: var(--serif);
   font-weight: 400;
-  font-size: 1.5rem;
+  font-size: var(--step-2);
   margin: 0 0 0.25rem;
 }
 
