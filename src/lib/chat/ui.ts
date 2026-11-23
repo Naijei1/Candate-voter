@@ -8,6 +8,7 @@ import {
   CHAT_TIMEOUT_MESSAGE,
 } from "./errors";
 import { isRaceSlug, labelForRaceId, presentAskMarkdown } from "./polish";
+import { askSampleQuestions } from "./state-copy";
 import type { ChatMode, ChatRequest, ChatSource } from "./types";
 
 export const MAX_CHAT_MESSAGE = 2000;
@@ -225,11 +226,7 @@ export function suggestedPrompts(context: ChatContextInput): string[] {
       "What was the last FEC update for this race?",
     ];
   }
-  return [
-    "Who is running for U.S. Senate in Kentucky?",
-    "Who is running in District 3?",
-    "What did Kentucky candidates say about health care?",
-  ];
+  return [...askSampleQuestions()];
 }
 
 export function buildChatRequestBody(input: {

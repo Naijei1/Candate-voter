@@ -42,6 +42,9 @@ test("only stored finance periods, SOS entries and explicitly certified results 
   const row = sourceRows.find(({ id }) => id === "11385")!;
   const html = `<option selected="selected">2026 General Election</option><div id="ctl00_MainContent_pOfficeResults"><tr class="boldleft"><td><a href="Default.aspx?cand=${row.id}">${row.name}</a></td><td></td><td>US Senator</td><td></td><td></td><td>${row.filed}</td></tr></div>`;
   assert.deepEqual(parseSosFilings(html, SOS_SENATE), [{ id: row.id, raceId: row.raceId, name: row.name, filed: row.filed, sourceUrl: row.sourceUrl }]);
+  const house = sourceRows.find(({ id }) => id === "11394")!;
+  const houseHtml = `<option selected="selected">2026 General Election</option><div id="ctl00_MainContent_pOfficeResults"><tr class="boldleft"><td><a href="Default.aspx?cand=${house.id}">${house.name}</a></td><td></td><td>US Representative</td><td><a href="Default.aspx?district=3">3</a></td><td></td><td>${house.filed}</td></tr><tr class="boldleft"><td><a href="Default.aspx?cand=99999">Out of range</a></td><td></td><td>US Representative</td><td><a href="Default.aspx?district=7">7</a></td><td></td><td>1/1/2026</td></tr></div>`;
+  assert.deepEqual(parseSosFilings(houseHtml, SOS_SENATE).map(({ raceId }) => raceId), [house.raceId]);
   assert.deepEqual(sosEvents([row])[0].follow, ["race:2026-senate-KY", "candidate:S6KY00286"]);
   assert.throws(() => parseSosFilings("<html></html>", SOS_SENATE));
 

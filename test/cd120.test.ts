@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 import { HOUSE_SEATS, HOUSE_SEATS_TOTAL } from "../src/lib/data/at-large";
+import { mapHintsFor } from "../src/lib/states";
 
 const index = JSON.parse(
   readFileSync(new URL("../public/geo/cd120/index.json", import.meta.url), "utf8"),
@@ -28,5 +29,19 @@ test("district paths render in number order with a reserved short live label", (
   assert.match(map, /`District \$\{Number\(shape\.district\)\}`/);
   assert.match(map, /className="cd-hover-label" aria-live="polite">\{hover \?\? "\\u00a0"\}/);
   assert.doesNotMatch(map, /<title>/);
-  assert.match(map, /postal === "KY" && shape\.district === "03"/);
+  assert.match(map, /mapHintsFor\(postal\)/);
+  assert.match(map, /hints\.fitPad/);
+  assert.match(map, /hints\.localLatitude/);
+  assert.match(map, /hints\.compactLabelDistricts\.includes\(shape\.district\)/);
+  assert.doesNotMatch(map, /postal === "KY"/);
+  const kentucky = mapHintsFor("KY");
+  assert.equal(kentucky.fitPad, 4);
+  assert.equal(kentucky.localLatitude, true);
+  assert.deepEqual([...kentucky.compactLabelDistricts], ["03"]);
+  assert.equal(kentucky.hideHouseLegend, true);
+  const other = mapHintsFor("OH");
+  assert.equal(other.fitPad, 20);
+  assert.equal(other.localLatitude, false);
+  assert.deepEqual([...other.compactLabelDistricts], []);
+  assert.equal(other.hideHouseLegend, false);
 });

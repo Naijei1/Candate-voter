@@ -7,6 +7,7 @@ import { MapLegend } from "@/components/UsMap";
 import { HOUSE_SEATS, isSingleSeat } from "@/lib/data/at-large";
 import { stateName } from "@/lib/data/states";
 import { withBasePath } from "@/lib/base-path";
+import { mapHintsFor } from "@/lib/states";
 import { withPreservedQuery, type MapContext } from "@/lib/landing/state-query";
 import {
   districtHasCandidates,
@@ -44,6 +45,7 @@ export function DistrictMap({
   const covered = HOUSE_SEATS[postal] != null;
   const yours = new Set(yourDistricts.map((code) => code.padStart(2, "0")));
   const here = youAreHere(postal, yourDistricts);
+  const hints = mapHintsFor(postal);
 
   function openRace(raceId: string) {
     router.push(context ? withPreservedQuery(`/races/${raceId}`, context) : `/races/${raceId}`);
@@ -64,7 +66,7 @@ export function DistrictMap({
         const body: unknown = await response.json();
         if (!isCdFeatureCollection(body)) throw new Error("shape");
         if (!active) return;
-        setShapes(projectCollection(body, VIEW.width, VIEW.height, postal === "KY" ? 4 : 20, true, postal === "KY")
+        setShapes(projectCollection(body, VIEW.width, VIEW.height, hints.fitPad, true, hints.localLatitude)
           .sort((a, b) => Number(a.district) - Number(b.district)));
       } catch (error) {
         if (!active || isAbort(error)) return;
@@ -75,7 +77,7 @@ export function DistrictMap({
       active = false;
       controller.abort();
     };
-  }, [covered, postal]);
+  }, [covered, postal, hints.fitPad, hints.localLatitude]);
 
   return (
     <div className="state-map-pane" data-testid="district-map">
@@ -145,7 +147,7 @@ export function DistrictMap({
                 {shapes.map((shape) => (
                   <text
                     key={shape.district}
-                    className={`cd-label${postal === "KY" && shape.district === "03" ? " compact" : ""}`}
+                    className={`cd-label${hints.compactLabelDistricts.includes(shape.district) ? " compact" : ""}`}
                     x={shape.labelX}
                     y={shape.labelY}
                     dominantBaseline="central"
@@ -165,7 +167,7 @@ export function DistrictMap({
           {here}
         </p>
       ) : null}
-      {postal !== "KY" ? <MapLegend house /> : null}
+      {hints.hideHouseLegend ? null : <MapLegend house />}
     </div>
   );
 }

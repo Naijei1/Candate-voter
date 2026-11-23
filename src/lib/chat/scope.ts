@@ -2,6 +2,7 @@ import { stateName } from "../data/states";
 import { stateRaces } from "../landing";
 import type { Race } from "../types";
 import { askedChamber, chamberFromRaceId, type AskedChamber } from "./intent";
+import { askIntro } from "./state-copy";
 import type { ChatAnswer, ChatSource } from "./types";
 import type { ChatContextInput } from "./ui";
 
@@ -12,7 +13,7 @@ import type { ChatContextInput } from "./ui";
 export const ALIGNMENT_DISCLAIMER =
   "Viewpoint similarity uses public records only. This is not a voting recommendation.";
 
-export const ASK_INTRO = "Ask about Kentucky’s races.";
+export const ASK_INTRO = askIntro();
 
 const MAX_MESSAGE = 2000;
 

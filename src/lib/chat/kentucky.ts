@@ -1,27 +1,43 @@
 import { kyBallot } from "../site/ky-ballot";
-import { KY_RESULTS_LINKS } from "../site/ky-results";
-import { stateConfig } from "../states";
+import { mentionedHouseDistrict, stateConfig } from "../states";
 import type { ChatAnswer } from "./types";
 
-/** Names on the November Kentucky ballot. Does not declare a winner. */
+const LONG_DATE = new Intl.DateTimeFormat("en-US", {
+  timeZone: "UTC",
+  month: "long",
+  day: "numeric",
+  year: "numeric",
+});
+
+function electionDayLabel(iso: string): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+  if (!match) return iso;
+  return LONG_DATE.format(new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]))));
+}
+
+/** Names on the November ballot for the enabled state. Does not declare a winner. */
 export function kentuckyRunningAnswer(message: string, { districtOnly = false } = {}): ChatAnswer | null {
   if (!/\brunning\b|\bon the ballot\b|\bnominees?\b/i.test(message)) return null;
-  const district = /\bdistrict\s+0?([1-6])\b/i.exec(message);
+  const state = stateConfig();
+  const district = mentionedHouseDistrict(message, state);
   const senate = !districtOnly && /\bsenate\b/i.test(message) && !district;
-  const raceId = district ? `2026-house-KY-0${district[1]}` : senate ? "2026-senate-KY" : null;
+  const raceId = district
+    ? `${state.cycle}-house-${state.code}-${district.padStart(2, "0")}`
+    : senate
+      ? `${state.cycle}-senate-${state.code}`
+      : null;
   if (!raceId) return null;
   const race = kyBallot(raceId);
   if (!race) return null;
-  const title = district ? `U.S. House District ${Number(district[1])}` : "U.S. Senate";
+  const title = district ? `U.S. House District ${Number(district)}` : "U.S. Senate";
   const lines = race.people.map((person) => `- **${person.name}** (${person.party})`);
-  const results = KY_RESULTS_LINKS[1];
   return {
     answer_markdown: [
-      `**${title}, Kentucky.** People on the November 3, 2026 list:`,
+      `**${title}, ${state.name}.** People on the ${electionDayLabel(state.generalElection)} list:`,
       lines.join("\n"),
-      `[See official results](${results.href}).`,
+      `[See official results](${state.results.official.href}).`,
     ].join("\n\n"),
-    sources: [{ title: "Kentucky Secretary of State filing list", url: stateConfig("KY").filings.href, as_of: "2026-11-03" }],
+    sources: [{ title: `${state.filings.name} filing list`, url: state.filings.href, as_of: state.generalElection }],
     refused: false,
     mode: "factual",
   };

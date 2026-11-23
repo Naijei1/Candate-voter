@@ -47,6 +47,31 @@ export type StateConfig = {
     readonly districts: string;
     readonly counties: string;
   };
+  /**
+   * How this state's shape is fitted and labeled. Other states use
+   * {@link GENERIC_MAP_HINTS}. Kentucky's values are the ones the map used
+   * before they lived here.
+   */
+  readonly mapHints: MapHints;
+};
+
+export type MapHints = {
+  /** Padding when the districts are fitted into the map view. */
+  readonly fitPad: number;
+  /** Scale longitude by the state's middle latitude so the shape stays proportional. */
+  readonly localLatitude: boolean;
+  /** District codes whose numbers use the compact label. */
+  readonly compactLabelDistricts: readonly string[];
+  /** Skip the shared House legend. Kentucky's map has its own instruction. */
+  readonly hideHouseLegend: boolean;
+};
+
+/** Fit used for any postal code that is not an enabled state entry. */
+export const GENERIC_MAP_HINTS: MapHints = {
+  fitPad: 20,
+  localLatitude: false,
+  compactLabelDistricts: [],
+  hideHouseLegend: false,
 };
 
 export const STATES = {
@@ -74,6 +99,12 @@ export const STATES = {
     map: {
       districts: "/geo/cd120/KY.json",
       counties: "/geo/counties/KY.json",
+    },
+    mapHints: {
+      fitPad: 4,
+      localLatitude: true,
+      compactLabelDistricts: ["03"],
+      hideHouseLegend: true,
     },
   },
 } as const satisfies Record<StateCode, StateConfig>;
@@ -117,4 +148,30 @@ export function isFederalRaceIdFor(state: StateConfig, raceId: string): boolean 
 
 export function statePath(state: StateConfig): string {
   return `/states/${state.slug}`;
+}
+
+/** Map fit and label rules for a postal code. Unknown codes keep the generic fit. */
+export function mapHintsFor(postal: string): MapHints {
+  return isStateCode(postal) ? STATES[postal].mapHints : GENERIC_MAP_HINTS;
+}
+
+/**
+ * Character class for House district numbers 1 through N, when N is 2–9.
+ * At-large states and states with 10 or more districts return null.
+ */
+export function houseDistrictDigitClass(state: StateConfig): string | null {
+  if (state.houseDistricts < 2 || state.houseDistricts > 9) return null;
+  return `1-${state.houseDistricts}`;
+}
+
+/**
+ * House district digit named in a question, such as "District 3" or "district 03".
+ * The capture is the same one the Kentucky Ask check used: one digit, 1 through
+ * the state's House count.
+ */
+export function mentionedHouseDistrict(message: string, state: StateConfig = stateConfig()): string | null {
+  const digits = houseDistrictDigitClass(state);
+  if (!digits) return null;
+  const match = new RegExp(`\\bdistrict\\s+0?([${digits}])\\b`, "i").exec(message);
+  return match?.[1] ?? null;
 }

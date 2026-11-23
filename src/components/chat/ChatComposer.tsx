@@ -2,6 +2,7 @@
 
 // Classic JSX runtime for `node --import tsx --test`. Next compiles this with the automatic runtime.
 import React, { useId, type KeyboardEvent } from "react";
+import { askPlaceholder } from "@/lib/chat/state-copy";
 import { MAX_CHAT_MESSAGE } from "@/lib/chat/ui";
 
 export function ChatComposer({
@@ -44,7 +45,7 @@ export function ChatComposer({
           maxLength={MAX_CHAT_MESSAGE}
           aria-label="Ask about races or candidates"
           aria-describedby={nearLimit ? counterId : undefined}
-          placeholder="Ask about Kentucky’s races…"
+          placeholder={askPlaceholder()}
           disabled={pending}
           onChange={(event) => onChange(event.target.value)}
           onKeyDown={onKeyDown}

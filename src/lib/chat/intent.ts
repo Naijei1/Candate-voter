@@ -1,5 +1,6 @@
 import { parseCycle } from "../data/cycles";
 import { isPostalState, stateOptions } from "../data/states";
+import { clarifyRaceMarkdown } from "./state-copy";
 import type { ChatRequest } from "./types";
 
 const RACE_ID = /\b(?:19|20)\d{2}-(?:president|senate-[A-Z]{2}|house-[A-Z]{2}-\d{2})\b/;
@@ -232,9 +233,7 @@ export function isAlignmentRequest(message: string): boolean {
   return ALIGNMENT.some((pattern) => pattern.test(message));
 }
 
-export const CLARIFY_RACE_MARKDOWN = `This guide covers Kentucky. Which race should I look at?
-
-I can list who officially filed to run. For example, U.S. Senate or U.S. House District 3.`;
+export const CLARIFY_RACE_MARKDOWN = clarifyRaceMarkdown();
 
 function mentionsState(message: string): boolean {
   return stateMentionedIn(message) != null;

@@ -6,6 +6,7 @@ import { ChatComposer } from "@/components/chat/ChatComposer";
 import { ChatMessageList, politeStatus } from "@/components/chat/ChatMessageList";
 import type { ChatController } from "@/components/chat/useChat";
 import { askHistoryKey } from "@/lib/chat/scope";
+import { askSampleQuestions } from "@/lib/chat/state-copy";
 import {
   chatPageHref,
   contextLabel,
@@ -134,7 +135,7 @@ export function ChatShell({
       <div className="min-h-0 flex-1 overflow-y-auto">
         {mode === "panel" && chat.turns.length === 0 ? (
           <div className="flex flex-col items-start gap-2 px-4 py-4">
-            {["Who is running for U.S. Senate in Kentucky?", "Who is running in District 3?", "What did Kentucky candidates say about health care?"].map((prompt) => (
+            {askSampleQuestions().map((prompt) => (
               <button key={prompt} className="btn btn-ghost" type="button" onClick={() => send(prompt)}>
                 {prompt}
               </button>
