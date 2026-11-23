@@ -140,8 +140,8 @@ const DAY_FORMAT = new Intl.DateTimeFormat("en-US", {
  * Calendar day for a date-only string, or for a timestamp in the state's display zone.
  * A UTC timestamp late in the evening is the previous local day in Kentucky.
  */
-export function calendarDay(value: string, timeZone = stateConfig().displayTimeZone): string {
-  const text = value.trim();
+export function calendarDay(value: string | Date, timeZone = stateConfig().displayTimeZone): string {
+  const text = value instanceof Date ? value.toISOString() : value.trim();
   if (/^\d{4}-\d{2}-\d{2}$/.test(text)) return text;
   const date = new Date(text);
   if (Number.isNaN(date.getTime())) {
@@ -162,18 +162,6 @@ export function dayLabel(value: string): string {
   if (!match) return value;
   const date = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])));
   return DAY_FORMAT.format(date);
-}
-
-/** Calendar day in a zone, `YYYY-MM-DD`. */
-export function calendarDay(now: Date, timeZone = stateConfig().displayTimeZone): string {
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(now);
-  const value = (type: Intl.DateTimeFormatPartTypes) => parts.find((part) => part.type === type)?.value ?? "";
-  return `${value("year")}-${value("month")}-${value("day")}`;
 }
 
 /**
