@@ -2,6 +2,7 @@ import { dayLabel } from "../format";
 import { kyBallot, kyBallotSeed } from "../site/ky-ballot";
 import { latestNews, newsForNames } from "../site/ky-news";
 import { stanceIssues, stancesFor } from "../site/stances";
+import { whichRaceMarkdown } from "./state-copy";
 import type { ChatAnswer, ChatRequest } from "./types";
 
 const ISSUE = /stance|position|issue|health care|healthcare|immigration|data center|cost of living|national debt|what did|news|lantern/i;
@@ -14,7 +15,7 @@ export async function notesAnswer(request: ChatRequest): Promise<ChatAnswer | nu
     : namedPeople(request.message);
   if (!race && people.length === 0 && !/news|lantern/i.test(request.message)) {
     return {
-      answer_markdown: "Which Kentucky federal race?",
+      answer_markdown: whichRaceMarkdown(),
       sources: [],
       refused: false,
       mode: "factual",

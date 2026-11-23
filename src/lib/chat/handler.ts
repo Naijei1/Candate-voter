@@ -23,6 +23,7 @@ import {
 } from "./config";
 import { definitionAnswer } from "./definitions";
 import { kentuckyRunningAnswer } from "./kentucky";
+import { outOfScopeMarkdown } from "./state-copy";
 import { notesAnswer } from "./notes";
 import { alignSourceAsOf } from "./freshness";
 import { CHAT_TIMEOUT_MESSAGE, ChatUnavailableError, isAbortError, unavailableBody } from "./errors";
@@ -174,7 +175,7 @@ async function answerChat(
   if (ballotRoster && contextState && contextState !== "KY") {
     logOutcome({ refused: false, tools: [], latencyMs: Date.now() - started, mode: "factual" });
     return json(chatBody({
-      answer_markdown: "THE VOTE covers Kentucky elections only.",
+      answer_markdown: outOfScopeMarkdown(),
       sources: [],
       refused: false,
       mode: "factual",

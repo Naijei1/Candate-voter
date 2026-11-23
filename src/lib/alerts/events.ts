@@ -2,9 +2,12 @@ import { withBasePath } from "../base-path";
 import type { PublicCandidate } from "../data/view";
 import type { FinanceDirect } from "../finance/model";
 import { kyBallot, kyPerson } from "../site/ky-ballot";
-import { isKentuckyFederalRaceId } from "../site/ky-race-id";
+import { houseDistrictDigitClass, isFederalRaceIdFor, stateConfig } from "../states";
 
-export const SOS_SENATE = "https://web.sos.ky.gov/candidatefilings/Default.aspx?id=3";
+const state = stateConfig();
+const federalCandidateId = new RegExp(`^[SH]\\d${state.code}\\d{5}$`);
+
+export const SOS_SENATE = state.filings.href;
 export const SOS_HOUSE = "https://web.sos.ky.gov/candidatefilings/Default.aspx?id=4";
 
 export type AlertEvent = { id: string; subject: string; source: string; page: string; follow: string[] };
@@ -30,8 +33,8 @@ export function fecReportEvents(rows: FinanceDirect[]): AlertEvent[] {
     const { candidateId, raceId, fileNumber, committeeId } = row;
     const name = kyPerson(candidateId)?.person.name ?? row.name;
     const source = officialUrl(row.sourceUrl, "fec.gov");
-    if (row.scope !== "period" || !raceId || !isKentuckyFederalRaceId(raceId) || !name || !source ||
-        !/^C\d{8}$/.test(committeeId ?? "") || !/^\d+$/.test(fileNumber ?? "") || !/^[SH]\dKY\d{5}$/.test(candidateId)) return [];
+    if (row.scope !== "period" || !raceId || !isFederalRaceIdFor(state, raceId) || !name || !source ||
+        !/^C\d{8}$/.test(committeeId ?? "") || !/^\d+$/.test(fileNumber ?? "") || !federalCandidateId.test(candidateId)) return [];
     return [{
       id: `fec:${committeeId}:${fileNumber}`,
       subject: `New FEC report: ${name}`,
@@ -58,8 +61,9 @@ export function parseSosFilings(html: string, listUrl: string): SosFiling[] {
     if (cells.length !== 6) throw new Error("Unrecognized Kentucky SOS filing row");
     const person = /<a\b[^>]*href="Default\.aspx\?cand=(\d+)"[^>]*>([\s\S]*?)<\/a>/i.exec(cells[0]);
     const office = plainText(cells[2]);
-    const district = /[?;&]district=([1-6])\b/i.exec(cells[3])?.[1];
-    const raceId = office === "US Senator" ? `${year}-senate-KY` : office === "US Representative" && district ? `${year}-house-KY-0${district}` : null;
+    const digits = houseDistrictDigitClass(state);
+    const district = digits ? new RegExp(`[?;&]district=([${digits}])\\b`, "i").exec(cells[3])?.[1] : undefined;
+    const raceId = office === "US Senator" ? `${year}-senate-${state.code}` : office === "US Representative" && district ? `${year}-house-${state.code}-0${district}` : null;
     const filed = plainText(cells[5]);
     if (!person || !raceId || !/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(filed)) continue;
     filings.push({ id: person[1], name: plainText(person[2]), raceId, filed, sourceUrl: new URL(`Default.aspx?cand=${person[1]}`, listUrl).href });
@@ -101,7 +105,7 @@ export function certifiedEvents(value: unknown): AlertEvent[] {
     const row = item as Record<string, unknown>;
     const raceId = typeof row.raceId === "string" ? row.raceId : key;
     const source = officialUrl(row.sourceUrl ?? document.sourceUrl, "ky.gov");
-    if (!isKentuckyFederalRaceId(raceId) || row.status !== "certified" || !source) return [];
+    if (!isFederalRaceIdFor(state, raceId) || row.status !== "certified" || !source) return [];
     const primary = row.election === "primary";
     if (primary && (typeof row.party !== "string" || !row.party)) return [];
     if (row.election != null && row.election !== "general" && !primary) return [];
