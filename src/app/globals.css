@@ -2574,6 +2574,38 @@ summary { cursor: pointer; align-content: center; }
   .profile-meta { font-size: 1rem; }
   html:has(.ballot-bar, .sticky-mobile) { scroll-padding-bottom: calc(var(--tab-space) + 5rem); }
 }
+/* Page layer (2026 design pass). Uses the tokens above. */
+
+/* Profile: each record group opens with air; a heading sits close to its list. */
+.profile-page > :is(section, h2, details) { margin-block-start: var(--space-7); }
+.profile-page > section > h2,
+.profile-page > h2 { margin-block-end: var(--space-3); }
+.profile-page > section > h2 { margin-block-start: 0; }
+.profile-page .fact-grid { margin-block: var(--space-5) 0; border-block-end: 1px solid var(--color-line); }
+
+/* Race and ballot cards: the name block takes the row; the chevron sits on the card's edge. */
+@media (min-width: 801px) {
+  .person-face .person-face-copy { flex: 1 1 auto; }
+  .person-face .view-label { align-self: center; margin-inline-start: auto; padding-inline: var(--space-2); font-size: var(--step-1); }
+}
+
+/* Race page: the November list leads; primary tables follow with a section's air. */
+.race-layout > section[aria-labelledby="primary-results-heading"] { margin-block-start: var(--space-6); }
+.race-layout .person-list + .hint { margin-block-start: var(--space-3); }
+.race-layout .actions + p { margin-block-start: var(--space-4); }
+
+/* Ask: the compare panel is not a box around boxes. Its three parts stack at this measure. */
+.ask-page > section[aria-labelledby="ask-compare-heading"] { margin-block: var(--space-5) var(--space-6); background: none; border: 0; border-radius: 0; }
+.ask-page .compare-cols { grid-template-columns: minmax(0, 1fr); gap: var(--space-3); }
+.ask-page .compare-col-wide { grid-column: auto; }
+.ask-page .compare-ai > .hint { margin-block: var(--space-2) 0; }
+
+/* A date never breaks across lines. */
+time { white-space: nowrap; }
+
+/* Feed: the report link is a quiet utility under its card, not a second call to action. */
+.feed-report { justify-self: start; align-self: start; inline-size: fit-content; margin-block-start: var(--space-1); }
+
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   *, *::before, *::after { transition-duration: 0s !important; }

@@ -11,7 +11,7 @@ import { ElectionDayBanner } from "@/components/site/ElectionDayBanner";
 import { DirectList, orgLabel, OutsideList } from "@/components/site/FinanceLists";
 import { FollowControl } from "@/components/site/FollowControl";
 import { RosterMoney } from "@/components/site/RosterMoney";
-import { CareerTimeline, EducationList, PriorResults, RecordSource, VoteList } from "@/components/site/ProfileRecords";
+import { CareerTimeline, EducationList, PriorResults, SocialList, VoteList } from "@/components/site/ProfileRecords";
 import { dayLabel, formatInstant, httpsUrl, partyCue, partyLabel } from "@/lib/format";
 import { shortMoney } from "@/lib/finance/model";
 import { financeForCandidate, loadFinance } from "@/lib/finance/load";
@@ -106,7 +106,7 @@ export default async function CandidatePage({ params }: PageProps) {
     : null;
 
   return (
-    <article className="wrap">
+    <article className="wrap profile-page">
       <Crumbs
         items={[
           { href: stateHref, label: "My races" },
@@ -172,17 +172,7 @@ export default async function CandidatePage({ params }: PageProps) {
       {profile.social.length > 0 ? (
         <section>
           <h2>Social accounts</h2>
-          <ul className="plain-list">
-            {profile.social.map((account) => {
-              const label = `${account.platform} · ${account.kind === "office" ? "Official" : "Campaign"}`;
-              return (
-                <li key={account.url}>
-                  <a href={account.url} aria-label={`${label} · ${name}`}>{label}</a>
-                  <RecordSource source={account} />
-                </li>
-              );
-            })}
-          </ul>
+          <SocialList accounts={profile.social} name={name} />
         </section>
       ) : null}
       {notes.length > 0 ? <>
