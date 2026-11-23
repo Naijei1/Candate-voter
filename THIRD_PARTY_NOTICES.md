@@ -10,6 +10,8 @@ THE VOTE's own code and design are not derived from the projects below. No sourc
 | [Animata](https://github.com/codse/animata) | MIT | Static loading skeleton pattern |
 | [Cult UI](https://github.com/nolly-studio/cult-ui) | MIT | Direction-aware tab indicator pattern (the site's segmented control already follows it) |
 | [react-components-for-claude-code](https://github.com/davekrugman/react-components-for-claude-code) | None published | Used only as an index of the libraries above. Nothing copied. |
+| [GOV.UK Design System](https://design-system.service.gov.uk/) summary list | MIT | Fact rows on a profile. Rebuilt with a description list. Nothing copied. |
+| [U.S. Web Design System](https://designsystem.digital.gov/) summary box | Public domain | “What to know” box. Rebuilt in this project's CSS. Nothing copied. |
 
 ## Homepage film
 

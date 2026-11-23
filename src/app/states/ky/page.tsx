@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { DistrictMap } from "@/components/DistrictMap";
+import { DistrictRoster } from "@/components/site/DistrictRoster";
 import { Crumbs } from "@/components/site/Crumbs";
 import { FollowControl } from "@/components/site/FollowControl";
 import { generalElectionLabel } from "@/lib/copy";
@@ -99,6 +100,8 @@ export default async function StatePage({ searchParams }: PageProps) {
           />
         </section>
       ) : null}
+
+      {year === PILOT_YEAR && category === "federal" ? <DistrictRoster /> : null}
 
     </article>
   );

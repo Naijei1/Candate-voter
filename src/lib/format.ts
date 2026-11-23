@@ -163,3 +163,33 @@ export function dayLabel(value: string): string {
   const date = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])));
   return DAY_FORMAT.format(date);
 }
+
+/** Calendar day in a zone, `YYYY-MM-DD`. */
+export function calendarDay(now: Date, timeZone = stateConfig().displayTimeZone): string {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(now);
+  const value = (type: Intl.DateTimeFormatPartTypes) => parts.find((part) => part.type === type)?.value ?? "";
+  return `${value("year")}-${value("month")}-${value("day")}`;
+}
+
+/**
+ * "3 days ago" for a recent filing or story date. Computed once on the server.
+ * Older dates keep the calendar label.
+ */
+export function ageLabel(value: string, now = new Date(), timeZone = stateConfig().displayTimeZone): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
+  if (!match) return dayLabel(value);
+  const then = Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+  const today = calendarDay(now, timeZone);
+  const todayMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(today);
+  if (!todayMatch) return dayLabel(value);
+  const start = Date.UTC(Number(todayMatch[1]), Number(todayMatch[2]) - 1, Number(todayMatch[3]));
+  const days = Math.round((start - then) / 86_400_000);
+  if (days === 0) return "today";
+  if (days > 0 && days < 14) return days === 1 ? "1 day ago" : `${days} days ago`;
+  return dayLabel(value);
+}

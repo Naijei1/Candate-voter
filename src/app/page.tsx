@@ -13,6 +13,7 @@ import { StatewidePanel } from "@/components/home/StatewidePanel";
 import { CandidateCard } from "@/components/site/CandidateCard";
 import { candidateCards } from "@/lib/site/candidate-cards";
 import { MoneyCharts } from "@/components/site/MoneyCharts";
+import { DistrictRoster } from "@/components/site/DistrictRoster";
 import { COMPARE_RACE_IDS, compareBasis, compareOption } from "@/lib/compare/evidence";
 import { kyBallotSeed } from "@/lib/site/ky-ballot";
 import { kyStatewide } from "@/lib/site/ky-statewide";
@@ -50,6 +51,9 @@ export default async function HomePage() {
         <p className="zip-link">
           <a href="/ballot">Or enter a ZIP code</a>
         </p>
+      </section>
+      <section className="wrap home-section">
+        <DistrictRoster />
       </section>
       <RacesInFocus />
       <section className="wrap home-section mobile-candidates" aria-labelledby="senate-candidates">

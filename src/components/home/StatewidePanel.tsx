@@ -1,3 +1,4 @@
+import { KeyDates } from "@/components/site/KeyDates";
 import { PersonMark } from "@/components/site/PersonMark";
 import { partyBadge } from "@/components/site/PersonFace";
 import { type StatewideOfficial } from "@/lib/site/ky-statewide";
@@ -40,6 +41,7 @@ export function StatewidePanel({
 }) {
   return (
     <div className="statewide" data-testid="statewide-panel">
+      <KeyDates />
       <h3>U.S. senators for Kentucky</h3>
       <ul className="official-grid">
         {senators.map((person) => (

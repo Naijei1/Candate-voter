@@ -33,6 +33,8 @@ export type ProfileVote = ProfileSource & {
   vote: string;
   title: string;
   roll: number;
+  lawUrl?: string;
+  lawSigned?: string;
 };
 
 export type KyProfile = {
