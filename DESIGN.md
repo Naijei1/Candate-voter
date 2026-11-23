@@ -35,6 +35,10 @@ Keyboard focus is a 3px ring 2px off the element. Buttons and form controls add 
 - Give profiles a portrait beside the name, race and actions. Separate facts with hairlines. In the feed, keep source and date together beneath the summary. Give finance figures a common right edge.
 - Keep the Kentucky shape intact. Use the projected interior point for each label. Keyboard focus outlines the district path. Reserve the map and live-label space before interaction.
 
+## Records and race pages
+
+A race page leads with its certification line, the actions and the November candidates. Certified primary tables follow. On a profile, career, education, results, social accounts and votes are hairline rows with a lead column (year or vote) on a shared subgrid, and the source on one muted line. A list longer than eight rows shows six and keeps the rest, server-rendered, behind “Show all (N)”. In a narrow container (side-by-side compare) the lead sits above the fact. Dates do not break across lines.
+
 ## Interaction and copy
 
 Hover and press use 160ms and `cubic-bezier(0.22, 1, 0.36, 1)`. On hover-capable inputs a linked card rises 2px, a candidate image scales to 1.02 inside its frame, and action links draw an underline. Keep keyboard focus independent of hover. Reduced motion removes translation, zoom, transitions and smooth scrolling. The film keeps its existing poster fallback.

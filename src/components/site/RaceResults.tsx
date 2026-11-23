@@ -3,16 +3,18 @@ import { certifiedWinner, generalResult, KY_RESULTS_SOURCE, primaryResults, shor
 import { KY_RESULTS_LINKS } from "@/lib/site/ky-results";
 import styles from "./election-results.module.css";
 
-export function RaceResults({ raceId }: { raceId: string }) {
+/** `status`: certification note or certified general result. `primary`: May primary tables. */
+export function RaceResults({ raceId, show = "all" }: { raceId: string; show?: "all" | "status" | "primary" }) {
   const general = generalResult(raceId);
-  const primary = primaryResults(raceId);
+  const primary = show === "status" ? [] : primaryResults(raceId);
+  const status = show !== "primary";
   const winner = general?.status === "certified" ? certifiedWinner(general) : null;
   return (
     <>
-      {general?.status === "pending" ? (
+      {status && general?.status === "pending" ? (
         <p className="results-note">Certification due {shortElectionDate(general.scheduledCertificationDate)}. <a href={KY_RESULTS_LINKS[1].href}>See official results</a></p>
       ) : null}
-      {general?.status === "certified" ? (
+      {status && general?.status === "certified" ? (
         <section aria-labelledby="general-results-heading">
           <h2 id="general-results-heading">General election results</h2>
           <p>{winner ? <><strong>{winner.name}</strong> · Elected · </> : null}Certified {dayLabel(general.certificationDate)} · <a href={general.sourceUrl}>{KY_RESULTS_SOURCE}</a></p>

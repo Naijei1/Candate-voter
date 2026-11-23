@@ -1,23 +1,73 @@
-ol.timeline {
-  border-inline-start: 1px solid currentColor;
-  padding-inline-start: 16px;
+/* Record rows: a lead column (year or vote) and the fact, separated by hairlines. */
+.frame {
+  container-type: inline-size;
 }
 
-.timeline li {
-  position: relative;
+/* One column track for the whole list, so every lead lines up (subgrid). */
+.records {
+  display: grid;
+  grid-template-columns: minmax(3.25rem, max-content) minmax(0, 1fr);
+  column-gap: var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-block-start: 1px solid var(--color-line);
 }
 
-.timeline li::before {
-  content: "";
-  position: absolute;
-  inset-block-start: 0.9em;
-  inset-inline-start: -20px;
-  inline-size: 7px;
-  block-size: 7px;
-  border-radius: 50%;
-  background: currentColor;
+.rest {
+  border-block-start: 0;
+}
+
+.records > li {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  row-gap: var(--space-1);
+  padding-block: var(--space-3);
+  border-block-end: 1px solid var(--color-line);
+}
+
+.records > li.single > .body {
+  grid-column: 1 / -1;
+}
+
+.lead {
+  color: var(--color-muted);
+  font-size: var(--step--1);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.55;
+  padding-block-start: 0.15em;
+}
+
+.body > p {
+  margin: 0;
+}
+
+.body > p + p {
+  margin-block-start: var(--space-1);
+}
+
+.source time {
+  white-space: nowrap;
+}
+
+.source {
+  color: var(--color-muted);
+  font-size: var(--step--1);
+  line-height: 1.45;
 }
 
 .numbers {
   font-variant-numeric: tabular-nums;
+}
+
+/* Narrow columns (side-by-side compare, small phones): lead sits above the fact. */
+@container (max-width: 22rem) {
+  .records {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .records > li > * {
+    grid-column: 1;
+  }
 }

@@ -60,7 +60,7 @@ export default async function RacePage({ params }: PageProps) {
       />
       <h1>{race.title}</h1>
       <DatasetUpdated date={[ballot ? KY_BALLOT_CHECKED : "", loaded.refreshedAt ?? ""].sort().at(-1)} />
-      {ballot ? <RaceResults raceId={race.raceId} /> : <ElectionDayBanner />}
+      {ballot ? <RaceResults raceId={race.raceId} show="status" /> : <ElectionDayBanner />}
       {!ballot && sourceHref ? <p className="hint"><a href={sourceHref}>Source ↗</a></p> : null}
       {ballot || loaded.filingsLoaded ? null : roster.fecList ? (
         <p className="notice" role="status">
@@ -164,6 +164,7 @@ export default async function RacePage({ params }: PageProps) {
           </>
         )}
       </section>
+      {ballot ? <RaceResults raceId={race.raceId} show="primary" /> : null}
       <AskPanel raceId={race.raceId} cycle={race.cycle} state={race.state} />
       </div>
       {ballot ? (
