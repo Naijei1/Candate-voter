@@ -192,7 +192,7 @@ export function CompareBoard({
       </div>
       {summary ? <p>{summary}</p> : filingsLoaded ? <p>{filedLine(candidates.length)}</p> : null}
       <div className="compare-grid" role="tabpanel" aria-labelledby={tabId(tab)} tabIndex={selected.length ? undefined : 0}>
-        {selected.map((candidate) => (
+        {orderedPair(selected, pair).map((candidate) => (
           <article className={pair.includes(candidate.candidateId) ? "person-card is-paired" : "person-card"} key={candidate.candidateId}>
             <PersonMark name={candidate.displayName} photo={candidate.photo ?? null} party={candidate.partyLabel} size="lg" />
             <h2>
@@ -211,6 +211,20 @@ export function CompareBoard({
       </p>
     </div>
   );
+}
+
+/** Phone columns follow the Left and Right choices. The other cards stay after them. */
+export function orderedPair(selected: readonly CompareCandidate[], pair: readonly string[]): CompareCandidate[] {
+  const seen = new Set<string>();
+  const paired: CompareCandidate[] = [];
+  for (const id of pair) {
+    if (seen.has(id)) continue;
+    const candidate = selected.find((item) => item.candidateId === id);
+    if (!candidate) continue;
+    seen.add(id);
+    paired.push(candidate);
+  }
+  return [...paired, ...selected.filter((candidate) => !seen.has(candidate.candidateId))];
 }
 
 function filedLine(count: number): string {

@@ -5,7 +5,7 @@ import { signOutAction } from "@/lib/auth/actions";
 import { useSession } from "@/components/site/SessionProvider";
 
 export function AccountMenu() {
-  const { signedIn, email, admin } = useSession();
+  const { signedIn, email, admin, clearSession } = useSession();
   if (!signedIn || !email) {
     return (
       <Link href="/sign-in" className="nav-signin">
@@ -19,7 +19,10 @@ export function AccountMenu() {
       <div>
         <Link href="/account">My watchlist</Link>
         {admin ? <Link href="/admin">Admin</Link> : null}
-        <form action={signOutAction}>
+        <form action={() => {
+          clearSession();
+          return signOutAction();
+        }}>
           <button type="submit">Sign out</button>
         </form>
       </div>

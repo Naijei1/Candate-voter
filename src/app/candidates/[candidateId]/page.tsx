@@ -13,7 +13,7 @@ import { RosterMoney } from "@/components/site/RosterMoney";
 import { CareerTimeline, EducationList, PriorResults, SocialList, VoteList } from "@/components/site/ProfileRecords";
 import { dayLabel, formatInstant, httpsUrl, partyCue, partyLabel } from "@/lib/format";
 import { shortMoney } from "@/lib/finance/model";
-import { financeForCandidate, loadFinance } from "@/lib/finance/load";
+import { loadFinance } from "@/lib/finance/load";
 import { selectDirect, selectOutside } from "@/lib/finance/present";
 import { loadChecks } from "@/lib/content/store";
 import { loadProfile } from "@/lib/site/contest";
@@ -27,7 +27,7 @@ import { seatStatus } from "@/lib/site/seat";
 import { candidateElectionStatus, CONGRESSIONAL_TERM_START, KY_FEDERAL_RACES, KY_RESULTS_SOURCE, primaryCandidateById } from "@/lib/site/certified-results";
 import { raceCardTitle } from "@/lib/site/candidate-cards";
 import { filingPeriods } from "@/lib/site/fec-reports";
-import { moneyReportState, sinceLastFiling } from "@/lib/site/money-status";
+import { financeHeadline, sinceLastFiling } from "@/lib/site/money-status";
 import { photoAttribution, portraitFor, stanceIssues, stancesFor } from "@/lib/site/stances";
 import { showcaseCandidate, showcaseRace, type ShowcaseCandidate } from "@/lib/site/showcase";
 import type { Filing, Race } from "@/lib/types";
@@ -93,12 +93,12 @@ export default async function CandidatePage({ params }: PageProps) {
     loadChecks("candidate", id),
     ballot ? newsForNames([name]) : [],
   ]);
-  const finance = financeForCandidate(bundle, financeKey);
-  const kentuckyFinance = finance.direct.filter(isKentuckyFinanceRow);
-  const direct = selectDirect(kentuckyFinance, null);
-  const outside = selectOutside(finance.outside.filter(isKentuckyFinanceRow), null);
-  const filingDelta = sinceLastFiling(filingPeriods(kentuckyFinance, financeKey));
-  const reportState = moneyReportState(ballot?.person.finance ?? null);
+  const storedIds = new Set([financeKey, ...(ballot?.person.alsoFecIds ?? [])]);
+  const stored = bundle.direct.filter((row) => storedIds.has(row.candidateId) && isKentuckyFinanceRow(row));
+  const headline = financeHeadline(stored, ballot?.person.finance ?? null);
+  const direct = selectDirect(stored, null);
+  const outside = selectOutside(bundle.outside.filter((row) => storedIds.has(row.candidateId) && isKentuckyFinanceRow(row)), null);
+  const filingDelta = sinceLastFiling(filingPeriods(stored, financeKey));
   const profile = ballot ? profileFor(ballot.person.id) : profileFor(id);
   const timeline = careerTimeline(profile);
   const photo = portraitFor(ballot?.person.id ?? id);
@@ -157,14 +157,15 @@ export default async function CandidatePage({ params }: PageProps) {
         {ballot ? (
         <div>
           <p className="hint">Campaign finance</p>
-          {reportState === "missing" ? <p>No report on file</p> : reportState === "zero" ? (
-            <p>Reported $0 · <a href={ballot.person.finance?.sourceUrl}>FEC</a></p>
-          ) : (
+          {headline.kind === "missing" ? <p>No report on file</p> : null}
+          {headline.kind === "zero" ? <p>Reported $0{headline.sourceUrl ? <> · <a href={headline.sourceUrl}>FEC</a></> : null}</p> : null}
+          {headline.kind === "reported" ? (
             <p>
-              {shortMoney(ballot.person.finance?.receipts ?? 0)} raised{ballot.person.finance?.cash != null ? ` · ${shortMoney(ballot.person.finance.cash)} cash on hand` : ""} · <a href={ballot.person.finance?.sourceUrl}>FEC</a>
+              {shortMoney(headline.receipts)} raised{headline.cash != null ? ` · ${shortMoney(headline.cash)} cash on hand` : ""}{headline.sourceUrl ? <> · <a href={headline.sourceUrl}>FEC</a></> : null}
             </p>
-          )}
-          {filingDelta && reportState === "reported" ? (
+          ) : null}
+          {headline.kind === "filed" && headline.sourceUrl ? <p>Report on file · <a href={headline.sourceUrl}>FEC</a></p> : null}
+          {filingDelta && headline.kind === "reported" ? (
             <p className="hint">
               {filingDelta.amount > 0 ? `+${shortMoney(filingDelta.amount)}` : "Reported $0"} since the {dayLabel(filingDelta.since)} report · <a href={filingDelta.sourceUrl}>FEC</a>
             </p>
@@ -307,7 +308,7 @@ export default async function CandidatePage({ params }: PageProps) {
         </>
       ) : null}
 
-      {direct.length > 0 || outside.length > 0 || ballot?.person.finance ? <h2>Campaign finance</h2> : null}
+      {direct.length > 0 || outside.length > 0 || ballot?.person.finance || headline.kind === "filed" ? <h2>Campaign finance</h2> : null}
       {direct.length > 0 ? null : ballot?.person.finance ? <RosterMoney finance={ballot.person.finance} /> : null}
       {direct.length > 0 ? <DirectList rows={direct} /> : null}
       {outside.length > 0 ? (

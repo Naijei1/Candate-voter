@@ -10,12 +10,12 @@ import { CareerTimeline, EducationList, PriorResults, VoteList } from "@/compone
 import { loadFinance } from "@/lib/finance/load";
 import { selectDirect, selectOutside } from "@/lib/finance/present";
 import { ElectionDayBanner } from "@/components/site/ElectionDayBanner";
-import { formatMoney } from "@/lib/finance/model";
+import { formatMoney, type FinanceDirect } from "@/lib/finance/model";
 import { filingPeriods } from "@/lib/site/fec-reports";
-import { moneyReportState, sinceLastFiling } from "@/lib/site/money-status";
+import { financeHeadline, sinceLastFiling } from "@/lib/site/money-status";
 import { dayLabel } from "@/lib/format";
 import { KY_FEDERAL_RACES } from "@/lib/site/certified-results";
-import { KY_BALLOT_CHECKED, kyBallot, rosterMoney } from "@/lib/site/ky-ballot";
+import { KY_BALLOT_CHECKED, kyBallot, rosterMoney, type KyPerson } from "@/lib/site/ky-ballot";
 import { newsForNames } from "@/lib/site/ky-news";
 import { careerTimeline, linkLabel, profileFor } from "@/lib/site/profiles";
 import { photoAttribution, portraitFor, stanceIssues, stancesFor } from "@/lib/site/stances";
@@ -132,13 +132,8 @@ export default async function ComparePage({ params }: PageProps) {
                       </>
                     ) : null,
                     priorResults: profile.results.length ? <PriorResults entries={profile.results} /> : null,
-                    raised: moneyReportState(person.finance) === "missing"
-                      ? "No report on file"
-                      : moneyReportState(person.finance) === "zero"
-                        ? "Reported $0"
-                        : formatMoney(person.finance?.receipts ?? 0),
+                    ...raisedFacts(finance.direct, person),
                     raisedChange: raisedChange(filingPeriods(finance.direct, person.fecCandidateId ?? person.id)),
-                    raisedSource: person.finance?.sourceUrl,
                     moneyIds: [person.id, person.fecCandidateId, ...person.alsoFecIds].filter((id): id is string => Boolean(id)),
                   };
                 })
@@ -156,6 +151,16 @@ export default async function ComparePage({ params }: PageProps) {
       <BallotBar step={4} backHref={`/races/${race.raceId}`} nextHref="/ballot" nextLabel="Your ballot" nextShort="Ballot" />
     </article>
   );
+}
+
+function raisedFacts(rows: readonly FinanceDirect[], person: KyPerson): { raised: string | null; raisedSource?: string } {
+  const ids = new Set([person.id, person.fecCandidateId, ...person.alsoFecIds].filter((id): id is string => Boolean(id)));
+  const headline = financeHeadline(rows.filter((row) => ids.has(row.candidateId)), person.finance);
+  const source = headline.kind === "missing" ? undefined : headline.sourceUrl ?? undefined;
+  if (headline.kind === "missing") return { raised: "No report on file" };
+  if (headline.kind === "zero") return { raised: "Reported $0", raisedSource: source };
+  if (headline.kind === "reported") return { raised: formatMoney(headline.receipts), raisedSource: source };
+  return { raised: source ? "Report on file" : null, raisedSource: source };
 }
 
 function raisedChange(periods: ReturnType<typeof filingPeriods>): string | null {
