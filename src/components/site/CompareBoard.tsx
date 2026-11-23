@@ -227,6 +227,11 @@ export function orderedPair(selected: readonly CompareCandidate[], pair: readonl
   return [...paired, ...selected.filter((candidate) => !seen.has(candidate.candidateId))];
 }
 
+export function raisedOverview(raised: string): string {
+  if (raised === "No report on file" || raised === "Reported $0" || raised === "Report on file") return raised;
+  return `Raised ${raised}`;
+}
+
 function filedLine(count: number): string {
   if (count === 0) return "No one has filed to run.";
   if (count === 1) return "One person has filed to run.";
@@ -268,7 +273,7 @@ function TabBody({
             <a className="action-link" href={candidate.website.url}>{candidate.website.label}</a>
           </p>
         ) : null}
-        {candidate.raised ? <p>{candidate.raised === "No report on file" || candidate.raised === "Reported $0" ? candidate.raised : <>Raised {candidate.raised}</>}{candidate.raisedSource ? <> · <a href={candidate.raisedSource}>FEC</a></> : null}</p> : null}
+        {candidate.raised ? <p>{raisedOverview(candidate.raised)}{candidate.raisedSource ? <> · <a href={candidate.raisedSource}>FEC</a></> : null}</p> : null}
         {candidate.raisedChange ? <p className="hint">{candidate.raisedChange}</p> : null}
       </div>
     );

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import type { FinanceDirect } from "../src/lib/finance/model";
 import { financeHeadline, sinceLastFiling } from "../src/lib/site/money-status";
-import { orderedPair, type CompareCandidate } from "../src/components/site/CompareBoard";
+import { orderedPair, raisedOverview, type CompareCandidate } from "../src/components/site/CompareBoard";
 
 function period(input: Partial<FinanceDirect> & Pick<FinanceDirect, "coverageStart" | "coverageEnd" | "receipts">): FinanceDirect {
   return {
@@ -67,6 +67,11 @@ test("a stored total replaces a blank ballot seed, and an unclear set states no 
   assert.equal(filed.kind, "filed");
   const several = financeHeadline([cycle, { ...cycle, committeeId: "C2" }], null);
   assert.equal(several.kind, "filed");
+});
+
+test("a report without a total is not labeled as money raised", () => {
+  assert.equal(raisedOverview("Report on file"), "Report on file");
+  assert.equal(raisedOverview("$12,000"), "Raised $12,000");
 });
 
 test("phone compare keeps the chosen left and right order", () => {
