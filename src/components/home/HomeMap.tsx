@@ -5,7 +5,9 @@ import { useEffect, useState, type KeyboardEvent, type ReactNode } from "react";
 
 import { parseMapView, type MapView } from "@/lib/site/map-view";
 
-const CountyMap = dynamic(() => import("./CountyMap"));
+const CountyMap = dynamic(() => import("./CountyMap"), {
+  loading: () => <p className="hint" role="status">Loading the county map.</p>,
+});
 
 const VIEWS: { id: MapView; label: string }[] = [
   { id: "congressional", label: "Congressional" },
@@ -27,11 +29,19 @@ export function HomeMap({
   }, []);
 
   function choose(next: MapView) {
+    const y = window.scrollY;
     setView(next);
     const url = new URL(window.location.href);
     if (next !== "congressional") url.searchParams.set("map", next);
     else url.searchParams.delete("map");
+    const tabId = `map-tab-${next}`;
     window.history.replaceState(null, "", `${url.pathname}${url.search}#map`);
+    const restore = () => {
+      if (Math.abs(window.scrollY - y) > 1) window.scrollTo(0, y);
+      document.getElementById(tabId)?.focus({ preventScroll: true });
+    };
+    restore();
+    requestAnimationFrame(restore);
   }
 
   function onKey(event: KeyboardEvent<HTMLButtonElement>) {
@@ -41,7 +51,6 @@ export function HomeMap({
     const offset = event.key === "ArrowRight" ? 1 : -1;
     const next = VIEWS[(index + offset + VIEWS.length) % VIEWS.length].id;
     choose(next);
-    document.getElementById(`map-tab-${next}`)?.focus();
   }
 
   return (

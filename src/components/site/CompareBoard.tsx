@@ -114,6 +114,17 @@ export function CompareBoard({
     hasPriorResults: selected.some((candidate) => candidate.priorResults),
   });
   const tab = tabs.includes(selectedTab) ? selectedTab : "Overview";
+  const candidateIds = candidates.map((candidate) => candidate.candidateId).join("\n");
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const left = params.get("left");
+    const right = params.get("right");
+    if (!left || !right || left === right) return;
+    const known = new Set(candidateIds.split("\n"));
+    if (!known.has(left) || !known.has(right)) return;
+    setDraftPair([left, right]);
+    setPair([left, right]);
+  }, [candidateIds]);
   useEffect(() => {
     if (tab !== "Issues") return;
     const hash = window.location.hash.replace(/^#/, "");
@@ -142,7 +153,13 @@ export function CompareBoard({
             const [first, second] = draftPair;
             if (!first) return;
             const other = candidates.find((candidate) => candidate.candidateId !== first)?.candidateId ?? first;
-            setPair(!second || second === first ? [first, other] : [first, second]);
+            const resolved: [string, string] = !second || second === first ? [first, other] : [first, second];
+            setDraftPair(resolved);
+            setPair(resolved);
+            const url = new URL(window.location.href);
+            url.searchParams.set("left", resolved[0]);
+            url.searchParams.set("right", resolved[1]);
+            window.history.replaceState(null, "", `${url.pathname}?${url.searchParams}${url.hash}`);
           }}
         >
           {(["Left", "Right"] as const).map((side, index) => (

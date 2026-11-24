@@ -1,4 +1,5 @@
 import { KY_BALLOT_SOURCES, kyBallot } from "@/lib/site/ky-ballot";
+import { kentuckyPollsClosed } from "@/lib/site/ky-results";
 import { profileFor } from "@/lib/site/profiles";
 import { stanceIssues, stancesFor } from "@/lib/site/stances";
 
@@ -111,7 +112,7 @@ export function compareBasis(raceId: string): CompareBasis | null {
       ? { text: `${holder.name} held this seat and was running again.`, cites: [clerkId] }
       : { text: "Open seat: no current officeholder was running.", cites: [clerkId] },
   ];
-  if (race.note) know.push({ text: race.note, cites: [ballotId] });
+  if (race.note) know.push({ text: pastBallotNote(race.note), cites: [ballotId] });
   return { raceId, title: compareTitle(raceId), people, evidence, know: know.filter((claim) => claim.cites.length > 0) };
 }
 
@@ -162,6 +163,13 @@ export function candidateEvidence(basis: CompareBasis): Evidence[] {
 }
 
 export { REFUSALS } from "./refusals";
+
+function pastBallotNote(note: string, now = new Date()): string {
+  if (!kentuckyPollsClosed(now)) return note;
+  return note
+    .replace(/\bis not a candidate\b/g, "was not a candidate")
+    .replace(/\bis running\b/g, "was running");
+}
 
 export function candidatesWithEvidence(basis: CompareBasis): number {
   return new Set(basis.evidence.filter((row) => row.personId).map((row) => row.personId)).size;

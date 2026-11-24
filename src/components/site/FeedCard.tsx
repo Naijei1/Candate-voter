@@ -36,7 +36,7 @@ export function FeedCard({ card }: { card: TodayCard }) {
           <span className="feed-title">{card.title}</span>
           <span className="feed-text">{card.text}</span>
           <span className="meta">
-            {card.sourceName}{card.date ? <> · <time dateTime={card.date}>{ageLabel(card.date)}</time></> : null}
+            {card.sourceName}{card.date ? <span className="meta-date"> · <time dateTime={card.date}>{ageLabel(card.date)}</time></span> : null}
           </span>
         </span>
       </a>

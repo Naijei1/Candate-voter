@@ -1,5 +1,6 @@
 import data from "../../../data/ky-certified-results.json";
 import calendar from "../../../data/ky-election-calendar.json";
+import { calendarDay } from "../format";
 import { stateConfig } from "../states";
 
 const KY = stateConfig("KY");
@@ -62,6 +63,15 @@ export function certifiedWinner(result: CertifiedResult) {
 
 export function shortElectionDate(date: string): string {
   return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", timeZone: "UTC" }).format(new Date(date));
+}
+
+/** Past, present, or future wording for a certification deadline. Does not name a winner. */
+export function certificationPhrase(date: string, now = new Date()): string {
+  const today = calendarDay(now);
+  const label = shortElectionDate(date);
+  if (date < today) return `Certification was due ${label}.`;
+  if (date === today) return `Certification is due ${label}.`;
+  return `Certification due ${label}.`;
 }
 
 export type ElectionStatus = {

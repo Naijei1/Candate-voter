@@ -1,10 +1,10 @@
 import { dayLabel } from "@/lib/format";
-import { certifiedWinner, generalResult, KY_RESULTS_SOURCE, primaryResults, shortElectionDate, type CertifiedResult } from "@/lib/site/certified-results";
+import { certificationPhrase, certifiedWinner, generalResult, KY_RESULTS_SOURCE, primaryResults, type CertifiedResult } from "@/lib/site/certified-results";
 import { KY_RESULTS_LINKS } from "@/lib/site/ky-results";
 import styles from "./election-results.module.css";
 
 /** `status`: certification note or certified general result. `primary`: May primary tables. */
-export function RaceResults({ raceId, show = "all" }: { raceId: string; show?: "all" | "status" | "primary" }) {
+export function RaceResults({ raceId, show = "all", now = new Date() }: { raceId: string; show?: "all" | "status" | "primary"; now?: Date }) {
   const general = generalResult(raceId);
   const primary = show === "status" ? [] : primaryResults(raceId);
   const status = show !== "primary";
@@ -12,7 +12,7 @@ export function RaceResults({ raceId, show = "all" }: { raceId: string; show?: "
   return (
     <>
       {status && general?.status === "pending" ? (
-        <p className="results-note">Certification due {shortElectionDate(general.scheduledCertificationDate)}. <a href={KY_RESULTS_LINKS[1].href}>See official results</a></p>
+        <p className="results-note">{certificationPhrase(general.scheduledCertificationDate, now)} <a href={KY_RESULTS_LINKS[1].href}>See official results</a></p>
       ) : null}
       {status && general?.status === "certified" ? (
         <section aria-labelledby="general-results-heading">

@@ -18,6 +18,7 @@ export default async function AccountPage() {
     return (
       <article className="wrap">
         <h1>My watchlist</h1>
+        <p>Follow a candidate, a race, or Kentucky. What you follow is listed here.</p>
         <p>{installHint}</p>
         <p>
           <Link className="btn btn-navy" href="/sign-in">

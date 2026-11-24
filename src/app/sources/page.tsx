@@ -13,17 +13,17 @@ export default function SourcesPage() {
       <h1>Sources</h1>
       <h2>Kentucky&apos;s 2026 federal elections</h2>
       <ul className="plain-list">
-        <li><a href={KY_BALLOT_SOURCES[0].url}>Kentucky Secretary of State candidate filings</a> · Nov 3, 2026</li>
-        <li><a href={KY_BALLOT_SOURCES[1].url}>Clerk of the House nominee list</a> · Oct 8, 2026</li>
-        <li><a href={KY_BALLOT_SOURCES[2].url}>FEC campaign totals</a> · Through Oct 14, 2026</li>
+        <li><a href={KY_BALLOT_SOURCES[0].url}>Kentucky Secretary of State candidate filings</a><span className="meta-date"> · Nov 3, 2026</span></li>
+        <li><a href={KY_BALLOT_SOURCES[1].url}>Clerk of the House nominee list</a><span className="meta-date"> · Oct 8, 2026</span></li>
+        <li><a href={KY_BALLOT_SOURCES[2].url}>FEC campaign totals</a><span className="meta-date"> · Through Oct 14, 2026</span></li>
         <li><a href="https://www.fec.gov/data/independent-expenditures/">FEC outside spending</a></li>
+        <li><DistrictVintageNote /></li>
       </ul>
-      <DistrictVintageNote />
       <h2>Kentucky counties</h2>
       <ul className="plain-list">
-        <li><a href="https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip">Census county boundaries</a> · 2023</li>
+        <li><a href="https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_5m.zip">Census county boundaries</a><span className="meta-date"> · 2023</span></li>
         <li><a href="https://www2.census.gov/programs-surveys/decennial/rdo/mapping-files/2027/120-congressional-district-befs/">Census block assignments for the 120th Congress</a></li>
-        <li><a href="https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx">State Board of Elections county clerk directory</a> · Nov 22, 2026</li>
+        <li><a href="https://elect.ky.gov/About-Us/Pages/County-Clerks.aspx">State Board of Elections county clerk directory</a><span className="meta-date"> · Nov 22, 2026</span></li>
       </ul>
       <p><a className="action-link" href={withBasePath("/openapi.yaml")}>API documentation</a></p>
       <h2>News Feed</h2>

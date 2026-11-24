@@ -22,6 +22,23 @@ export function currentOfficeFor(candidateId: string, name?: string) {
   );
 }
 
+/**
+ * The officeholder page's name when it is the same person with a shorter form
+ * ("James Comer" for "James R. Comer"). Otherwise the stored name.
+ */
+export function shownName(legalName: string, candidateId?: string): string {
+  const office = currentOfficeFor(candidateId ?? "", legalName);
+  if (!office || office.name === legalName) return legalName;
+  const legal = nameTokens(legalName);
+  const common = nameTokens(office.name);
+  if (common.length > 0 && common.length < legal.length && common.every((token) => legal.includes(token))) return office.name;
+  return legalName;
+}
+
+function nameTokens(name: string): string[] {
+  return name.toLowerCase().replace(/[^a-z0-9 ]/g, " ").split(/\s+/).filter(Boolean);
+}
+
 export function congressionalOfficeLabel(member: ReturnType<typeof currentOfficeFor>): string | null {
   if (!member) return null;
   return member.district ? `U.S. Representative, District ${member.district}` : "U.S. Senator";

@@ -22,6 +22,7 @@ import {
   coldAskBudgetMs,
 } from "./config";
 import { definitionAnswer } from "./definitions";
+import { storedRaceAnswer, usesStoredKentuckyCycle } from "./facts";
 import { kentuckyRunningAnswer } from "./kentucky";
 import { outOfScopeMarkdown } from "./state-copy";
 import { notesAnswer } from "./notes";
@@ -257,6 +258,14 @@ async function answerChat(
     }
   }
 
+  if (/\bon the ballot\b|\bnominees?\b/i.test(question) && usesStoredKentuckyCycle(question, asked.raceId, asked.cycle)) {
+    const listed = kentuckyRunningAnswer(question);
+    if (listed) {
+      logOutcome({ refused: false, tools: ["kentucky"], latencyMs: Date.now() - started, mode: "factual" });
+      return json(chatBody(listed, threadId, asked.message, asked, origin, false));
+    }
+  }
+
   if (isScopedRosterQuestion(asked)) {
     const siteRoot =
       deps.siteRoot ?? `${originFromRequest(request)}${basePathFromEnv(deps.env)}`;
@@ -379,6 +388,12 @@ async function answerChat(
         origin,
       ),
     );
+  }
+
+  const stored = storedRaceAnswer(asked.message, now, asked.raceId, asked.cycle);
+  if (stored) {
+    logOutcome({ refused: false, tools: ["records"], latencyMs: Date.now() - started, mode: "factual" });
+    return json(chatBody(stored, threadId, asked.message, asked, origin, false));
   }
 
   const siteRoot =

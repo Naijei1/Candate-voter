@@ -86,9 +86,9 @@ function RaceChart({ race, previous, showHeadline }: { race: ChartRace; previous
         ))}
       />
       {race.missing.length > 0 ? (
-        <ul className="plain-list">
-          {race.missing.map((name) => <li key={name}>{name}: No report on file</li>)}
-        </ul>
+        <div>
+          {race.missing.map((name) => <p className="chart-missing" key={name}>{name}: No report on file</p>)}
+        </div>
       ) : null}
       <details className="chart-table">
         <summary>View as table</summary>

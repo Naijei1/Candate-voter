@@ -10,12 +10,13 @@ import { CareerTimeline, EducationList, PriorResults, VoteList } from "@/compone
 import { loadFinance } from "@/lib/finance/load";
 import { selectDirect, selectOutside } from "@/lib/finance/present";
 import { ElectionDayBanner } from "@/components/site/ElectionDayBanner";
-import { formatMoney, type FinanceDirect } from "@/lib/finance/model";
+import { shortMoney, type FinanceDirect } from "@/lib/finance/model";
 import { filingPeriods } from "@/lib/site/fec-reports";
 import { financeHeadline, sinceLastFiling } from "@/lib/site/money-status";
 import { dayLabel } from "@/lib/format";
 import { KY_FEDERAL_RACES } from "@/lib/site/certified-results";
 import { KY_BALLOT_CHECKED, kyBallot, rosterMoney, type KyPerson } from "@/lib/site/ky-ballot";
+import { shownName } from "@/lib/site/ky-officeholders";
 import { newsForNames } from "@/lib/site/ky-news";
 import { careerTimeline, linkLabel, profileFor } from "@/lib/site/profiles";
 import { photoAttribution, portraitFor, stanceIssues, stancesFor } from "@/lib/site/stances";
@@ -104,9 +105,9 @@ export default async function ComparePage({ params }: PageProps) {
                   const timeline = careerTimeline(profile);
                   return {
                     candidateId: person.id,
-                    displayName: person.name,
+                    displayName: shownName(person.name, person.id),
                     partyLabel: person.party,
-                    note: person.role === "write-in" ? "Write-in" : person.holdsOffice ? "Current officeholder" : null,
+                    note: person.role === "write-in" ? null : person.holdsOffice ? "Current officeholder" : null,
                     photo: photo?.src ?? null,
                     photoCredit: photoAttribution(photo) ?? photo?.credit,
                     photoSource: photo?.sourceUrl,
@@ -159,14 +160,14 @@ function raisedFacts(rows: readonly FinanceDirect[], person: KyPerson): { raised
   const source = headline.kind === "missing" ? undefined : headline.sourceUrl ?? undefined;
   if (headline.kind === "missing") return { raised: "No report on file" };
   if (headline.kind === "zero") return { raised: "Reported $0", raisedSource: source };
-  if (headline.kind === "reported") return { raised: formatMoney(headline.receipts), raisedSource: source };
+  if (headline.kind === "reported") return { raised: shortMoney(headline.receipts), raisedSource: source };
   return { raised: source ? "Report on file" : null, raisedSource: source };
 }
 
 function raisedChange(periods: ReturnType<typeof filingPeriods>): string | null {
   const delta = sinceLastFiling(periods);
   if (!delta || delta.amount <= 0) return null;
-  return `+${formatMoney(delta.amount)} since the ${dayLabel(delta.since)} report`;
+  return `+${shortMoney(delta.amount)} since the ${dayLabel(delta.since)} report`;
 }
 
 function compareNote(line: string): string | null {
