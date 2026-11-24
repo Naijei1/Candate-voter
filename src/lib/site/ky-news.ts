@@ -51,6 +51,7 @@ async function loadFeed(source: FeedSource): Promise<NewsItem[]> {
     const response = await fetch(source.url, {
       headers: { accept: "application/rss+xml, application/xml, text/xml" },
       signal: AbortSignal.timeout(4000),
+      next: { revalidate: 3600 },
     });
     if (!response.ok) return fallback;
     const xml = await response.text();

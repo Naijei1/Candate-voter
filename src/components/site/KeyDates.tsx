@@ -22,6 +22,7 @@ export function KeyDates({ now = new Date() }: { now?: Date }) {
                 <time className={styles.dateLabel} dateTime={item.date}>{dayLabel(item.date)}</time>
                 {" "}
                 {item.label}
+                {past ? " (passed)" : null}
                 {next ? " · Next" : null}
                 {item.label.toLowerCase().includes("certification") ? <> · <a href={official.href}>See official results</a></> : null}
                 {" · "}

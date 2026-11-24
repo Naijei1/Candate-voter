@@ -1,5 +1,6 @@
 "use client";
 
+import type { CSSProperties } from "react";
 import type { Preferences, PreferencesResponse } from "@/lib/api/v1-types";
 import { withBasePath } from "@/lib/base-path";
 import { validIssues } from "@/lib/users/preferences";
@@ -16,7 +17,7 @@ import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { districtFromPoint } from "@/lib/geo/address-district";
 import { findRacesByZip } from "@/lib/lookup/find-races";
 import { settleZipLookup } from "@/lib/lookup/zip-view";
-import { ElectionStatus } from "@/components/site/ElectionStatus";
+import { ElectionStatus, electionIsOver } from "@/components/site/ElectionStatus";
 import { partyMark, PersonMark } from "@/components/site/PersonMark";
 import { parseGuideQuery } from "@/lib/site/guide-query";
 import { KY_RESULTS_LINKS } from "@/lib/site/ky-results";
@@ -183,6 +184,11 @@ export function GuideFlow({ races, signedIn }: { races: GuideRace[]; signedIn: b
   );
   const current = ballot.find((race) => race.id === raceParam) ?? ballot[0];
   const stepNumber = step === "zip" ? 1 : step === "compare" || step === "list" ? 3 : 2;
+  const pollsClosed = electionIsOver();
+  const raceIndex = current ? ballot.findIndex((race) => race.id === current.id) : -1;
+  const hasNextRace = step === "race" && raceIndex >= 0 && raceIndex < ballot.length - 1;
+  const nextLong = step === "races" ? "Next" : hasNextRace ? "Next race" : "Compare";
+  const nextShort = hasNextRace || step === "races" ? "Next" : "Compare";
 
   async function lookupZip() {
     const entered = zip.trim();
@@ -302,7 +308,9 @@ export function GuideFlow({ races, signedIn }: { races: GuideRace[]; signedIn: b
           <h1 ref={headingRef} tabIndex={-1}>Your ballot</h1>
           {district ? (
             <>
-              <p className="mb-4 text-lg text-slate-700">{`You're in KY-${district.padStart(2, "0")}. You'll vote on ${ballot.length} federal races.`}</p>
+              <p className="mb-4 text-lg text-slate-700">{pollsClosed
+                ? `You're in KY-${district.padStart(2, "0")}. Your November ballot listed ${ballot.length} federal races.`
+                : `You're in KY-${district.padStart(2, "0")}. You'll vote on ${ballot.length} federal races.`}</p>
             </>
           ) : (
             <p className="mb-4">Go back and add a ZIP so this list is your U.S. House district plus the Senate race.</p>
@@ -313,7 +321,7 @@ export function GuideFlow({ races, signedIn }: { races: GuideRace[]; signedIn: b
                 <span>
                   <span className="block text-2xl font-semibold">{race.title}</span>
                   <span className="mt-1 block text-slate-700">
-                    {!race.people.some((person) => person.holds) ? "Open seat: no current officeholder is running. " : ""}
+                    {!race.people.some((person) => person.holds) ? (pollsClosed ? "Open seat: no current officeholder was running. " : "Open seat: no current officeholder is running. ") : ""}
                     {race.people.length} people on the November list
                   </span>
                 </span>
@@ -403,27 +411,39 @@ export function GuideFlow({ races, signedIn }: { races: GuideRace[]; signedIn: b
         ) : null}
       </Sheet>
       {step !== "zip" ? (
-        <div className="ballot-bar">
-          <p className="ballot-crumbs">Step {stepNumber} of 3 · Your district › Your races › Compare</p>
-          <div className="ballot-actions">
-            <Button variant="ghost" onClick={() => router.back()}>Back</Button>
-            <Button onClick={() => {
-              if (step === "races" && ballot[0]) {
-                push({ step: "race", race: ballot[0].id });
+        <nav className="ballot-bar" style={{ "--guide-progress": `${(stepNumber / 3) * 100}%` } as CSSProperties} aria-label="Where you are on the ballot">
+          <button type="button" className="btn btn-ghost ballot-back" onClick={() => {
+            if (step === "races") push({ step: "zip", race: null });
+            else if (step === "list") push({ step: "race", race: current?.id ?? ballot[0]?.id ?? null });
+            else push({ step: "races", race: null });
+          }}>Back</button>
+          <p className="ballot-step">
+            <span className="sr-only">Step </span>
+            {stepNumber} of 3
+          </p>
+          <button type="button" className="btn btn-navy ballot-next" onClick={() => {
+            if (step === "races" && ballot[0]) {
+              push({ step: "race", race: ballot[0].id });
+              return;
+            }
+            if (step === "race" && current) {
+              const nextRace = ballot[raceIndex + 1];
+              if (nextRace) {
+                push({ step: "race", race: nextRace.id });
                 return;
               }
-              if (step === "race" && current) {
-                const index = ballot.findIndex((race) => race.id === current.id);
-                const nextRace = ballot[index + 1];
-                if (nextRace) {
-                  push({ step: "race", race: nextRace.id });
-                  return;
-                }
-                router.push(`/races/${current.id}/compare?zip=${zipParam}&district=${district ?? ""}`);
-              }
-            }}>{step === "race" && current && ballot.findIndex((race) => race.id === current.id) < ballot.length - 1 ? `Next race: ${ballot[ballot.findIndex((race) => race.id === current.id) + 1]?.title ?? "Next"}` : step === "race" ? "Compare side by side" : "Next"}</Button>
-          </div>
-        </div>
+              router.push(`/races/${current.id}/compare?zip=${zipParam}&district=${district ?? ""}`);
+              return;
+            }
+            if (step === "list") {
+              const raceId = current?.id ?? ballot[0]?.id;
+              if (raceId) router.push(`/races/${raceId}/compare?zip=${zipParam}&district=${district ?? ""}`);
+            }
+          }}>
+            <span className="ballot-label-long">{nextLong}</span>
+            <span className="ballot-label-short">{nextShort}</span>
+          </button>
+        </nav>
       ) : null}
     </div>
   );

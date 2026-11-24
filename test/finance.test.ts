@@ -317,7 +317,7 @@ test("totals worker is a second function and does not itemize Schedule E lines",
   const client = readFileSync("src/lib/fec/client.ts", "utf8");
   assert.match(client, /\/schedules\/schedule_e\/by_candidate\//);
   assert.equal(client.includes("/schedules/schedule_e/?"), false);
-  const page = readFileSync("src/app/finance/page.tsx", "utf8");
+  const page = `${readFileSync("src/app/finance/page.tsx", "utf8")}\n${readFileSync("src/components/site/FinanceBrowser.tsx", "utf8")}`;
   assert.equal(page.includes("example-pac"), false);
   assert.doesNotMatch(page, /FinanceExplanation|\/finance\/example/);
   assert.match(page, /Money reported by campaigns/);

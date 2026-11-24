@@ -1,5 +1,6 @@
 import { formatMoney } from "@/lib/finance/model";
 import { kyBallot, kyBallotSeed } from "@/lib/site/ky-ballot";
+import { shownName } from "@/lib/site/ky-officeholders";
 import { jobLine, linkLabel, profileFor } from "@/lib/site/profiles";
 import { photoAttribution, portraitFor } from "@/lib/site/stances";
 import type { GuideRace } from "@/components/guide/GuideFlow";
@@ -28,7 +29,7 @@ export function guideRaces(): GuideRace[] {
       const photo = portraitFor(person.id);
       return {
         id: person.id,
-        name: person.name,
+        name: shownName(person.name, person.id),
         party: person.party,
         holds: person.holdsOffice,
         writeIn: person.role === "write-in",

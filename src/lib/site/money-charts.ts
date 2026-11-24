@@ -5,6 +5,7 @@ import type { FinanceOutside } from "@/lib/finance/model";
 import { loadFinance } from "@/lib/finance/load";
 import { FINANCE_SNAPSHOT_RETRIEVED_AT, snapshotFinance } from "@/lib/finance/snapshot";
 import { KY_BALLOT_SOURCES, kyBallot } from "@/lib/site/ky-ballot";
+import { shownName } from "@/lib/site/ky-officeholders";
 import { campaignFinanceChecked, candidateOutsideSpending } from "./fec-reports";
 import type { ChartTarget } from "./money-chart-lines";
 
@@ -86,12 +87,12 @@ export function chartRaces(): ChartRace[] {
     const missing: string[] = [];
     for (const person of race.people) {
       if (!person.finance) {
-        missing.push(person.name);
+        missing.push(shownName(person.name, person.id));
         continue;
       }
       people.push({
         id: person.id,
-        name: person.name,
+        name: shownName(person.name, person.id),
         party: person.party,
         raised: person.finance.receipts,
         spent: person.finance.disbursements,

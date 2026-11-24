@@ -25,6 +25,7 @@ import { PageLinks } from "@/components/site/PageLinks";
 import reading from "@/components/site/reading.module.css";
 import { PersonMark } from "@/components/site/PersonMark";
 import { KY_BALLOT_SOURCES, kyBallot, kyPerson } from "@/lib/site/ky-ballot";
+import { shownName } from "@/lib/site/ky-officeholders";
 import { newsForNames } from "@/lib/site/ky-news";
 import { careerTimeline, jobLine, linkLabel, profileFor, profileRecordDate } from "@/lib/site/profiles";
 import { seatStatus } from "@/lib/site/seat";
@@ -59,7 +60,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const primary = primaryCandidateById(id);
   if (primary && !ballot) return { alternates, title: primary.candidate.name };
   const snap = showcaseCandidate(ballot?.person.fecCandidateId ?? id);
-  if (ballot) return { alternates, title: ballot.person.name };
+  if (ballot) return { alternates, title: shownName(ballot.person.name, ballot.person.id) };
   if (snap) return { alternates, title: snap.displayName };
   const loaded = await loadProfile(id);
   return { alternates, title: loaded.ok ? loaded.candidate.displayName : "Candidate" };
@@ -85,7 +86,7 @@ export default async function CandidatePage({ params }: PageProps) {
   }
 
   const race = loaded.ok ? loaded.race : null;
-  const name = ballot?.person.name ?? snap?.displayName ?? (loaded.ok ? loaded.candidate.displayName : "Candidate");
+  const name = ballot ? shownName(ballot.person.name, ballot.person.id) : snap?.displayName ?? (loaded.ok ? loaded.candidate.displayName : "Candidate");
   const party = ballot?.person.party ?? snap?.partyLabel ?? (loaded.ok ? partyCue([partyLabel(loaded.candidate.partyAffiliation, loaded.candidate.partyLabel)]) : "");
   const stateHref = "/";
   const raceHref = ballot ? `/races/${ballot.race.raceId}` : race ? `/races/${race.raceId}` : snap ? `/races/${showcaseRace()?.raceId}` : null;

@@ -15,6 +15,7 @@ import { RaceResults } from "@/components/site/RaceResults";
 import { candidateElectionStatus, KY_FEDERAL_RACES } from "@/lib/site/certified-results";
 import { raceCardTitle } from "@/lib/site/candidate-cards";
 import { KY_BALLOT_CHECKED, KY_BALLOT_SOURCES, kyBallot, kyBallotIds } from "@/lib/site/ky-ballot";
+import { shownName } from "@/lib/site/ky-officeholders";
 import { CiteShare } from "@/components/site/CiteShare";
 import { KeyDates } from "@/components/site/KeyDates";
 import { PageLinks } from "@/components/site/PageLinks";
@@ -112,7 +113,7 @@ export default async function RacePage({ params }: PageProps) {
                 <li key={person.id}>
                   <PersonFace
                     office={raceCardTitle(race.raceId)}
-                    name={person.name}
+                    name={shownName(person.name, person.id)}
                     party={person.party}
                     photo={photo?.src ?? null}
                     holds={person.holdsOffice}

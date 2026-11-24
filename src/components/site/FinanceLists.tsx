@@ -2,15 +2,16 @@ import { ShortList } from "@/components/site/ShortList";
 import { isKentuckyFinanceRow } from "@/lib/site/ky-finance";
 import Link from "next/link";
 import { normalizePersonName } from "@/lib/data/names";
+import { shownName } from "@/lib/site/ky-officeholders";
 import { httpsUrl } from "@/lib/format";
 import { formatOrgName } from "@/lib/site/org-name";
 import { coverageLabel, formatMoney, type FinanceDirect, type FinanceOutside } from "@/lib/finance/model";
 
-function personLabel(name: string | null, fallback: string): string {
+function personLabel(name: string | null, fallback: string, candidateId?: string): string {
   const normalized = name ? normalizePersonName(name) ?? name : fallback;
   const parts = normalized.split(",").map((part) => part.trim()).filter(Boolean);
-  if (parts.length === 2 && parts[0] && parts[1]) return `${parts[1]} ${parts[0]}`;
-  return normalized;
+  const readable = parts.length === 2 && parts[0] && parts[1] ? `${parts[1]} ${parts[0]}` : normalized;
+  return shownName(readable, candidateId);
 }
 
 export function orgLabel(name: string | null): string | null {
@@ -32,19 +33,19 @@ export function DirectList({ rows }: { rows: readonly FinanceDirect[] }) {
     <ShortList
       className="card-grid"
       items={kentuckyRows.map((row) => {
-        const name = personLabel(row.name, row.candidateId);
+        const name = personLabel(row.name, row.candidateId, row.candidateId);
         const source = httpsUrl(row.sourceUrl);
         return (
           <li className="card" key={`${row.scope}-${row.candidateId}-${row.committeeId ?? ""}-${row.coverageEnd ?? ""}-${row.fileNumber ?? ""}`}>
             <h3>
               {row.committeeId ? (
-                <Link href={`/finance/committees/${row.committeeId}`}>{orgLabel(row.committeeName) ?? row.committeeId}</Link>
+                <Link className="block-link" href={`/finance/committees/${row.committeeId}`}>{orgLabel(row.committeeName) ?? row.committeeId}</Link>
               ) : (
                 orgLabel(row.committeeName) ?? "Campaign group"
               )}
             </h3>
             <p>
-              <Link href={`/candidates/${row.candidateId}`}>{name}</Link>
+              <Link className="block-link" href={`/candidates/${row.candidateId}`}>{name}</Link>
             </p>
             {row.receipts != null ? <p>Raised {formatMoney(row.receipts)}</p> : null}
             {row.disbursements != null ? <p>Spent {formatMoney(row.disbursements)}</p> : null}
@@ -71,15 +72,15 @@ export function OutsideList({ rows }: { rows: readonly FinanceOutside[] }) {
       className="card-grid"
       items={kentuckyRows.map((row) => {
         const source = httpsUrl(row.sourceUrl);
-        const who = personLabel(row.candidateName, row.candidateId);
+        const who = personLabel(row.candidateName, row.candidateId, row.candidateId);
         return (
           <li className="card" key={`${row.candidateId}-${row.committeeId}-${row.support}`}>
             <h3>
-              <Link href={`/finance/committees/${row.committeeId}`}>{orgLabel(row.committeeName) ?? row.committeeId}</Link>
+              <Link className="block-link" href={`/finance/committees/${row.committeeId}`}>{orgLabel(row.committeeName) ?? row.committeeId}</Link>
             </h3>
             <p>
               {row.support === "support" ? "Supports" : "Opposes"}{" "}
-              <Link href={`/candidates/${row.candidateId}`}>{who}</Link>
+              <Link className="block-link" href={`/candidates/${row.candidateId}`}>{who}</Link>
             </p>
             <p>{formatMoney(row.total)}</p>
             {source ? (

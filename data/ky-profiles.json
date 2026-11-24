@@ -206,14 +206,6 @@
           "sourceDate": "2026-11-22"
         },
         {
-          "platform": "X",
-          "url": "https://x.com/barrforsenate",
-          "kind": "campaign",
-          "sourceName": "Campaign site",
-          "sourceUrl": "https://barrforsenate.com/",
-          "sourceDate": "2026-11-22"
-        },
-        {
           "platform": "Instagram",
           "url": "https://www.instagram.com/barrforsenate",
           "kind": "campaign",
@@ -502,13 +494,7 @@
       ]
     },
     "S6KY00377": {
-      "website": {
-        "url": "https://campbell4congress.info",
-        "kind": "campaign",
-        "sourceName": "FEC candidate record, committee website",
-        "sourceUrl": "https://www.fec.gov/data/candidate/S6KY00377/",
-        "sourceDate": "2026-11-03"
-      },
+      "website": null,
       "bio": null,
       "endorsements": [],
       "votes": [],
@@ -2538,14 +2524,6 @@
         {
           "platform": "Facebook",
           "url": "https://www.facebook.com/profile.php?id=61584741065528",
-          "kind": "campaign",
-          "sourceName": "Campaign site",
-          "sourceUrl": "https://www.bowman2026.com/",
-          "sourceDate": "2026-11-22"
-        },
-        {
-          "platform": "X",
-          "url": "https://x.com/Bowman2026_KY",
           "kind": "campaign",
           "sourceName": "Campaign site",
           "sourceUrl": "https://www.bowman2026.com/",

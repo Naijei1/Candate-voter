@@ -30,12 +30,11 @@ test("Kentucky November ballot matches the Secretary of State filing list", () =
   const header = readFileSync("src/components/SiteHeader.tsx", "utf8");
   const footer = readFileSync("src/components/SiteFooter.tsx", "utf8");
   const home = readFileSync("src/app/page.tsx", "utf8");
-  const about = readFileSync("src/app/about/page.tsx", "utf8");
   const signIn = readFileSync("src/components/site/SignInForm.tsx", "utf8");
   assert.equal(header.includes("/about"), false);
   assert.equal(footer.includes("/about"), false);
   assert.equal(home.includes("founder"), false);
-  assert.match(about, /redirect\("\/"\)/);
+  assert.equal(existsSync("src/app/about/page.tsx"), false);
   assert.match(signIn, /googleUrl/);
   assert.match(signIn, /Continue with Google/);
 });

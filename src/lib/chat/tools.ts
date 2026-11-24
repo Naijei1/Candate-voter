@@ -367,7 +367,7 @@ async function searchCandidates(
       const stored = await ctx.repo.getCandidate(query);
       const direct = stored ? presentCandidate(stored) : null;
       if (direct && matchesCandidate(direct, needle)) {
-        const mismatch = contestMismatch(direct.raceId, ctx);
+        const mismatch = contestMismatch(direct.raceId, ctx, true);
         if (mismatch) return toolError(mismatch);
         const race = await loadVisibleRace(ctx.repo, direct.raceId);
         const sources = sourcesForCandidate(direct, ctx.root);
@@ -380,7 +380,13 @@ async function searchCandidates(
       }
     }
 
-    if (ctx.raceId) return searchLockedRace(ctx.raceId, needle, limit.value, ctx);
+    let officeFilter = officeValue;
+    const searchState = stateValue ?? (ctx.raceId ? stateFromRaceId(ctx.raceId) ?? undefined : undefined);
+    if (ctx.raceId) {
+      const locked = await searchLockedRace(ctx.raceId, needle, limit.value, ctx);
+      if (!locked.ok || locked.records > 0) return locked;
+      officeFilter = null;
+    }
 
     const cycles = cycle.cycles;
     const matches: Array<{ candidate: PublicCandidate; race: Race | null }> = [];
@@ -389,8 +395,8 @@ async function searchCandidates(
     for (const year of cycles) {
       const races = visibleRaces(await ctx.repo.listRacesByCycle(year));
       for (const race of races) {
-        if (stateValue && race.state !== stateValue) continue;
-        if (officeValue && race.office !== officeValue) continue;
+        if (searchState && race.state !== searchState) continue;
+        if (officeFilter && race.office !== officeFilter) continue;
         if (scanned >= MAX_RACES_SCANNED) {
           truncated = true;
           break;
@@ -437,7 +443,7 @@ async function getCandidate(
     if (!candidate) {
       return ok(0, [], [], { candidate: null, race: null, sources: [] });
     }
-    const mismatch = contestMismatch(candidate.raceId, ctx);
+    const mismatch = contestMismatch(candidate.raceId, ctx, true);
     if (mismatch) return toolError(mismatch);
     const race = await loadVisibleRace(ctx.repo, candidate.raceId);
     const sources = [
@@ -466,7 +472,7 @@ async function listFilings(
     if (!candidate) {
       return ok(0, [], [], { candidate: null, filings: [], sources: [] });
     }
-    const mismatch = contestMismatch(candidate.raceId, ctx);
+    const mismatch = contestMismatch(candidate.raceId, ctx, true);
     if (mismatch) return toolError(mismatch);
     const filings = collapseIdenticalFilings(
       await ctx.repo.listFilingsForCandidate(candidateId.value),
@@ -841,8 +847,11 @@ function resolveCycles(
 }
 
 /** Page race, year, chamber, and state win over a drifted tool argument. */
-function contestMismatch(raceId: string, ctx: ToolContext): string | null {
-  if (ctx.raceId && raceId !== ctx.raceId) {
+function contestMismatch(raceId: string, ctx: ToolContext, allowSameState = false): string | null {
+  const pageState = ctx.raceId ? stateFromRaceId(ctx.raceId) : ctx.state;
+  const foundState = stateFromRaceId(raceId);
+  const sameState = Boolean(allowSameState && pageState && foundState && pageState === foundState);
+  if (ctx.raceId && raceId !== ctx.raceId && !sameState) {
     return "Stay on the page contest. Do not look up another race, chamber, or year.";
   }
   const year = yearFromRaceId(raceId);
@@ -850,7 +859,7 @@ function contestMismatch(raceId: string, ctx: ToolContext): string | null {
     return "Stay on the page year. Do not look up another election year.";
   }
   const office = chamberFromRaceId(raceId);
-  if (ctx.office && office && office !== ctx.office) {
+  if (ctx.office && office && office !== ctx.office && !sameState) {
     return "Stay on the page chamber. Do not look up another chamber.";
   }
   const state = stateFromRaceId(raceId);

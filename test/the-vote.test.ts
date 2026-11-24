@@ -43,9 +43,10 @@ test("nav says News Feed and Candidates' Political Finances, and /updates goes t
   assert.equal(NAV_LINKS[0].href, "/news");
   assert.equal(NAV_LINKS[1].href, "/finance");
   assert.ok(NAV_LINKS[1].short.length < NAV_LINKS[1].label.length);
-  const updates = readFileSync("src/app/updates/page.tsx", "utf8");
-  assert.match(updates, /redirect\(/);
+  const updates = readFileSync("src/middleware.ts", "utf8");
+  assert.match(updates, /\/updates/);
   assert.match(updates, /\/news/);
+  assert.equal(existsSync("src/app/updates/page.tsx"), false);
   const news = readFileSync("src/app/news/page.tsx", "utf8");
   assert.match(news, /<h1>News Feed<\/h1>/);
   assert.equal(news.includes("redirect("), false);

@@ -1,7 +1,7 @@
 import { KY_RESULTS_LINKS } from "@/lib/site/ky-results";
 import { kentuckyPollsClosed } from "@/lib/site/ky-results";
 import { ResultsNote } from "@/components/site/ResultsNote";
-import { generalResult, shortElectionDate } from "@/lib/site/certified-results";
+import { certificationPhrase, generalResult } from "@/lib/site/certified-results";
 
 const OFFICIAL = KY_RESULTS_LINKS[1];
 
@@ -36,7 +36,7 @@ export function ElectionStatus({ compact = false, now = new Date() }: { compact?
   return (
     <aside className="election-banner" aria-label="Election results">
       <p>
-        {general?.status === "pending" ? <>Certification due {shortElectionDate(general.scheduledCertificationDate)}. </> : null}
+        {general?.status === "pending" ? <>{certificationPhrase(general.scheduledCertificationDate, now)} </> : null}
         <a href={OFFICIAL.href}>See official results</a>
       </p>
     </aside>

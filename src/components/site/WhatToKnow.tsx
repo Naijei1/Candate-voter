@@ -15,7 +15,7 @@ export function WhatToKnow({ raceId }: { raceId: string }) {
             {claim.cites.map((id) => {
               const source = sources.get(id);
               if (!source) return null;
-              return <a key={id} href={source.sourceUrl}>{source.sourceName} ↗</a>;
+              return <a key={id} className="cite" href={source.sourceUrl}>{source.sourceName} ↗</a>;
             })}
           </li>
         ))}

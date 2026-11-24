@@ -7,7 +7,7 @@ import { FollowControl } from "@/components/site/FollowControl";
 import { generalElectionLabel } from "@/lib/copy";
 import { ElectionDayBanner } from "@/components/site/ElectionDayBanner";
 import { PILOT_YEAR, contestsForState, loadPilotIndex } from "@/lib/site/contest";
-import { dayLabel } from "@/lib/format";
+import { calendarDay, dayLabel } from "@/lib/format";
 import { KY_ELECTION_CALENDAR } from "@/lib/site/certified-results";
 import { kyBallot } from "@/lib/site/ky-ballot";
 
@@ -59,11 +59,14 @@ export default async function StatePage({ searchParams }: PageProps) {
         <section className="section" aria-labelledby="election-calendar">
           <h2 id="election-calendar">Election calendar</h2>
           <ul className="plain-list">
-            {KY_ELECTION_CALENDAR.map((event) => (
-              <li key={event.date}>
-                <time dateTime={event.date}>{dayLabel(event.date)}</time> · {event.label} · <a href={event.sourceUrl}>{event.sourceName}</a>
-              </li>
-            ))}
+            {KY_ELECTION_CALENDAR.map((event) => {
+              const passed = event.date < calendarDay(new Date());
+              return (
+                <li key={event.date}>
+                  <time dateTime={event.date}>{dayLabel(event.date)}</time> · {event.label}{passed ? " (passed)" : ""} · <a href={event.sourceUrl}>{event.sourceName}</a>
+                </li>
+              );
+            })}
           </ul>
         </section>
       ) : null}

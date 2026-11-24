@@ -1,5 +1,5 @@
 import { KY_RESULTS_LINKS, kentuckyPollsClosed } from "@/lib/site/ky-results";
-import { certifiedWinner, generalResult, KY_FEDERAL_RACES, shortElectionDate } from "@/lib/site/certified-results";
+import { certificationPhrase, certifiedWinner, generalResult, KY_FEDERAL_RACES } from "@/lib/site/certified-results";
 import { raceCardTitle } from "@/lib/site/candidate-cards";
 import Link from "next/link";
 
@@ -33,7 +33,7 @@ export function ResultsBar({ now = new Date() }: { now?: Date }) {
           ))}
         </ul>
       ) : null}
-      {pending?.status === "pending" ? <p>Certification due {shortElectionDate(pending.scheduledCertificationDate)}.</p> : null}
+      {pending?.status === "pending" ? <p>{certificationPhrase(pending.scheduledCertificationDate, now)}</p> : null}
       <a href={OFFICIAL.href}>See official results</a>
     </aside>
   );
