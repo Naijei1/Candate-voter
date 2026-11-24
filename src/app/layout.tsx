@@ -23,7 +23,7 @@ const sourceSans = Source_Sans_3({
 });
 const newsreader = Newsreader({
   subsets: ["latin"],
-  weight: "400",
+  weight: ["600", "700"],
   variable: "--font-editorial",
   display: "swap",
 });
@@ -38,8 +38,8 @@ const display = localFont({
 export const viewport: Viewport = {
   colorScheme: "light dark",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#0b1a2a" },
-    { media: "(prefers-color-scheme: dark)", color: "#071320" },
+    { media: "(prefers-color-scheme: light)", color: "#f7f8fb" },
+    { media: "(prefers-color-scheme: dark)", color: "#071533" },
   ],
   width: "device-width",
   initialScale: 1,

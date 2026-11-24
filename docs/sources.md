@@ -28,4 +28,4 @@ Last-checked dates sit on the note, link, or vote they belong to.
 
 ## Colors
 
-Brand red `#a8123e` (crimson) is used for accents: the wordmark flag, section bars, the map toggle, buttons, and the "Spent" bars. The Republican party color is a warmer red `#b8321f`, used only on party tags, so the two never read as the same thing. White text on either red, and on navy `#142b49`, meets WCAG AA.
+Brand red `#a8123e` (crimson) is used for accents: the wordmark flag, section bars, the map toggle, buttons, and the "Spent" bars. The Republican party color is a warmer red `#b8321f`, used only on party tags, so the two never read as the same thing. White text on either red, and on navy `#0b2a66`, meets WCAG AA.

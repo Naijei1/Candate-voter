@@ -4,6 +4,18 @@ import { CandidateElectionStatus } from "@/components/site/CandidateElectionStat
 import type { ElectionStatus } from "@/lib/site/certified-results";
 import { seatStatus } from "@/lib/site/seat";
 
+/** Short corner tag. The spelled-out name stays on partyBadge. */
+export function partyTag(party: string): { label: string; tone: "rep" | "dem" | "oth" } {
+  const badge = partyBadge(party);
+  if (badge.tone === "dem") return { label: "DEM", tone: "dem" };
+  if (badge.tone === "rep") return { label: "REP", tone: "rep" };
+  if (/kentucky/i.test(party)) return { label: "KP", tone: "oth" };
+  if (/libertarian/i.test(party)) return { label: "LIB", tone: "oth" };
+  if (/independent/i.test(party)) return { label: "IND", tone: "oth" };
+  if (/write-in/i.test(party) || badge.label === "Write-in") return { label: "Write-in", tone: "oth" };
+  return { label: badge.label, tone: "oth" };
+}
+
 export function partyBadge(party: string): { label: string; tone: "rep" | "dem" | "oth" } {
   if (/republican/i.test(party)) return { label: "Republican", tone: "rep" };
   if (/democrat/i.test(party)) return { label: "Democratic", tone: "dem" };

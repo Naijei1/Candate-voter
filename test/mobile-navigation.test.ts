@@ -86,7 +86,8 @@ test("Back/Next and page action bars stay pinned above the tab bar", () => {
 
 test("race cards keep the photo credit inside the card", () => {
   const race = readFileSync("src/app/races/[raceId]/page.tsx", "utf8");
-  assert.match(race, /credit=\{photoAttribution\(photo\)\}/);
+  assert.match(readFileSync("src/lib/site/candidate-cards.ts", "utf8"), /credit: photoAttribution\(photo\)/);
+  assert.match(readFileSync("src/components/site/CandidateCard.tsx", "utf8"), /className="cand-credit"/);
   assert.equal(/<p className="hint">\{photo\.credit\}<\/p>/.test(race), false);
   assert.match(readFileSync("src/components/site/PersonFace.tsx", "utf8"), /person-face-credit/);
 });

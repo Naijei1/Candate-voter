@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
-import { seatLabel } from "../src/components/site/CandidateCard";
+import { cardStatus, seatLabel } from "../src/components/site/CandidateCard";
 import { visibleCompareTabs } from "../src/components/site/CompareBoard";
 import { uniqueSources } from "../src/components/home/CompareSection";
 import { createRateLimiter, trustedClientAddress } from "../src/lib/chat/rate-limit";
@@ -228,7 +228,10 @@ test("plain seat labels: Current officeholder, and Write-in only once", () => {
   assert.equal(seatLabel({ holdsOffice: true, openSeat: false, writeIn: false }), "Current officeholder");
   assert.equal(seatLabel({ holdsOffice: false, openSeat: true, writeIn: true, party: "Write-in" }), null);
   assert.equal(seatLabel({ holdsOffice: false, openSeat: true, writeIn: true, party: "Independent" }), "Write-in");
-  assert.equal(/"Incumbent"/.test(readFileSync("src/components/site/CandidateCard.tsx", "utf8")), false);
+  assert.equal(cardStatus({ holdsOffice: true, writeIn: false }), "Incumbent");
+  assert.equal(cardStatus({ holdsOffice: false, writeIn: true }), null);
+  assert.equal(cardStatus({ holdsOffice: false, writeIn: false, electionStatus: { primary: "lost" } }), null);
+  assert.equal(cardStatus({ holdsOffice: false, writeIn: false }), "Nominee");
   assert.match(readFileSync("src/components/site/PersonFace.tsx", "utf8"), /rawStatus === badge\.label \? null/);
 });
 

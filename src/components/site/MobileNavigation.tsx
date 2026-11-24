@@ -79,7 +79,7 @@ export function MobileNavigation({ signedIn: signedInProp }: { signedIn?: boolea
         const current = currentTab(path, destination) ?? (watchlist && currentTab(path, href) ? "location" : undefined);
         return (
           <Link key={href} href={destination} aria-current={current}>
-            <Icon size={21} aria-hidden="true" />
+            <Icon size={22} strokeWidth={current ? 2.25 : 1.75} fill={current ? "currentColor" : "none"} aria-hidden="true" />
             {label}
           </Link>
         );

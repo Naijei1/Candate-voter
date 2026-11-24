@@ -10,19 +10,17 @@ import { FollowControl } from "@/components/site/FollowControl";
 import { ElectionDayBanner } from "@/components/site/ElectionDayBanner";
 import { BallotBar } from "@/components/site/BallotBar";
 import { RaceChanges } from "@/components/site/RaceChanges";
-import { PersonFace } from "@/components/site/PersonFace";
+import { CandidateCard } from "@/components/site/CandidateCard";
 import { RaceResults } from "@/components/site/RaceResults";
-import { candidateElectionStatus, KY_FEDERAL_RACES } from "@/lib/site/certified-results";
-import { raceCardTitle } from "@/lib/site/candidate-cards";
+import { KY_FEDERAL_RACES } from "@/lib/site/certified-results";
+import { candidateCards } from "@/lib/site/candidate-cards";
 import { KY_BALLOT_CHECKED, KY_BALLOT_SOURCES, kyBallot, kyBallotIds } from "@/lib/site/ky-ballot";
-import { shownName } from "@/lib/site/ky-officeholders";
 import { CiteShare } from "@/components/site/CiteShare";
 import { KeyDates } from "@/components/site/KeyDates";
 import { PageLinks } from "@/components/site/PageLinks";
 import { RaceSummary } from "@/components/site/RaceSummary";
 import { WhatToKnow } from "@/components/site/WhatToKnow";
 import { CandidateCorrection } from "@/components/site/CandidateCorrection";
-import { photoAttribution, portraitFor } from "@/lib/site/stances";
 import { cardsForRace } from "@/lib/site/showcase";
 import { personFilingNote } from "@/lib/data/filing-note";
 import { dayLabel, httpsUrl } from "@/lib/format";
@@ -106,25 +104,12 @@ export default async function RacePage({ params }: PageProps) {
                 Your ballot
               </Link>
             </div>
-            <ul className="person-list">
-              {[...ballot.people].sort((a, b) => a.name.localeCompare(b.name)).map((person) => {
-                const photo = portraitFor(person.id);
-                return (
-                <li key={person.id}>
-                  <PersonFace
-                    office={raceCardTitle(race.raceId)}
-                    name={shownName(person.name, person.id)}
-                    party={person.party}
-                    photo={photo?.src ?? null}
-                    holds={person.holdsOffice}
-                    writeIn={person.role === "write-in"}
-                    electionStatus={candidateElectionStatus(race.raceId, person)}
-                    href={`/candidates/${person.id}`}
-                    credit={photoAttribution(photo)}
-                  />
-                </li>
-                );
-              })}
+            {ballot.people.length === 0 ? <p>No one is on the November ballot.</p> : null}
+            <ul className="cand-grid">
+              {candidateCards(race.raceId)
+                .slice()
+                .sort((a, b) => a.name.localeCompare(b.name))
+                .map((person) => <CandidateCard key={person.id} person={person} />)}
             </ul>
             <p className="hint">
               Source: <a href={KY_BALLOT_SOURCES[0].url}>Kentucky Secretary of State ↗</a>

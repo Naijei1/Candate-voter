@@ -11,6 +11,8 @@ import { HomeNewsFeed, loadHomeNewsFeed } from "@/components/home/HomeNewsFeed";
 import { ResultsBar } from "@/components/home/ResultsBar";
 import { StatewidePanel } from "@/components/home/StatewidePanel";
 import { CandidateCard } from "@/components/site/CandidateCard";
+import { DatedFacts } from "@/components/site/DatedFacts";
+import { StateHeader } from "@/components/site/StateHeader";
 import { candidateCards } from "@/lib/site/candidate-cards";
 import { MoneyCharts } from "@/components/site/MoneyCharts";
 import { DistrictRoster } from "@/components/site/DistrictRoster";
@@ -37,9 +39,8 @@ export default async function HomePage() {
       <Hero />
       <ResultsBar />
       <section className="wrap home-section home-map" id="map" aria-labelledby="map-heading">
-        <div className="section-head">
-          <h2 id="map-heading">Kentucky map</h2>
-        </div>
+        <StateHeader headingId="map-heading" />
+        <DatedFacts />
         <HomeMap
           congressional={
             <div className="map-frame">

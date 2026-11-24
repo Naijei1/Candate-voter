@@ -106,9 +106,11 @@ test("dark text, party chips and chart series retain contrast on their own surfa
     ["chart-hatch", "chart-track", 3],
     ["color-map-data", "color-map-hover", 3],
   ] as const;
-  for (const [lighter, darker, minimum] of pairs) {
-    const ratio = (luminance(token(dark, lighter)) + 0.05) / (luminance(token(dark, darker)) + 0.05);
-    assert.ok(ratio >= minimum, `${lighter} on ${darker}: ${ratio}`);
+  for (const [first, second, minimum] of pairs) {
+    const a = luminance(token(dark, first)) + 0.05;
+    const b = luminance(token(dark, second)) + 0.05;
+    const ratio = Math.max(a, b) / Math.min(a, b);
+    assert.ok(ratio >= minimum, `${first} on ${second}: ${ratio}`);
   }
 });
 

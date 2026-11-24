@@ -1,15 +1,24 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { DistrictMap } from "@/components/DistrictMap";
+import { HomeMap } from "@/components/home/HomeMap";
+import { StatewidePanel } from "@/components/home/StatewidePanel";
+import "@/components/home/homepage.css";
 import { DistrictRoster } from "@/components/site/DistrictRoster";
 import { Crumbs } from "@/components/site/Crumbs";
+import { DatedFacts } from "@/components/site/DatedFacts";
 import { FollowControl } from "@/components/site/FollowControl";
+import { StateHeader } from "@/components/site/StateHeader";
 import { generalElectionLabel } from "@/lib/copy";
 import { ElectionDayBanner } from "@/components/site/ElectionDayBanner";
+import { CandidateCard } from "@/components/site/CandidateCard";
+import { candidateCards, raceCardTitle } from "@/lib/site/candidate-cards";
 import { PILOT_YEAR, contestsForState, loadPilotIndex } from "@/lib/site/contest";
 import { calendarDay, dayLabel } from "@/lib/format";
 import { KY_ELECTION_CALENDAR } from "@/lib/site/certified-results";
 import { kyBallot } from "@/lib/site/ky-ballot";
+import { kyStatewide } from "@/lib/site/ky-statewide";
+import { federalRaceIds, stateConfig } from "@/lib/states";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -32,28 +41,94 @@ type PageProps = {
 export const metadata: Metadata = { alternates: { canonical: "/states/ky" }, title: "Kentucky" };
 
 export default async function StatePage({ searchParams }: PageProps) {
-  const postal = "KY";
+  const state = stateConfig();
+  const postal = state.code;
   const query = await searchParams;
   const year = parseYear(query.year);
   const category = parseCategory(query.category);
   const loaded = await loadPilotIndex(year);
   const contests = contestsForState(loaded.races, postal);
-  const name = "Kentucky";
+  const name = state.name;
+  const dashboard = year === PILOT_YEAR && category === "federal";
+  const house = contests.filter((race) => race.office === "house").map((race) =>
+    kyBallot(race.raceId) ? { ...race, empty: false, hasCandidates: true } : race,
+  );
+  const statewide = kyStatewide();
+  const raceIds = federalRaceIds(state);
+  const senateId = raceIds[0];
+  const senate = senateId ? candidateCards(senateId) : [];
 
   return (
-    <article className="wrap">
+    <article className="wrap state-page">
       <Crumbs items={[{ href: "/", label: "Home" }, { label: name }]} />
-      <h1>{name}</h1>
+      {dashboard ? (
+        <StateHeader heading="h1" />
+      ) : (
+        <h1>{name}</h1>
+      )}
       {year === PILOT_YEAR ? <ElectionDayBanner compact /> : null}
-      <p className="lede">
-        {year} general · {generalElectionLabel(year)}
-      </p>
-      <FollowControl what="jurisdiction" targetId={postal} returnPath="/states/ky" />
+      {dashboard ? null : (
+        <p className="lede">
+          {year} general · {generalElectionLabel(year)}
+        </p>
+      )}
+      {dashboard ? null : <FollowControl what="jurisdiction" targetId={postal} returnPath="/states/ky" />}
       {loaded.filingsLoaded || (year === PILOT_YEAR) ? null : (
         <p className="notice notice-error" role="status">
           Filings unavailable. <Link href="/sources">Sources</Link>
         </p>
       )}
+
+      {dashboard ? <DatedFacts /> : null}
+
+      {dashboard ? (
+        <section className="home-map" aria-label={`${name} map`}>
+          <HomeMap
+            congressional={
+              <div className="map-frame">
+                <DistrictMap
+                  postal={postal}
+                  races={house}
+                  year={year}
+                  instruction="Choose a district to see its race."
+                  context={{ year, state: postal, zip: null }}
+                />
+              </div>
+            }
+            statewide={<StatewidePanel senators={statewide.senators} officers={statewide.officers} />}
+          />
+          <p className="zip-link">
+            <a href="/ballot">Or enter a ZIP code</a>
+          </p>
+        </section>
+      ) : null}
+
+      {dashboard && senate.length > 0 ? (
+        <section className="section" aria-labelledby="senate-candidates">
+          <h2 id="senate-candidates">U.S. Senate candidates</h2>
+          <ul className="cand-grid">
+            {senate.map((person) => <CandidateCard key={person.id} person={person} />)}
+          </ul>
+        </section>
+      ) : null}
+
+      {dashboard ? (
+        <section className="section" aria-labelledby="house-candidates">
+          <h2 id="house-candidates">U.S. House candidates</h2>
+          {raceIds.slice(1).map((id) => {
+            const people = candidateCards(id);
+            if (people.length === 0) return null;
+            return (
+              <div key={id}>
+                <h3 id={id}>{raceCardTitle(id)}</h3>
+                <ul className="cand-grid">
+                  {people.map((person) => <CandidateCard key={person.id} person={person} />)}
+                </ul>
+              </div>
+            );
+          })}
+        </section>
+      ) : null}
 
       {year === PILOT_YEAR ? (
         <section className="section" aria-labelledby="election-calendar">
@@ -71,7 +146,7 @@ export default async function StatePage({ searchParams }: PageProps) {
         </section>
       ) : null}
 
-      {category === "federal" ? (
+      {category === "federal" && !dashboard ? (
         contests.length === 0 ? (
           <p>No federal contest for {year}.</p>
         ) : (
@@ -88,16 +163,15 @@ export default async function StatePage({ searchParams }: PageProps) {
         )
       ) : null}
 
-      {(loaded.filingsLoaded || (year === PILOT_YEAR)) &&
+      {!dashboard &&
+      (loaded.filingsLoaded || (year === PILOT_YEAR)) &&
       category === "federal" &&
       contests.some((race) => race.office === "house") ? (
         <section className="section" aria-labelledby="districts">
           <h2 id="districts">Districts</h2>
           <DistrictMap
             postal={postal}
-            races={contests.map((race) =>
-              kyBallot(race.raceId) ? { ...race, empty: false, hasCandidates: true } : race,
-            )}
+            races={house}
             year={year}
             context={{ year, state: postal, zip: null }}
           />
