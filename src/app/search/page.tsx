@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { withBasePath } from "@/lib/base-path";
-import { searchSite } from "@/lib/site/search-index";
+import { searchQueryValue, searchSite } from "@/lib/site/search-index";
 import styles from "@/components/site/reading.module.css";
 
 export const metadata: Metadata = { title: "Search", alternates: { canonical: "/search" } };
 
-type PageProps = { searchParams: Promise<{ q?: string }> };
+type PageProps = { searchParams: Promise<{ q?: string | string[] }> };
 
 export default async function SearchPage({ searchParams }: PageProps) {
-  const query = (await searchParams).q?.trim() ?? "";
+  const query = searchQueryValue((await searchParams).q);
   const hits = query ? searchSite(query) : [];
   return (
     <article className="wrap">

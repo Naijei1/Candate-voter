@@ -1,6 +1,7 @@
 import { partyBadge } from "@/components/site/PersonFace";
 import { dayLabel } from "@/lib/format";
-import { currentKentuckyOfficeholders } from "@/lib/site/ky-officeholders";
+import { officeholderForSeat } from "@/lib/site/ky-officeholders";
+import { CONGRESSIONAL_TERM_START } from "@/lib/site/certified-results";
 import type { KyPerson, KyRace } from "@/lib/site/ky-ballot";
 
 export type SummaryBit = { text: string; href?: string };
@@ -18,7 +19,7 @@ export function raceSummary(race: KyRace, now = new Date()): RaceSummaryModel | 
   if (race.people.length === 0) return null;
   const holders = race.people.filter((person) => person.holdsOffice);
   const others = race.people.filter((person) => !person.holdsOffice);
-  const outgoing = holders.length === 0 ? outgoingHolder(race, now) : null;
+  const outgoing = holders.length === 0 ? outgoingHolder(race) : null;
   const bits: SummaryBit[] = [];
 
   if (holders.length > 0) {
@@ -33,9 +34,10 @@ export function raceSummary(race: KyRace, now = new Date()): RaceSummaryModel | 
     bits.push(...nameList(race.people.map(candidateBit)));
     const verb = race.people.length === 1 ? "is" : "are";
     if (outgoing) {
+      const ended = now.getTime() >= Date.parse(`${outgoing.termEnd}T17:00:00Z`);
       bits.push({ text: ` ${verb} running for the open seat ` });
       bits.push({ text: outgoing.name, href: outgoing.url });
-      bits.push({ text: ` (${partyBadge(outgoing.party).label}) holds until ${dayLabel(outgoing.termEnd)}.` });
+      bits.push({ text: ` (${partyBadge(outgoing.party).label}) ${ended ? "held" : "holds"} until ${dayLabel(outgoing.termEnd)}.` });
     } else {
       bits.push({ text: ` ${verb} running for the open seat.` });
     }
@@ -66,12 +68,10 @@ function nameList(people: readonly Named[]): SummaryBit[] {
   return bits;
 }
 
-function outgoingHolder(race: KyRace, now: Date) {
+function outgoingHolder(race: KyRace) {
   const ids = new Set(race.people.flatMap((person) => [person.id, person.fecCandidateId, ...person.alsoFecIds].filter((id): id is string => Boolean(id))));
-  const district = race.raceId.includes("senate") ? null : Number(race.raceId.slice(-2));
-  const absent = currentKentuckyOfficeholders(now)
-    .filter((member) => (district == null ? member.office === "senate" : member.office === "house" && member.district === district))
-    .filter((member) => !member.fecIds.some((id) => ids.has(id)))
-    .sort((a, b) => a.termEnd.localeCompare(b.termEnd));
-  return absent[0] ?? null;
+  const senate = race.raceId.includes("senate");
+  const member = officeholderForSeat(senate ? "senate" : "house", senate ? null : Number(race.raceId.slice(-2)), CONGRESSIONAL_TERM_START.slice(0, 10));
+  if (!member || member.fecIds.some((id) => ids.has(id))) return null;
+  return member;
 }

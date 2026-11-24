@@ -26,7 +26,7 @@ import reading from "@/components/site/reading.module.css";
 import { PersonMark } from "@/components/site/PersonMark";
 import { KY_BALLOT_SOURCES, kyBallot, kyPerson } from "@/lib/site/ky-ballot";
 import { newsForNames } from "@/lib/site/ky-news";
-import { careerTimeline, jobLine, linkLabel, profileFor } from "@/lib/site/profiles";
+import { careerTimeline, jobLine, linkLabel, profileFor, profileRecordDate } from "@/lib/site/profiles";
 import { seatStatus } from "@/lib/site/seat";
 import { candidateElectionStatus, CONGRESSIONAL_TERM_START, KY_FEDERAL_RACES, KY_RESULTS_SOURCE, primaryCandidateById } from "@/lib/site/certified-results";
 import { raceCardTitle } from "@/lib/site/candidate-cards";
@@ -135,7 +135,7 @@ export default async function CandidatePage({ params }: PageProps) {
     profile.votes.length > 0 ? { href: "#votes", label: "Votes" } : null,
     news.length > 0 ? { href: "#news", label: "News" } : null,
   ].filter((item): item is { href: string; label: string } => item != null);
-  const updated = [profile.bio?.sourceDate, ballot ? "2026-11-03" : null].filter((value): value is string => Boolean(value)).sort().at(-1);
+  const updated = profileRecordDate(profile, [hasVerified ? retrieved : null]);
 
   return (
     <article className="wrap profile-page">

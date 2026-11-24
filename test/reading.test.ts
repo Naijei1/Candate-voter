@@ -3,8 +3,9 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 import { ageLabel } from "../src/lib/format";
 import { kyBallot } from "../src/lib/site/ky-ballot";
+import { profileFor, profileRecordDate } from "../src/lib/site/profiles";
 import { raceSummaryText } from "../src/lib/site/race-summary";
-import { searchSite } from "../src/lib/site/search-index";
+import { searchQueryValue, searchSite } from "../src/lib/site/search-index";
 
 const now = new Date("2026-11-23T18:00:00Z");
 
@@ -17,6 +18,12 @@ test("a race summary is one sourced sentence", () => {
   const openHouse = raceSummaryText(kyBallot("2026-house-KY-06")!, now);
   assert.match(openHouse ?? "", /open seat Andy Barr \(Republican\) holds until Jan 3, 2027/);
   assert.match(openHouse ?? "", /Andy Barr is running for Senate\./);
+  const afterTerm = new Date("2027-01-03T17:00:00Z");
+  const senateLater = raceSummaryText(kyBallot("2026-senate-KY")!, afterTerm);
+  assert.match(senateLater ?? "", /Mitch McConnell \(Republican\) held until Jan 3, 2027/);
+  assert.doesNotMatch(senateLater ?? "", /Rand Paul/);
+  const houseLater = raceSummaryText(kyBallot("2026-house-KY-06")!, afterTerm);
+  assert.match(houseLater ?? "", /Andy Barr \(Republican\) held until Jan 3, 2027/);
 });
 
 test("search finds candidates, counties, and a ZIP without inventing a miss", () => {
@@ -25,6 +32,15 @@ test("search finds candidates, counties, and a ZIP without inventing a miss", ()
   assert.ok(searchSite("Adair").some((hit) => hit.kind === "County" && hit.title === "Adair County"));
   assert.deepEqual(searchSite("40502"), [{ kind: "ZIP", title: "ZIP 40502", detail: "Find the races for this ZIP", href: "/ballot?zip=40502" }]);
   assert.equal(searchSite("zzzz-not-a-candidate").length, 0);
+  assert.equal(searchQueryValue(["Barr", "Booker"]), "Barr");
+  assert.equal(searchQueryValue(["  ", "Booker"]), "Booker");
+  assert.equal(searchQueryValue("  Barr "), "Barr");
+  assert.equal(searchQueryValue(undefined), "");
+});
+
+test("a profile citation uses the newest record date shown for that person", () => {
+  assert.equal(profileRecordDate(profileFor("S6KY00286")), "2026-11-22");
+  assert.equal(profileRecordDate({ ...profileFor("S6KY00286"), votes: [], website: null, bio: { text: "U.S. Representative, Kentucky, with a sourced biography.", sourceName: "Office", sourceUrl: "https://example.com", sourceDate: "2026-09-16" }, endorsements: [], education: [], career: [], results: [], social: [] }), "2026-09-16");
 });
 
 test("citations keep the base path and every issue stance is in the page", () => {

@@ -18,6 +18,12 @@ type CountyRow = {
 
 const countyRows = counties as CountyRow[];
 
+/** One search string. A repeated `q` uses the first value that has text. */
+export function searchQueryValue(value: string | string[] | undefined): string {
+  const raw = Array.isArray(value) ? value.find((item) => item.trim().length > 0) : value;
+  return raw?.trim() ?? "";
+}
+
 /** Candidates, races, counties, and a ZIP handoff. Empty when the query is too short to match. */
 export function searchSite(query: string): SearchHit[] {
   const text = query.trim();
