@@ -41,6 +41,7 @@
   --segment-track: #e8ecf4;
   --segment-selected: #0b2a66;
   --segment-selected-ink: #fff;
+  --tag-fill: #0b2a66;
   --party-neutral: #e8ecf4;
   --status-surface: #f0f2f8;
   --color-party-dem-status: #1d4ed8;
@@ -1913,6 +1914,7 @@ td {
 }
 
 .segmented > a,
+.segmented > button,
 .segmented [role="tab"] {
   display: grid;
   place-items: center;
@@ -1929,17 +1931,21 @@ td {
   cursor: pointer;
 }
 
-.page-main .segmented > a { text-decoration: none; }
+.page-main .segmented > a,
+.page-main .segmented > button { text-decoration: none; }
 
 .segmented [aria-selected="true"],
-.segmented > a[aria-current="page"] {
+.segmented > a[aria-current="page"],
+.segmented > button[aria-current="page"] {
   background: var(--segment-selected);
   color: var(--segment-selected-ink);
 }
 .segmented [role="tab"]:focus-visible,
-.segmented > a:focus-visible { outline: 3px solid var(--color-navy); outline-offset: -4px; }
+.segmented > a:focus-visible,
+.segmented > button:focus-visible { outline: 3px solid var(--color-navy); outline-offset: -4px; }
 .segmented [aria-selected="true"]:focus-visible,
-.segmented > a[aria-current="page"]:focus-visible { outline-color: #fff; }
+.segmented > a[aria-current="page"]:focus-visible,
+.segmented > button[aria-current="page"]:focus-visible { outline-color: #fff; }
 
 @supports selector(:has(*)) {
   .segmented::before {
@@ -1954,7 +1960,8 @@ td {
   .segmented:has(> :nth-child(2)[aria-selected="true"])::before,
   .segmented:has(> :nth-child(2)[aria-current="page"])::before { transform: translateX(100%); }
   .segmented [aria-selected="true"],
-  .segmented > a[aria-current="page"] { background: transparent; color: var(--segment-selected-ink); }
+  .segmented > a[aria-current="page"],
+  .segmented > button[aria-current="page"] { background: transparent; color: var(--segment-selected-ink); }
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -2456,7 +2463,7 @@ a.block-link {
   z-index: 2;
   padding: 0.35rem 0.6rem 0.4rem;
   border-radius: 0 0 0 8px;
-  background: var(--color-navy);
+  background: var(--tag-fill);
   color: #fff;
   font-family: var(--font-sans), "Source Sans 3", sans-serif;
   font-size: 0.75rem;
