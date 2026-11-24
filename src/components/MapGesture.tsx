@@ -218,6 +218,20 @@ export function MapGesture({
     event.stopPropagation();
   }
 
+  function zoomBy(factor: number) {
+    const frame = frameRef.current;
+    if (!frame) return;
+    const current = panRef.current;
+    const next = clampPan(
+      { x: current.x, y: current.y, scale: current.scale * factor },
+      frame.clientWidth,
+      frame.clientHeight,
+      panLimits(frame, current.scale),
+    );
+    panRef.current = next;
+    setPan(next);
+  }
+
   const transform = `translate3d(${pan.x}px, ${pan.y}px, 0) scale(${pan.scale})`;
   return (
     <div
@@ -229,6 +243,10 @@ export function MapGesture({
     >
       <div className="map-gesture-stage" style={{ transform }}>
         {children}
+      </div>
+      <div className="map-zoom" onPointerDown={(event) => event.stopPropagation()}>
+        <button type="button" aria-label="Zoom in" onClick={() => zoomBy(1.35)}>+</button>
+        <button type="button" aria-label="Zoom out" onClick={() => zoomBy(1 / 1.35)}>−</button>
       </div>
     </div>
   );

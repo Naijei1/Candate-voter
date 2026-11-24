@@ -1,8 +1,7 @@
 import { thumbnail } from "@/lib/site/thumbnail";
 import Link from "next/link";
 import { PersonMark } from "@/components/site/PersonMark";
-import { partyBadge } from "@/components/site/PersonFace";
-import { CandidateElectionStatus } from "@/components/site/CandidateElectionStatus";
+import { partyBadge, partyTag } from "@/components/site/PersonFace";
 import type { ElectionStatus } from "@/lib/site/certified-results";
 
 export type CardPerson = {
@@ -15,6 +14,7 @@ export type CardPerson = {
   writeIn: boolean;
   photo: string | null;
   summary?: string | null;
+  credit?: string | null;
   uncontested?: boolean;
   electionStatus?: ElectionStatus;
 };
@@ -30,33 +30,37 @@ export function seatLabel(person: Pick<CardPerson, "holdsOffice" | "openSeat" | 
   return null;
 }
 
+/** The one status line on a broadcast card. Primary losses stay on the profile. */
+export function cardStatus(person: Pick<CardPerson, "holdsOffice" | "writeIn" | "electionStatus">): string | null {
+  if (person.electionStatus?.elected) return "Elected";
+  if (person.holdsOffice) return "Incumbent";
+  if (person.writeIn) return null;
+  if (person.electionStatus?.primary === "lost") return null;
+  return "Nominee";
+}
+
 export function CandidateCard({ person }: { person: CardPerson }) {
-  const badge = partyBadge(person.party);
-  const label = seatLabel(person);
+  const badge = partyTag(person.party);
+  const status = cardStatus(person);
+  const line = person.summary || person.office;
   return (
     <li className="cand-card">
       <Link className="cand-link" href={`/candidates/${person.id}`}>
         <span className="cand-photo">
           {person.photo ? (
-            <img src={thumbnail(person.photo)} alt="" width={240} height={300} loading="lazy" decoding="async" />
+            <img src={thumbnail(person.photo)} alt="" width={360} height={270} loading="lazy" decoding="async" />
           ) : (
             <PersonMark name={person.name} photo={null} party={person.party} size="lg" />
           )}
+          <span className={`cand-party ${badge.tone}`}>{badge.label}</span>
         </span>
         <span className="cand-body">
-          <span className={`cand-party ${badge.tone}`}>{badge.label}</span>
           <span className="cand-name">{person.name}</span>
-          {person.summary ? <span className="cand-office">{person.summary}</span> : null}
-          <span className="cand-office">{person.office}</span>
-          {label ? <span className={`cand-status${person.holdsOffice ? " is-incumbent" : ""}`}>{label}</span> : null}
-          {person.uncontested ? <span className="cand-status">Uncontested</span> : null}
-          <CandidateElectionStatus status={person.electionStatus} />
-          {person.electionStatus?.primaryVotes !== undefined ? (
-            <span className="cand-office">{person.electionStatus.primaryVotes.toLocaleString("en-US")} certified primary votes</span>
-          ) : null}
-          <span className="cand-cta">
-            View profile <span aria-hidden="true">→</span>
-          </span>
+          {status ? <span className="cand-status">{status}</span> : null}
+          <span className="cand-rule" />
+          <span className="cand-line">{line}</span>
+          {person.credit ? <span className="cand-credit">Photo: {person.credit}</span> : null}
+          <span className="cand-cta">View profile</span>
         </span>
       </Link>
     </li>

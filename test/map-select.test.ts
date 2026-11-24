@@ -46,12 +46,12 @@ test("homepage is a document in the navy and red palette, not a map shell", () =
   assert.match(brand, /Kentucky’s federal elections\./);
   assert.equal(page.includes("Landing"), false);
   assert.equal(page.includes("Explore by state"), false);
-  assert.match(css, /--color-navy:\s*#142b49/);
+  assert.match(css, /--color-navy:\s*#0b2a66/);
   assert.match(css, /--color-error:\s*#9b1c2e/);
-  assert.match(css, /--color-paper:\s*#f8f7f3/);
-  assert.match(css, /--color-ink:\s*#122033/);
-  assert.match(css, /--color-navy-deep:\s*#0b1a2a/);
-  assert.match(css, /@media \(prefers-color-scheme: dark\)\s*\{\s*:root\s*\{[^}]*--color-paper:\s*#0b1a2a/);
+  assert.match(css, /--color-paper:\s*#f7f8fb/);
+  assert.match(css, /--color-ink:\s*#0a1633/);
+  assert.match(css, /--color-navy-deep:\s*#071533/);
+  assert.match(css, /@media \(prefers-color-scheme: dark\)\s*\{\s*:root\s*\{[^}]*--color-paper:\s*#071533/);
   assert.equal(/body\s*\{[^}]*overflow:\s*hidden/.test(css), false);
   assert.equal(/\.national-shell/.test(css), false);
 });

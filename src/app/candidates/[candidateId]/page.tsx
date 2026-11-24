@@ -156,6 +156,9 @@ export default async function CandidatePage({ params }: PageProps) {
           <h1>{name}</h1>
           <p className="profile-meta">{[...new Set([party, status, officeElect, race ? race.title : ballot ? ballotTitle(ballot.race.raceId) : snap ? "U.S. Senate, Kentucky · 2026" : null].filter(Boolean))].join(" · ")}</p>
           <CandidateElectionStatus status={electionStatus} />
+          {electionStatus?.primaryVotes != null ? (
+            <p className="hint">{electionStatus.primaryVotes.toLocaleString("en-US")} certified primary votes</p>
+          ) : null}
           <dl className={reading.facts}>
             {job ? <div><dt>Current job</dt><dd>{job}{profile.bio ? <> <a href={profile.bio.sourceUrl}>Source ↗</a></> : null}</dd></div> : null}
             {headline.kind === "missing" && ballot ? <div><dt>Raised</dt><dd>No report on file</dd></div> : null}

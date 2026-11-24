@@ -1,6 +1,7 @@
 import type { CardPerson } from "@/components/site/CandidateCard";
 import { kyBallot } from "@/lib/site/ky-ballot";
-import { portraitFor } from "@/lib/site/stances";
+import { jobLine } from "@/lib/site/profiles";
+import { photoAttribution, portraitFor } from "@/lib/site/stances";
 import { candidateElectionStatus, primaryProfileId, primaryResults, resultCandidateMatches } from "@/lib/site/certified-results";
 import { congressionalOfficeLabel, currentOfficeFor } from "@/lib/site/ky-officeholders";
 
@@ -23,16 +24,18 @@ export function primaryCandidateCards(raceId: string) {
       const nominee = ballot?.people.find((person) => resultCandidateMatches(candidate, person));
       const id = nominee?.id ?? candidate.candidateId ?? primaryProfileId(result, candidate);
       const member = currentOfficeFor(id, candidate.name);
+      const photo = portraitFor(id);
       return {
         id,
         name: candidate.name,
         party: result.party,
-        photo: portraitFor(id)?.src ?? null,
+        photo: photo?.src ?? null,
+        credit: photoAttribution(photo),
         office,
         holdsOffice: member?.district === district || Boolean(nominee?.holdsOffice),
         openSeat,
         writeIn: false,
-        summary: congressionalOfficeLabel(member),
+        summary: jobLine(id) ?? congressionalOfficeLabel(member),
         electionStatus: {
           ...candidateElectionStatus(raceId, { id, name: candidate.name, party: result.party }),
           primary: candidate.winner ? "won" : "lost",
@@ -47,7 +50,9 @@ export function candidateCards(raceId: string): CardPerson[] {
   const race = kyBallot(raceId);
   if (!race) return [];
   const openSeat = !race.people.some((person) => person.holdsOffice);
-  return race.people.map((person) => ({
+  return race.people.map((person) => {
+    const photo = portraitFor(person.id);
+    return {
     id: person.id,
     name: person.name,
     party: person.party,
@@ -55,10 +60,12 @@ export function candidateCards(raceId: string): CardPerson[] {
     holdsOffice: person.holdsOffice,
     openSeat,
     writeIn: person.role === "write-in",
-    photo: portraitFor(person.id)?.src ?? null,
-    summary: congressionalOfficeLabel(currentOfficeFor(person.id)),
+    photo: photo?.src ?? null,
+    credit: photoAttribution(photo),
+    summary: jobLine(person.id) ?? congressionalOfficeLabel(currentOfficeFor(person.id)),
     uncontested: race.people.length === 1,
     electionStatus: candidateElectionStatus(raceId, person),
-  }));
+    };
+  });
 }
 

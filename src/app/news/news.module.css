@@ -1,30 +1,3 @@
-.news nav a,
-.news nav button {
-  display: grid;
-  place-items: center;
-  min-height: 44px;
-  padding: 0.5rem 1rem;
-  border: 0;
-  border-radius: 6px;
-  background: transparent;
-  color: var(--color-navy);
-  font: inherit;
-  font-weight: 600;
-  text-align: center;
-  text-decoration: none !important;
-  cursor: pointer;
-}
-
-.news nav a[aria-current],
-.news nav button[aria-current] {
-  background: var(--color-card);
-  box-shadow: inset 0 -2px var(--color-navy);
-}
-
-.news nav::before {
-  content: none;
-}
-
 .filter {
   max-width: 27rem;
   margin-bottom: 1.5rem;
