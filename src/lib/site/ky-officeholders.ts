@@ -11,6 +11,11 @@ export function currentKentuckyOfficeholders(now = new Date()) {
   );
 }
 
+/** The member whose term ends when the next term for this seat begins. */
+export function officeholderForSeat(office: "senate" | "house", district: number | null, termEnd = CONGRESSIONAL_TERM_START.slice(0, 10)) {
+  return data.find((member) => member.office === office && member.district === district && member.termEnd === termEnd) ?? null;
+}
+
 export function currentOfficeFor(candidateId: string, name?: string) {
   return currentKentuckyOfficeholders().find((person) =>
     person.fecIds.includes(candidateId) || Boolean(name && resultCandidateMatches(person, { name })),

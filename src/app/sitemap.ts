@@ -8,7 +8,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const prefix = normalizeBasePath(process.env.NEXT_PUBLIC_BASE_PATH);
   const { races, candidates } = kyBallotSeed();
   const paths = [
-    "/", "/accessibility", "/ask", "/ballot", "/candidates", "/contact",
+    "/", "/accessibility", "/ask", "/ballot", "/candidates", "/contact", "/search",
     "/finance", "/news", "/officeholders", "/privacy", "/sources", ...enabledStates().map(statePath), "/terms",
     ...races.flatMap(({ raceId }) => [`/races/${raceId}`, `/races/${raceId}/compare`]),
     ...candidates.map(({ candidateId }) => `/candidates/${candidateId}`),

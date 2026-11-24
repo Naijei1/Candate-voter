@@ -14,12 +14,17 @@ import { PersonFace } from "@/components/site/PersonFace";
 import { RaceResults } from "@/components/site/RaceResults";
 import { candidateElectionStatus, KY_FEDERAL_RACES } from "@/lib/site/certified-results";
 import { raceCardTitle } from "@/lib/site/candidate-cards";
-import { openSeatLine } from "@/lib/site/seat";
 import { KY_BALLOT_CHECKED, KY_BALLOT_SOURCES, kyBallot, kyBallotIds } from "@/lib/site/ky-ballot";
+import { CiteShare } from "@/components/site/CiteShare";
+import { KeyDates } from "@/components/site/KeyDates";
+import { PageLinks } from "@/components/site/PageLinks";
+import { RaceSummary } from "@/components/site/RaceSummary";
+import { WhatToKnow } from "@/components/site/WhatToKnow";
+import { CandidateCorrection } from "@/components/site/CandidateCorrection";
 import { photoAttribution, portraitFor } from "@/lib/site/stances";
 import { cardsForRace } from "@/lib/site/showcase";
 import { personFilingNote } from "@/lib/data/filing-note";
-import { httpsUrl } from "@/lib/format";
+import { dayLabel, httpsUrl } from "@/lib/format";
 import { loadChecks } from "@/lib/content/store";
 import { loadContest } from "@/lib/site/contest";
 import { raceChanges } from "@/lib/site/race-changes";
@@ -54,6 +59,7 @@ export default async function RacePage({ params }: PageProps) {
     ? loaded.candidates.filter((candidate) => !ballotIds.has(candidate.candidateId) && !ballotIds.has(candidate.fecCandidateId ?? ""))
     : [];
   const stateHref = "/";
+  const updated = [ballot ? KY_BALLOT_CHECKED : "", loaded.refreshedAt ?? ""].filter((value) => value.length > 0).sort().at(-1);
 
   return (
     <article className="wrap">
@@ -64,7 +70,12 @@ export default async function RacePage({ params }: PageProps) {
         ]}
       />
       <h1>{race.title}</h1>
-      <DatasetUpdated date={[ballot ? KY_BALLOT_CHECKED : "", loaded.refreshedAt ?? ""].sort().at(-1)} />
+      {ballot ? <RaceSummary race={ballot} /> : null}
+      <PageLinks raceId={race.raceId} />
+      <CiteShare title={race.title} path={`/races/${race.raceId}`} updated={updated ? dayLabel(updated) : null} />
+      <DatasetUpdated date={updated} />
+      {ballot ? <KeyDates /> : null}
+      {ballot ? <WhatToKnow raceId={race.raceId} /> : null}
       {ballot ? <RaceResults raceId={race.raceId} show="status" /> : <ElectionDayBanner />}
       {!ballot && sourceHref ? <p className="hint"><a href={sourceHref}>Source ↗</a></p> : null}
       {ballot || loaded.filingsLoaded ? null : roster.fecList ? (
@@ -94,8 +105,6 @@ export default async function RacePage({ params }: PageProps) {
                 Your ballot
               </Link>
             </div>
-            {openSeatLine(ballot.people.some((person) => person.holdsOffice)) ? <p>{openSeatLine(ballot.people.some((person) => person.holdsOffice))}</p> : null}
-            {ballot.note ? <p>{ballot.note}</p> : null}
             <ul className="person-list">
               {[...ballot.people].sort((a, b) => a.name.localeCompare(b.name)).map((person) => {
                 const photo = portraitFor(person.id);
@@ -172,6 +181,7 @@ export default async function RacePage({ params }: PageProps) {
       {ballot ? <RaceResults raceId={race.raceId} show="primary" /> : null}
       <RaceChanges events={raceChanges(race.raceId)} />
       <AskPanel raceId={race.raceId} cycle={race.cycle} state={race.state} />
+      <CandidateCorrection raceId={race.raceId} page={`/races/${race.raceId}`} />
       </div>
       {ballot ? (
         <BallotBar step={2} backHref="/" nextHref={`/races/${race.raceId}/compare`} nextLabel="Compare candidates" nextShort="Compare" />

@@ -1,3 +1,4 @@
+import { ageLabel } from "@/lib/format";
 import { FeedCorrection } from "./FeedCorrection";
 import { thumbnail } from "@/lib/site/thumbnail";
 import { portraitFor } from "@/lib/site/stances";
@@ -31,10 +32,11 @@ export function FeedCard({ card }: { card: TodayCard }) {
       <a className="feed-card has-thumb" href={card.sourceUrl}>
         <FeedImage card={card} />
         <span className="feed-body">
+          <span className="feed-kicker">{card.date ? "FEC filing" : "Official record"}</span>
           <span className="feed-title">{card.title}</span>
           <span className="feed-text">{card.text}</span>
           <span className="meta">
-            Official record · {card.sourceName}{card.date ? <> · <time dateTime={card.date}>{card.when}</time></> : null}
+            {card.sourceName}{card.date ? <> · <time dateTime={card.date}>{ageLabel(card.date)}</time></> : null}
           </span>
         </span>
       </a>

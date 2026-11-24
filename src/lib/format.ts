@@ -140,8 +140,8 @@ const DAY_FORMAT = new Intl.DateTimeFormat("en-US", {
  * Calendar day for a date-only string, or for a timestamp in the state's display zone.
  * A UTC timestamp late in the evening is the previous local day in Kentucky.
  */
-export function calendarDay(value: string, timeZone = stateConfig().displayTimeZone): string {
-  const text = value.trim();
+export function calendarDay(value: string | Date, timeZone = stateConfig().displayTimeZone): string {
+  const text = value instanceof Date ? value.toISOString() : value.trim();
   if (/^\d{4}-\d{2}-\d{2}$/.test(text)) return text;
   const date = new Date(text);
   if (Number.isNaN(date.getTime())) {
@@ -162,4 +162,22 @@ export function dayLabel(value: string): string {
   if (!match) return value;
   const date = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])));
   return DAY_FORMAT.format(date);
+}
+
+/**
+ * "3 days ago" for a recent filing or story date. Computed once on the server.
+ * Older dates keep the calendar label.
+ */
+export function ageLabel(value: string, now = new Date(), timeZone = stateConfig().displayTimeZone): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
+  if (!match) return dayLabel(value);
+  const then = Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+  const today = calendarDay(now, timeZone);
+  const todayMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(today);
+  if (!todayMatch) return dayLabel(value);
+  const start = Date.UTC(Number(todayMatch[1]), Number(todayMatch[2]) - 1, Number(todayMatch[3]));
+  const days = Math.round((start - then) / 86_400_000);
+  if (days === 0) return "today";
+  if (days > 0 && days < 14) return days === 1 ? "1 day ago" : `${days} days ago`;
+  return dayLabel(value);
 }

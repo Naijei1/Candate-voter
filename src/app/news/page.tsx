@@ -5,7 +5,7 @@ import { DatasetUpdated } from "@/components/site/DatasetUpdated";
 import { FeedCorrection } from "@/components/site/FeedCorrection";
 import { FeedCard } from "@/components/site/FeedCard";
 import { withBasePath } from "@/lib/base-path";
-import { dayLabel } from "@/lib/format";
+import { ageLabel } from "@/lib/format";
 import { kentuckyCandidates } from "@/lib/site/ky-candidate-mentions";
 import { latestNews, latestPress, type NewsItem } from "@/lib/site/ky-news";
 import { todayMoney } from "@/lib/site/today";
@@ -86,9 +86,10 @@ function StoryCard({ story, reporting }: { story: NewsItem; reporting: boolean }
             <figcaption className="hint">{story.image.credit}</figcaption>
           </figure>
         ) : null}
+        <span className="feed-kicker">{reporting ? "Reporting" : "Candidate says"}</span>
         <span className="feed-title">{story.title}</span>
         <span className="meta">
-          {reporting ? "Reporting" : "Candidate says"} · {story.source} · <time dateTime={story.date}>{dayLabel(story.date)}</time>
+          {story.source} · <time dateTime={story.date}>{ageLabel(story.date)}</time>
         </span>
       </a>
       <FeedCorrection sourceUrl={story.url} />

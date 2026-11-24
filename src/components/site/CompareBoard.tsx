@@ -2,7 +2,7 @@
 
 import { dayLabel } from "@/lib/format";
 import Link from "next/link";
-import { useId, useState, type KeyboardEvent, type ReactNode } from "react";
+import { useEffect, useId, useState, type KeyboardEvent, type ReactNode } from "react";
 import { PersonMark } from "@/components/site/PersonMark";
 import { orgLabel } from "@/components/site/FinanceLists";
 import { SourcePeek } from "@/components/site/SourcePeek";
@@ -92,6 +92,10 @@ export function CompareBoard({
   updates?: readonly { title: string; url: string; date: string | null; source: string }[];
 }) {
   const [selectedTab, setTab] = useState<Tab>("Overview");
+  useEffect(() => {
+    const hash = window.location.hash.replace(/^#/, "");
+    if (hash.startsWith("issue-")) setTab("Issues");
+  }, []);
   const [excluded, setExcluded] = useState<string[]>([]);
   const opening = candidates.slice(0, 2).map((candidate) => candidate.candidateId);
   const [draftPair, setDraftPair] = useState<string[]>(opening);
@@ -110,6 +114,12 @@ export function CompareBoard({
     hasPriorResults: selected.some((candidate) => candidate.priorResults),
   });
   const tab = tabs.includes(selectedTab) ? selectedTab : "Overview";
+  useEffect(() => {
+    if (tab !== "Issues") return;
+    const hash = window.location.hash.replace(/^#/, "");
+    if (!hash.startsWith("issue-")) return;
+    document.getElementById(hash)?.scrollIntoView({ block: "nearest" });
+  }, [tab]);
   const tabId = (item: Tab) => `${id}-${item.replace(/\s+/g, "-").toLowerCase()}`;
 
   function moveTab(event: KeyboardEvent<HTMLButtonElement>, index: number) {
@@ -192,7 +202,7 @@ export function CompareBoard({
       </div>
       {summary ? <p>{summary}</p> : filingsLoaded ? <p>{filedLine(candidates.length)}</p> : null}
       <div className="compare-grid" role="tabpanel" aria-labelledby={tabId(tab)} tabIndex={selected.length ? undefined : 0}>
-        {orderedPair(selected, pair).map((candidate) => (
+        {orderedPair(selected, pair).map((candidate, index) => (
           <article className={pair.includes(candidate.candidateId) ? "person-card is-paired" : "person-card"} key={candidate.candidateId}>
             <PersonMark name={candidate.displayName} photo={candidate.photo ?? null} party={candidate.partyLabel} size="lg" />
             <h2>
@@ -200,7 +210,7 @@ export function CompareBoard({
             </h2>
             <p className="party">{candidate.partyLabel}</p>
             {candidate.note ? <p className="hint">{candidate.note}</p> : null}
-            <TabBody tab={tab} candidate={candidate} finance={finance} issues={issues} updates={updates} />
+            <TabBody tab={tab} candidate={candidate} finance={finance} issues={issues} updates={updates} anchor={index === 0} />
             {candidate.photoCredit && candidate.photoSource ? <p className="hint compare-credit">Photo: <a href={candidate.photoSource}>{candidate.photoCredit}</a></p> : null}
           </article>
         ))}
@@ -251,6 +261,7 @@ function TabBody({
   finance,
   issues,
   updates,
+  anchor = false,
 }: {
   tab: Tab;
   candidate: CompareCandidate;
@@ -261,6 +272,7 @@ function TabBody({
   } | null;
   issues: readonly { id: string; label: string }[];
   updates: readonly { title: string; url: string; date: string | null; source: string }[];
+  anchor?: boolean;
 }) {
   const notes = candidate.stances ?? [];
   if (tab === "Experience") return candidate.experience;
@@ -285,7 +297,7 @@ function TabBody({
         {rows.map((issue) => {
           const stance = notes.find((note) => note.issueId === issue.id);
           return (
-            <li key={issue.id}>
+            <li key={issue.id} id={anchor ? `issue-${issue.id}` : undefined}>
               <p>{issue.label}</p>
               {stance ? (
                 <p>

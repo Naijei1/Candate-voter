@@ -33,6 +33,8 @@ export type ProfileVote = ProfileSource & {
   vote: string;
   title: string;
   roll: number;
+  lawUrl?: string;
+  lawSigned?: string;
 };
 
 export type KyProfile = {
@@ -55,6 +57,25 @@ export const profileVoteSelection = { rule: data.voteSelection, checkedOn: data.
 
 export function profileFor(candidateId: string): KyProfile {
   return { ...empty, ...byId[candidateId] };
+}
+
+/** Latest source date among the records a profile shows. Not the election day. */
+export function profileRecordDate(profile: KyProfile, extra: Array<string | null | undefined> = []): string | null {
+  const dates = [
+    profile.bio?.sourceDate,
+    profile.website?.sourceDate,
+    ...profile.endorsements.map((item) => item.sourceDate),
+    ...profile.votes.map((item) => item.sourceDate),
+    ...profile.education.map((item) => item.sourceDate),
+    ...profile.career.map((item) => item.sourceDate),
+    ...profile.results.map((item) => item.sourceDate),
+    ...profile.social.map((item) => item.sourceDate),
+    ...extra,
+  ].flatMap((value) => {
+    const match = /^(\d{4}-\d{2}-\d{2})/.exec(value ?? "");
+    return match?.[1] ? [match[1]] : [];
+  });
+  return dates.sort().at(-1) ?? null;
 }
 
 export function electionLabel(result: PriorResult): string {

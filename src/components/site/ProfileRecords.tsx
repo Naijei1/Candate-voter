@@ -105,11 +105,11 @@ export function VoteList({ entries }: { entries: readonly ProfileVote[] }) {
       </p>
       <RecordRows
         rows={entries.map((vote) => (
-          <Row key={vote.sourceUrl} lead={vote.vote}>
-            <p>{vote.bill} · {vote.title}</p>
-            <p className={styles.source}>
-              <time dateTime={vote.date}>{dayLabel(vote.date)}</time> · <a href={vote.sourceUrl}>{vote.sourceName} roll call {vote.roll}</a>
-            </p>
+          <Row key={vote.sourceUrl} lead={`Voted ${vote.vote}`}>
+            <p>{vote.bill}, {vote.title} · <time dateTime={vote.date}>{dayLabel(vote.date)}</time> · <a href={vote.sourceUrl}>{vote.sourceName} ↗</a></p>
+            {vote.lawSigned && vote.lawUrl ? (
+              <p className={styles.source}>Signed into law <time dateTime={vote.lawSigned}>{dayLabel(vote.lawSigned)}</time> · <a href={vote.lawUrl}>Public law</a></p>
+            ) : null}
           </Row>
         ))}
       />

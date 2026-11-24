@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { useSession } from "@/components/site/SessionProvider";
+import { SiteSearch } from "@/components/site/SiteSearch";
 
 /** `short` shows on narrow desktop widths. The mobile menu always uses the full label. */
 export const NAV_LINKS = [
@@ -30,6 +31,7 @@ export function HeaderFrame({
         <nav className="nav-desktop" aria-label="Primary">
           <Link href={findHref}>Find my races</Link>
           <Link href="/candidates" aria-current={active(path, "/candidates") ? "page" : undefined}>Candidates</Link>
+          <SiteSearch />
           {NAV_LINKS.map((item) => (
             <Link key={item.href} href={item.href} aria-current={active(path, item.href) ? "page" : undefined}>
               {item.short === item.label ? (
@@ -48,6 +50,7 @@ export function HeaderFrame({
           <summary>Menu</summary>
           <div>
             <Link href={findHref}>Find my races</Link>
+            <Link href="/search">Search</Link>
             {NAV_LINKS.map((item) => (
               <Link key={item.href} href={item.href} aria-current={active(path, item.href) ? "page" : undefined}>
                 {item.label}
