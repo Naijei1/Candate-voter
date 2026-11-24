@@ -181,6 +181,18 @@ test("money, primary, and other-year questions stay on the matching stored recor
   assert.match(primary, /Republican Party primary/);
   assert.doesNotMatch(primary, /not certified yet/);
 
+  const both = await ask("Who won the Republican primary and Democratic primary for Senate?", { raceId: "2026-senate-KY" });
+  assert.match(both, /Andy Barr/);
+  assert.match(both, /Charles Booker/);
+  assert.match(both, /Republican Party primary/);
+  assert.match(both, /Democratic Party primary/);
+
+  const campaign = await ask("How much has Andy Barr spent?", { raceId: "2026-senate-KY" });
+  assert.match(campaign, /spent \$14,615,968\.43/);
+
+  const outside = await ask("What was outside spending against Andy Barr?", { raceId: "2026-senate-KY" });
+  assert.doesNotMatch(outside, /spent \$14,615,968\.43/);
+
   const older = await ask("Who won the 2022 Kentucky Senate race?", { raceId: "2026-senate-KY" });
   assert.doesNotMatch(older, /not certified yet/);
   assert.doesNotMatch(older, /Certification was due/);
@@ -190,7 +202,7 @@ test("money, primary, and other-year questions stay on the matching stored recor
   assert.match(page, /2024|Looked up the other year/);
   assert.doesNotMatch(page, /Andy Barr/);
   assert.doesNotMatch(page, /November 3, 2026/);
-  assert.ok(calls <= 1);
+  assert.ok(calls <= 2);
 });
 
 test("activity keeps receipts and spending when filings already fill a page", () => {

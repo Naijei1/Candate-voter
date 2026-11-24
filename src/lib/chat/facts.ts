@@ -88,8 +88,8 @@ function certificationDate(): string | null {
 }
 
 function primaryWinnerAnswer(question: string, raceId: string): ChatAnswer | null {
-  const party = askedParty(question);
-  const results = primaryResults(raceId).filter((result) => !party || party.test(result.party));
+  const parties = askedParties(question);
+  const results = primaryResults(raceId).filter((result) => parties.length === 0 || parties.some((party) => party.test(result.party)));
   if (results.length === 0) return null;
   const state = stateConfig();
   const title = contestTitle(raceId);
@@ -109,11 +109,12 @@ function primaryWinnerAnswer(question: string, raceId: string): ChatAnswer | nul
   };
 }
 
-function askedParty(question: string): RegExp | null {
-  if (/\brepublican\b/i.test(question)) return /republican/i;
-  if (/\bdemocrat/i.test(question)) return /democrat/i;
-  if (/\blibertarian\b/i.test(question)) return /libertarian/i;
-  return null;
+function askedParties(question: string): RegExp[] {
+  const parties: RegExp[] = [];
+  if (/\brepublican\b/i.test(question)) parties.push(/republican/i);
+  if (/\bdemocrat/i.test(question)) parties.push(/democrat/i);
+  if (/\blibertarian\b/i.test(question)) parties.push(/libertarian/i);
+  return parties;
 }
 
 type MoneyKind = "raised" | "spent" | "cash" | "debt";
@@ -130,6 +131,8 @@ function moneyAnswer(question: string): ChatAnswer | null {
 }
 
 function moneyKind(question: string): MoneyKind | null {
+  // Outside spending is a different record from a campaign's own disbursements.
+  if (/\boutside\b|\bindependent expenditures?\b|\bsuper ?pacs?\b|\bspending against\b|\bspent against\b|\bspending for\b|\bspent for\b/i.test(question)) return null;
   const spent = /\bspent\b|\bspending\b|\bdisburs/i.test(question);
   const cash = /\bcash on hand\b|\bcash\b/i.test(question);
   const debt = /\bdebt/i.test(question);
