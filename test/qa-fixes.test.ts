@@ -4,6 +4,8 @@ import test from "node:test";
 import { createCompareService } from "../src/lib/compare/service";
 import { summarizeRace } from "../src/lib/compare/summarize";
 import { postChat, type ChatDeps } from "../src/lib/chat/handler";
+import { activityCards } from "../src/lib/site/news-activity";
+import type { TodayCard } from "../src/lib/site/today";
 import { createRateLimiter } from "../src/lib/chat/rate-limit";
 import type { ConverseFn } from "../src/lib/chat/types";
 import { MemoryVoterRepository } from "../src/lib/data/memory-repository";
@@ -141,4 +143,67 @@ test("Ask answers the six ballot questions from stored Kentucky records", async 
   assert.match(compared, /Where they differ/);
   assert.match(compared, /Where they agree/);
   assert.equal(calls, 0);
+});
+
+test("money, primary, and other-year questions stay on the matching stored record", async () => {
+  const repo = new MemoryVoterRepository();
+  let calls = 0;
+  const converse: ConverseFn = async () => {
+    calls += 1;
+    return { stopReason: "end_turn", message: { role: "assistant", content: [{ text: "Looked up the other year." }] } };
+  };
+  const deps: ChatDeps = {
+    env: { CANDATE_CHAT_ENABLED: "true" },
+    now,
+    repository: () => repo,
+    converse,
+    siteRoot: "https://voter.example",
+    dailyLimiter: { take: () => ({ ok: true }) },
+    rateLimiter: createRateLimiter({ limit: 20, windowMs: 60_000 }),
+  };
+  async function ask(message: string, extra: { raceId?: string; cycle?: number } = {}) {
+    const response = await postChat(new Request("https://voter.example/api/chat", {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-forwarded-for": "203.0.113.20" },
+      body: JSON.stringify({ message, cycle: extra.cycle ?? 2026, state: "KY", ...(extra.raceId ? { raceId: extra.raceId } : {}) }),
+    }), deps);
+    const body = await response.json() as { answer_markdown?: string; message?: string };
+    assert.equal(response.status, 200, `${message} ${body.message ?? ""}`);
+    return body.answer_markdown ?? "";
+  }
+
+  const spent = await ask("How much has Morgan McGarvey spent?", { raceId: "2026-senate-KY" });
+  assert.match(spent, /spent \$1,327,899\.66/);
+  assert.doesNotMatch(spent, /raised \$1,998,328/);
+
+  const primary = await ask("Who won the Republican Senate primary?", { raceId: "2026-senate-KY" });
+  assert.match(primary, /Andy Barr/);
+  assert.match(primary, /Republican Party primary/);
+  assert.doesNotMatch(primary, /not certified yet/);
+
+  const older = await ask("Who won the 2022 Kentucky Senate race?", { raceId: "2026-senate-KY" });
+  assert.doesNotMatch(older, /not certified yet/);
+  assert.doesNotMatch(older, /Certification was due/);
+  assert.doesNotMatch(older, /was elected/);
+
+  const page = await ask("Who is on the ballot for U.S. Senate?", { raceId: "2024-senate-KY", cycle: 2024 });
+  assert.match(page, /2024|Looked up the other year/);
+  assert.doesNotMatch(page, /Andy Barr/);
+  assert.doesNotMatch(page, /November 3, 2026/);
+  assert.ok(calls <= 1);
+});
+
+test("activity keeps receipts and spending when filings already fill a page", () => {
+  const card = (id: string, personId: string): TodayCard => ({
+    id, title: id, text: id, date: "2026-11-01", when: "Nov 1", sourceName: "FEC", sourceUrl: "https://www.fec.gov",
+    personId, personName: personId, group: personId,
+  });
+  const cards = activityCards({
+    filings: Array.from({ length: 13 }, (_, index) => card(`filing-${index}`, "filer")),
+    receipts: [card("receipt-1", "raiser")],
+    spending: [card("spend-1", "spender")],
+  }, "");
+  assert.equal(cards.filter((item) => item.id.startsWith("filing")).length, 12);
+  assert.ok(cards.some((item) => item.id === "receipt-1"));
+  assert.ok(cards.some((item) => item.id === "spend-1"));
 });

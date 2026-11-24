@@ -4,13 +4,16 @@
 import { FeedCard } from "@/components/site/FeedCard";
 import { FeedCorrection } from "@/components/site/FeedCorrection";
 import { ageLabel } from "@/lib/format";
+import { activityCards } from "@/lib/site/news-activity";
 import type { NewsItem } from "@/lib/site/ky-news";
 import type { TodayCard } from "@/lib/site/today";
 import { useRouter, useSearchParams } from "next/navigation";
 import styles from "@/app/news/news.module.css";
 
 export type NewsData = {
-  cards: TodayCard[];
+  filings: TodayCard[];
+  receipts: TodayCard[];
+  spending: TodayCard[];
   press: NewsItem[];
   reporting: NewsItem[];
   candidates: { id: string; name: string }[];
@@ -34,9 +37,7 @@ export function NewsView({ data, lane, candidate }: { data: NewsData; lane: "act
   const stories = (lane === "reporting" ? data.reporting : data.press)
     .filter((story) => !candidate || story.personIds.includes(candidate))
     .slice(0, 12);
-  const cards = lane === "activity"
-    ? data.cards.filter((card) => !candidate || card.personId === candidate).slice(0, 12)
-    : [];
+  const cards = lane === "activity" ? activityCards(data, candidate) : [];
   const items = [
     ...cards.map((card) => ({ id: card.id, date: card.date ?? "", node: <FeedCard card={card} /> })),
     ...stories.map((story) => ({ id: story.url, date: story.date, node: <StoryCard story={story} reporting={lane === "reporting"} /> })),

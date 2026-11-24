@@ -14,7 +14,9 @@ export const revalidate = 3600;
 export default async function NewsFeedPage() {
   const [money, press, reporting] = await Promise.all([todayMoney(48), latestPress(12), latestNews(40)]);
   const data: NewsData = {
-    cards: [...money.filings, ...money.receipts, ...money.spending],
+    filings: money.filings,
+    receipts: money.receipts,
+    spending: money.spending,
     press,
     reporting,
     candidates: [...kentuckyCandidates]
