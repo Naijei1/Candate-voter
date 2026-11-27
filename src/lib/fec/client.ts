@@ -176,6 +176,15 @@ export class FecClient {
     return results[0] ?? null;
   }
 
+  /** `GET /committee/{id}/totals/` for one cycle: receipts by source, spending and cash. */
+  async getCommitteeTotals(committeeId: string, cycle: number): Promise<Record<string, unknown> | null> {
+    const url = this.endpoint(`/committee/${encodeURIComponent(committeeId)}/totals/`, {
+      cycle: String(cycle),
+    });
+    const results = await this.getResults(url);
+    return results[0] ?? null;
+  }
+
   async getCandidateCommittees(candidateId: string, cycle: number): Promise<Record<string, unknown>[]> {
     const url = this.endpoint(`/candidate/${encodeURIComponent(candidateId)}/committees/`, {
       cycle: String(cycle),
