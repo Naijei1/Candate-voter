@@ -3,6 +3,7 @@ import { Fragment, type ReactNode } from "react";
 import type { PartyInfo } from "@/lib/tv/party";
 import { initials } from "@/lib/tv/party";
 import type { PersonView } from "@/lib/tv/people";
+import { enabledStates, statePath } from "@/lib/states";
 import { Icon } from "./Icon";
 
 /** Party tag: short text for sight, full name for screen readers. Never color alone. */
@@ -78,5 +79,27 @@ export function Empty({ title, children, action }: { title: string; children?: R
       {children}
       {action}
     </div>
+  );
+}
+
+/** National / States / Congress / Local switch shown above state and officeholder pages. */
+export function ScopeNav({ current }: { current: "states" | "congress" }) {
+  const home = enabledStates()[0];
+  const items = [
+    { key: "national", href: "/", label: "National" },
+    { key: "states", href: "/states", label: "States" },
+    { key: "congress", href: "/officeholders", label: "Congress" },
+    { key: "local", href: home ? `${statePath(home)}?view=county` : "/states", label: "Local" },
+  ];
+  return (
+    <nav className="scope" aria-label="Scope">
+      <div className="wrap">
+        {items.map((item) => (
+          <Link key={item.key} href={item.href} aria-current={item.key === current ? "page" : undefined}>
+            {item.label}
+          </Link>
+        ))}
+      </div>
+    </nav>
   );
 }

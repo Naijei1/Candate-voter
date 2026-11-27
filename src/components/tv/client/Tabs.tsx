@@ -4,26 +4,26 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 
 export type TabPanel = { id: string; label: string; panel: ReactNode };
 
-/** ARIA tabs that keep the open tab in `?tab=` so links and Back work. */
-export function Tabs({ label, tabs }: { label: string; tabs: TabPanel[] }) {
+/** ARIA tabs that keep the open tab in the URL (`?tab=` by default) so links and Back work. */
+export function Tabs({ label, tabs, param = "tab", listClass = "tabs" }: { label: string; tabs: TabPanel[]; param?: string; listClass?: string }) {
   const [active, setActive] = useState(tabs[0]?.id ?? "");
   const buttons = useRef<Array<HTMLButtonElement | null>>([]);
 
   useEffect(() => {
     const sync = () => {
-      const wanted = new URLSearchParams(location.search).get("tab");
+      const wanted = new URLSearchParams(location.search).get(param);
       setActive(tabs.some((tab) => tab.id === wanted) ? (wanted as string) : (tabs[0]?.id ?? ""));
     };
     sync();
     window.addEventListener("popstate", sync);
     return () => window.removeEventListener("popstate", sync);
-  }, [tabs]);
+  }, [tabs, param]);
 
   const choose = (id: string, focus = false) => {
     setActive(id);
     const url = new URL(location.href);
-    if (id === tabs[0]?.id) url.searchParams.delete("tab");
-    else url.searchParams.set("tab", id);
+    if (id === tabs[0]?.id) url.searchParams.delete(param);
+    else url.searchParams.set(param, id);
     history.replaceState(history.state, "", url);
     if (focus) buttons.current[tabs.findIndex((tab) => tab.id === id)]?.focus();
   };
@@ -38,7 +38,7 @@ export function Tabs({ label, tabs }: { label: string; tabs: TabPanel[] }) {
 
   return (
     <>
-      <div className="tabs" role="tablist" aria-label={label}>
+      <div className={listClass} role="tablist" aria-label={label}>
         {tabs.map((tab, index) => (
           <button
             key={tab.id}

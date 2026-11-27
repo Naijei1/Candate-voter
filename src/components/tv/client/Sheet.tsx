@@ -9,9 +9,12 @@ export function SheetButton({
   icon,
   className,
   title,
+  iconOnly = false,
   children,
 }: {
   label: string;
+  /** Show only the icon; the label becomes the button's accessible name. */
+  iconOnly?: boolean;
   icon?: IconName;
   className: string;
   title: string;
@@ -20,9 +23,9 @@ export function SheetButton({
   const dialogRef = useRef<HTMLDialogElement>(null);
   return (
     <>
-      <button className={className} type="button" aria-haspopup="dialog" onClick={() => dialogRef.current?.showModal()}>
-        {icon ? <Icon name={icon} size="sm" /> : null}
-        {label}
+      <button className={className} type="button" aria-haspopup="dialog" aria-label={iconOnly ? label : undefined} onClick={() => dialogRef.current?.showModal()}>
+        {icon ? <Icon name={icon} size={iconOnly ? undefined : "sm"} /> : null}
+        {iconOnly ? null : label}
       </button>
       <dialog
         className="sheet"

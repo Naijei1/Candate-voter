@@ -12,8 +12,8 @@ import { ExtLink } from "@/components/tv/ExtLink";
 import { FinanceTable, FundingLegend } from "@/components/tv/FinanceTable";
 import { Icon } from "@/components/tv/Icon";
 import { NewsList } from "@/components/tv/NewsList";
+import { RaceCard } from "@/components/tv/RaceCard";
 import { VoteRecord } from "@/components/tv/Votes";
-import { WonTag } from "@/components/tv/Won";
 import { formatMoney } from "@/lib/finance/model";
 import { dayLabel } from "@/lib/format";
 import { KY_BALLOT_SOURCES } from "@/lib/site/ky-ballot";
@@ -22,10 +22,9 @@ import { stanceIssues } from "@/lib/site/stances";
 import { stateConfig, statePath } from "@/lib/states";
 import { raceQuestions } from "@/lib/tv/ask";
 import { newsForRace } from "@/lib/tv/news";
-import { initials, lastName } from "@/lib/tv/party";
+import { lastName } from "@/lib/tv/party";
 import { allRaces, backgroundParts, defaultPair, isHouseVote, raceView, stanceFor, voteChoice, type PersonView, type RaceView } from "@/lib/tv/people";
 import { outsideSpending, raceTimeline, recordNote } from "@/lib/tv/race-extra";
-import { isWinner } from "@/lib/tv/results-gate";
 import { shortLine } from "@/lib/tv/short-line";
 
 export const revalidate = 3600;
@@ -45,43 +44,6 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     title: `${race.title}, ${stateConfig().name}`,
     description: `Everyone running for ${race.title} in ${stateConfig().name}, with sourced facts, positions and campaign money.`,
   };
-}
-
-function Card({ person, race }: { person: PersonView; race: RaceView }) {
-  return (
-    <article className={`ccard ${person.party.key}`}>
-      <div className="ph">
-        {person.photo ? (
-          <img src={person.photo.src} alt={`Portrait of ${person.name}`} loading="eager" width={400} height={400} />
-        ) : (
-          <div className="ph-empty">
-            <span className="ini-big" aria-hidden="true">
-              {initials(person.name)}
-            </span>
-            <span>No photo</span>
-          </div>
-        )}
-        <PartyTag party={person.party} corner />
-      </div>
-      <div className="cb">
-        <h3 className="cname">{person.name}</h3>
-        <p className={`role ${person.party.key}`}>
-          {person.role}
-          {isWinner(race.raceId, person.name) ? <WonTag /> : null}
-        </p>
-        {person.oneLine ? <p className="one">{person.oneLine}</p> : <p className="one none">No background in our records.</p>}
-        <Link className={`btn vp ${person.party.key}`} href={`/candidates/${person.id}`} aria-label={`View profile: ${person.name}`}>
-          View Profile
-        </Link>
-        <p className="cacts">
-          <Link href={`/candidates/${person.id}#money`} aria-label={`Money: ${person.name}`}>
-            <Icon name="money" size="sm" />
-            Money
-          </Link>
-        </p>
-      </div>
-    </article>
-  );
 }
 
 function ColumnHead({ person }: { person: PersonView }) {
@@ -448,7 +410,7 @@ export default async function RacePage({ params }: PageProps) {
 
       <div className="cards">
         {race.people.map((person) => (
-          <Card key={person.id} person={person} race={race} />
+          <RaceCard key={person.id} person={person} race={race} />
         ))}
       </div>
       {pair && compareHref ? (

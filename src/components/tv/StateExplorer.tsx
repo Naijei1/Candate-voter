@@ -40,10 +40,17 @@ export function TileMap({ rows }: { rows: StateRow[] }) {
   );
 }
 
-export function StateExplorer({ id, big }: { id: string; big?: boolean }) {
+export function StateExplorer({ id, big, note }: { id: string; big?: boolean; note?: React.ReactNode }) {
   const rows = stateRows();
+  const finder = (
+    <div>
+      <StateFinder id={id} rows={rows} />
+      {note}
+    </div>
+  );
   return (
     <div className={big ? "explore-g big" : "explore-g"}>
+      {big ? finder : null}
       <div>
         <TileMap rows={rows} />
         <div className="legend">
@@ -57,7 +64,7 @@ export function StateExplorer({ id, big }: { id: string; big?: boolean }) {
           </span>
         </div>
       </div>
-      <StateFinder id={id} rows={rows} />
+      {big ? null : finder}
     </div>
   );
 }

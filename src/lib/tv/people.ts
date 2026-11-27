@@ -62,9 +62,7 @@ function runningFor(raceId: string): string {
 
 /** Ballot notes are written before the election; the race header reads after it. */
 function pastTense(note: string): string {
-  return note
-    .replace(/\bis not a candidate\./, "did not run again.")
-    .replace(/\bis running for\b/, "ran for");
+  return note.replace(/\bis not a candidate\./, "did not run again.").replace(/\bis running for\b/, "ran for");
 }
 
 function subtitle(raceId: string, people: readonly KyPerson[], note: string | null): string | null {
@@ -116,8 +114,28 @@ function hostLabel(url: string): string {
   }
 }
 
+const FEDERAL = /^U\.S\. (representative|senator)\b/i;
+
+/** One line for a candidate card: checked office first, then the stored bio, then the filing date. */
+function cardLine(raceId: string, person: KyPerson, profile: KyProfile, filing: Filing | null): string | null {
+  const career = profile.career.filter((entry) => !isCandidacy(entry)).sort((a, b) => b.startYear - a.startYear);
+  const federal = career.find((entry) => FEDERAL.test(entry.text) && (entry.endYear == null || entry.endYear >= new Date().getFullYear()));
+  const senate = raceId.includes("-senate-");
+  if (federal) {
+    const title = federal.text.split(" · ")[0];
+    if (person.holdsOffice && /representative/i.test(title) === !senate) return `Has held this ${senate ? "Senate" : "House"} seat since ${federal.startYear}.`;
+    return `${title} since ${federal.startYear}, running for ${senate ? "Senate" : "the House"}.`;
+  }
+  const checked = career.find((entry) => !CAMPAIGN_SOURCE.test(entry.sourceName) || isOfficialSource(entry.sourceName, entry.sourceUrl));
+  if (checked) return `${checked.text.replace(/\.$/, "")}, ${yearsLabel(checked)}.`;
+  if (profile.bio) return profile.bio.text;
+  if (filing) return `Filed to run on ${dayLabel(filing.date)}.`;
+  return null;
+}
+
 function view(raceId: string, person: KyPerson): PersonView {
   const profile = profileFor(person.id);
+  const filing = filingFor(raceId, person.name);
   const party = partyInfo(person.role === "write-in" ? "Write-in" : person.party);
   return {
     id: person.id,
@@ -128,9 +146,9 @@ function view(raceId: string, person: KyPerson): PersonView {
     holdsOffice: person.holdsOffice,
     raceId,
     photo: photoFor(person.id),
-    oneLine: profile.bio?.text ?? null,
+    oneLine: cardLine(raceId, person, profile, filing),
     website: profile.website ? { url: profile.website.url, label: hostLabel(profile.website.url) } : null,
-    filing: filingFor(raceId, person.name),
+    filing,
     funding: fundingFor(person.fecCandidateId),
   };
 }
@@ -195,7 +213,8 @@ export function defaultPair(race: RaceView): [PersonView, PersonView] | null {
 
 // ---- Records split into checked facts and candidate claims ----
 
-const OFFICIAL_SOURCE = /\b(clerk|congress legislators|house biography|official house website|house oversight|legislative research|secretary of state|federal election commission|fec\b|state board of elections|membership resolution)/i;
+const OFFICIAL_SOURCE =
+  /\b(clerk|congress legislators|house biography|official house website|house oversight|legislative research|secretary of state|federal election commission|fec\b|state board of elections|membership resolution)/i;
 const CAMPAIGN_SOURCE = /\bcampaign\b/i;
 
 export function isOfficialSource(name: string, url?: string): boolean {
@@ -216,7 +235,7 @@ export type ClaimGroup = {
 };
 
 function isCandidacy(entry: CareerEntry): boolean {
-  return /^candidate for\b/i.test(entry.text);
+  return /^(write-in )?candidate for\b/i.test(entry.text);
 }
 
 function sourcesOf(note: ProfileNote & { secondarySourceName?: string; secondarySourceUrl?: string }): FactSource[] {
@@ -315,7 +334,9 @@ export function personRecord(person: PersonView): PersonRecord {
   }
 
   const covered = new Set(stances.map((stance) => stance.issueId));
-  const missingIssues = stanceIssues().filter((issue) => !covered.has(issue.id)).map((issue) => issue.label);
+  const missingIssues = stanceIssues()
+    .filter((issue) => !covered.has(issue.id))
+    .map((issue) => issue.label);
   return { profile, facts, claims, missingIssues, stances };
 }
 
@@ -330,7 +351,10 @@ export function backgroundParts(person: PersonView): Array<{ says: boolean; text
   }
   const campaign = career.filter((entry) => !checked.includes(entry));
   if (campaign.length > 0) {
-    return [...campaign].sort((a, b) => a.startYear - b.startYear).slice(0, 2).map((entry) => ({ says: true, text: entry.text, muted: `(${yearsLabel(entry)})` }));
+    return [...campaign]
+      .sort((a, b) => a.startYear - b.startYear)
+      .slice(0, 2)
+      .map((entry) => ({ says: true, text: entry.text, muted: `(${yearsLabel(entry)})` }));
   }
   if (profile.bio) return [{ says: false, text: profile.bio.text }];
   return [];
