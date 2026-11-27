@@ -2,39 +2,37 @@
 @import "tailwindcss/theme.css" layer(theme);
 @import "tailwindcss/utilities.css" layer(utilities);
 
+/* Tailwind utilities used by admin and account views read the v12 roles, so they follow the brand and dark mode. */
 @theme {
-  --color-paper: #f7f8fb;
-  --color-ink: #0a1633;
-  --color-muted: #4a5470;
-  --color-line: rgb(10 22 51 / 10%);
-  --color-card: #ffffff;
-  --color-navy: #0b2a66;
-  --color-navy-deep: #071533;
+  --color-paper: var(--band);
+  --color-ink: var(--ink);
+  --color-muted: var(--ink-2);
+  --color-line: var(--line);
+  --color-card: var(--surface);
+  --color-navy: #142b49;
+  --color-navy-deep: #0c1b30;
   --color-hero-sub: #e8eef4;
-  --color-accent: #0b2a66;
-  --color-navy-surface: #0b2a66;
-  --color-control-ink: var(--color-slate-900);
-  /* Brand red (crimson, hue ~343°). Kept clearly apart from the warm Republican red below. */
+  --color-accent: var(--navy);
+  --color-navy-surface: var(--navy);
+  --color-control-ink: var(--ink);
   --color-brand-red: #a8123e;
-  --color-brand-red-deep: #7d0d2e;
-  /* Party colors. Republican is a warm red (hue ~7°); it is never used for brand accents. */
-  --color-party-rep: #b8321f;
-  --color-party-rep-ink: #8a2412;
+  --color-brand-red-deep: #8b0e33;
+  --color-party-rep: #a03a2b;
+  --color-party-rep-ink: var(--rep-t);
   --color-party-rep-tint: #fbe7e1;
-  --color-party-dem: #1d4ed8;
-  --color-party-dem-ink: #1a3a6b;
+  --color-party-dem: #2a5495;
+  --color-party-dem-ink: var(--dem-t);
   --color-party-dem-tint: #e4eaf6;
   --color-cta: #a8123e;
-  --color-error: #9b1c2e;
-  --color-map: #c9d3e6;
-  --color-map-data: #c9d3e6;
-  --color-map-hover: #0b2a66;
-  --color-map-label: #0a1633;
+  --color-error: var(--err);
+  --color-map: var(--map-1);
+  --color-map-data: var(--map-1);
+  --color-map-hover: var(--map-hover);
+  --color-map-label: var(--ink);
   --font-sans: var(--sans);
 }
 
-/* THE VOTE v12 design system. Ported from the approved r2 mockups (style.css). */
-/* THE VOTE v7 design system. Navy #142B49 primary, crimson #a8123e accent. Serif display (Source Serif 4), sans body 18px (Public Sans).
+/* THE VOTE v12 design system, ported from the approved r2 mockups (style.css). Navy #142B49 primary, crimson #a8123e accent. Serif display (Source Serif 4), sans body 18px (Public Sans).
    Scale 1.25 (14 / 18 / 22 / 28 / 35 / 44 / 55). Space 4/8 (4 8 12 16 24 32 48 64 96). Radius 6 / 10 / 16 / pill. One elevation token. */
 :root, [data-theme="light"] {
   /* slate (cool neutrals) */
@@ -57,8 +55,8 @@
   --link: #1D4E89; --on-navy: #fff;
   --map-0: var(--navy-100); --map-1: var(--navy-200); --map-2: var(--navy-200); --map-on: var(--navy-800); --map-stroke: #fff; --map-hover: var(--navy-300);
   /* party tags: muted, always text-labelled; never used to colour a map */
-  --rep: #9E2B33; --dem: #2A5495; --ind: #525E73; --lib: #7A5C00; --kp: #2F6B4F; --wi: #525E73;
-  --rep-t: #9E2B33; --dem-t: #2A5495;
+  --rep: #A03A2B; --dem: #2A5495; --ind: #525E73; --lib: #7A5C00; --kp: #2F6B4F; --wi: #525E73;
+  --rep-t: #A03A2B; --dem-t: #2A5495;
   --seg: var(--navy-800); --seg-bg: var(--slate-100); --sel: var(--navy-800);
   --focus: #1D6FD8; --focus-ring: 0 0 0 3px rgb(29 111 216 / 35%);
   --ok: #2F6B4F; --warn: #8A5A00; --err: #B4232A;
@@ -77,7 +75,7 @@
   --accent: var(--red-600); --accent-t: #F0728F;
   --link: #A9C5F2;
   --map-0: #1B2E4C; --map-1: #24406A; --map-2: #2E5182; --map-on: #8FB0DA; --map-stroke: #0A1628; --map-hover: #3F6599;
-  --rep: #B04048; --dem: #3F6BB5; --ind: #5F6C82; --lib: #8C6D10; --kp: #3A7D5E; --wi: #5F6C82;
+  --rep: #B4472F; --dem: #3F6BB5; --ind: #5F6C82; --lib: #8C6D10; --kp: #3A7D5E; --wi: #5F6C82;
   --rep-t: #F19AA0; --dem-t: #9DBCF2;
   --seg: var(--red-600); --seg-bg: var(--surface-2); --sel: #8FB0DA;
   --focus: #8FB4FF; --focus-ring: 0 0 0 3px rgb(143 180 255 / 35%);
@@ -139,7 +137,7 @@ main:focus { outline: none; }
 .page-f a { min-height: 44px; display: inline-flex; align-items: center; }
 
 /* ---------------------------------------------------------------- header */
-.hdr { position: sticky; top: 0; z-index: 40; background: var(--bg); border-bottom: 1px solid var(--line); }
+.hdr { position: sticky; top: 0; z-index: 40; background: var(--bg); border-bottom: 1px solid var(--line); padding-top: env(safe-area-inset-top, 0px); }
 [data-theme="dark"] .hdr { background: rgb(10 22 40 / 82%); backdrop-filter: blur(12px) saturate(1.2); }
 .hdr .wrap { display: flex; align-items: center; gap: 24px; min-height: 72px; }
 .brand { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; flex: none; text-decoration: none; }
@@ -339,7 +337,7 @@ textarea.input { resize: vertical; }
 .trust-l a { min-height: 44px; display: inline-flex; align-items: center; font-weight: 600; }
 
 /* ---------------------------------------------------------------- footer + tab bar */
-.ftr { background: var(--navy-9); color: var(--navy-100); margin-top: 96px; padding: 56px 0 32px; }
+.ftr { background: var(--navy-9); color: var(--navy-100); margin-top: 96px; padding: 56px 0 32px; --focus: #fff; }
 [data-theme="dark"] .ftr { background: #070F1C; border-top: 1px solid var(--line); }
 body:has(.hero) .ftr { margin-top: 0; }
 .ftr .wrap { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 32px; }
@@ -348,7 +346,7 @@ body:has(.hero) .ftr { margin-top: 0; }
 .ftr p { font-size: 16px; color: #B9C6D8; margin-top: 12px; max-width: 36ch; }
 .ftr h2 { font: 700 16px/1.4 var(--sans); color: #fff; margin-bottom: 8px; }
 .ftr .f-link { text-align: left; }
-.ftr ul a, .ftr .f-link { color: var(--navy-100); text-decoration: none; font-size: 16px; min-height: 40px; display: inline-flex; align-items: center; }
+.ftr ul a, .ftr .f-link { color: var(--navy-100); text-decoration: none; font-size: 16px; min-height: 44px; display: inline-flex; align-items: center; }
 .ftr ul a:hover, .ftr .f-link:hover { text-decoration: underline; color: #fff; }
 .f-base { grid-column: 1 / -1; border-top: 1px solid #263B5C; padding-top: 20px; max-width: none !important; font-size: 15px !important; }
 .tabbar { display: none; }
@@ -1632,3 +1630,6 @@ html[data-keyboard="open"] .tabbar { display: none; }
 
 .s-ask { margin-top: 16px; }
 .offline { padding-top: 16px; }
+.prose { max-width: 72ch; }
+.prose p { margin: 12px 0; }
+.prose .sec-t { margin-top: 28px; }

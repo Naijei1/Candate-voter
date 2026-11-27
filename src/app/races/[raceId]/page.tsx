@@ -428,6 +428,7 @@ export default async function RacePage({ params }: PageProps) {
           <p className="page-f">
             <ReportButton />
             <Link href="/sources">Sources</Link>
+            <ExtLink href={state.results.official.href}>See official results</ExtLink>
           </p>
           <details className="how">
             <summary>Sources and method</summary>

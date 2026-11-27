@@ -312,6 +312,9 @@ function CoveredState({ state }: { state: StateConfig }) {
                 Key dates
               </h2>
             </div>
+            <ExtLink className="viewall" href={state.results.official.href}>
+              See official results
+            </ExtLink>
           </div>
           <ol className="dates">
             {rows.map((row, index) => (
