@@ -1642,3 +1642,4 @@ html[data-keyboard="open"] .tabbar { display: none; }
 @media (max-width: 420px) {
   .btn { white-space: normal; text-align: center; line-height: 1.2; padding-block: 8px; max-width: 100%; }
 }
+.pt:has(+ .pmore[open]) { display: none; }

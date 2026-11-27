@@ -117,6 +117,13 @@ function Background({ person }: { person: PersonView }) {
   if (parts.length === 0) return <span className="none">Not in our records</span>;
   if (parts[0].says) {
     const first = shortLine(parts[0].text);
+    if (parts.length === 1 && !first.cut && !parts[0].muted) {
+      return (
+        <p className="pt">
+          <span className="cs-t">Says:</span> {parts[0].text}
+        </p>
+      );
+    }
     return (
       <>
         <p className="pt">
