@@ -1,5 +1,6 @@
 import snapshot from "../../../data/ky-news-snapshot.json";
 import { decodeHtmlEntities } from "./html-entities";
+import { visibleNews } from "../tv/results-gate";
 import { mentionedCandidates, mentionedRaces } from "./ky-candidate-mentions";
 
 export type NewsItem = {
@@ -30,17 +31,17 @@ const cache = new Map<string, { at: number; items: NewsItem[] }>();
 export async function newsForNames(names: readonly string[]): Promise<NewsItem[]> {
   const ids = new Set(names.flatMap((name) => mentionedCandidates(name).map((person) => person.id)));
   if (ids.size === 0) return [];
-  return (await loadFeed(LANTERN)).filter((item) => item.personIds.some((id) => ids.has(id))).slice(0, 3);
+  return visibleNews(await loadFeed(LANTERN)).filter((item) => item.personIds.some((id) => ids.has(id))).slice(0, 3);
 }
 
 export async function latestNews(limit = 8, personId?: string): Promise<NewsItem[]> {
-  const items = await loadFeed(LANTERN);
+  const items = visibleNews(await loadFeed(LANTERN));
   return items.filter((item) => !personId || item.personIds.includes(personId)).slice(0, limit);
 }
 
 export async function latestPress(limit = 4, personId?: string): Promise<NewsItem[]> {
   if (personId && personId !== GUTHRIE.personId) return [];
-  return (await loadFeed(GUTHRIE)).slice(0, limit);
+  return visibleNews(await loadFeed(GUTHRIE)).slice(0, limit);
 }
 
 async function loadFeed(source: FeedSource): Promise<NewsItem[]> {
