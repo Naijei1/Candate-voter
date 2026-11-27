@@ -87,18 +87,20 @@ export function CountyGuide({ viewBox, counties, sets, stateName }: { viewBox: s
     if (params.has("change")) return;
     const asked = params.get("county");
     const county = asked ? canon(counties, asked) : null;
+    const saved = readPlace();
+    const place = saved ? canon(counties, saved.c) : null;
+    const savedDistricts = saved && place ? saved.d.filter((d) => place.districts.includes(d)) : [];
     if (county) {
       setValue(county.name);
       const d = Number(params.get("d"));
       if (d && county.districts.includes(d)) show(county, [d], false);
+      else if (place === county && savedDistricts.length) show(county, savedDistricts, false);
       else choose(county, false);
       return;
     }
-    const saved = readPlace();
-    const place = saved ? canon(counties, saved.c) : null;
-    if (saved && place) {
+    if (place) {
       setValue(place.name);
-      show(place, saved.d.filter((d) => place.districts.includes(d)).length ? saved.d.filter((d) => place.districts.includes(d)) : place.districts, false);
+      show(place, savedDistricts.length ? savedDistricts : place.districts, false);
     }
     // Only on first load.
     // eslint-disable-next-line react-hooks/exhaustive-deps
