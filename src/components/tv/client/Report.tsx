@@ -5,6 +5,9 @@ import { withBasePath } from "@/lib/base-path";
 import { Icon } from "../Icon";
 import { openReport, toast, type ReportTarget } from "./device";
 
+/** The corrections API stores at most 2,000 characters, including the source and page lines. */
+const MAX_NOTE = 2000;
+
 export function ReportButton({ candidateId, className = "linkbtn", children }: { candidateId?: string; className?: string; children?: React.ReactNode }) {
   return (
     <button className={className} type="button" onClick={() => openReport({ candidateId })}>
@@ -53,6 +56,11 @@ export function ReportDialog() {
     }
     const source = String(data.get("source") ?? "").trim();
     const note = [what, source ? `Source: ${source}` : null, `Page: ${page}`].filter(Boolean).join("\n");
+    if (note.length > MAX_NOTE) {
+      setError(`Too long by ${note.length - MAX_NOTE} characters. Shorten the description or the source link.`);
+      whatRef.current?.focus();
+      return;
+    }
     setSending(true);
     setError(null);
     try {
@@ -94,16 +102,7 @@ export function ReportDialog() {
       <form className="sh-b" onSubmit={submit} noValidate>
         <div className="field">
           <label htmlFor="rp-what">What is wrong?</label>
-          <textarea
-            ref={whatRef}
-            className="input"
-            id="rp-what"
-            name="what"
-            rows={4}
-            required
-            maxLength={1500}
-            placeholder="For example: the filing date for this candidate is wrong…"
-          />
+          <textarea ref={whatRef} className="input" id="rp-what" name="what" rows={4} required maxLength={1500} placeholder="For example: the filing date for this candidate is wrong…" />
         </div>
         <div className="field">
           <label htmlFor="rp-src">Link to a source that shows the right information (optional)</label>
