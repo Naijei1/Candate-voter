@@ -1627,3 +1627,5 @@ body:has(.phead) .own { padding: 14px 16px; }
 }
 html[data-keyboard="open"] .tabbar { display: none; }
 .won { display: inline-flex; align-items: center; margin-left: 8px; padding: 2px 8px; border: 1.5px solid currentColor; border-radius: var(--r-pill); font: 700 13px/1.3 var(--sans); letter-spacing: .04em; text-transform: uppercase; color: var(--ink); vertical-align: middle; }
+.nextrow-i { display: contents; }
+.brow .val.wide { grid-column: 2 / -1; }

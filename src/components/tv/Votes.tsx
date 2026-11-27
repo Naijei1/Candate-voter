@@ -48,14 +48,14 @@ function VoteTable({ votes }: { votes: readonly ProfileVote[] }) {
 }
 
 /** Recent House roll calls: four, then the rest behind "Show all". */
-export function VoteRecord({ votes, first = 4 }: { votes: readonly ProfileVote[]; first?: number }) {
+export function VoteRecord({ votes, first = 4, more = true }: { votes: readonly ProfileVote[]; first?: number; more?: boolean }) {
   const sorted = [...votes].sort((a, b) => b.date.localeCompare(a.date) || b.roll - a.roll);
   const head = sorted.slice(0, first);
   const rest = sorted.slice(first);
   return (
     <>
       <VoteTable votes={head} />
-      {rest.length > 0 ? (
+      {more && rest.length > 0 ? (
         <details className="more-v">
           <summary>Show all {sorted.length} votes</summary>
           <VoteTable votes={rest} />

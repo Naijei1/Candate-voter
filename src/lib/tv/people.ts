@@ -36,6 +36,8 @@ export type RaceView = {
   runningFor: string;
   short: string;
   subtitle: string | null;
+  /** Ballot note in past tense, e.g. "Andy Barr ran for Senate." */
+  note: string | null;
   people: PersonView[];
 };
 
@@ -150,6 +152,7 @@ export function raceView(raceId: string): RaceView | null {
     runningFor: runningFor(raceId),
     short: raceShort(raceId),
     subtitle: subtitle(raceId, race.people, race.note),
+    note: race.note ? pastTense(race.note) : null,
     people: sorted.map((person) => view(raceId, person)),
   };
 }
@@ -226,7 +229,7 @@ function issueLabel(issueId: string): string {
   return stanceIssues().find((issue) => issue.id === issueId)?.label ?? issueId;
 }
 
-function isVote(stance: Stance): boolean {
+export function isHouseVote(stance: Stance): boolean {
   return /roll call/i.test(stance.sourceName) || /clerk\.house\.gov\/Votes/i.test(stance.sourceUrl);
 }
 
@@ -259,7 +262,7 @@ export function personRecord(person: PersonView): PersonRecord {
     }
   }
 
-  for (const stance of stances.filter(isVote)) {
+  for (const stance of stances.filter(isHouseVote)) {
     facts.push({
       term: `House vote: ${issueLabel(stance.issueId).toLowerCase()}`,
       text: stance.text,
@@ -296,7 +299,7 @@ export function personRecord(person: PersonView): PersonRecord {
   }
 
   const issueOrder = stanceIssues().map((issue) => issue.id);
-  const said = stances.filter((stance) => !isVote(stance)).sort((a, b) => issueOrder.indexOf(a.issueId) - issueOrder.indexOf(b.issueId));
+  const said = stances.filter((stance) => !isHouseVote(stance)).sort((a, b) => issueOrder.indexOf(a.issueId) - issueOrder.indexOf(b.issueId));
   for (const stance of said) {
     claimItems.push({
       source: { label: stance.sourceName, url: stance.sourceUrl, date: stance.sourceDate },
@@ -319,7 +322,8 @@ export function personRecord(person: PersonView): PersonRecord {
 /** Background line for the race overview: checked service first, then campaign career, then the stored bio. */
 export function backgroundParts(person: PersonView): Array<{ says: boolean; text: string; muted?: string }> {
   const profile = profileFor(person.id);
-  const career = profile.career.filter((entry) => !isCandidacy(entry)).sort((a, b) => b.startYear - a.startYear);
+  const federal = (entry: CareerEntry) => (/^U\.S\. (representative|senator)\b/i.test(entry.text) ? 0 : 1);
+  const career = profile.career.filter((entry) => !isCandidacy(entry)).sort((a, b) => federal(a) - federal(b) || b.startYear - a.startYear);
   const checked = career.filter((entry) => !CAMPAIGN_SOURCE.test(entry.sourceName) || isOfficialSource(entry.sourceName, entry.sourceUrl));
   if (checked.length > 0) {
     return checked.slice(0, 2).map((entry) => ({ says: false, text: entry.text, muted: `(${yearsLabel(entry)})` }));
