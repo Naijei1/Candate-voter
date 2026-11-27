@@ -303,10 +303,10 @@ test("ask, navigation, and map copy stay plain", () => {
   assert.match(shell, /Clear context/);
   assert.match(technical, /Technical details/);
   assert.doesNotMatch(technical, /<details[^>]*\sopen/);
-  assert.match(candidatePage, /FEC filing/);
-  assert.equal(candidatePage.includes("Voting record"), false);
-  assert.match(candidatePage, /profile\.website \?/);
-  assert.match(candidatePage, /Form 2/);
+  // v12: the candidate page cites the state filing under "Filed to run" and titles House votes "Voting record".
+  assert.match(candidatePage, /Filed to run/);
+  assert.match(candidatePage, /state\.filings\.name/);
+  assert.match(candidatePage, /website \?/);
   assert.equal(candidatePage.includes("Form {filing.formType}"), false);
   assert.equal(candidatePage.includes("CandidateTechnicalDetails"), false);
 });

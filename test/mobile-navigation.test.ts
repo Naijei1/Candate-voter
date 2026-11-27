@@ -25,11 +25,15 @@ test("detail pages keep the relevant tab marked without marking Home", () => {
   assert.equal(currentTab("/finance-example", "/finance"), undefined);
 });
 
-test("the ZIP link follows the map and mockup election claims stay out of source", () => {
-  const hero = readFileSync("src/components/home/Hero.tsx", "utf8");
+test("no ZIP entry anywhere and mockup election claims stay out of source", () => {
+  // v12: the flow is state map, then county. ZIP entry was removed from every public page.
+  const hero = readFileSync("src/components/tv/Hero.tsx", "utf8");
   assert.doesNotMatch(hero, /<input|<Zip(?:Lookup|Search)|href=["'][^"']*zip/i);
-  const home = readFileSync("src/app/page.tsx", "utf8");
-  assert.match(home, /<HomeMap\b[\s\S]+?className="zip-link"[\s\S]+?Or enter a ZIP code/);
+  for (const path of readdirSync("src/app", { recursive: true, encoding: "utf8" })) {
+    if (!/page\.tsx$/.test(path) || path.startsWith("admin")) continue;
+    const source = readFileSync(join("src/app", path), "utf8");
+    assert.doesNotMatch(source, /ZipLookup|ZipSearch|ZIP code|inputMode="numeric"/, path);
+  }
   for (const path of readdirSync("src", { recursive: true, encoding: "utf8" })) {
     if (!/\.(tsx?|css|json)$/.test(path)) continue;
     const source = readFileSync(join("src", path), "utf8");
@@ -38,9 +42,12 @@ test("the ZIP link follows the map and mockup election claims stay out of source
 });
 
 test("tab names match the page titles they open", () => {
+  // v12 keeps the short tab labels from the approved mockup; the pages carry the mockup's longer titles.
   assert.deepEqual(MOBILE_TABS.map(({ label }) => label), ["Home", "My races", "News Feed", "Finances", "Ask"]);
-  assert.match(readFileSync("src/app/news/page.tsx", "utf8"), /<h1>News Feed<\/h1>/);
-  assert.match(readFileSync("src/app/finance/page.tsx", "utf8"), /<h1>Candidates&apos; Political Finances<\/h1>/);
+  assert.match(readFileSync("src/app/ballot/page.tsx", "utf8"), />My races<\/h1>/);
+  assert.match(readFileSync("src/app/news/page.tsx", "utf8"), />News and Updates<\/h1>/);
+  assert.match(readFileSync("src/app/finance/page.tsx", "utf8"), />Campaign Finance<\/h1>/);
+  assert.match(readFileSync("src/app/ask/page.tsx", "utf8"), />Ask<\/h1>/);
 });
 
 test("the tab bar hides while the on-screen keyboard is open", () => {
@@ -59,29 +66,29 @@ test("the tab bar hides while the on-screen keyboard is open", () => {
   assert.equal(raisesKeyboard(field("button")), false);
   assert.equal(raisesKeyboard(null), false);
   const css = readFileSync("src/app/globals.css", "utf8");
-  assert.match(css, /html\[data-keyboard="open"\] \.mobile-tabs \{ display: none; \}/);
+  assert.match(css, /html\[data-keyboard="open"\] \.tabbar \{ display: none; \}/);
 });
 
 function phoneBlock(): string {
   const css = readFileSync("src/app/globals.css", "utf8");
-  const start = css.indexOf(".mobile-tabs,\n.mobile-candidates");
+  const start = css.indexOf("@media (max-width: 760px) {\n  :root { --hh: 61px; }");
   assert.ok(start > 0);
   return css.slice(start);
 }
 
 test("the film stays full-screen on phones with the light shade", () => {
   const phone = phoneBlock();
-  assert.match(phone, /\.hero-stage \{\s*min-height: 100svh;/);
+  assert.match(phone, /\.hero \{ min-height: calc\(100svh - var\(--hh\)\);/);
   assert.equal(/\.hero-shade \{/.test(phone), false, "no darker phone-only shade");
-  assert.equal(/\.site-header\.is-overlay \{ position: relative/.test(phone), false, "header stays over the film");
 });
 
 test("Back/Next and page action bars stay pinned above the tab bar", () => {
-  const phone = phoneBlock();
-  assert.match(phone, /\.ballot-bar,\s*\.sticky-mobile \{\s*position: fixed;[\s\S]*?bottom: var\(--tab-space\);/);
-  assert.equal(/position: static;\s*max-height: none/.test(phone), false);
-  assert.match(phone, /body \{ padding-bottom: var\(--tab-space\); \}/);
-  assert.match(phone, /body:has\(\.ballot-bar\) \.site-footer,\s*body:has\(\.sticky-mobile\) \.site-footer \{ padding-bottom: calc\(2rem \+ env\(safe-area-inset-bottom\) \+ 3rem\); \}/);
+  // v12 has no Back/Next guide bar; the fixed tab bar keeps page content and the film clear of it.
+  const css = readFileSync("src/app/globals.css", "utf8");
+  assert.match(css, /\.tabbar \{ display: grid; grid-template-columns: repeat\(5, 1fr\); position: fixed;/);
+  assert.match(phoneBlock(), /\.hero \.hero-g \{ padding-block: 40px calc\(var\(--tb\) \+ 40px\); \}/);
+  assert.match(css, /main \{ padding-bottom: var\(--tb\); \}/);
+  assert.match(css, /\.toast \{ bottom: calc\(88px \+ env\(safe-area-inset-bottom\)\); \}/);
 });
 
 test("race cards keep the photo credit inside the card", () => {

@@ -16,11 +16,8 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
-      ["/states", "/states/ky"],
-      ["/states/:state((?!ky(?:/|$))[^/]+)", "/states/ky"],
-      ["/states/:state/issues", "/states/ky"],
-      ["/polls", "/"],
-      ["/measures/:path*", "/"],
+      ["/states/:state/issues", "/states/:state"],
+      ["/measures/:path+", "/measures"],
       ["/agent", "/sources"],
       ["/chat", "/ask"],
     ].map(([source, destination]) => ({ source, destination, permanent: true }));

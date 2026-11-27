@@ -1,0 +1,47 @@
+{
+ "election": "2026 Kentucky general election, Nov 3, 2026",
+ "status": "Kentucky State Board of Elections statewide results, 120 of 120 counties reporting; State Board page lists them as unofficial (certification PDF not yet posted on elect.ky.gov as of 2026-11-27). Corroborated by Ballotpedia and the Lexington Herald-Leader.",
+ "sourceUrl": "https://vrsws.sos.ky.gov/liveresults/Statewide",
+ "sourceLabel": "Kentucky State Board of Elections",
+ "retrievedAt": "2026-11-27",
+ "winners": [
+  {
+   "raceId": "2026-senate-KY",
+   "name": "Andy Barr",
+   "party": "R"
+  },
+  {
+   "raceId": "2026-house-KY-01",
+   "name": "James Comer",
+   "party": "R"
+  },
+  {
+   "raceId": "2026-house-KY-02",
+   "name": "Brett Guthrie",
+   "party": "R"
+  },
+  {
+   "raceId": "2026-house-KY-03",
+   "name": "Morgan McGarvey",
+   "party": "D"
+  },
+  {
+   "raceId": "2026-house-KY-04",
+   "name": "Ed Gallrein",
+   "party": "R"
+  },
+  {
+   "raceId": "2026-house-KY-05",
+   "name": "Hal Rogers",
+   "party": "R"
+  },
+  {
+   "raceId": "2026-house-KY-06",
+   "name": "Zach Dembo",
+   "party": "D"
+  }
+ ],
+ "official": false,
+ "display": false,
+ "note": "UNOFFICIAL. Hidden on the site until the Kentucky State Board of Elections posts certification. Set display=true to turn winners back on."
+}

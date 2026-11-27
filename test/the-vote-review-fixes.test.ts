@@ -220,8 +220,10 @@ test("home page sends only race titles and ballot facts; candidate records load 
   const records = summary("records");
   assert.ok(records.evidence.length > 0);
   assert.equal(records.evidence.every((row) => row.personId), true);
+  // v12 home shows one Senate matchup and links to the compare page; no records are sent with it.
   const page = readFileSync("src/app/page.tsx", "utf8");
-  assert.match(page, /<CompareSection options=\{compareOptions\} \/>/);
+  assert.match(page, /href=\{`\/races\/\$\{senate\.raceId\}\/compare\?a=\$\{pair\[0\]\.id\}&b=\$\{pair\[1\]\.id\}`\}/);
+  assert.equal(/evidence|compareBasis|"use client"/.test(page), false);
 });
 
 test("plain seat labels: Current officeholder, and Write-in only once", () => {
@@ -237,17 +239,19 @@ test("plain seat labels: Current officeholder, and Write-in only once", () => {
 
 test("candidate photos fill the same box on every screen", () => {
   const css = readFileSync("src/app/globals.css", "utf8");
-  const base = /\n\.cand-photo img \{([^}]*)\}/.exec(css)?.[1] ?? "";
-  assert.match(base, /position: absolute/);
-  assert.match(base, /inset: 0/);
-  assert.match(base, /object-fit: cover/);
+  // v12: round faces and candidate card photos both fill their box.
+  assert.match(css, /\.face img \{ width: 100%; height: 100%; object-fit: cover;/);
+  assert.match(css, /\.face img \{ position: absolute; inset: 0; \}/);
+  assert.match(css, /\.ccard \.ph img \{ width: 100%; height: 100%; object-fit: cover;/);
+  assert.match(css, /\.ccard \.ph img \{ position: absolute; inset: 0; \}/);
 });
 
 test("Ask stays Kentucky only and the map tabs say what they show", () => {
   assert.match(CHAT_SYSTEM_PROMPT, /Kentucky's U\.S\. Senate and U\.S\. House races/);
   assert.equal(/President, Senate, and House races/.test(CHAT_SYSTEM_PROMPT), false);
   assert.equal(/ask which state or race/i.test(CHAT_SYSTEM_PROMPT), false);
-  const map = readFileSync("src/components/home/HomeMap.tsx", "utf8");
+  // v12 moved the map tabs to the state page.
+  const map = readFileSync("src/app/states/[state]/page.tsx", "utf8");
   assert.match(map, /label: "Congressional"/);
   assert.match(map, /label: "Statewide"/);
   assert.match(map, /label: "County"/);

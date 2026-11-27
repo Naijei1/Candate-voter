@@ -21,17 +21,18 @@ test("watchlist can remove follows and separately update email alerts", () => {
   assert.equal(existsSync("src/app/api/alerts/route.ts"), false);
 });
 
-test("follow controls read the client session and guard signed-out requests", () => {
-  const follow = readFileSync("src/components/site/FollowControl.tsx", "utf8");
-  assert.match(follow, /if \(!signedIn\) return;[\s\S]*?fetch\(endpoint\)/);
-  assert.match(follow, /if \(!signedIn \|\| expired\) return <Link[^>]*href=\{signIn\}/);
-  assert.match(follow, /useSession\(\)/);
+test("follow buttons save on this device and public pages never read a session", () => {
+  const follow = readFileSync("src/components/tv/client/Follow.tsx", "utf8");
+  assert.match(follow, /toggleSaved\(id, name\)/);
+  assert.match(follow, /aria-pressed=\{on\}/);
+  assert.equal(follow.includes("fetch("), false);
+  assert.equal(follow.includes("sign-in"), false);
   const layout = readFileSync("src/app/layout.tsx", "utf8");
-  assert.match(layout, /SessionProvider/);
+  assert.equal(layout.includes("SessionProvider"), false);
   assert.equal(layout.includes("currentUser"), false);
-  for (const page of ["states/ky", "races/[raceId]", "candidates/[candidateId]"]) {
+  for (const page of ["states/[state]", "races/[raceId]", "candidates/[candidateId]"]) {
     const source = readFileSync(`src/app/${page}/page.tsx`, "utf8");
-    assert.match(source, /<FollowControl /);
+    assert.match(source, /<FollowButton /);
     assert.equal(source.includes("currentUser"), false);
   }
 });
@@ -102,11 +103,11 @@ test("account infrastructure stays least privilege and separate from filings", (
   assert.equal(googleRoute.includes("url.origin"), false);
   const privacy = readFileSync("src/app/privacy/page.tsx", "utf8");
   const terms = readFileSync("src/app/terms/page.tsx", "utf8");
-  const footer = readFileSync("src/components/SiteFooter.tsx", "utf8");
+  const footer = readFileSync("src/components/tv/Chrome.tsx", "utf8");
   assert.match(privacy, /never sell/);
   assert.match(terms, /privacy policy/);
-  assert.match(footer, /href: "\/privacy"/);
-  assert.match(footer, /href: "\/terms"/);
+  assert.match(footer, /href="\/privacy"/);
+  assert.match(footer, /href="\/terms"/);
   const admin = readFileSync("src/app/admin/corrections/page.tsx", "utf8");
   const guard = readFileSync("src/lib/auth/guard.ts", "utf8");
   assert.match(admin, /adminActor/);

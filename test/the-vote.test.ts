@@ -38,17 +38,20 @@ test("the site is named THE VOTE and no visitor-facing Candate name is left in s
 });
 
 test("nav says News Feed and Candidates' Political Finances, and /updates goes to /news", () => {
-  const labels = NAV_LINKS.map((item) => item.label);
-  assert.deepEqual(labels, ["News Feed", "Candidates' Political Finances", "Ask"]);
+  // v12 header uses the approved mockup labels; the phone tab bar keeps "News Feed" and "Finances".
+  const nav = readFileSync("src/components/tv/client/PrimaryNav.tsx", "utf8");
+  const order = ["Find my races", 'label="Candidates"', "News and Updates", 'label="Polls and Analysis"', "Campaign Finance"].map((text) => nav.indexOf(text));
+  assert.ok(order.every((index) => index > 0), String(order));
+  assert.deepEqual([...order].sort((x, y) => x - y), order);
+  assert.match(nav, /<Link href="\/news"/);
+  assert.match(nav, /<Link href="\/finance"/);
   assert.equal(NAV_LINKS[0].href, "/news");
-  assert.equal(NAV_LINKS[1].href, "/finance");
-  assert.ok(NAV_LINKS[1].short.length < NAV_LINKS[1].label.length);
   const updates = readFileSync("src/middleware.ts", "utf8");
   assert.match(updates, /\/updates/);
   assert.match(updates, /\/news/);
   assert.equal(existsSync("src/app/updates/page.tsx"), false);
   const news = readFileSync("src/app/news/page.tsx", "utf8");
-  assert.match(news, /<h1>News Feed<\/h1>/);
+  assert.match(news, />News and Updates<\/h1>/);
   assert.equal(news.includes("redirect("), false);
 });
 
@@ -92,26 +95,33 @@ test("brand red is AA with white text and clearly apart from the Republican red"
 });
 
 test("dark text, party chips and chart series retain contrast on their own surfaces", () => {
+  // v12 tokens: the in-page dark theme lives in [data-theme="dark"]; light values in :root.
   const css = readFileSync("src/app/globals.css", "utf8");
-  const dark = css.split("@media (prefers-color-scheme: dark)")[1].split("}")[0];
+  const dark = css.split('[data-theme="dark"] {')[1].split("}")[0];
   const pairs = [
-    ["color-muted", "color-card", 4.5],
-    ["color-cta", "color-card", 4.5],
-    ["color-party-rep-ink", "color-party-rep-tint", 4.5],
-    ["color-party-dem-ink", "color-party-dem-tint", 4.5],
-    ["color-navy", "chart-track", 3],
-    ["color-cta", "chart-track", 3],
-    ["chart-cash", "chart-track", 3],
-    ["chart-support", "chart-track", 3],
-    ["chart-hatch", "chart-track", 3],
-    ["color-map-data", "color-map-hover", 3],
+    ["text-muted", "surface", 4.5],
+    ["text-subtle", "surface", 4.5],
+    ["text-muted", "bg", 4.5],
+    ["accent-t", "surface", 4.5],
+    ["rep-t", "surface", 4.5],
+    ["dem-t", "surface", 4.5],
+    ["link", "surface", 4.5],
+    ["map-on", "map-1", 3],
+    ["map-on", "map-0", 3],
+    ["focus", "bg", 3],
   ] as const;
+  const darkFocus = /--focus:\s*(#[0-9a-f]{6})/i.exec(dark)?.[1];
   for (const [first, second, minimum] of pairs) {
-    const a = luminance(token(dark, first)) + 0.05;
+    const one = first === "focus" ? darkFocus : token(dark, first);
+    assert.ok(one, first);
+    const a = luminance(one) + 0.05;
     const b = luminance(token(dark, second)) + 0.05;
     const ratio = Math.max(a, b) / Math.min(a, b);
     assert.ok(ratio >= minimum, `${first} on ${second}: ${ratio}`);
   }
+  // Money bars are ink on surface with patterns, so they never depend on color.
+  assert.match(css, /\.fbar \{[^}]*color: var\(--ink\); background: var\(--surface\); \}/);
+  assert.match(css, /\.s-c \{ background: repeating-linear-gradient/);
 });
 
 test("statewide panel lists 2 senators and the 7 constitutional officers with sources", () => {
@@ -370,23 +380,16 @@ test("the full Senate comparison allows enough output for cited differences and 
 });
 
 test("home order is film, map, compare, news feed, money; ZIP link stays and nothing has a pause button", () => {
+  // v12 home: hero, Senate matchup, Featured, state map, then sources. No ZIP entry (the flow is state map, then county).
   const page = readFileSync("src/app/page.tsx", "utf8");
-  const order = ["<Hero", "<HomeMap", "<CompareSection", "<HomeNewsFeed", "<MoneyCharts"].map((tag) => page.indexOf(tag));
+  const order = ["<Hero", "/compare?a=", 'title="Featured"', 'title="Explore by state"', "/sources"].map((tag) => page.indexOf(tag));
   assert.ok(order.every((index) => index > 0), String(order));
   assert.deepEqual([...order].sort((a, b) => a - b), order);
-  assert.match(page, /Or enter a ZIP code/);
-  assert.equal(page.includes("<input"), false);
-  assert.equal(/National|UsMap/.test(page), false);
-  for (const file of [
-    "src/components/home/Hero.tsx",
-    "src/components/home/HomeNewsFeed.tsx",
-    "src/components/site/FeedCard.tsx",
-    "src/components/home/HomeMap.tsx",
-    "src/components/site/MoneyCharts.tsx",
-  ]) {
+  assert.equal(/ZIP code|<input/.test(page), false);
+  for (const file of ["src/components/tv/Hero.tsx", "src/components/tv/client/HeroBits.tsx", "src/components/tv/StateExplorer.tsx", "src/app/page.tsx"]) {
     assert.equal(/pause video|play video|aria-label="Pause|>Pause</i.test(readFileSync(file, "utf8")), false, file);
   }
-  assert.match(readFileSync("src/components/home/Hero.tsx", "utf8"), /prefers-reduced-motion/);
+  assert.match(readFileSync("src/app/globals.css", "utf8"), /prefers-reduced-motion/);
 });
 
 test("comparison requests for the same race share one model call while it runs", async () => {

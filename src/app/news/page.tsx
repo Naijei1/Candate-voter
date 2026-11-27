@@ -1,37 +1,49 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
-import { DatasetUpdated } from "@/components/site/DatasetUpdated";
-import { NewsBrowser, NewsView, type NewsData } from "@/components/site/NewsFeed";
-import { shownName } from "@/lib/site/ky-officeholders";
-import { kentuckyCandidates } from "@/lib/site/ky-candidate-mentions";
-import { latestNews, latestPress } from "@/lib/site/ky-news";
-import { todayMoney } from "@/lib/site/today";
-import styles from "./news.module.css";
+import { NewsFeed } from "@/components/tv/client/NewsFeed";
+import { YoursLink } from "@/components/tv/client/Yours";
+import { Crumbs } from "@/components/tv/bits";
+import { ExtLink } from "@/components/tv/ExtLink";
+import { Icon } from "@/components/tv/Icon";
+import { NEWS_TOPICS, newsFeed } from "@/lib/tv/news";
+import { allRaces } from "@/lib/tv/people";
 
-export const metadata: Metadata = { alternates: { canonical: "/news" }, title: "News Feed" };
+export const metadata: Metadata = { alternates: { canonical: "/news" }, title: "News and Updates" };
 export const revalidate = 3600;
 
-export default async function NewsFeedPage() {
-  const [money, press, reporting] = await Promise.all([todayMoney(48), latestPress(12), latestNews(40)]);
-  const data: NewsData = {
-    filings: money.filings,
-    receipts: money.receipts,
-    spending: money.spending,
-    press,
-    reporting,
-    candidates: [...kentuckyCandidates]
-      .map((person) => ({ id: person.id, name: shownName(person.name, person.id) }))
-      .sort((a, b) => a.name.localeCompare(b.name)),
-  };
-  const updatedAt = [money.updatedAt, ...press.map((story) => story.retrievedAt), ...reporting.map((story) => story.retrievedAt)].sort().at(-1);
-
+export default async function NewsPage() {
+  const items = await newsFeed();
+  const races = allRaces().map((race) => ({ raceId: race.raceId, title: race.title, district: race.office === "house" ? Number(race.district) : null }));
+  const sources = [...new Map(items.map((item) => [item.source, item])).values()];
   return (
-    <article className={`wrap ${styles.news}`}>
-      <h1>News Feed</h1>
-      <DatasetUpdated date={updatedAt} />
-      <Suspense fallback={<NewsView data={data} lane="activity" candidate="" />}>
-        <NewsBrowser data={data} />
-      </Suspense>
-    </article>
+    <div className="wrap">
+      <Crumbs items={[{ href: "/", label: "Home" }, { label: "News and Updates" }]} />
+      <h1 className="t-h1 pt">News and Updates</h1>
+      {items.length ? (
+        <NewsFeed items={items} topics={NEWS_TOPICS} races={races} />
+      ) : (
+        <div className="empty">
+          <p className="empty-t">No news in our records yet.</p>
+        </div>
+      )}
+      <p className="page-f">
+        <YoursLink className="btn primary">
+          <Icon name="pin" size="sm" />
+          Find my races
+        </YoursLink>
+      </p>
+      {sources.length ? (
+        <p className="src">
+          Source:{" "}
+          {sources.map((item, index) => (
+            <span key={item.source}>
+              {index ? "; " : ""}
+              <ExtLink className="xl" href={item.sourceUrl} icon>
+                {item.source}
+              </ExtLink>
+            </span>
+          ))}
+        </p>
+      ) : null}
+    </div>
   );
 }

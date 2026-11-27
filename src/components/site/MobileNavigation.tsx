@@ -1,18 +1,18 @@
 "use client";
 
-import { House, Landmark, MessageCircle, Newspaper, Wallet } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect } from "react";
-import { useSession } from "@/components/site/SessionProvider";
+import { useEffect, useState } from "react";
+import { Icon, type IconName } from "@/components/tv/Icon";
+import { PLACE_EVENT, placeHref, readPlace } from "@/components/tv/client/device";
 
 export const MOBILE_TABS = [
-  { href: "/", label: "Home", icon: House },
-  { href: "/ballot", label: "My races", icon: Landmark },
-  { href: "/news", label: "News Feed", icon: Newspaper },
-  { href: "/finance", label: "Finances", icon: Wallet },
-  { href: "/ask", label: "Ask", icon: MessageCircle },
-] as const;
+  { href: "/", label: "Home", icon: "home" },
+  { href: "/ballot", label: "My races", icon: "ballot" },
+  { href: "/news", label: "News Feed", icon: "news" },
+  { href: "/finance", label: "Finances", icon: "money" },
+  { href: "/ask", label: "Ask", icon: "ask" },
+] as const satisfies ReadonlyArray<{ href: string; label: string; icon: IconName }>;
 
 export function currentTab(path: string | null, href: string) {
   if (path === href) return "page";
@@ -66,24 +66,24 @@ function useKeyboardFlag() {
   }, []);
 }
 
-export function MobileNavigation({ signedIn: signedInProp }: { signedIn?: boolean } = {}) {
+export function MobileNavigation() {
   const path = usePathname();
-  const session = useSession();
-  const signedIn = signedInProp ?? session.signedIn;
+  const [races, setRaces] = useState("/ballot");
   useKeyboardFlag();
+  useEffect(() => {
+    const sync = () => setRaces(placeHref(readPlace()));
+    sync();
+    window.addEventListener(PLACE_EVENT, sync);
+    return () => window.removeEventListener(PLACE_EVENT, sync);
+  }, []);
   return (
-    <nav className="mobile-tabs" aria-label="Primary">
-      {MOBILE_TABS.map(({ href, label, icon: Icon }) => {
-        const watchlist = href === "/ballot" && signedIn;
-        const destination = watchlist ? "/account" : href;
-        const current = currentTab(path, destination) ?? (watchlist && currentTab(path, href) ? "location" : undefined);
-        return (
-          <Link key={href} href={destination} aria-current={current}>
-            <Icon size={22} strokeWidth={current ? 2.25 : 1.75} fill={current ? "currentColor" : "none"} aria-hidden="true" />
-            {label}
-          </Link>
-        );
-      })}
+    <nav className="tabbar" aria-label="Sections">
+      {MOBILE_TABS.map(({ href, label, icon }) => (
+        <Link key={href} href={href === "/ballot" ? races : href} aria-current={currentTab(path, href)}>
+          <Icon name={icon} />
+          <span>{label}</span>
+        </Link>
+      ))}
     </nav>
   );
 }

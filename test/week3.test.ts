@@ -83,19 +83,22 @@ test("sitewide security headers coexist with asset caching", async () => {
 });
 
 test("legacy pages permanently redirect to the Kentucky site", async () => {
+  // v12 adds real /states, /states/{st}, /polls and /measures pages; only retired paths still redirect.
   const origin = "https://voter.naijei.com";
   const config = { ...nextConfig, basePath: "/voter" };
   for (const [source, destination] of [
-    ["/states", "/states/ky"], ["/states/oh", "/states/ky"],
+    ["/states/ky/issues", "/states/ky"],
     ["/agent", "/sources"], ["/chat?year=2026", "/ask?year=2026"],
-    ["/polls", "/"], ["/measures", "/"], ["/measures/ky/example", "/"],
+    ["/measures/ky/example", "/measures"],
   ]) {
     const response = await unstable_getResponseFromNextConfig({ url: `${origin}/voter${source}`, nextConfig: config });
     assert.equal(response.status, 308, source);
     assert.equal(response.headers.get("location"), `${origin}/voter${destination === "/" ? "" : destination}`);
   }
-  const kentucky = await unstable_getResponseFromNextConfig({ url: `${origin}/voter/states/ky`, nextConfig: config });
-  assert.equal(kentucky.headers.get("location"), null);
+  for (const path of ["/states", "/states/ky", "/states/oh", "/polls", "/measures"]) {
+    const response = await unstable_getResponseFromNextConfig({ url: `${origin}/voter${path}`, nextConfig: config });
+    assert.equal(response.headers.get("location"), null, path);
+  }
 });
 
 test("robots and sitemap use canonical Kentucky URLs", () => {

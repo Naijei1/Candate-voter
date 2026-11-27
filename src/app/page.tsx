@@ -1,89 +1,159 @@
-import { ShortList } from "@/components/site/ShortList";
 import Link from "next/link";
-import { DistrictMap } from "@/components/DistrictMap";
-import { CompareSection } from "@/components/home/CompareSection";
-import { RacesInFocus } from "@/components/home/RacesInFocus";
-import "@/components/home/homepage.css";
-import { GuideHandoff } from "@/components/home/GuideHandoff";
-import { Hero } from "@/components/home/Hero";
-import { HomeMap } from "@/components/home/HomeMap";
-import { HomeNewsFeed, loadHomeNewsFeed } from "@/components/home/HomeNewsFeed";
-import { ResultsBar } from "@/components/home/ResultsBar";
-import { StatewidePanel } from "@/components/home/StatewidePanel";
-import { CandidateCard } from "@/components/site/CandidateCard";
-import { DatedFacts } from "@/components/site/DatedFacts";
-import { StateHeader } from "@/components/site/StateHeader";
-import { candidateCards } from "@/lib/site/candidate-cards";
-import { MoneyCharts } from "@/components/site/MoneyCharts";
-import { DistrictRoster } from "@/components/site/DistrictRoster";
-import { COMPARE_RACE_IDS, compareBasis, compareOption } from "@/lib/compare/evidence";
-import { kyBallotSeed } from "@/lib/site/ky-ballot";
-import { kyStatewide } from "@/lib/site/ky-statewide";
-import { loadMoneyCharts } from "@/lib/site/money-charts";
+import { ExtLink } from "@/components/tv/ExtLink";
+import { Face, PartyTag, SectionHead } from "@/components/tv/bits";
+import { Hero } from "@/components/tv/Hero";
+import { Icon } from "@/components/tv/Icon";
+import { StateExplorer } from "@/components/tv/StateExplorer";
+import { profileFor } from "@/lib/site/profiles";
+import { stateConfig } from "@/lib/states";
+import { featured } from "@/lib/tv/featured";
+import { allRaces, defaultPair, isOfficialSource, type PersonView } from "@/lib/tv/people";
 
 export const revalidate = 3600;
 
-/** Home order: film, map, compare, news feed, money charts. */
-export default async function HomePage() {
-  const house = kyBallotSeed().races.filter((race) => race.office === "house");
-  const statewide = kyStatewide();
-  /** Titles and ballot facts for each comparison. */
-  const compareOptions = COMPARE_RACE_IDS.flatMap((id) => {
-    const basis = compareBasis(id);
-    return basis ? [compareOption(basis)] : [];
-  });
-  const [money, newsFeed] = await Promise.all([loadMoneyCharts(), loadHomeNewsFeed()]);
+const SOURCES = [
+  "Kentucky State Board of Elections",
+  "Kentucky Secretary of State",
+  "Federal Election Commission",
+  "Clerk of the U.S. House",
+  "U.S. Census Bureau",
+];
+
+/** Most recent checked public office, e.g. "U.S. representative, District 6, since 2013". */
+function experience(person: PersonView, stateName: string, year: number): string | null {
+  const entry = profileFor(person.id)
+    .career.filter((row) => !/^candidate for\b/i.test(row.text) && row.endYear && isOfficialSource(row.sourceName, row.sourceUrl))
+    .sort((a, b) => b.startYear - a.startYear)[0];
+  if (!entry) return null;
+  const text = entry.text.replace(` · ${stateName} `, ", ");
+  const years = entry.endYear && entry.endYear <= year ? `${entry.startYear}–${entry.endYear}` : `since ${entry.startYear}`;
+  return `${text}, ${years}`;
+}
+
+export default function HomePage() {
+  const state = stateConfig();
+  const senate = allRaces(state).find((race) => race.office === "senate");
+  const pair = senate ? defaultPair(senate) : null;
+  const year = new Date().getFullYear();
   return (
     <>
-      <GuideHandoff />
       <Hero />
-      <ResultsBar />
-      <section className="wrap home-section home-map" id="map" aria-labelledby="map-heading">
-        <StateHeader headingId="map-heading" />
-        <DatedFacts />
-        <HomeMap
-          congressional={
-            <div className="map-frame">
-              <DistrictMap postal="KY" races={house} year={2026} instruction="Choose a district to see its race." />
-            </div>
-          }
-          statewide={<StatewidePanel senators={statewide.senators} officers={statewide.officers} />}
-        />
-        <p className="zip-link">
-          <a href="/ballot">Or enter a ZIP code</a>
-        </p>
-      </section>
-      <section className="wrap home-section">
-        <DistrictRoster />
-      </section>
-      <RacesInFocus />
-      <section className="wrap home-section mobile-candidates" aria-labelledby="senate-candidates">
-        <div className="section-head">
-          <h2 id="senate-candidates">U.S. Senate candidates</h2>
-          <Link className="section-more" href="/candidates">All candidates <span aria-hidden="true">→</span></Link>
+
+      <section className="band" aria-labelledby="h-how">
+        <div className="wrap how-g">
+          <div>
+            <h2 id="h-how" className="sec-t">
+              How it works
+            </h2>
+            <ol className="steps">
+              <li>
+                <span className="sn" aria-hidden="true">
+                  1
+                </span>
+                <div>
+                  <h3>Find your election</h3>
+                  <p>Pick your county.</p>
+                </div>
+              </li>
+              <li>
+                <span className="sn" aria-hidden="true">
+                  2
+                </span>
+                <div>
+                  <h3>Compare your options</h3>
+                  <p>Side by side.</p>
+                </div>
+              </li>
+              <li>
+                <span className="sn" aria-hidden="true">
+                  3
+                </span>
+                <div>
+                  <h3>Follow updates</h3>
+                  <p>Saved on this device.</p>
+                </div>
+              </li>
+            </ol>
+          </div>
+          {senate && pair ? (
+            <figure className="mc" aria-labelledby="mc-cap">
+              <figcaption id="mc-cap" className="mc-cap">
+                Preview: {senate.title}
+              </figcaption>
+              <div className="mc-r mc-head">
+                <span className="mc-k" />
+                {pair.map((person) => (
+                  <div className="mc-p" key={person.id}>
+                    <Face person={person} size="lg" eager />
+                    <span>
+                      <b>{person.name}</b>
+                      <PartyTag party={person.party} size="sm" />
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <div className="mc-r">
+                <span className="mc-k">Role</span>
+                {pair.map((person) => (
+                  <span key={person.id}>{person.role}</span>
+                ))}
+              </div>
+              <div className="mc-r">
+                <span className="mc-k">Experience</span>
+                {pair.map((person) => (
+                  <span key={person.id}>{experience(person, state.name, year) ?? <span className="none">Not in our records</span>}</span>
+                ))}
+              </div>
+              <Link className="mc-go" href={`/races/${senate.raceId}/compare?a=${pair[0].id}&b=${pair[1].id}`}>
+                Full comparison
+                <Icon name="right" size="sm" />
+              </Link>
+            </figure>
+          ) : null}
         </div>
-        <ShortList
-          className="cand-grid"
-          items={candidateCards("2026-senate-KY").map((person) => <CandidateCard key={person.id} person={person} />)}
-        />
       </section>
-      <section className="wrap home-section" id="compare" aria-labelledby="compare-heading">
-        <div className="section-head">
-          <h2 id="compare-heading">Compare the candidates</h2>
-        </div>
-        <CompareSection options={compareOptions} />
+
+      <section className="wrap section" aria-labelledby="h-feat">
+        <SectionHead id="h-feat" title="Featured" more={{ href: "/news", label: "News" }} />
+        <ul className="frow">
+          {featured().map((item) => (
+            <li key={item.label}>
+              <b>{item.label}</b>
+              <Link href={item.href}>{item.text}</Link>
+              <span className="fs">
+                <ExtLink className="xl" href={item.source.url} icon>
+                  {item.source.label}
+                </ExtLink>
+              </span>
+            </li>
+          ))}
+        </ul>
       </section>
-      <div className="wrap">
-        <HomeNewsFeed data={newsFeed} />
-      </div>
-      <section className="wrap home-section" id="money" aria-labelledby="money-heading">
-        <div className="section-head">
-          <h2 id="money-heading">Follow the money</h2>
-          <a className="section-more" href="/finance">
-            Candidates&apos; Political Finances <span aria-hidden="true">→</span>
-          </a>
+
+      <section className="wrap section" aria-labelledby="h-map">
+        <SectionHead id="h-map" title="Explore by state" />
+        <details className="allstates">
+          <summary className="btn outline">See all states</summary>
+          <StateExplorer id="homelist" />
+        </details>
+      </section>
+
+      <section className="band trust" aria-labelledby="h-trust">
+        <div className="wrap trust-g">
+          <div>
+            <h2 id="h-trust" className="sec-t sm">
+              Where our facts come from
+            </h2>
+          </div>
+          <ul className="srcs">
+            {SOURCES.map((source) => (
+              <li key={source}>{source}</li>
+            ))}
+          </ul>
+          <p className="trust-l">
+            <Link href="/sources">All sources</Link>
+          </p>
         </div>
-        <MoneyCharts data={money} />
       </section>
     </>
   );

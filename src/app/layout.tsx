@@ -1,45 +1,35 @@
 import type { Metadata, Viewport } from "next";
-import localFont from "next/font/local";
-import { Newsreader, Source_Sans_3 } from "next/font/google";
+import { Public_Sans, Source_Serif_4 } from "next/font/google";
 import { Suspense } from "react";
-import { AskProvider } from "@/components/chat/AskProvider";
-import { SiteFooter } from "@/components/SiteFooter";
-import { SiteHeader } from "@/components/SiteHeader";
 import { GoatCounter } from "@/components/site/GoatCounter";
 import { MobileNavigation } from "@/components/site/MobileNavigation";
 import { ServiceWorker } from "@/components/site/ServiceWorker";
-import { PlaceSync } from "@/components/site/PlaceSync";
-import { SessionProvider } from "@/components/site/SessionProvider";
+import { SiteFooter, SiteHeader } from "@/components/tv/Chrome";
+import { OfflineNotice } from "@/components/tv/client/Offline";
+import { THEME_SCRIPT } from "@/components/tv/theme-script";
 import { brand } from "@/content/brand";
-import { cyclesFromEnv } from "@/lib/data/cycles";
 import { withBasePath } from "@/lib/base-path";
 import { PRODUCTION_ORIGIN } from "@/lib/api/public-origin";
 import "./globals.css";
 
-const sourceSans = Source_Sans_3({
-  subsets: ["latin"],
-  display: "swap",
-  variable: "--font-sans",
-});
-const newsreader = Newsreader({
+const serif = Source_Serif_4({
   subsets: ["latin"],
   weight: ["600", "700"],
-  variable: "--font-editorial",
+  variable: "--tv-serif",
   display: "swap",
 });
-const display = localFont({
-  src: [
-    { path: "../fonts/big-shoulders-latin.woff2", weight: "800", style: "normal" },
-  ],
-  variable: "--font-display",
+const sans = Public_Sans({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--tv-sans",
   display: "swap",
 });
 
 export const viewport: Viewport = {
   colorScheme: "light dark",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f7f8fb" },
-    { media: "(prefers-color-scheme: dark)", color: "#071533" },
+    { media: "(prefers-color-scheme: light)", color: "#FFFFFF" },
+    { media: "(prefers-color-scheme: dark)", color: "#0B1628" },
   ],
   width: "device-width",
   initialScale: 1,
@@ -50,11 +40,12 @@ export const metadata: Metadata = {
   metadataBase: new URL(withBasePath("/"), PRODUCTION_ORIGIN),
   alternates: { canonical: "./" },
   title: {
-    default: brand.name,
+    default: "THE VOTE: your elections, all in one place",
     template: `%s · ${brand.name}`,
   },
-  description: brand.description,
+  description: "Kentucky’s 2026 elections: candidates, comparisons, dates and money, each with its source.",
   applicationName: brand.name,
+  appleWebApp: { title: brand.name },
   icons: { apple: [{ url: withBasePath("/icons/apple-touch-icon.png"), sizes: "180x180" }] },
   openGraph: {
     type: "website",
@@ -77,30 +68,26 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const cycles = cyclesFromEnv();
   return (
-    <html lang="en">
-      <body className={`${sourceSans.variable} ${newsreader.variable} ${display.variable}`}>
+    <html lang="en" data-theme="light" className={`${serif.variable} ${sans.variable}`} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+      </head>
+      <body>
         <ServiceWorker />
         <Suspense fallback={null}>
           <GoatCounter />
         </Suspense>
-        <a className="skip-link" href="#main">
+        <a className="skip" href="#main">
           Skip to content
         </a>
-        <AskProvider cycles={cycles}>
-          <SessionProvider>
-            <Suspense fallback={null}>
-              <PlaceSync />
-            </Suspense>
-            <SiteHeader />
-            <main id="main" className="page-main">
-              {children}
-            </main>
-            <SiteFooter />
-            <MobileNavigation />
-          </SessionProvider>
-        </AskProvider>
+        <SiteHeader />
+        <main id="main" tabIndex={-1}>
+          <OfflineNotice />
+          {children}
+        </main>
+        <SiteFooter />
+        <MobileNavigation />
       </body>
     </html>
   );

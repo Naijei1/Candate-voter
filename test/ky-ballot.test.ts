@@ -46,9 +46,11 @@ test("the November seed covers every federal race and does not add primary loser
   assert.equal(seed.candidates.some((candidate) => candidate.displayName === "Nate Morris"), false);
   assert.equal(seed.candidates.filter((candidate) => candidate.raceId === "2026-house-KY-01").length, 2);
   const page = readFileSync("src/app/races/[raceId]/page.tsx", "utf8");
-  assert.match(page, /ballot\.people/);
-  assert.match(page, /ElectionDayBanner/);
-  assert.match(readFileSync("src/components/site/ElectionStatus.tsx", "utf8"), /See official results/);
+  // v12: race pages read the ballot through raceView and link the certified results page in the footer.
+  assert.match(page, /raceView\(/);
+  assert.match(page, /race\.people\.map/);
+  assert.match(page, /See official results/);
+  assert.match(readFileSync("src/app/states/[state]/page.tsx", "utf8"), /See official results/);
   const script = readFileSync("scripts/seed-ky-ballot.ts", "utf8");
   assert.match(script, /AWS_REGION=us-east-1 CANDATE_TABLE_NAME=candate-voter npm run seed:ky/);
 });

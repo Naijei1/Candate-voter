@@ -27,31 +27,27 @@ test("map marks one selected state and exposes every postal on a click target", 
 });
 
 test("map shapes drop the browser focus rectangle and keep a fill for the selected state", () => {
+  // v12: district links draw focus on the path; the selected district or county keeps the dark fill.
   const css = readFileSync(new URL("../src/app/globals.css", import.meta.url), "utf8");
-  assert.match(css, /\.us-map \.us-state:focus/);
-  assert.match(css, /\.us-map \.us-state:-moz-focusring/);
-  assert.match(css, /outline:\s*none/);
-  const focusBlock = css.slice(css.indexOf(".us-map .us-state:focus"));
-  assert.equal(/stroke:\s*var\(--color-ink\)/.test(focusBlock), false);
+  assert.match(css, /\.kymap a:focus-visible \{ outline: none; \}/);
+  assert.match(css, /\.kymap a:focus-visible \.d \{ stroke: var\(--focus\)/);
+  assert.match(css, /\.kymap \.d\.on, \.kymap a:nth-of-type\(2n\) \.d\.on \{ fill: var\(--map-on\); \}/);
+  assert.match(css, /\.kymap \.cty\.on \{ fill: var\(--map-on\); \}/);
 });
 
 test("homepage is a document in the navy and red palette, not a map shell", () => {
+  // v12: the guide is county-first (CountyGuide) and the palette is navy #142B49 with crimson #a8123e, light and dark.
   const page = readFileSync(new URL("../src/app/page.tsx", import.meta.url), "utf8");
-  const guide = readFileSync(new URL("../src/components/guide/GuideFlow.tsx", import.meta.url), "utf8");
   const brand = readFileSync(new URL("../src/content/brand.ts", import.meta.url), "utf8");
   const css = readFileSync(new URL("../src/app/globals.css", import.meta.url), "utf8");
-  assert.match(page, /Hero/);
-  assert.match(readFileSync(new URL("../src/app/ballot/page.tsx", import.meta.url), "utf8"), /GuideFlow/);
-  assert.match(guide, /Step \{stepNumber\} of 3/);
+  assert.match(page, /<Hero \/>/);
+  assert.match(readFileSync(new URL("../src/app/ballot/page.tsx", import.meta.url), "utf8"), /<CountyGuide/);
   assert.match(brand, /Kentucky’s federal elections\./);
   assert.equal(page.includes("Landing"), false);
-  assert.equal(page.includes("Explore by state"), false);
-  assert.match(css, /--color-navy:\s*#0b2a66/);
-  assert.match(css, /--color-error:\s*#9b1c2e/);
-  assert.match(css, /--color-paper:\s*#f7f8fb/);
-  assert.match(css, /--color-ink:\s*#0a1633/);
-  assert.match(css, /--color-navy-deep:\s*#071533/);
-  assert.match(css, /@media \(prefers-color-scheme: dark\)\s*\{\s*:root\s*\{[^}]*--color-paper:\s*#071533/);
+  assert.match(css, /--navy-800: #142B49;/);
+  assert.match(css, /--red-600: #a8123e;/);
+  assert.match(css, /--color-navy: #142b49;/);
+  assert.match(css, /\[data-theme="dark"\] \{/);
   assert.equal(/body\s*\{[^}]*overflow:\s*hidden/.test(css), false);
   assert.equal(/\.national-shell/.test(css), false);
 });
