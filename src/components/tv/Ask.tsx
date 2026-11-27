@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { withBasePath } from "@/lib/base-path";
 import { shortMoney } from "@/lib/finance/model";
 import type { AskAnswer } from "@/lib/tv/ask";
 import { ReportButton } from "./client/Report";
@@ -138,7 +139,7 @@ export function AskPanel({ id, place, questions }: { id: string; place: string; 
           </Link>
         ))}
       </div>
-      <form className="composer" action="/ask">
+      <form className="composer" action={withBasePath("/ask")}>
         <label className="sr" htmlFor={`${id}-q`}>
           Your question about {place}
         </label>

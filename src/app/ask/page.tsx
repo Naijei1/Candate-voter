@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { AnswerView } from "@/components/tv/Ask";
 import { Crumbs } from "@/components/tv/bits";
+import { withBasePath } from "@/lib/base-path";
 import { answerQuestion } from "@/lib/tv/ask";
 
 export const metadata: Metadata = { alternates: { canonical: "/ask" }, title: "Ask" };
@@ -18,7 +19,7 @@ export default async function AskPage({ searchParams }: PageProps) {
       <Crumbs items={[{ href: "/", label: "Home" }, { label: "Ask" }]} />
       <h1 className="t-h1 pt ask-h">Ask</h1>
       <p className="lede ask-l">Answers come only from our records.</p>
-      <form className="composer big ask-box" action="/ask" method="get" role="search">
+      <form className="composer big ask-box" action={withBasePath("/ask")} method="get" role="search">
         <label className="sr" htmlFor="askq">
           Your question
         </label>

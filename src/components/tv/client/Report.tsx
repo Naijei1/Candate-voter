@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { withBasePath } from "@/lib/base-path";
 import { Icon } from "../Icon";
 import { openReport, toast, type ReportTarget } from "./device";
 
@@ -55,7 +56,7 @@ export function ReportDialog() {
     setSending(true);
     setError(null);
     try {
-      const response = await fetch("/api/corrections", {
+      const response = await fetch(withBasePath("/api/corrections"), {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ candidateId: target.candidateId, note, website: String(data.get("website") ?? "") }),

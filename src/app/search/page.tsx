@@ -4,6 +4,7 @@ import { Fragment } from "react";
 import { Crumbs } from "@/components/tv/bits";
 import { ExtLink } from "@/components/tv/ExtLink";
 import { Icon } from "@/components/tv/Icon";
+import { withBasePath } from "@/lib/base-path";
 import { dayLabel } from "@/lib/format";
 import { searchIndex, type IndexEntry } from "@/lib/tv/index-search";
 import { newsFeed } from "@/lib/tv/news";
@@ -43,7 +44,7 @@ export default async function SearchPage({ searchParams }: PageProps) {
     <div className="wrap srch">
       <Crumbs items={[{ href: "/", label: "Home" }, { label: "Search" }]} />
       <h1 className="t-h1 pt">{query ? `Search: ${query}` : "Search"}</h1>
-      <form className="composer big" role="search" action="/search" method="get">
+      <form className="composer big" role="search" action={withBasePath("/search")} method="get">
         <Icon name="search" />
         <label className="sr" htmlFor="s-q">
           Search
