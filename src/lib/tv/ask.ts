@@ -23,13 +23,14 @@ export type AskAnswer = {
   next: AskLink[];
 };
 
-const ISSUE_WORDS: Record<string, RegExp> = {
-  cost: /cost of living|prices|inflation|afford|gas|fuel|cost/,
-  health: /health|medicaid|medicare|insurance|\baca\b|hospital/,
-  data: /data cent|utilit|electric|power bill|energy/,
-  immigration: /immigra|border|deport|asylum/,
-  debt: /national debt|federal debt|deficit/,
-};
+/** Checked in order: specific topics before broad words like "cost" and "prices". */
+const ISSUE_WORDS: Array<[string, RegExp]> = [
+  ["health", /health|medicaid|medicare|insurance|\baca\b|hospital/],
+  ["data", /data cent|utilit|electric|power bill|energy/],
+  ["immigration", /immigra|border|deport|asylum/],
+  ["debt", /national debt|federal debt|deficit/],
+  ["cost", /cost of living|prices|inflation|afford|gas|fuel|cost/],
+];
 
 const FILINGS_SOURCES = (): AskSource[] => [
   { label: `${stateConfig().filings.name}, candidate filings`, url: stateConfig().filings.href },
@@ -46,7 +47,20 @@ function comparePath(race: RaceView): string {
 }
 
 function nameWords(name: string): string {
-  return name.toLowerCase().replace(/"[^"]*"/g, " ").replace(/\s+/g, " ").trim();
+  return name
+    .toLowerCase()
+    .replace(/"[^"]*"/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/** Names a question may use: John "Drew" Williams is "john drew williams", "john williams" or "drew williams". */
+function fullNames(name: string): string[] {
+  const stripped = nameWords(name);
+  const last = lastName(name).toLowerCase();
+  const first = stripped.split(" ")[0];
+  const nickname = name.match(/"([^"]+)"/)?.[1]?.toLowerCase();
+  return [...new Set([name.toLowerCase().replace(/"/g, ""), stripped, `${first} ${last}`, ...(nickname ? [`${nickname} ${last}`] : [])])];
 }
 
 function escapeRegExp(text: string): string {
@@ -69,18 +83,31 @@ export function answerQuestion(raw: string): AskAnswer {
   const q = raw.toLowerCase().replace(/[’']/g, "'");
 
   const districtMatch = q.match(/(?:district|\bd|ky-?)\s*#?([1-9])\b/) ?? q.match(/\b([1-9])(?:st|nd|rd|th)\s+district/);
-  const race =
-    /senat/.test(q) ? races.find((row) => row.office === "senate") ?? null : districtMatch ? races.find((row) => row.district && Number(row.district) === Number(districtMatch[1])) ?? null : null;
+  const race = /senat/.test(q)
+    ? (races.find((row) => row.office === "senate") ?? null)
+    : districtMatch
+      ? (races.find((row) => row.district && Number(row.district) === Number(districtMatch[1])) ?? null)
+      : null;
 
-  const named = people.filter(({ person }) => {
-    const full = nameWords(person.name);
-    if (q.includes(full)) return true;
-    return new RegExp(`\\b${escapeRegExp(lastName(person.name).toLowerCase())}\\b`).test(q);
-  });
-  const county = [...counties]
-    .sort((a, b) => b.name.length - a.name.length)
-    .find((row) => new RegExp(`\\b${escapeRegExp(row.name.toLowerCase())}\\s+county\\b`).test(q));
-  const issueId = Object.keys(ISSUE_WORDS).find((key) => ISSUE_WORDS[key].test(q));
+  const mentions = (phrase: string) => new RegExp(`\\b${escapeRegExp(phrase)}\\b`).test(q);
+  const byFullName = people.filter(({ person }) => fullNames(person.name).some(mentions));
+  const bySurname = people.filter(({ person }) => mentions(lastName(person.name).toLowerCase()) && !byFullName.some((row) => lastName(row.person.name) === lastName(person.name)));
+  const surnameInRace = race ? bySurname.filter((row) => row.race.raceId === race.raceId) : [];
+  const named = [...byFullName, ...(surnameInRace.length ? surnameInRace : bySurname)];
+  const shared = named.filter((row) => named.some((other) => other !== row && lastName(other.person.name) === lastName(row.person.name)));
+  const county = [...counties].sort((a, b) => b.name.length - a.name.length).find((row) => new RegExp(`\\b${escapeRegExp(row.name.toLowerCase())}\\s+county\\b`).test(q));
+  const issueId = ISSUE_WORDS.find(([, words]) => words.test(q))?.[0];
+
+  if (shared.length > 0) {
+    const surname = lastName(shared[0].person.name);
+    return {
+      found: false,
+      lead: [`${shared.length} candidates are named ${surname}.`, "Ask again with a full name."],
+      people: shared.map(({ person, race: home }) => ({ person, status: home.title })),
+      sources: [],
+      next: shared.map(({ person }) => ({ label: person.name, href: `/candidates/${person.id}` })),
+    };
+  }
 
   if (/debate|transcript|speech|said in|town hall/.test(q)) {
     const target = race ?? named[0]?.race ?? null;
@@ -206,9 +233,7 @@ export function answerQuestion(raw: string): AskAnswer {
     return {
       found: reported.length > 0,
       lead: [`${heading} by each ${target.title} campaign,`, `as reported to the FEC${end ? ` through ${dayLabel(end)}` : ""}.`],
-      bars: target.people
-        .map((person) => ({ person, value: person.funding?.status === "ok" ? (person.funding[key] ?? null) : null }))
-        .sort((a, b) => (b.value ?? -1) - (a.value ?? -1)),
+      bars: target.people.map((person) => ({ person, value: person.funding?.status === "ok" ? (person.funding[key] ?? null) : null })).sort((a, b) => (b.value ?? -1) - (a.value ?? -1)),
       sources: reported.map(fecSource),
       next: [{ label: `${target.title} campaign finance`, href: `${racePath(target)}?tab=finance` }],
     };
@@ -258,10 +283,7 @@ export function answerQuestion(raw: string): AskAnswer {
 
   return {
     found: false,
-    lead: [
-      "We don’t have a sourced answer to that.",
-      `Ask about a ${state.name} Senate or House race: who is running, money raised, where a candidate stands, or your county.`,
-    ],
+    lead: ["We don’t have a sourced answer to that.", `Ask about a ${state.name} Senate or House race: who is running, money raised, where a candidate stands, or your county.`],
     sources: [],
     next: [],
   };
