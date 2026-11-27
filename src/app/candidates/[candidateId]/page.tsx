@@ -1,41 +1,24 @@
-import { isKentuckyFinanceRow } from "@/lib/site/ky-finance";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CheckHistory } from "@/components/site/CheckHistory";
-import { CandidateCorrection } from "@/components/site/CandidateCorrection";
-import { Crumbs } from "@/components/site/Crumbs";
-import { CandidateElectionStatus } from "@/components/site/CandidateElectionStatus";
-import { ElectionDayBanner } from "@/components/site/ElectionDayBanner";
-import { DirectList, orgLabel, OutsideList } from "@/components/site/FinanceLists";
-import { FollowControl } from "@/components/site/FollowControl";
-import { RosterMoney } from "@/components/site/RosterMoney";
-import { CareerTimeline, EducationList, PriorResults, SocialList, VoteList } from "@/components/site/ProfileRecords";
-import { dayLabel, formatInstant, httpsUrl, partyCue, partyLabel } from "@/lib/format";
-import { shortMoney } from "@/lib/finance/model";
-import { loadFinance } from "@/lib/finance/load";
-import { selectDirect, selectOutside } from "@/lib/finance/present";
-import { loadChecks } from "@/lib/content/store";
-import { loadProfile } from "@/lib/site/contest";
-import { BallotBar } from "@/components/site/BallotBar";
-import { CiteShare } from "@/components/site/CiteShare";
-import { IssueNotes } from "@/components/site/IssueNotes";
-import { OnThisPage } from "@/components/site/OnThisPage";
-import { PageLinks } from "@/components/site/PageLinks";
-import reading from "@/components/site/reading.module.css";
-import { PersonMark } from "@/components/site/PersonMark";
-import { KY_BALLOT_SOURCES, kyBallot, kyPerson } from "@/lib/site/ky-ballot";
-import { shownName } from "@/lib/site/ky-officeholders";
-import { newsForNames } from "@/lib/site/ky-news";
-import { careerTimeline, jobLine, linkLabel, profileFor, profileRecordDate } from "@/lib/site/profiles";
-import { seatStatus } from "@/lib/site/seat";
-import { candidateElectionStatus, CONGRESSIONAL_TERM_START, KY_FEDERAL_RACES, KY_RESULTS_SOURCE, primaryCandidateById } from "@/lib/site/certified-results";
-import { raceCardTitle } from "@/lib/site/candidate-cards";
-import { filingPeriods } from "@/lib/site/fec-reports";
-import { financeHeadline, sinceLastFiling } from "@/lib/site/money-status";
-import { photoAttribution, portraitFor, stanceIssues, stancesFor } from "@/lib/site/stances";
-import { showcaseCandidate, showcaseRace, type ShowcaseCandidate } from "@/lib/site/showcase";
-import type { Filing, Race } from "@/lib/types";
+import { FollowButton } from "@/components/tv/client/Follow";
+import { More } from "@/components/tv/client/More";
+import { ReportButton } from "@/components/tv/client/Report";
+import { YoursContext } from "@/components/tv/client/Yours";
+import { Crumbs, Face, PartyTag } from "@/components/tv/bits";
+import { ExtLink } from "@/components/tv/ExtLink";
+import { FundingBlock } from "@/components/tv/Funding";
+import { Icon } from "@/components/tv/Icon";
+import { VoteRecord } from "@/components/tv/Votes";
+import { WonTag } from "@/components/tv/Won";
+import { dayLabel } from "@/lib/format";
+import { KY_BALLOT_SOURCES } from "@/lib/site/ky-ballot";
+import { stateConfig, statePath } from "@/lib/states";
+import { newsForPerson } from "@/lib/tv/news";
+import { initials, lastName } from "@/lib/tv/party";
+import { allPeople, mainRival, personRecord, personView } from "@/lib/tv/people";
+import { isWinner } from "@/lib/tv/results-gate";
+import { splitSentence } from "@/lib/tv/short-line";
 
 export const revalidate = 3600;
 export const runtime = "nodejs";
@@ -43,401 +26,334 @@ export const runtime = "nodejs";
 type PageProps = { params: Promise<{ candidateId: string }> };
 
 export function generateStaticParams() {
-  const ids = new Set<string>();
-  for (const raceId of KY_FEDERAL_RACES) {
-    for (const person of kyBallot(raceId)?.people ?? []) {
-      ids.add(person.id);
-      if (person.fecCandidateId) ids.add(person.fecCandidateId);
-    }
-  }
-  return [...ids].map((candidateId) => ({ candidateId }));
+  return allPeople().map((person) => ({ candidateId: person.id }));
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const id = (await params).candidateId;
-  const alternates = { canonical: `/candidates/${encodeURIComponent(id)}` };
-  const ballot = kyPerson(id);
-  const primary = primaryCandidateById(id);
-  if (primary && !ballot) return { alternates, title: primary.candidate.name };
-  const snap = showcaseCandidate(ballot?.person.fecCandidateId ?? id);
-  if (ballot) return { alternates, title: shownName(ballot.person.name, ballot.person.id) };
-  if (snap) return { alternates, title: snap.displayName };
-  const loaded = await loadProfile(id);
-  return { alternates, title: loaded.ok ? loaded.candidate.displayName : "Candidate" };
+  const person = personView(id);
+  if (!person) return { title: "Candidate not found" };
+  return {
+    alternates: { canonical: `/candidates/${encodeURIComponent(person.id)}` },
+    title: person.name,
+    description: `${person.name}, ${person.role} for ${person.race.title}: verified facts, statements and campaign money, each with its source.`,
+  };
 }
 
 export default async function CandidatePage({ params }: PageProps) {
   const id = (await params).candidateId;
-  const ballot = kyPerson(id);
-  const primary = primaryCandidateById(id);
-  if (primary && !ballot && !primary.candidate.candidateId) return <PrimaryProfile primary={primary} />;
-  const snap = showcaseCandidate(ballot?.person.fecCandidateId ?? id);
-  const loaded = await loadProfile(ballot?.person.fecCandidateId ?? id);
-  if (!loaded.ok && primary && !ballot) return <PrimaryProfile primary={primary} />;
-  if (!loaded.ok && loaded.missing && !snap && !ballot) notFound();
-  if (!loaded.ok && !loaded.missing && !snap && !ballot) {
-    return (
-      <article className="wrap">
-        <h1>Candidate</h1>
-        <p className="notice notice-error">This profile is unavailable.</p>
-        <Link href="/">Kentucky</Link>
-      </article>
-    );
-  }
-
-  const race = loaded.ok ? loaded.race : null;
-  const name = ballot ? shownName(ballot.person.name, ballot.person.id) : snap?.displayName ?? (loaded.ok ? loaded.candidate.displayName : "Candidate");
-  const party = ballot?.person.party ?? snap?.partyLabel ?? (loaded.ok ? partyCue([partyLabel(loaded.candidate.partyAffiliation, loaded.candidate.partyLabel)]) : "");
-  const stateHref = "/";
-  const raceHref = ballot ? `/races/${ballot.race.raceId}` : race ? `/races/${race.raceId}` : snap ? `/races/${showcaseRace()?.raceId}` : null;
-  const raceLabel = ballot ? shortBallot(ballot.race.raceId) : race ? shortRace(race) : snap ? "Senate" : "Race";
-  const retrieved = showcaseRace()?.retrievedAt ?? null;
-  const financeKey = ballot?.person.fecCandidateId ?? id;
-  const [bundle, checks, news] = await Promise.all([
-    loadFinance(race?.cycle ?? 2026),
-    loadChecks("candidate", id),
-    ballot ? newsForNames([name]) : [],
-  ]);
-  const storedIds = new Set([financeKey, ...(ballot?.person.alsoFecIds ?? [])]);
-  const stored = bundle.direct.filter((row) => storedIds.has(row.candidateId) && isKentuckyFinanceRow(row));
-  const headline = financeHeadline(stored, ballot?.person.finance ?? null);
-  const direct = selectDirect(stored, null);
-  const outside = selectOutside(bundle.outside.filter((row) => storedIds.has(row.candidateId) && isKentuckyFinanceRow(row)), null);
-  const filingDelta = sinceLastFiling(filingPeriods(stored, financeKey));
-  const profile = ballot ? profileFor(ballot.person.id) : profileFor(id);
-  const timeline = careerTimeline(profile);
-  const photo = portraitFor(ballot?.person.id ?? id);
-  const notes = stancesFor(ballot?.person.id ?? id);
-
-  const job = jobLine(ballot?.person.id ?? id);
-  const attribution = photoAttribution(photo);
-  const filings = loaded.ok ? loaded.filings : [];
-  const hasVerified = filings.length > 0 || Boolean(snap?.filingPdf && snap.filingDate) ||
-    Boolean(retrieved && (snap?.incumbentLabel || snap?.statusLabel || (snap?.committeeName && snap.committeeUrl)));
-  const status = seatStatus({ holds: Boolean(ballot?.person.holdsOffice), writeIn: ballot?.person.role === "write-in" });
-  const filedRaceId = race?.raceId ?? (snap ? showcaseRace()?.raceId : undefined);
-  const electionStatus = ballot ? candidateElectionStatus(ballot.race.raceId, ballot.person) :
-    primary ? candidateElectionStatus(primary.raceId, {
-      id: primary.candidate.candidateId,
-      name: primary.candidate.name,
-      party: primary.result.party,
-    }) : filedRaceId ? candidateElectionStatus(filedRaceId, { id, name, party }) : undefined;
-  const officeElect = electionStatus?.elected && !ballot?.person.holdsOffice && Date.now() < Date.parse(CONGRESSIONAL_TERM_START)
-    ? (ballot?.race.raceId ?? primary?.raceId)?.includes("senate") ? "Senator-elect" : "Rep.-elect"
-    : null;
-
-  const sections = [
-    timeline.length > 0 ? { href: "#career", label: "Career" } : null,
-    profile.education.length > 0 ? { href: "#education", label: "Education" } : null,
-    profile.results.length > 0 ? { href: "#results", label: "Results" } : null,
-    profile.social.length > 0 ? { href: "#social", label: "Social" } : null,
-    notes.length > 0 ? { href: "#issues", label: "Issues" } : null,
-    profile.endorsements.length > 0 ? { href: "#endorsements", label: "Endorsements" } : null,
-    profile.votes.length > 0 ? { href: "#votes", label: "Votes" } : null,
-    news.length > 0 ? { href: "#news", label: "News" } : null,
-  ].filter((item): item is { href: string; label: string } => item != null);
-  const updated = profileRecordDate(profile, [hasVerified ? retrieved : null]);
+  const person = personView(id);
+  if (!person) notFound();
+  const state = stateConfig();
+  const race = person.race;
+  const record = personRecord(person);
+  const rival = mainRival(race, person.id);
+  const news = await newsForPerson(person.id);
+  const others = race.people.filter((row) => row.id !== person.id);
+  const social = record.profile.social;
+  const campaignLinks = social.filter((row) => row.kind === "campaign");
+  const officeLinks = social.filter((row) => row.kind === "office");
+  const website = record.profile.website;
+  const hasLinks = Boolean(website) || social.length > 0;
+  const won = isWinner(race.raceId, person.name);
+  const surname = lastName(person.name);
 
   return (
-    <article className="wrap profile-page">
+    <div className="wrap">
       <Crumbs
         items={[
-          { href: stateHref, label: "My races" },
-          ...(raceHref ? [{ href: raceHref, label: raceLabel }] : []),
-          { label: name },
+          { href: "/", label: "Home" },
+          { href: statePath(state), label: state.name },
+          { href: `/races/${race.raceId}`, label: race.title },
+          { label: person.name },
         ]}
       />
-      <header className="profile-head">
-        <figure>
-          <PersonMark name={name} photo={photo?.src ?? null} party={party} size="lg" priority />
-          {photo && attribution ? <figcaption>Photo: <a href={photo.sourceUrl}>{attribution}</a></figcaption> : null}
-        </figure>
-        <div>
-          <h1>{name}</h1>
-          <p className="profile-meta">{[...new Set([party, status, officeElect, race ? race.title : ballot ? ballotTitle(ballot.race.raceId) : snap ? "U.S. Senate, Kentucky · 2026" : null].filter(Boolean))].join(" · ")}</p>
-          <CandidateElectionStatus status={electionStatus} />
-          {electionStatus?.primaryVotes != null ? (
-            <p className="hint">{electionStatus.primaryVotes.toLocaleString("en-US")} certified primary votes</p>
-          ) : null}
-          <dl className={reading.facts}>
-            {job ? <div><dt>Current job</dt><dd>{job}{profile.bio ? <> <a href={profile.bio.sourceUrl}>Source ↗</a></> : null}</dd></div> : null}
-            {headline.kind === "missing" && ballot ? <div><dt>Raised</dt><dd>No report on file</dd></div> : null}
-            {headline.kind === "zero" ? <div><dt>Raised</dt><dd>Reported $0{headline.sourceUrl ? <> · <a href={headline.sourceUrl}>FEC ↗</a></> : null}</dd></div> : null}
-            {headline.kind === "reported" ? <div><dt>Raised</dt><dd>{shortMoney(headline.receipts)}{headline.sourceUrl ? <> · <a href={headline.sourceUrl}>FEC ↗</a></> : null}{filingDelta ? <> · {filingDelta.amount > 0 ? `+${shortMoney(filingDelta.amount)}` : "Reported $0"} since the {dayLabel(filingDelta.since)} report</> : null}</dd></div> : null}
-            {headline.kind === "reported" && headline.cash != null ? <div><dt>Cash on hand</dt><dd>{shortMoney(headline.cash)}{headline.sourceUrl ? <> · <a href={headline.sourceUrl}>FEC ↗</a></> : null}</dd></div> : null}
-            {headline.kind === "filed" && headline.sourceUrl ? <div><dt>Raised</dt><dd>Report on file · <a href={headline.sourceUrl}>FEC ↗</a></dd></div> : null}
-            {profile.website ? <div><dt>Site</dt><dd><a href={profile.website.url}>{linkLabel(profile.website)}</a></dd></div> : null}
-          </dl>
-          {raceHref ? (
-            <div className="actions">
-              <Link className="btn btn-navy" href={`${raceHref}/compare`}>Compare</Link>
-            </div>
-          ) : null}
-          <div className="actions">
-            <FollowControl what="candidate" targetId={ballot?.person.fecCandidateId ?? (loaded.ok ? loaded.candidate.candidateId : id)} returnPath={`/candidates/${id}`} />
-            <Link className="btn btn-ghost" href="/ballot">Your ballot</Link>
+      <YoursContext />
+
+      <div className="phead">
+        <div className="pcol">
+          <div className={`pph ${person.party.key}`}>
+            {person.photo ? (
+              <img src={person.photo.src} alt={`Portrait of ${person.name}`} width={400} height={500} />
+            ) : (
+              <div className="ph-empty">
+                <span className="ini-big" aria-hidden="true">
+                  {initials(person.name)}
+                </span>
+                <span>No photo</span>
+              </div>
+            )}
+            <PartyTag party={person.party} corner />
           </div>
-          <PageLinks raceId={ballot?.race.raceId ?? race?.raceId} candidateId={id} />
-          <CiteShare title={name} path={`/candidates/${id}`} updated={updated ? dayLabel(updated) : null} />
+          {person.photo ? (
+            <p className="credit">
+              Photo:{" "}
+              <ExtLink href={person.photo.sourceUrl}>
+                {person.photo.license.startsWith("CC") ? `${person.photo.credit}, ${person.photo.license}` : person.photo.credit}
+              </ExtLink>
+            </p>
+          ) : null}
         </div>
-      </header>
-      <div className={reading.withToc}>
-      <OnThisPage links={sections} />
-      <div className={reading.tocBody}>
-      {timeline.length > 0 ? (
-        <section id="career">
-          <h2>Career timeline</h2>
-          <CareerTimeline entries={timeline} />
-        </section>
-      ) : null}
-      {profile.education.length > 0 ? (
-        <section id="education">
-          <h2>Education</h2>
-          <EducationList entries={profile.education} />
-        </section>
-      ) : null}
-      {profile.results.length > 0 ? (
-        <section id="results">
-          <h2>Prior election results</h2>
-          <PriorResults entries={profile.results} />
-        </section>
-      ) : null}
-      {profile.social.length > 0 ? (
-        <section id="social">
-          <h2>Social accounts</h2>
-          <SocialList accounts={profile.social} name={name} />
-        </section>
-      ) : null}
-      {notes.length > 0 ? (
-        <section id="issues">
-          <h2>Issues</h2>
-          <IssueNotes notes={notes} issues={stanceIssues()} compareHref={raceHref ? `${raceHref}/compare` : undefined} />
-        </section>
-      ) : null}
-      {profile.endorsements.length > 0 ? <>
-        <h2 id="endorsements">Endorsements</h2>
-        <ul className="plain-list">
-          {profile.endorsements.map((item) => (
-            <li key={item.sourceUrl}>
-              {item.text} <a href={item.sourceUrl}>{item.sourceName}</a>
-              <span className="hint"> · {dayLabel(item.sourceDate)}</span>
-            </li>
-          ))}
-        </ul>
-      </> : null}
-      {profile.votes.length > 0 ? <>
-        <h2 id="votes">Votes</h2>
-        <VoteList entries={profile.votes} />
-      </> : null}
-      {news.length > 0 ? (
-        <section id="news">
-          <h2>News</h2>
-          <ul className="plain-list">
-            {news.map((story) => (
-              <li key={story.url}>
-                <p><a href={story.url}>{story.title}</a></p>
-                <p className="hint">{story.source}{story.date ? ` · ${dayLabel(story.date)}` : ""}</p>
-              </li>
+        <div className="pwho">
+          <h1 className="t-h1">{person.name}</h1>
+          <p className={`role ${person.party.key}`}>
+            {person.role}
+            {won ? <WonTag /> : null}
+          </p>
+          <p className="lede">
+            Running for <Link href={`/races/${race.raceId}`}>{race.runningFor}</Link>.
+          </p>
+          <div className="pact">
+            {rival ? (
+              <Link className="btn primary" href={`/races/${race.raceId}/compare?a=${person.id}&b=${rival.id}`}>
+                <Icon name="swap" size="sm" />
+                Compare with {lastName(rival.name)}
+              </Link>
+            ) : null}
+            <FollowButton id={person.id} name={person.name} />
+          </div>
+          <p className="pmeta">
+            <ReportButton candidateId={person.id} />
+          </p>
+        </div>
+      </div>
+
+      <nav className="jump" aria-labelledby="jump-l">
+        <span className="jump-l" id="jump-l">
+          On this page
+        </span>
+        <a href="#facts">Verified facts</a>
+        <a href="#own">In their own words</a>
+        <a href="#money">Campaign money</a>
+        {news.length > 0 ? <a href="#updates">News ({news.length})</a> : null}
+      </nav>
+
+      <div className="two">
+        <section id="facts" className="sec" aria-labelledby="h-vf">
+          <h2 id="h-vf" className="sec-t">
+            Verified facts
+          </h2>
+          <dl className="facts">
+            <div>
+              <dt>Party on the ballot</dt>
+              <dd>
+                <PartyTag party={person.party} size="sm" /> {person.party.name}
+                {person.writeIn ? (
+                  <ExtLink className="srcl" href={state.filings.href}>
+                    {state.filings.name}
+                  </ExtLink>
+                ) : (
+                  <ExtLink className="srcl" href={KY_BALLOT_SOURCES[1].url}>
+                    Clerk of the House nominations
+                  </ExtLink>
+                )}
+              </dd>
+            </div>
+            <div>
+              <dt>Filed to run</dt>
+              <dd>
+                {person.filing ? (
+                  <>
+                    {person.filing.label}
+                    <ExtLink className="srcl" href={person.filing.url}>
+                      {state.filings.name}
+                    </ExtLink>
+                  </>
+                ) : (
+                  <span className="none">Not in our records</span>
+                )}
+              </dd>
+            </div>
+            {record.facts.map((fact, index) => (
+              <div key={`${fact.term}-${index}`}>
+                <dt>{fact.term}</dt>
+                <dd>
+                  {fact.text}
+                  {fact.muted ? <> <span className="muted">{fact.muted}</span></> : null}
+                  {fact.hint ? <span className="hint">{fact.hint}</span> : null}
+                  {fact.sources.map((source) => (
+                    <ExtLink key={source.url} className="srcl" href={source.url}>
+                      {source.label}
+                    </ExtLink>
+                  ))}
+                </dd>
+              </div>
             ))}
-          </ul>
+          </dl>
         </section>
-      ) : null}
-      <details>
-        <summary>More details</summary>
 
-      {hasVerified ? <>
-      <h2>Official filings</h2>
-      <ul className="plain-list">
-        {snap?.incumbentLabel && retrieved ? (
-          <Fact
-            label="Running status"
-            value={plainSeat(snap.incumbentLabel)}
-            href={snap.profileUrl}
-            source="Official candidate record"
-            date={retrieved}
-          />
-        ) : null}
-        {snap?.statusLabel && retrieved ? (
-          <Fact
-            label="Filing status"
-            value={plainStatus(snap.statusLabel)}
-            href={showcaseRace()?.dictionary ?? snap.profileUrl}
-            source="Official candidate list"
-            date={retrieved}
-          />
-        ) : null}
-        {snap?.committeeName && snap.committeeUrl && retrieved ? (
-          <Fact
-            label="Campaign fund"
-            value={orgLabel(snap.committeeName) ?? snap.committeeName}
-            href={snap.committeeUrl}
-            source="Official campaign record"
-            date={retrieved}
-          />
-        ) : null}
-        <FilingFacts filings={filings} snap={snap} />
-      </ul>
-      </> : null}
-
-      {snap?.committeeWebsite && snap.committeeUrl && retrieved ? (
-        <>
-      <h2>Candidate says</h2>
-        <ul className="plain-list">
-          <Fact
-            label="Campaign site"
-            value={snap.committeeWebsite}
-            href={snap.committeeWebsite}
-            source="Listed on the official campaign record"
-            date={retrieved}
-          />
-        </ul>
-        </>
-      ) : null}
-
-      {direct.length > 0 || outside.length > 0 || ballot?.person.finance || headline.kind === "filed" ? <h2>Campaign finance</h2> : null}
-      {direct.length > 0 ? null : ballot?.person.finance ? <RosterMoney finance={ballot.person.finance} /> : null}
-      {direct.length > 0 ? <DirectList rows={direct} /> : null}
-      {outside.length > 0 ? (
-        <>
-          <h3>Spending by other groups</h3>
-          <OutsideList rows={outside} />
-        </>
-      ) : null}
-
-      <CheckHistory checks={checks} />
-
-      {ballot ? (
-        <p className="hint">
-          Source: <a href={KY_BALLOT_SOURCES[0].url}>Kentucky Secretary of State ↗</a>
-        </p>
-      ) : null}
-      </details>
-      <CandidateCorrection candidateId={ballot?.person.id ?? id} raceId={ballot?.race.raceId ?? race?.raceId} page={`/candidates/${id}`} />
-      </div>
-      </div>
-      {ballot ? <ElectionDayBanner compact /> : null}
-      {raceHref ? (
-        <BallotBar step={3} backHref={raceHref} nextHref={`${raceHref}/compare`} nextLabel="Compare candidates" nextShort="Compare" />
-      ) : null}
-    </article>
-  );
-}
-
-function Fact({
-  label,
-  value,
-  href,
-  source,
-  date,
-}: {
-  label: string;
-  value: string;
-  href: string;
-  source: string;
-  date: string;
-}) {
-  const shown = formatInstant(date) ?? dayLabel(date);
-  return (
-    <li>
-      <p>
-        {label}: {href ? <a href={href}>{value}</a> : value}
-      </p>
-      <p className="hint">
-        {source} · {shown}
-      </p>
-    </li>
-  );
-}
-
-function FilingFacts({
-  filings,
-  snap,
-}: {
-  filings: Filing[];
-  snap: ShowcaseCandidate | null;
-}) {
-  if (filings.length > 0) {
-    return (
-      <>
-        {filings.map((filing) => {
-          const href = httpsUrl(filing.sourceUrl);
-          const when = formatInstant(filing.fecLoadTimestamp) ?? formatInstant(filing.updatedAt);
-          return (
-            <li key={filing.filingId}>
-              Statement of candidacy
-              {href ? (
-                <>
-                  : <a href={href} title="FEC filing, Form 2">Official filing</a>
-                </>
+        <section id="own" className="sec claims" aria-labelledby="h-own">
+          <h2 id="h-own" className="sec-t">
+            In their own words
+          </h2>
+          <p className="sec-sub">Not checked by THE VOTE.</p>
+          {record.claims.length === 0 ? <p className="none">No sourced statements in our records.</p> : null}
+          {record.claims.map((group, index) => (
+            <div className="own" key={`${group.source.url}-${index}`}>
+              {group.items.map((item, itemIndex) => {
+                const [first, rest] = splitSentence(item.text);
+                return (
+                  <div className="own-i" key={`${item.heading}-${itemIndex}`}>
+                    <h3>
+                      {item.heading}
+                      {item.tag ? <> <span className="cs">{item.tag}</span></> : null}
+                    </h3>
+                    {item.parts ? (
+                      <p>
+                        {item.parts.map((part, partIndex) => (
+                          <span key={partIndex}>
+                            {partIndex > 0 ? <br /> : null}
+                            {part.text}
+                            {part.muted ? <> <span className="muted">{part.muted}</span></> : null}
+                          </span>
+                        ))}
+                      </p>
+                    ) : rest ? (
+                      <p>
+                        <More short={first} rest={rest} context={`${surname}'s ${item.heading.toLowerCase()} statement`} />
+                      </p>
+                    ) : (
+                      <p>{item.text}</p>
+                    )}
+                  </div>
+                );
+              })}
+              <p className="srcl2 bot">
+                {group.items.length > 1 ? `Source for these ${group.items.length} statements: ` : "Source: "}
+                <ExtLink className="xl srcl" href={group.source.url} icon>
+                  {group.source.label}
+                </ExtLink>
+                {group.source.date ? `, ${dayLabel(group.source.date)}` : null}
+              </p>
+            </div>
+          ))}
+          {record.missingIssues.length > 0 ? <p className="none">No sourced statement: {record.missingIssues.join(", ")}.</p> : null}
+          {hasLinks ? (
+            <>
+              {website || campaignLinks.length > 0 ? (
+                <div className="lgrp">
+                  <h3>{website?.kind === "office" && campaignLinks.length === 0 ? "Official office" : "Campaign"}</h3>
+                  <div className="chips">
+                    {website ? (
+                      <ExtLink className="chip" href={website.url}>
+                        <Icon name="link" size="sm" />
+                        Website
+                        <Icon name="ext" size="xs" />
+                      </ExtLink>
+                    ) : null}
+                    {campaignLinks.map((row) => (
+                      <ExtLink key={row.url} className="chip" href={row.url}>
+                        {row.platform}
+                        <Icon name="ext" size="xs" />
+                      </ExtLink>
+                    ))}
+                  </div>
+                </div>
               ) : null}
-              {when ? <span className="hint"> · {when}</span> : null}
-            </li>
-          );
-        })}
-      </>
-    );
-  }
-  if (snap?.filingPdf && snap.filingDate) {
-    return (
-      <li>
-        Statement of candidacy: <a href={snap.filingPdf} title="FEC filing, Form 2">Official filing</a>
-        <span className="hint"> Filed {dayLabel(snap.filingDate)}</span>
-      </li>
-    );
-  }
-  return null;
-}
+              {officeLinks.length > 0 ? (
+                <div className="lgrp">
+                  <h3>Official office</h3>
+                  <div className="chips">
+                    {officeLinks.map((row) => (
+                      <ExtLink key={row.url} className="chip" href={row.url}>
+                        {row.platform}
+                        <Icon name="ext" size="xs" />
+                      </ExtLink>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+            </>
+          ) : null}
+        </section>
+      </div>
 
-function plainSeat(label: string): string {
-  if (/open seat/i.test(label)) return "Open seat (the officeholder is not running)";
-  if (/incumbent/i.test(label)) return "Currently holds this office";
-  if (/challenger/i.test(label)) return "Running against the current officeholder";
-  return label;
-}
+      <section id="money" className="sec" aria-labelledby="h-mo">
+        <h2 id="h-mo" className="sec-t">
+          Campaign money
+        </h2>
+        <FundingBlock name={person.name} row={person.funding} />
+        {person.funding?.status === "ok" ? (
+          <p className="whence-b">
+            <Link className="btn primary" href={`/finance/candidates/${person.id}`}>
+              <Icon name="money" size="sm" />
+              See who funds {person.name}
+            </Link>
+          </p>
+        ) : null}
+      </section>
 
-function plainStatus(label: string): string {
-  if (/not yet/i.test(label)) return "Paperwork started, not finished";
-  if (/future/i.test(label)) return "Filed for a later election";
-  if (/prior/i.test(label)) return "Filed in an earlier election";
-  if (/statutory/i.test(label)) return "Filed the required paperwork";
-  return label;
-}
-
-function ballotTitle(raceId: string): string {
-  if (raceId.includes("senate")) return "U.S. Senate, Kentucky · 2026";
-  const district = Number(raceId.split("-").at(-1));
-  return `U.S. House, Kentucky District ${district} · 2026`;
-}
-
-function PrimaryProfile({ primary }: { primary: NonNullable<ReturnType<typeof primaryCandidateById>> }) {
-  const { candidate, result, raceId } = primary;
-  return (
-    <article className="wrap">
-      <Crumbs items={[{ href: "/candidates", label: "Candidates" }, { label: candidate.name }]} />
-      <header className="profile-head">
-        <PersonMark name={candidate.name} photo={null} party={result.party} size="lg" />
-        <div>
-          <h1>{candidate.name}</h1>
-          <p className="profile-meta">{result.party} · {raceCardTitle(raceId)}</p>
-          <CandidateElectionStatus status={{ primary: candidate.winner ? "won" : "lost" }} />
-          <p>{candidate.votes.toLocaleString("en-US")} certified primary votes · <a href={result.sourceUrl}>{KY_RESULTS_SOURCE}</a></p>
-          <Link className="action-link" href={`/races/${raceId}`}>Race details</Link>
-        </div>
-      </header>
-    </article>
+      <div className="discs">
+        {news.length > 0 ? (
+          <details className="disc" id="updates">
+            <summary>
+              <span className="sec-t sm">News ({news.length})</span>
+            </summary>
+            <div className="disc-b">
+              <ul className="nlite">
+                {news.map((item) => (
+                  <li key={item.url}>
+                    <ExtLink href={item.url}>{item.title}</ExtLink>
+                    <span className="nm">
+                      {item.source} · {dayLabel(item.date)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </details>
+        ) : null}
+        {record.profile.votes.length > 0 ? (
+          <details className="disc" id="record">
+            <summary>
+              <span className="sec-t sm">Voting record ({record.profile.votes.length})</span>
+            </summary>
+            <div className="disc-b">
+              <VoteRecord votes={record.profile.votes} />
+            </div>
+          </details>
+        ) : null}
+        {record.profile.endorsements.length > 0 ? (
+          <details className="disc" id="endorsements">
+            <summary>
+              <span className="sec-t sm">Endorsements ({record.profile.endorsements.length})</span>
+            </summary>
+            <div className="disc-b">
+              <ul className="nlite">
+                {record.profile.endorsements.map((row) => (
+                  <li key={`${row.text}-${row.sourceUrl}`}>
+                    {row.text}
+                    <span className="nm">
+                      <ExtLink href={row.sourceUrl}>{row.sourceName}</ExtLink>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </details>
+        ) : null}
+        {others.length > 0 ? (
+          <details className="disc" id="also">
+            <summary>
+              <span className="sec-t sm">Also running ({others.length})</span>
+            </summary>
+            <div className="disc-b">
+              <ul className="also">
+                {others.map((row) => (
+                  <li key={row.id}>
+                    <Link href={`/candidates/${row.id}`}>
+                      <Face person={row} />
+                      <span>
+                        <b>{row.name}</b>
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </details>
+        ) : null}
+      </div>
+    </div>
   );
-}
-
-function shortBallot(raceId: string): string {
-  if (raceId.includes("senate")) return "Senate";
-  const district = raceId.split("-").at(-1);
-  return district ? `District ${Number(district)}` : "House";
-}
-
-function shortRace(race: Race): string {
-  if (race.office === "senate") return "Senate";
-  if (race.office === "house") {
-    return race.district && race.district !== "00" ? `District ${Number(race.district)}` : "House";
-  }
-  return "President";
 }
