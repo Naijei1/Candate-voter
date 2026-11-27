@@ -61,14 +61,15 @@ test("news feed choices and issue follows still work", () => {
   const guide = readFileSync("src/components/guide/GuideFlow.tsx", "utf8");
   assert.match(guide, /seedIssues: true/);
   assert.match(guide, /\/api\/v1\/me\/preferences/);
-  const judicial = readFileSync("src/app/states/ky/page.tsx", "utf8");
+  const judicial = readFileSync("src/app/states/[state]/page.tsx", "utf8");
   assert.doesNotMatch(judicial, /LocalTemplate|<nav className="filters"/);
   assert.equal(judicial.includes("Jane Doe"), false);
 });
 
 test("keyboard focus stays visible on the map and in the header", () => {
+  // v12: the header is light and uses the global ring; district and county maps draw focus on the shape itself.
   const css = readFileSync("src/app/globals.css", "utf8");
-  assert.match(css, /\.site-header :focus-visible[\s\S]*outline-color:\s*#fff/);
-  assert.match(css, /\.us-map \.us-state:focus-visible,\s*\.us-map \.us-hit:focus-visible\s*\{[^}]*stroke:\s*var\(--color-navy\)/);
-  assert.equal(/\.us-map \.us-state:focus-visible[\s\S]{0,80}outline:\s*none/.test(css), false);
+  assert.match(css, /:focus-visible \{ outline: 3px solid var\(--focus\);/);
+  assert.match(css, /\.kymap a:focus-visible \{ outline: none; \}\s*\.kymap a:focus-visible \.d \{ stroke: var\(--focus\); stroke-width: 4; \}/);
+  assert.equal(/\.stile:focus-visible[^}]*outline:\s*none/.test(css), false);
 });

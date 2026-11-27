@@ -4,11 +4,12 @@ import test from "node:test";
 import { splitRecordRows } from "../src/lib/site/record-rows";
 
 test("race page puts the November candidates before primary tables", () => {
+  // v12: the November cards lead the page, the tabbed comparison follows, and primary tables are gone.
   const race = readFileSync("src/app/races/[raceId]/page.tsx", "utf8");
-  const status = race.indexOf('<RaceResults raceId={race.raceId} show="status" />');
-  const candidates = race.indexOf('id="candidates-heading"');
-  const primary = race.indexOf('<RaceResults raceId={race.raceId} show="primary" />');
-  assert.ok(status > -1 && candidates > status && primary > candidates);
+  const candidates = race.indexOf("<RaceCard key={person.id}");
+  const tabs = race.indexOf('<Tabs label="Compare the candidates"');
+  assert.ok(candidates > -1 && tabs > candidates);
+  assert.equal(race.includes('show="primary"'), false);
 });
 
 test("profile records keep every row in the page and collapse only long lists", () => {
@@ -25,9 +26,10 @@ test("feed report link is a quiet utility, not a second call to action", () => {
 
 test("focus ring turns white on dark bands and controls get a halo", () => {
   const css = readFileSync("src/app/globals.css", "utf8");
-  assert.match(css, /:focus-visible \{\s*outline: 3px solid var\(--focus-ring\);/);
-  assert.match(css, /:where\(\.site-header, \.site-footer, \.hero-stage, \.results-bar, \.focus-band\) \{\s*--focus-ring: #fff;/);
-  assert.match(css, /box-shadow: 0 0 0 2px var\(--focus-halo\)/);
+  assert.match(css, /:focus-visible \{ outline: 3px solid var\(--focus\);/);
+  assert.match(css, /\.ftr \{[^}]*--focus: #fff;/);
+  assert.match(css, /\.btn\.hero-btn:focus-visible, \.hero-ln:focus-visible \{ outline: 3px solid #fff;/);
+  assert.match(css, /\.input:focus-visible \{[^}]*box-shadow: var\(--focus-ring\)/);
 });
 
 test("long profile lists keep every row, six shown and the rest behind Show all", () => {

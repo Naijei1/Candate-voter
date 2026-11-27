@@ -56,18 +56,13 @@ test("pulling the sheet below a peek dismisses, otherwise it snaps", () => {
 });
 
 test("explore and district maps still use the pan gesture", () => {
+  // v12 replaced drag-to-pan with zoom buttons over a natively scrollable map box.
   const css = readFileSync(new URL("../src/app/globals.css", import.meta.url), "utf8");
-  const national = readFileSync(new URL("../src/components/UsMap.tsx", import.meta.url), "utf8");
-  const district = readFileSync(new URL("../src/components/DistrictMap.tsx", import.meta.url), "utf8");
+  const maps = readFileSync(new URL("../src/components/tv/client/Maps.tsx", import.meta.url), "utf8");
   const sources = readFileSync(new URL("../src/app/sources/page.tsx", import.meta.url), "utf8");
-  const note = readFileSync(new URL("../src/components/site/DistrictVintageNote.tsx", import.meta.url), "utf8");
-  assert.match(national, /<MapGesture/);
-  assert.match(district, /<MapGesture/);
-  assert.match(css, /\.map-gesture\s*\{[^}]*touch-action:\s*none/);
-  assert.match(national, /onPanActive/);
-  assert.match(national, /preserveAspectRatio="xMidYMin meet"/);
-  assert.match(sources, /DistrictVintageNote/);
-  assert.match(note, /120th/);
-  assert.match(note, /ZIP lookup/);
-  assert.equal(/119th/.test(note), false);
+  assert.match(maps, /export function ZoomBox/);
+  assert.equal((maps.match(/<ZoomBox>/g) ?? []).length >= 2, true);
+  assert.match(css, /\.mapscroll \{ overflow: auto;/);
+  assert.match(css, /\.zoom button \{ width: 48px; height: 48px;/);
+  assert.match(sources, /120th Congress district files/);
 });

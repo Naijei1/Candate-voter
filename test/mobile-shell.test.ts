@@ -10,7 +10,10 @@ test("public shell scrolls and keeps large navigation targets", () => {
   assert.match(css, /font-size:\s*18px/);
   assert.equal(/body\s*\{[^}]*overflow:\s*hidden/.test(css), false);
   assert.equal(/\.national-shell/.test(css), false);
-  assert.match(css, /:root\s*\{[^}]*color-scheme:\s*light dark/);
+  // v12 sets color-scheme per theme so the in-page toggle wins over the system setting.
+  assert.match(css, /color-scheme: light;/);
+  assert.match(css, /color-scheme: dark;/);
+  assert.match(readFileSync(new URL("../src/app/layout.tsx", import.meta.url), "utf8"), /colorScheme: "light dark"/);
 });
 
 test("race and candidate pages return to the state journey", () => {
@@ -23,21 +26,18 @@ test("race and candidate pages return to the state journey", () => {
     new URL("../src/app/races/[raceId]/compare/page.tsx", import.meta.url),
     "utf8",
   );
-  assert.match(race, /id="candidates-heading"/);
-  assert.match(race, /Compare candidates/);
+  // v12: crumbs lead back to the state page; compare and follow controls are the shared tv components.
+  assert.match(race, /href: statePath\(state\), label: state\.name/);
+  assert.match(race, /Compare \{lastName\(pair\[0\]\.name\)\} and \{lastName\(pair\[1\]\.name\)\}/);
   assert.match(race, /AskPanel/);
-  assert.match(race, /FollowControl/);
-  assert.match(race, /alternateFilings\.length \+ 1/);
-  assert.match(compare, /CompareBoard/);
-  assert.match(compare, /AskPanel/);
-  assert.match(compare, /race-layout/);
+  assert.match(race, /<FollowButton /);
+  assert.match(compare, /\{ href: `\/races\/\$\{race\.raceId\}`, label: race\.title \}/);
   assert.equal(compare.includes("Sample candidate"), false);
-  assert.match(candidate, /FollowControl/);
-  assert.match(candidate, /FEC filing/);
+  assert.match(candidate, /<FollowButton /);
+  assert.match(candidate, /Filed to run/);
   assert.match(candidate, /profile\.votes\.length > 0/);
   assert.doesNotMatch(candidate, /No legislative record/);
-  assert.match(candidate, /Campaign site/);
-  assert.match(candidate, /profile\.website \?/);
+  assert.match(candidate, /website \?/);
   assert.equal(candidate.includes("Form {filing.formType}"), false);
   assert.equal(race.includes("Back to map"), false);
 });

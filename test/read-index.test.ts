@@ -134,16 +134,16 @@ test("production pages do not import placeholders", () => {
     "src/app/page.tsx",
     "src/app/races/[raceId]/page.tsx",
     "src/app/candidates/[candidateId]/page.tsx",
-    "src/components/SiteFooter.tsx",
-    "src/components/SiteHeader.tsx",
+    "src/components/tv/Chrome.tsx",
   ];
   for (const page of pages) {
     const source = readFileSync(page, "utf8");
     assert.equal(source.includes("placeholders"), false, page);
     assert.equal(source.includes("SampleBanner"), false, page);
     if (page.includes("[raceId]") || page.includes("[candidateId]")) {
+      // v12 pages enumerate the state's ballot through the shared person view (raceIdsFor reads states.ts).
       assert.match(source, /generateStaticParams/);
-      assert.match(source, /KY_FEDERAL_RACES/);
+      assert.match(source, /allRaces\(\)|allPeople\(\)/);
     } else {
       assert.equal(source.includes("generateStaticParams"), false, page);
     }

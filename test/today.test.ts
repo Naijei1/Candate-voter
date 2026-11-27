@@ -32,23 +32,23 @@ test("posts on X stay hidden when the bearer token is unset", async () => {
 });
 
 test("the home page leads with the hero, the Kentucky map, and FEC activity", () => {
+  // v12: the hero is a CSS line drawing of the country with the covered state lit; the guide is county-first.
   const page = readFileSync("src/app/page.tsx", "utf8");
-  const hero = readFileSync("src/components/home/Hero.tsx", "utf8");
-  assert.match(page, /Hero/);
-  assert.match(page, /DistrictMap/);
-  assert.match(page, /HomeNewsFeed/);
+  const hero = readFileSync("src/components/tv/Hero.tsx", "utf8");
+  const css = readFileSync("src/app/globals.css", "utf8");
+  assert.match(page, /<Hero \/>/);
+  assert.match(page, /<StateExplorer /);
+  assert.match(page, /featured\(/);
   assert.equal(page.includes("Kentucky Lantern"), false);
   assert.equal(page.includes("<input"), false);
-  assert.match(page, /GuideHandoff/);
-  assert.match(readFileSync("src/components/home/GuideHandoff.tsx", "utf8"), /\/ballot\?/);
+  assert.match(readFileSync("src/components/tv/client/Yours.tsx", "utf8"), /"Find my races"/);
+  assert.match(readFileSync("src/components/tv/client/device.ts", "utf8"), /\/ballot\?county=/);
   assert.equal(page.includes("latestNews"), false);
-  assert.match(hero, /prefers-reduced-motion/);
-  assert.match(hero, /Find my races/);
-  assert.match(hero, /Use my location/);
+  assert.match(css, /@media \(prefers-reduced-motion: reduce\) \{ \.hero \*, \.hero \{ animation: none !important; \}/);
+  assert.match(hero, /<YoursCta /);
   assert.equal(hero.includes("Pause video"), false);
   assert.equal(hero.includes("Play video"), false);
-  assert.match(hero, /vote-hero\.mp4/);
-  assert.match(hero, /IntersectionObserver/);
+  assert.match(readFileSync("src/components/tv/client/HeroBits.tsx", "utf8"), /IntersectionObserver/);
   assert.match(readFileSync("docs/sources.md", "utf8"), /2\.2\.2/);
   assert.match(readFileSync("src/config/brand.ts", "utf8"), /headline: "Vote\."/);
   assert.match(readFileSync("docs/sources.md", "utf8"), /X_BEARER_TOKEN/);

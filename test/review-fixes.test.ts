@@ -13,28 +13,34 @@ test("a saved place is not written back onto the landing page", () => {
 });
 
 test("ballot buttons leave the film and open the guide", () => {
-  const compare = readFileSync("src/app/races/[raceId]/compare/page.tsx", "utf8");
-  const candidate = readFileSync("src/app/candidates/[candidateId]/page.tsx", "utf8");
-  assert.match(compare, /nextHref="\/ballot"/);
-  assert.equal(compare.includes('nextHref="/"'), false);
-  assert.match(candidate, /href="\/ballot"/);
-  const yourBallot = candidate.slice(candidate.indexOf("Your ballot") - 80, candidate.indexOf("Your ballot"));
-  assert.match(yourBallot, /href="\/ballot"/);
+  // v12: the hero and the header both send readers to the county guide at /ballot (or their saved county).
+  const yours = readFileSync("src/components/tv/client/Yours.tsx", "utf8");
+  const device = readFileSync("src/components/tv/client/device.ts", "utf8");
+  assert.match(readFileSync("src/components/tv/Hero.tsx", "utf8"), /<YoursCta className="btn hero-btn" \/>/);
+  assert.match(yours, /placeHref\(/);
+  assert.match(device, /`\/ballot\?county=\$\{encodeURIComponent\(place\.c\)\}` : "\/ballot"/);
 });
 
 test("footer links are white with a light focus ring", () => {
+  // v12 footer: light navy links that turn white on hover, and a white focus ring on the dark band.
   const css = readFileSync("src/app/globals.css", "utf8");
-  assert.match(css, /\.site-footer a\s*\{[^}]*color:\s*#fff/);
-  assert.match(css, /\.site-footer a:focus-visible\s*\{[^}]*outline:\s*3px solid #fff/);
+  assert.match(css, /\.ftr ul a, \.ftr \.f-link \{ color: var\(--navy-100\);/);
+  assert.match(css, /\.ftr ul a:hover, \.ftr \.f-link:hover \{ text-decoration: underline; color: #fff; \}/);
+  assert.match(css, /\.ftr \{[^}]*--focus: #fff;/);
 });
 
 test("the film stays paused off screen when the tab returns", () => {
   assert.equal(shouldPlayFilm({ tabHidden: false, heroOnScreen: true }), true);
   assert.equal(shouldPlayFilm({ tabHidden: false, heroOnScreen: false }), false);
   assert.equal(shouldPlayFilm({ tabHidden: true, heroOnScreen: true }), false);
-  const hero = readFileSync("src/components/home/Hero.tsx", "utf8");
+  // v12 hero is a CSS line drawing; HeroPause applies the same rule by toggling .is-off.
+  const hero = readFileSync("src/components/tv/client/HeroBits.tsx", "utf8");
   assert.match(hero, /shouldPlayFilm/);
   assert.match(hero, /heroOnScreen: onScreen/);
-  assert.equal(hero.includes("Pause video"), false);
-  assert.equal(hero.includes("Play video"), false);
+  assert.match(readFileSync("src/app/globals.css", "utf8"), /\.hero\.is-off \*, \.hero\.is-off \{ animation-play-state: paused !important; \}/);
+  for (const file of ["src/components/tv/Hero.tsx", "src/components/tv/client/HeroBits.tsx"]) {
+    const source = readFileSync(file, "utf8");
+    assert.equal(source.includes("Pause video"), false);
+    assert.equal(source.includes("Play video"), false);
+  }
 });

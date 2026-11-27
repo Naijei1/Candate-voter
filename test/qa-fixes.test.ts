@@ -62,8 +62,9 @@ test("news and finance can be cached, and unknown routes are real 404s", () => {
   const middleware = readFileSync("src/middleware.ts", "utf8");
   assert.match(middleware, /pathname = "\/news"/);
   assert.match(middleware, /hash = "map"/);
-  assert.match(readFileSync("src/components/guide/GuideFlow.tsx", "utf8"), /ballot-step/);
-  assert.match(readFileSync("src/app/races/[raceId]/compare/page.tsx", "utf8"), /write-in" \? null/);
+  // v12: the county guide replaces the stepped GuideFlow; write-ins are labeled in the shared person view.
+  assert.match(readFileSync("src/components/tv/client/Guide.tsx", "utf8"), /Pick the one on your voter card/);
+  assert.match(readFileSync("src/lib/tv/people.ts", "utf8"), /person\.role === "write-in" \? "Write-in" : person\.party/);
 });
 
 test("Ask answers the six ballot questions from stored Kentucky records", async () => {

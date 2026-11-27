@@ -22,7 +22,7 @@ test("data refreshed banner uses the index timestamp and stays quiet when it is 
     "",
   );
 
-  const page = readFileSync(new URL("../src/app/states/ky/page.tsx", import.meta.url), "utf8");
+  const page = readFileSync(new URL("../src/app/states/[state]/page.tsx", import.meta.url), "utf8");
   const read = readFileSync(new URL("../src/lib/data/read.ts", import.meta.url), "utf8");
   assert.doesNotMatch(page, /DataRefreshedBanner/);
   assert.match(read, /const \[groups, refreshedAt\] = await Promise\.all\(\[[^]*?readIndexRefreshedAt\(\)/);
@@ -46,8 +46,9 @@ test("multi-id notes collapse behind the filing count and keep the existing copy
   assert.match(html, /S6CA01111/);
   assert.equal(html.includes("ranking"), false);
 
+  // v12 race pages list November candidates from the ballot snapshot, one filing each; the multi-id note is not shown there.
   const race = readFileSync(new URL("../src/app/races/[raceId]/page.tsx", import.meta.url), "utf8");
-  assert.match(race, /alternateFilings\.length \+ 1/);
+  assert.equal(race.includes("multiFilingNote"), false);
   assert.equal(race.includes("<p className=\"mt-1 text-sm leading-6 text-muted\">{candidate.multiFilingNote}</p>"), false);
 });
 

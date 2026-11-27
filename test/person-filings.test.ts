@@ -68,16 +68,19 @@ test("federal general election labels and district hover styles stay in sync wit
   assert.equal(generalElectionLabel(2028), "November 7, 2028");
 
   const css = readFileSync(new URL("../src/app/globals.css", import.meta.url), "utf8");
-  assert.match(css, /\.cd-map \.cd-district\.has-data:hover[\s\S]*?fill:\s*var\(--color-map-hover\)/);
-  assert.match(css, /\.cd-map \.cd-district:hover,\s*\.cd-map \.cd-district:focus-visible\s*\{[^}]*fill:\s*var\(--color-map\)/);
+  // v12 district map: hover and keyboard focus share one fill; the selected district keeps the dark fill.
+  assert.match(css, /\.kymap a:hover \.d, \.kymap a:focus-visible \.d \{ fill: var\(--map-hover\); \}/);
+  assert.match(css, /\.kymap \.d\.on, \.kymap a:nth-of-type\(2n\) \.d\.on \{ fill: var\(--map-on\); \}/);
 });
 
 test("both district path variants expose filing status in their accessible names", () => {
-  const map = readFileSync(new URL("../src/components/DistrictMap.tsx", import.meta.url), "utf8");
-  assert.match(map, /accessibleName = `\$\{label\}, \$\{has \? "filings on file" : "no filings on file"\}`/);
-  assert.match(map, /role="link"\s+tabIndex=\{0\}\s+aria-label=\{accessibleName\}/);
-  assert.match(map, /role="img" aria-label=\{accessibleName\}/);
-  assert.match(map, /onMouseEnter=\{\(\) => setHover\(label\)\}/);
+  // v12: each district is one link named with its candidate count; labels are hidden from assistive tech.
+  const map = readFileSync(new URL("../src/components/tv/client/Maps.tsx", import.meta.url), "utf8");
+  const page = readFileSync(new URL("../src/app/states/[state]/page.tsx", import.meta.url), "utf8");
+  assert.match(map, /aria-label=\{district\.label\}/);
+  assert.match(map, /aria-current=\{active === district\.code \? "true" : undefined\}/);
+  assert.match(map, /<g aria-hidden="true">/);
+  assert.match(page, /label: `House District \$\{district\.number\}, \$\{candidateCount\(/);
 });
 
 function filing(filingId: string, imageNumber: string): Filing {
