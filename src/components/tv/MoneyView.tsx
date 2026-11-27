@@ -34,13 +34,7 @@ export function MoneyView({ person }: { person: PersonView & { funding: FundingB
 
   return (
     <div className="wrap">
-      <Crumbs
-        items={[
-          { href: "/", label: "Home" },
-          { href: "/finance", label: "Campaign Finance" },
-          { label: committee?.name ?? person.name },
-        ]}
-      />
+      <Crumbs items={[{ href: "/", label: "Home" }, { href: "/finance", label: "Campaign Finance" }, { label: committee?.name ?? person.name }]} />
       <YoursContext />
       <h1 className="t-h1 pt">Where {person.name}’s money comes from</h1>
 
@@ -106,7 +100,7 @@ export function MoneyView({ person }: { person: PersonView & { funding: FundingB
           {gifts ? (
             <section className="sec" aria-labelledby="h-pac">
               <SectionHead id="h-pac" title={`Committee gifts, ${periodLong(gifts.start, gifts.end)} report`} />
-              <div className="tscroll">
+              <div className="tscroll" role="region" aria-labelledby="h-pac" tabIndex={0}>
                 <table className="tbl">
                   <caption className="sr">Committee gifts</caption>
                   <thead>

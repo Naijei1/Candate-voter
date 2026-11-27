@@ -129,7 +129,12 @@ function Background({ person }: { person: PersonView }) {
               <span key={index}>
                 {index > 0 ? <br /> : null}
                 <span className="cs-t">Campaign says:</span> {part.text}
-                {part.muted ? <> <span className="muted">{part.muted}</span></> : null}
+                {part.muted ? (
+                  <>
+                    {" "}
+                    <span className="muted">{part.muted}</span>
+                  </>
+                ) : null}
               </span>
             ))}
           </p>
@@ -155,7 +160,12 @@ function Background({ person }: { person: PersonView }) {
             <span key={index}>
               {index > 0 ? <br /> : null}
               {part.text}
-              {part.muted ? <> <span className="muted">{part.muted}</span></> : null}
+              {part.muted ? (
+                <>
+                  {" "}
+                  <span className="muted">{part.muted}</span>
+                </>
+              ) : null}
             </span>
           ))}
         </p>
@@ -232,14 +242,7 @@ export default async function ComparePage({ params, searchParams }: PageProps) {
 
   return (
     <div className="wrap cmp">
-      <Crumbs
-        items={[
-          { href: "/", label: "Home" },
-          { href: statePath(state), label: state.name },
-          { href: `/races/${race.raceId}`, label: race.title },
-          { label: "Compare" },
-        ]}
-      />
+      <Crumbs items={[{ href: "/", label: "Home" }, { href: statePath(state), label: state.name }, { href: `/races/${race.raceId}`, label: race.title }, { label: "Compare" }]} />
       <h1 className="t-h1 pt">
         {lastName(a.name)} and {lastName(b.name)}
       </h1>
@@ -290,12 +293,7 @@ export default async function ComparePage({ params, searchParams }: PageProps) {
       {both.length + onlyA.length + onlyB.length > 0 ? (
         <Block id="c-issues" title="Issues">
           {both.map((row) => (
-            <Row
-              key={row.issue.id}
-              label={row.issue.label}
-              pair={pair}
-              cell={(person) => <StanceCell person={person} issue={row.issue.label} stance={(person.id === a.id ? row.a : row.b)!} />}
-            />
+            <Row key={row.issue.id} label={row.issue.label} pair={pair} cell={(person) => <StanceCell person={person} issue={row.issue.label} stance={(person.id === a.id ? row.a : row.b)!} />} />
           ))}
           {(
             [
@@ -392,7 +390,7 @@ export default async function ComparePage({ params, searchParams }: PageProps) {
       </div>
       <p className="page-f">
         {funded.map((person) => (
-          <Link key={person.id} className="btn primary" href={`/finance/candidates/${person.id}`} aria-label={`Where the money comes from: ${lastName(person.name)}`}>
+          <Link key={person.id} className="btn primary" href={`/finance/candidates/${person.id}`}>
             <Icon name="money" size="sm" />
             See who funds {lastName(person.name)}
           </Link>

@@ -91,7 +91,7 @@ test("money splits receipts into four labeled parts, in a fixed order, without c
 test("outside links open in a new tab with noopener and spoken new-tab text", () => {
   // The app compiles JSX with the automatic runtime; tsx here uses the classic one.
   (globalThis as { React?: typeof React }).React = React;
-  const html = renderToStaticMarkup(React.createElement(ExtLink, { href: "https://www.fec.gov/" }, "FEC"));
+  const html = renderToStaticMarkup(React.createElement(ExtLink, { href: "https://www.fec.gov/", children: "FEC" }));
   assert.match(html, /target="_blank"/);
   assert.match(html, /rel="noopener noreferrer"/);
   assert.match(html, /<span class="sr"> \(opens in new tab\)<\/span>/);

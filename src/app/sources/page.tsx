@@ -118,7 +118,7 @@ export default async function SourcesPage() {
             </h2>
           </div>
         </div>
-        <div className="tscroll">
+        <div className="tscroll" role="region" aria-labelledby="h-cov" tabIndex={0}>
           <table className="tbl">
             <thead>
               <tr>
@@ -210,7 +210,7 @@ export default async function SourcesPage() {
               </h2>
             </div>
           </div>
-          <div className="tscroll">
+          <div className="tscroll" role="region" aria-labelledby="h-med" tabIndex={0}>
             <table className="tbl">
               <thead>
                 <tr>

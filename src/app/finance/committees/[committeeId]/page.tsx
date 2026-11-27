@@ -64,13 +64,7 @@ export default async function CommitteePage({ params }: PageProps) {
 
   return (
     <div className="wrap">
-      <Crumbs
-        items={[
-          { href: "/", label: "Home" },
-          { href: "/finance", label: "Campaign Finance" },
-          { label: pac.name },
-        ]}
-      />
+      <Crumbs items={[{ href: "/", label: "Home" }, { href: "/finance", label: "Campaign Finance" }, { label: pac.name }]} />
       <h1 className="t-h1 pt">{pac.name}</h1>
       <p className="lede">A committee that gave to Kentucky campaigns.</p>
       <div className="headfig">
@@ -100,7 +94,7 @@ export default async function CommitteePage({ params }: PageProps) {
 
       <section className="sec" aria-labelledby="h-g">
         <SectionHead id="h-g" title="Gifts to Kentucky campaigns" />
-        <div className="tscroll">
+        <div className="tscroll" role="region" aria-labelledby="h-g" tabIndex={0}>
           <table className="tbl">
             <thead>
               <tr>
@@ -147,7 +141,7 @@ export default async function CommitteePage({ params }: PageProps) {
       {outside.length > 0 ? (
         <section className="sec" aria-labelledby="h-ie">
           <SectionHead id="h-ie" title="Outside spending in Kentucky" />
-          <div className="tscroll">
+          <div className="tscroll" role="region" aria-labelledby="h-ie" tabIndex={0}>
             <table className="tbl">
               <thead>
                 <tr>

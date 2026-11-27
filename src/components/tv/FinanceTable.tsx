@@ -23,7 +23,7 @@ export function FundingLegend() {
 /** Raised, spent, cash and the funding bar for each campaign in a race. */
 export function FinanceTable({ people }: { people: PersonView[] }) {
   return (
-    <div className="tscroll">
+    <div className="tscroll" role="region" aria-label="Campaign money by candidate" tabIndex={0}>
       <table className="tbl fin-tbl">
         <caption className="sr">Money reported by each campaign</caption>
         <thead>
@@ -64,9 +64,9 @@ export function FinanceTable({ people }: { people: PersonView[] }) {
                     </td>
                     <td className="fcell">{(row.receipts ?? 0) > 0 ? <FundingBar name={person.name} row={row} compact /> : <span className="none">$0 raised</span>}</td>
                     <td className="gv">
-                      <Link className="btn outline sm" href={`/finance/candidates/${person.id}`} aria-label={`Where the money comes from: ${lastName(person.name)}`}>
+                      <Link className="btn outline sm" href={`/finance/candidates/${person.id}`}>
                         <Icon name="money" size="sm" />
-                        Who gave
+                        Who gave<span className="sr"> to {person.name}</span>
                       </Link>
                     </td>
                   </>

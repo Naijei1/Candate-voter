@@ -17,7 +17,7 @@ function shortTitle(title: string): string {
 
 function VoteTable({ votes }: { votes: readonly ProfileVote[] }) {
   return (
-    <div className="tscroll">
+    <div className="tscroll" role="region" aria-label="House votes" tabIndex={0}>
       <table className="tbl">
         <thead>
           <tr>
