@@ -1,0 +1,30 @@
+{
+ "note": "Corrections applied over data/ky-profiles.json. Each entry replaces the named fields of one record.",
+ "candidates": {
+  "H6KY06192": {
+   "career": {
+    "1": {
+     "text": "Served in the Kentucky Senate, District 28",
+     "startYear": 2015,
+     "endYear": 2023,
+     "sourceName": "Ballotpedia, Ralph Alvarado",
+     "sourceUrl": "https://ballotpedia.org/Ralph_Alvarado",
+     "secondarySourceName": "Kentucky Senate, 2015 membership resolution (SR 1)",
+     "secondarySourceUrl": "https://apps.legislature.ky.gov/record/15RS/sr1/bill.pdf",
+     "sourceDate": "2026-11-27"
+    }
+   }
+  },
+  "S6KY00385": {
+   "career": {
+    "1": { "endYear": 2021 }
+   }
+  },
+  "S6KY00286": {
+   "bio": {
+    "sourceName": "Office of the Clerk, U.S. House member page",
+    "sourceUrl": "https://clerk.house.gov/members/B001282"
+   }
+  }
+ }
+}

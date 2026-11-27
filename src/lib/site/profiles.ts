@@ -1,3 +1,4 @@
+import overrides from "../../../data/ky-profile-overrides.json";
 import data from "../../../data/ky-profiles.json";
 
 export type ProfileLink = {
@@ -15,7 +16,12 @@ export type ProfileSource = {
 };
 
 export type ProfileNote = ProfileSource & { text: string };
-export type CareerEntry = ProfileNote & { startYear: number; endYear?: number };
+export type CareerEntry = ProfileNote & {
+  startYear: number;
+  endYear?: number;
+  secondarySourceName?: string;
+  secondarySourceUrl?: string;
+};
 export type PriorResult = ProfileSource & {
   year: number;
   office: string;
@@ -55,8 +61,31 @@ const byId = data.candidates as Record<string, Partial<KyProfile>>;
 
 export const profileVoteSelection = { rule: data.voteSelection, checkedOn: data.checkedOn };
 
+type Override = Partial<Record<keyof KyProfile, Record<string, unknown>>>;
+const corrections = overrides.candidates as Record<string, Override>;
+
+function corrected(candidateId: string, profile: KyProfile): KyProfile {
+  const fixes = corrections[candidateId];
+  if (!fixes) return profile;
+  const next: Record<string, unknown> = { ...profile };
+  for (const [field, patch] of Object.entries(fixes)) {
+    const current = next[field];
+    if (Array.isArray(current)) {
+      const rows = [...current];
+      for (const [index, value] of Object.entries(patch ?? {})) {
+        const at = Number(index);
+        if (rows[at]) rows[at] = { ...rows[at], ...(value as object) };
+      }
+      next[field] = rows;
+    } else if (current && typeof current === "object") {
+      next[field] = { ...current, ...patch };
+    }
+  }
+  return next as KyProfile;
+}
+
 export function profileFor(candidateId: string): KyProfile {
-  return { ...empty, ...byId[candidateId] };
+  return corrected(candidateId, { ...empty, ...byId[candidateId] });
 }
 
 /** Latest source date among the records a profile shows. Not the election day. */
