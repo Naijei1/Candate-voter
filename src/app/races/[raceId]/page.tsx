@@ -9,13 +9,12 @@ import { Tabs } from "@/components/tv/client/Tabs";
 import { YoursContext } from "@/components/tv/client/Yours";
 import { Crumbs, Empty, Face, PartyTag } from "@/components/tv/bits";
 import { ExtLink } from "@/components/tv/ExtLink";
-import { FundingBar } from "@/components/tv/Funding";
+import { FinanceTable, FundingLegend } from "@/components/tv/FinanceTable";
 import { Icon } from "@/components/tv/Icon";
 import { NewsList } from "@/components/tv/NewsList";
 import { VoteRecord } from "@/components/tv/Votes";
 import { WonTag } from "@/components/tv/Won";
-import { FUNDING_PARTS } from "@/lib/finance/breakdown";
-import { formatMoney, shortMoney } from "@/lib/finance/model";
+import { formatMoney } from "@/lib/finance/model";
 import { dayLabel } from "@/lib/format";
 import { KY_BALLOT_SOURCES } from "@/lib/site/ky-ballot";
 import { profileFor } from "@/lib/site/profiles";
@@ -102,7 +101,15 @@ function Overview({ race }: { race: RaceView }) {
   const rows = ["Party", "Filed to run", "Ballot", "Campaign website", "Background"];
   return (
     <>
-      <div className="sbs" style={{ "--n": race.people.length, "--k": rows.length + 1 } as React.CSSProperties}>
+      <div
+        className="sbs"
+        style={
+          {
+            "--n": race.people.length,
+            "--k": rows.length + 1,
+          } as React.CSSProperties
+        }
+      >
         <div className="sbs-lab" aria-hidden="true">
           <div className="sbs-h" />
           {rows.map((row) => (
@@ -154,7 +161,12 @@ function Overview({ race }: { race: RaceView }) {
                   <span key={index}>
                     {index > 0 ? <br /> : null}
                     {part.says ? <span className="cs-t">Campaign says:</span> : null} {part.text}
-                    {part.muted ? <> <span className="muted">{part.muted}</span></> : null}
+                    {part.muted ? (
+                      <>
+                        {" "}
+                        <span className="muted">{part.muted}</span>
+                      </>
+                    ) : null}
                   </span>
                 ))}
               </div>
@@ -179,7 +191,15 @@ function Overview({ race }: { race: RaceView }) {
 function Issues({ race }: { race: RaceView }) {
   const issues = stanceIssues();
   return (
-    <div className="sbs wide" style={{ "--n": race.people.length, "--k": issues.length + 1 } as React.CSSProperties}>
+    <div
+      className="sbs wide"
+      style={
+        {
+          "--n": race.people.length,
+          "--k": issues.length + 1,
+        } as React.CSSProperties
+      }
+    >
       <div className="sbs-lab" aria-hidden="true">
         <div className="sbs-h" />
         {issues.map((issue) => (
@@ -274,72 +294,8 @@ function Finance({ race }: { race: RaceView }) {
   return (
     <>
       <h3 className="sub-h">Money reported</h3>
-      <ul className="fleg" aria-label="Bar key">
-        {FUNDING_PARTS.map((part) => (
-          <li key={part.key}>
-            <i className={`fsw ${part.className}`} aria-hidden="true" />
-            {part.label}
-          </li>
-        ))}
-      </ul>
-      <div className="tscroll">
-        <table className="tbl fin-tbl">
-          <caption className="sr">Money reported by each campaign</caption>
-          <thead>
-            <tr>
-              <th scope="col">Candidate</th>
-              <th scope="col" className="r">
-                Raised
-              </th>
-              <th scope="col" className="r">
-                Spent
-              </th>
-              <th scope="col" className="r">
-                Cash
-              </th>
-              <th scope="col">Where it came from</th>
-              <th scope="col">Who gave</th>
-            </tr>
-          </thead>
-          <tbody>
-            {race.people.map((person) => {
-              const row = person.funding;
-              const ok = row?.status === "ok" && row.receipts != null;
-              return (
-                <tr key={person.id}>
-                  <th scope="row">
-                    <PartyTag party={person.party} size="sm" /> <Link href={`/candidates/${person.id}`}>{person.name}</Link>
-                  </th>
-                  {ok && row ? (
-                    <>
-                      <td className="r num" data-l="Raised">
-                        <span title={formatMoney(Math.round(row.receipts ?? 0)).replace(/\.00$/, "")}>{shortMoney(row.receipts ?? 0)}</span>
-                      </td>
-                      <td className="r num" data-l="Spent">
-                        <span title={formatMoney(Math.round(row.disbursements ?? 0)).replace(/\.00$/, "")}>{shortMoney(row.disbursements ?? 0)}</span>
-                      </td>
-                      <td className="r num" data-l="Cash">
-                        <span title={formatMoney(Math.round(row.cash ?? 0)).replace(/\.00$/, "")}>{shortMoney(row.cash ?? 0)}</span>
-                      </td>
-                      <td className="fcell">{(row.receipts ?? 0) > 0 ? <FundingBar name={person.name} row={row} compact /> : <span className="none">$0 raised</span>}</td>
-                      <td className="gv">
-                        <Link className="btn outline sm" href={`/finance/candidates/${person.id}`} aria-label={`Where the money comes from: ${lastName(person.name)}`}>
-                          <Icon name="money" size="sm" />
-                          Who gave
-                        </Link>
-                      </td>
-                    </>
-                  ) : (
-                    <td colSpan={5}>
-                      <span className="none">No FEC totals reported for this campaign.</span>
-                    </td>
-                  )}
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+      <FundingLegend />
+      <FinanceTable people={race.people} />
       <p className="src">
         Source:{" "}
         <ExtLink className="xl" href={KY_BALLOT_SOURCES[2].url} icon>
@@ -435,7 +391,11 @@ export default async function RacePage({ params }: PageProps) {
         </Empty>
       ),
     },
-    { id: "finance", label: "Campaign finance", panel: <Finance race={race} /> },
+    {
+      id: "finance",
+      label: "Campaign finance",
+      panel: <Finance race={race} />,
+    },
     {
       id: "updates",
       label: "Updates",
@@ -469,13 +429,7 @@ export default async function RacePage({ params }: PageProps) {
 
   return (
     <div className="wrap">
-      <Crumbs
-        items={[
-          { href: "/", label: "Home" },
-          { href: statePath(state), label: state.name },
-          { label: race.title },
-        ]}
-      />
+      <Crumbs items={[{ href: "/", label: "Home" }, { href: statePath(state), label: state.name }, { label: race.title }]} />
       <YoursContext />
       <div className="rhead">
         <div>
