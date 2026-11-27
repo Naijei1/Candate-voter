@@ -1,38 +1,54 @@
-import { DatasetUpdated } from "@/components/site/DatasetUpdated";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CandidateDirectory } from "@/components/site/CandidateDirectory";
-import { candidateCards, primaryCandidateCards, raceCardTitle } from "@/lib/site/candidate-cards";
-import { KY_FEDERAL_RACES, primaryResults } from "@/lib/site/certified-results";
-import { KY_BALLOT_CHECKED, KY_BALLOT_SOURCES, kyBallot } from "@/lib/site/ky-ballot";
-import { KY_CONGRESSIONAL_ROSTER_SOURCE } from "@/lib/site/ky-officeholders";
+import { Crumbs } from "@/components/tv/bits";
+import { ExtLink } from "@/components/tv/ExtLink";
+import { Icon } from "@/components/tv/Icon";
+import { RaceCards } from "@/components/tv/RaceCard";
+import { KY_BALLOT_SOURCES } from "@/lib/site/ky-ballot";
+import { stateConfig } from "@/lib/states";
+import { allRaces } from "@/lib/tv/people";
 
 export const metadata: Metadata = { alternates: { canonical: "/candidates" }, title: "Candidates" };
 export const revalidate = 3600;
 
 export default function CandidatesPage() {
-  const general = KY_FEDERAL_RACES.map((id) => ({
-    id,
-    title: raceCardTitle(id),
-    note: kyBallot(id)?.note,
-    groups: [{ people: candidateCards(id) }],
-  }));
-  const primary = KY_FEDERAL_RACES.flatMap((id) => {
-    const groups = primaryCandidateCards(id);
-    return groups.length ? [{ id, title: raceCardTitle(id), groups }] : [];
-  });
-  const primarySources = Array.from(new Set(KY_FEDERAL_RACES.flatMap((id) => primaryResults(id).map((result) => result.sourceUrl))));
+  const state = stateConfig();
+  const races = allRaces(state);
   return (
-    <article className="wrap">
-      <h1>Candidates</h1>
-      <DatasetUpdated date={KY_BALLOT_CHECKED} />
-      <p className="lede">Kentucky’s U.S. Senate and House candidates.</p>
-      <CandidateDirectory general={general} primary={primary} generalSources={KY_BALLOT_SOURCES.slice(0, 2)} primarySources={primarySources} />
-      <p className="hint"><a href={KY_CONGRESSIONAL_ROSTER_SOURCE}>Congress Legislators roster</a></p>
-      <div className="actions">
-        <Link className="action-link" href="/officeholders">Officeholders</Link>
-        <Link className="action-link" href="/?map=statewide#map">Statewide officeholders</Link>
-      </div>
-    </article>
+    <div className="wrap">
+      <Crumbs items={[{ href: "/", label: "Home" }, { label: "Candidates" }]} />
+      <h1 className="t-h1 pt">Candidates</h1>
+      <p className="lede">
+        Everyone on {state.name}’s {state.cycle} U.S. Senate and House ballots.
+      </p>
+      {races.map((race) => (
+        <section className="sec" key={race.raceId} aria-labelledby={`h-${race.raceId}`}>
+          <div className="sec-head">
+            <div>
+              <h2 id={`h-${race.raceId}`} className="sec-t">
+                {race.title}
+              </h2>
+              {race.subtitle ? <p className="sec-sub">{race.subtitle}</p> : null}
+            </div>
+            <Link className="viewall" href={`/races/${race.raceId}`}>
+              View race
+              <Icon name="right" size="sm" />
+            </Link>
+          </div>
+          <RaceCards race={race} />
+        </section>
+      ))}
+      <p className="src">
+        Source:{" "}
+        {KY_BALLOT_SOURCES.slice(0, 2).map((source, index) => (
+          <span key={source.url}>
+            {index ? "; " : ""}
+            <ExtLink className="xl" href={source.url} icon>
+              {source.name}
+            </ExtLink>
+          </span>
+        ))}
+      </p>
+    </div>
   );
 }

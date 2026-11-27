@@ -2,7 +2,7 @@
 
 export type IndexEntry = {
   /** Group heading. */
-  g: "Pages" | "Races" | "Candidates";
+  g: "Pages" | "Races" | "Candidates" | "Committees";
   /** Title. */
   t: string;
   /** Short context line. */

@@ -5,6 +5,7 @@ import { GoatCounter } from "@/components/site/GoatCounter";
 import { MobileNavigation } from "@/components/site/MobileNavigation";
 import { ServiceWorker } from "@/components/site/ServiceWorker";
 import { SiteFooter, SiteHeader } from "@/components/tv/Chrome";
+import { OfflineNotice } from "@/components/tv/client/Offline";
 import { THEME_SCRIPT } from "@/components/tv/client/ThemeToggle";
 import { brand } from "@/content/brand";
 import { withBasePath } from "@/lib/base-path";
@@ -82,6 +83,7 @@ export default function RootLayout({
         </a>
         <SiteHeader />
         <main id="main" tabIndex={-1}>
+          <OfflineNotice />
           {children}
         </main>
         <SiteFooter />

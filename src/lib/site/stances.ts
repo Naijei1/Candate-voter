@@ -54,3 +54,10 @@ export function photoAttribution(photo: PhotoRow | null): string | null {
 export function creativeCommonsPortraits() {
   return Object.entries(portraits).filter(([, photo]) => photo.license.startsWith("CC"));
 }
+
+export const PHOTOS_CHECKED: string = photos.checkedOn;
+
+/** Every stored candidate portrait, keyed by candidate id. */
+export function allPortraits(): Array<[string, PhotoRow]> {
+  return Object.entries(portraits);
+}
