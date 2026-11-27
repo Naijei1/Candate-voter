@@ -2,9 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Icon } from "../Icon";
-
-const LIGHT_BAR = "#FFFFFF";
-const DARK_BAR = "#0B1628";
+import { DARK_BAR, LIGHT_BAR } from "../theme-script";
 
 function current(): "light" | "dark" {
   return document.documentElement.dataset.theme === "dark" ? "dark" : "light";
@@ -47,6 +45,3 @@ export function ThemeToggle() {
     </button>
   );
 }
-
-/** Runs before paint so the first frame uses the saved or system theme. */
-export const THEME_SCRIPT = `(function(){try{var q=new URLSearchParams(location.search).get('theme');if(q==='dark'||q==='light'){localStorage.setItem('tv-theme',q)}var t=q||localStorage.getItem('tv-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.dataset.theme=t;var m=document.querySelectorAll('meta[name="theme-color"]');for(var i=0;i<m.length;i++){m[i].content=t==='dark'?'${DARK_BAR}':'${LIGHT_BAR}';m[i].removeAttribute('media')}}catch(e){}})();`;

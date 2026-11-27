@@ -6,7 +6,7 @@ import { MobileNavigation } from "@/components/site/MobileNavigation";
 import { ServiceWorker } from "@/components/site/ServiceWorker";
 import { SiteFooter, SiteHeader } from "@/components/tv/Chrome";
 import { OfflineNotice } from "@/components/tv/client/Offline";
-import { THEME_SCRIPT } from "@/components/tv/client/ThemeToggle";
+import { THEME_SCRIPT } from "@/components/tv/theme-script";
 import { brand } from "@/content/brand";
 import { withBasePath } from "@/lib/base-path";
 import { PRODUCTION_ORIGIN } from "@/lib/api/public-origin";
