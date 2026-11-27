@@ -8,7 +8,7 @@ import { ReportButton } from "@/components/tv/client/Report";
 import { YoursContext } from "@/components/tv/client/Yours";
 import { Crumbs, Face, PartyTag } from "@/components/tv/bits";
 import { ExtLink } from "@/components/tv/ExtLink";
-import { FundingBar, FundingKey } from "@/components/tv/Funding";
+import { FundingBar, fundingCoverage, FundingKey } from "@/components/tv/Funding";
 import { Icon } from "@/components/tv/Icon";
 import { WonTag } from "@/components/tv/Won";
 import { formatMoney, shortMoney } from "@/lib/finance/model";
@@ -367,6 +367,19 @@ export default async function ComparePage({ params, searchParams }: PageProps) {
                 ) : null
               }
             />
+            <Row
+              label="Source"
+              pair={pair}
+              cell={(person) =>
+                person.funding ? (
+                  <p className="fnote">
+                    <ExtLink className="xl" href={person.funding.sourceUrl} icon>
+                      {person.funding.status === "ok" ? fundingCoverage(person.funding) : "FEC committee page"}
+                    </ExtLink>
+                  </p>
+                ) : null
+              }
+            />
           </>
         )}
         <Row
@@ -382,6 +395,11 @@ export default async function ComparePage({ params, searchParams }: PageProps) {
                 </p>
                 <p className="outl">
                   Outside groups against {person.name}: <b className="num">{formatMoney(Math.round(outside.oppose)).replace(/\.00$/, "")}</b>
+                </p>
+                <p className="fnote">
+                  <ExtLink className="xl" href={outside.sourceUrl} icon>
+                    FEC independent expenditures
+                  </ExtLink>
                 </p>
               </>
             );
