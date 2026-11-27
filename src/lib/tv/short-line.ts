@@ -27,6 +27,11 @@ const BOUNDARY = /(;\s+|,\s+(?:and that|and|but|or|which|with|while|so)\s+|,\s+|
 const ITEM = "(?!(?:including|especially|not|such|and|or)\\b)[\\w'’$-]+(?:\\s+[\\w'’$-]+){0,2}";
 const MIDDLE = "(?!(?!housing|spending|funding|building|training)[a-z]+ing\\b)" + ITEM;
 const SERIES = new RegExp(`\\b${ITEM},\\s+(?:${MIDDLE},\\s+)+(?:and|or)\\s+(?!that\\b)[\\w'’$-]+`, "g");
+const VERB = "(?:is|are|was|were|will|would|has|have|had|remains?|should|must|can|could|may|might)\\b";
+/** A main verb right after the cut means the head is only the subject. */
+const PREDICATE = new RegExp(`^${VERB}`, "i");
+/** "the cost of living, especially fuel prices, is a priority": the aside closes and the main verb follows. */
+const APPOSITIVE = new RegExp(`^(?:especially|including|particularly|notably|such as|like|which|who|whose)\\b[^;]*?,\\s+${VERB}`, "i");
 /** Words a complete clause cannot end on. */
 const DANGLING = /\b(?:the|a|an|of|to|for|in|on|at|by|with|and|or|but|his|her|their|its|our|that|this|these|those|more|most|very)$/i;
 
@@ -78,10 +83,13 @@ export function shortLine(text: string): ShortLine {
       if (isComma) aside = false;
       continue;
     }
-    if (isComma && /^not\s/i.test(first.slice(match.index + match[0].length))) {
+    const rest = first.slice(match.index + match[0].length);
+    if (isComma && /^not\s/i.test(rest)) {
       aside = true;
       continue;
     }
+    const tail = first.slice(match.index).replace(/^[,;]?\s+/, "");
+    if (PREDICATE.test(rest) || (isComma && APPOSITIVE.test(tail))) continue;
     if (words(head) < MIN_WORDS || DANGLING.test(head)) continue;
     cuts.push(head.replace(/[,;:]$/, ""));
   }
