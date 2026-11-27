@@ -91,7 +91,7 @@ test("money splits receipts into four labeled parts, in a fixed order, without c
 test("outside links open in a new tab with noopener and spoken new-tab text", () => {
   // The app compiles JSX with the automatic runtime; tsx here uses the classic one.
   (globalThis as { React?: typeof React }).React = React;
-  const html = renderToStaticMarkup(React.createElement(ExtLink, { href: "https://www.fec.gov/", children: "FEC" }));
+  const html = renderToStaticMarkup(ExtLink({ href: "https://www.fec.gov/", children: "FEC" }));
   assert.match(html, /target="_blank"/);
   assert.match(html, /rel="noopener noreferrer"/);
   assert.match(html, /<span class="sr"> \(opens in new tab\)<\/span>/);
@@ -140,4 +140,53 @@ test("Ask answers from the site's records and declines to pick a candidate", () 
   assert.doesNotMatch(advice.lead.join(" "), /you should vote for/i);
   const none = answerQuestion("What is the capital of France?");
   assert.equal(none.found, false);
+});
+
+test("compare cuts never split a subject from its main verb", () => {
+  const stored = "Says bringing down the cost of living, especially fuel prices, is a Senate priority.";
+  assert.equal(shortLine(stored).short, "Says bringing down the cost of living, especially fuel prices, is a Senate priority");
+  const longer = "Says bringing down the cost of living, especially fuel prices and grocery bills, is a Senate priority for him this year.";
+  assert.match(shortLine(longer).short, /is a Senate priority/);
+  const relative = shortLine("Says the farm bill, which lapsed last fall, should be passed before any new spending is approved by Congress this year.");
+  assert.match(relative.short, /should be passed$/);
+  const trailing = shortLine("Says her first priority is lowering costs, including support for small business and manufacturing, and protecting Medicare for every senior.");
+  assert.equal(trailing.short, "Says her first priority is lowering costs");
+});
+
+test("Ask prefers full names, asks which candidate for a shared surname, and puts specific topics first", () => {
+  const peter = allPeople().find((person) => person.name === "Peter Harmon Williams");
+  assert.ok(peter);
+  const full = answerQuestion("How much has Peter Harmon Williams raised?");
+  assert.equal(full.bars, undefined);
+  assert.match(full.lead[0], /^Peter Harmon Williams /);
+  const shared = answerQuestion("How much has Williams raised?");
+  assert.equal(shared.found, false);
+  assert.match(shared.lead[0], /2 candidates are named Williams/);
+  assert.equal(shared.next.length, 2);
+  const health = answerQuestion("Where does Booker stand on health care costs?");
+  assert.match(health.lead[0], /on health care/i);
+  const cost = answerQuestion("Where does Booker stand on the cost of living?");
+  assert.match(cost.lead[0], /on cost of living/i);
+});
+
+test('the server layout reads the theme script from a module without "use client"', () => {
+  const layout = readFileSync("src/app/layout.tsx", "utf8");
+  const from = layout.match(/import \{ THEME_SCRIPT \} from "@\/(.+?)";/)?.[1];
+  assert.ok(from);
+  const source = readFileSync(`src/${from}.ts`, "utf8");
+  assert.doesNotMatch(source, /^["']use client["']/m);
+});
+
+test("raw form actions and requests keep the configured base path", () => {
+  const files = ["src/components/tv", "src/app"].flatMap((dir) =>
+    readdirSync(dir, { recursive: true, encoding: "utf8" })
+      .filter((file) => /\.tsx?$/.test(file) && !file.startsWith("api"))
+      .map((file) => join(dir, file)),
+  );
+  for (const file of files) {
+    const source = readFileSync(file, "utf8");
+    assert.doesNotMatch(source, /action="\/|fetch\("\//, file);
+  }
+  const css = readFileSync("src/app/globals.css", "utf8");
+  assert.match(css, /\.pt:has\(~ \.pmore\[open\]\)/);
 });
