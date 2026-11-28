@@ -98,6 +98,15 @@ export function answerQuestion(raw: string): AskAnswer {
   const county = [...counties].sort((a, b) => b.name.length - a.name.length).find((row) => new RegExp(`\\b${escapeRegExp(row.name.toLowerCase())}\\s+county\\b`).test(q));
   const issueId = ISSUE_WORDS.find(([, words]) => words.test(q))?.[0];
 
+  if (/where (do|can|should|will) i vote|where to vote|polling (place|location)|precinct|voting location|register to vote|am i registered/.test(q)) {
+    return {
+      found: false,
+      lead: [`Look up where you vote on the ${state.voterInfo.label}.`, `The state of ${state.name} runs it.`],
+      sources: [{ label: state.voterInfo.label, url: state.voterInfo.href }],
+      next: [{ label: "My races", href: "/ballot" }],
+    };
+  }
+
   if (shared.length > 0) {
     const surname = lastName(shared[0].person.name);
     return {
@@ -167,7 +176,7 @@ export function answerQuestion(raw: string): AskAnswer {
       found: false,
       lead: ["No qualifying polls are available", `for ${state.name}’s ${state.cycle} federal races, so we can’t say who is ahead.`],
       sources: [],
-      next: [{ label: "How polls are listed", href: "/polls" }],
+      next: [{ label: "My races", href: "/ballot" }],
     };
   }
 

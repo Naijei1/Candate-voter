@@ -136,6 +136,17 @@ const DAY_FORMAT = new Intl.DateTimeFormat("en-US", {
   month: "short", day: "numeric", year: "numeric", timeZone: "UTC",
 });
 
+const LONG_DAY_FORMAT = new Intl.DateTimeFormat("en-US", {
+  weekday: "long", month: "long", day: "numeric", year: "numeric", timeZone: "UTC",
+});
+
+/** "Tuesday, November 3, 2026" for a date-only string. */
+export function longDayLabel(value: string): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(calendarDay(value));
+  if (!match) return value;
+  return LONG_DAY_FORMAT.format(new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]))));
+}
+
 /**
  * Calendar day for a date-only string, or for a timestamp in the state's display zone.
  * A UTC timestamp late in the evening is the previous local day in Kentucky.

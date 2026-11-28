@@ -5,6 +5,7 @@ import { FollowButton } from "@/components/tv/client/Follow";
 import { Crumbs } from "@/components/tv/bits";
 import { Icon } from "@/components/tv/Icon";
 import { RaceCards } from "@/components/tv/RaceCard";
+import { ElectionStatus, WhereToVote } from "@/components/tv/Status";
 import { stateMap } from "@/lib/geo/state-maps";
 import { stateConfig } from "@/lib/states";
 import { lastName } from "@/lib/tv/party";
@@ -25,7 +26,7 @@ function RaceSet({ race }: { race: RaceView }) {
           {race.subtitle ? <p className="sec-sub">{race.subtitle}</p> : null}
         </div>
         <Link className="viewall" href={`/races/${race.raceId}`}>
-          View race
+          Race page
           <Icon name="right" size="sm" />
         </Link>
       </div>
@@ -52,8 +53,10 @@ export default function BallotPage() {
     <div className="wrap">
       <Crumbs items={[{ href: "/", label: "Home" }, { label: "My races" }]} />
       <h1 className="t-h1 pt">My races</h1>
-      <p className="sec-sub">Federal races only: U.S. Senate and House.</p>
-      <CountyGuide viewBox={map.viewBox} stateName={state.name} counties={map.counties.map(({ fips, name, d, districts, clerkUrl }) => ({ fips, name, d, districts, clerkUrl }))} sets={sets} />
+      <p className="sec-sub pt-sub">
+        U.S. Senate and House races only. <WhereToVote />
+      </p>
+      <CountyGuide viewBox={map.viewBox} stateName={state.name} quick={state.quickCounties} summary={<ElectionStatus />} counties={map.counties.map(({ fips, name, d, districts, clerkUrl }) => ({ fips, name, d, districts, clerkUrl }))} sets={sets} />
     </div>
   );
 }

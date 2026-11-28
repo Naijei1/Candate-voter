@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ReportButton } from "@/components/tv/client/Report";
-import { Crumbs, PartyTag, ScopeNav } from "@/components/tv/bits";
+import { Crumbs, PartyTag } from "@/components/tv/bits";
 import { ExtLink } from "@/components/tv/ExtLink";
 import { Icon } from "@/components/tv/Icon";
 import { WonTag } from "@/components/tv/Won";
@@ -72,7 +72,6 @@ export default function OfficeholdersPage() {
   const incoming = RESULTS_VISIBLE ? races.flatMap((race) => (winnerName(race.raceId) ? [{ race, name: winnerName(race.raceId) as string }] : [])) : [];
   return (
     <>
-      <ScopeNav current="congress" />
       <div className="wrap">
         <Crumbs items={[{ href: "/", label: "Home" }, { label: "Officeholders" }]} />
         <h1 className="t-h1 pt">Officeholders</h1>

@@ -4,7 +4,7 @@ export type PartyKey = "rep" | "dem" | "ind" | "lib" | "kp" | "wi" | "oth";
 
 export type PartyInfo = {
   key: PartyKey;
-  /** Short tag text, always shown in words. */
+  /** Tag text: the full party name, never an abbreviation. */
   tag: string;
   /** Spoken name for the tag. */
   name: string;
@@ -13,13 +13,13 @@ export type PartyInfo = {
 };
 
 const TABLE: Record<PartyKey, PartyInfo> = {
-  rep: { key: "rep", tag: "GOP", name: "Republican", adjective: "Republican" },
-  dem: { key: "dem", tag: "DEM", name: "Democratic", adjective: "Democratic" },
-  ind: { key: "ind", tag: "IND", name: "Independent", adjective: "Independent" },
-  lib: { key: "lib", tag: "LIB", name: "Libertarian", adjective: "Libertarian" },
-  kp: { key: "kp", tag: "KYP", name: "Kentucky Party", adjective: "Kentucky Party" },
-  wi: { key: "wi", tag: "WRITE-IN", name: "Write-in", adjective: "Write-in" },
-  oth: { key: "oth", tag: "OTH", name: "Other party", adjective: "Other party" },
+  rep: { key: "rep", tag: "Republican", name: "Republican", adjective: "Republican" },
+  dem: { key: "dem", tag: "Democratic", name: "Democratic", adjective: "Democratic" },
+  ind: { key: "ind", tag: "Independent", name: "Independent", adjective: "Independent" },
+  lib: { key: "lib", tag: "Libertarian", name: "Libertarian", adjective: "Libertarian" },
+  kp: { key: "kp", tag: "Kentucky Party", name: "Kentucky Party", adjective: "Kentucky Party" },
+  wi: { key: "wi", tag: "Write-in", name: "Write-in", adjective: "Write-in" },
+  oth: { key: "oth", tag: "Other party", name: "Other party", adjective: "Other party" },
 };
 
 export function partyInfo(party: string | null | undefined): PartyInfo {

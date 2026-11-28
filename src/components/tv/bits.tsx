@@ -3,18 +3,13 @@ import { Fragment, type ReactNode } from "react";
 import type { PartyInfo } from "@/lib/tv/party";
 import { initials } from "@/lib/tv/party";
 import type { PersonView } from "@/lib/tv/people";
-import { enabledStates, statePath } from "@/lib/states";
+import { YoursLink } from "./client/Yours";
 import { Icon } from "./Icon";
 
-/** Party tag: short text for sight, full name for screen readers. Never color alone. */
+/** Party tag: the full party name in words. Never color alone. */
 export function PartyTag({ party, size, corner }: { party: PartyInfo; size?: "sm"; corner?: boolean }) {
   const classes = ["ptag", party.key, size, corner ? "corner" : null].filter(Boolean).join(" ");
-  return (
-    <span className={classes}>
-      <span aria-hidden="true">{party.tag}</span>
-      <span className="sr">{party.name}</span>
-    </span>
-  );
+  return <span className={classes}>{party.tag}</span>;
 }
 
 /** Round portrait with initials underneath; initials show when there is no photo. */
@@ -28,14 +23,17 @@ export function Face({ person, size, eager }: { person: Pick<PersonView, "name" 
   );
 }
 
-export type Crumb = { href?: string; label: string };
+/** `yours` links to My races at the saved county. */
+export type Crumb = { href?: string; label: string; yours?: boolean };
 
 /** Breadcrumb with a phone "up" link to the parent. */
 export function Crumbs({ items }: { items: Crumb[] }) {
   const parent = [...items].reverse().find((item, index) => index > 0 && item.href);
   return (
     <nav className="crumbs" aria-label="Breadcrumb">
-      {parent?.href ? (
+      {parent?.yours ? (
+        <YoursLink className="crumb-up">← {parent.label}</YoursLink>
+      ) : parent?.href ? (
         <Link className="crumb-up" href={parent.href}>
           ← {parent.label}
         </Link>
@@ -47,7 +45,13 @@ export function Crumbs({ items }: { items: Crumb[] }) {
               <Icon name="right" size="xs" />
             </span>
           ) : null}
-          {item.href && index < items.length - 1 ? <Link href={item.href}>{item.label}</Link> : <span aria-current="page">{item.label}</span>}
+          {index === items.length - 1 || !item.href ? (
+            <span aria-current="page">{item.label}</span>
+          ) : item.yours ? (
+            <YoursLink>{item.label}</YoursLink>
+          ) : (
+            <Link href={item.href}>{item.label}</Link>
+          )}
         </Fragment>
       ))}
     </nav>
@@ -82,24 +86,3 @@ export function Empty({ title, children, action }: { title: string; children?: R
   );
 }
 
-/** National / States / Congress / Local switch shown above state and officeholder pages. */
-export function ScopeNav({ current }: { current: "states" | "congress" }) {
-  const home = enabledStates()[0];
-  const items = [
-    { key: "national", href: "/", label: "National" },
-    { key: "states", href: "/states", label: "States" },
-    { key: "congress", href: "/officeholders", label: "Congress" },
-    { key: "local", href: home ? `${statePath(home)}?view=county` : "/states", label: "Local" },
-  ];
-  return (
-    <nav className="scope" aria-label="Scope">
-      <div className="wrap">
-        {items.map((item) => (
-          <Link key={item.key} href={item.href} aria-current={item.key === current ? "page" : undefined}>
-            {item.label}
-          </Link>
-        ))}
-      </div>
-    </nav>
-  );
-}

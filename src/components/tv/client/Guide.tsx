@@ -7,7 +7,6 @@ import { readPlace, savePlace } from "./device";
 
 export type GuideCounty = { fips: string; name: string; d: string; districts: number[]; clerkUrl: string | null };
 
-const QUICK = ["Jefferson", "Fayette", "Kenton", "Boone", "Warren", "Hardin"];
 
 function canon(counties: GuideCounty[], value: string): GuideCounty | null {
   const want = value
@@ -34,7 +33,21 @@ function setParams(county: string | null, district: number | null) {
 type View = { step: "ask" } | { step: "split"; county: GuideCounty } | { step: "out"; county: GuideCounty; districts: number[] };
 
 /** County first, then races. No street address or ZIP code; split counties ask which district is on the voter card. */
-export function CountyGuide({ viewBox, counties, sets, stateName }: { viewBox: string; counties: GuideCounty[]; sets: Record<string, ReactNode>; stateName: string }) {
+export function CountyGuide({
+  viewBox,
+  counties,
+  sets,
+  stateName,
+  quick,
+  summary,
+}: {
+  viewBox: string;
+  counties: GuideCounty[];
+  sets: Record<string, ReactNode>;
+  stateName: string;
+  quick: readonly string[];
+  summary?: ReactNode;
+}) {
   const [value, setValue] = useState("");
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(-1);
@@ -152,6 +165,7 @@ export function CountyGuide({ viewBox, counties, sets, stateName }: { viewBox: s
               Change county
             </button>
           </p>
+          {summary}
         </div>
         {sets.senate}
         {districts.map((district) => (
@@ -232,7 +246,7 @@ export function CountyGuide({ viewBox, counties, sets, stateName }: { viewBox: s
           </div>
           <div className="quick" role="group" aria-label="Largest counties">
             <span>Or pick one:</span>
-            {QUICK.filter((name) => names.includes(name)).map((name) => (
+            {quick.filter((name) => names.includes(name)).map((name) => (
               <button key={name} className="chip" type="button" onClick={() => choose(canon(counties, name))}>
                 {name}
               </button>

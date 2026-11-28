@@ -42,6 +42,6 @@
   }
  ],
  "official": false,
- "display": false,
- "note": "UNOFFICIAL. Hidden on the site until the Kentucky State Board of Elections posts certification. Set display=true to turn winners back on."
+ "display": true,
+ "note": "Unofficial State Board of Elections results, 120 of 120 counties. Shown since Nov 28, 2026 with owner approval: pages mark each winner \"Won\" and never show counts or margins. Set display=false to hide them."
 }

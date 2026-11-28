@@ -1,17 +1,17 @@
 import Link from "next/link";
 import { dayLabel } from "@/lib/format";
-import { stateConfig } from "@/lib/states";
-import { lastName } from "@/lib/tv/party";
-import { allRaces, defaultPair } from "@/lib/tv/people";
+import { stateConfig, statePath } from "@/lib/states";
+import { HOME_NAV, NAV } from "@/lib/tv/nav";
 import { siteIndex } from "@/lib/tv/site-index";
-import { AlertsButton } from "./client/Alerts";
 import { CommandPalette, SearchButton } from "./client/CommandPalette";
 import { MenuSheet } from "./client/MenuSheet";
-import { PrimaryNav, type NavItem } from "./client/PrimaryNav";
+import { PrimaryNav } from "./client/PrimaryNav";
 import { ReportButton, ReportDialog } from "./client/Report";
 import { ThemeToggle } from "./client/ThemeToggle";
 import { Toast } from "./client/Toast";
 import { YoursLink } from "./client/Yours";
+import { Icon } from "./Icon";
+import { WhereToVote } from "./Status";
 
 /** Last date the stored records were checked. */
 export const DATA_CHECKED = "2026-11-22";
@@ -31,70 +31,43 @@ function Brand() {
   );
 }
 
-function menus(): { candidates: NavItem[]; polls: NavItem[] } {
-  const state = stateConfig();
-  const races = allRaces(state);
-  const senate = races.find((race) => race.office === "senate");
-  const pair = senate ? defaultPair(senate) : null;
-  const house = races.filter((race) => race.office === "house").length;
-  const candidates: NavItem[] = [
-    { href: `/states/${state.slug}`, title: `${state.name} races`, sub: `${senate ? 1 : 0} Senate race, ${house} House races` },
-  ];
-  if (senate) candidates.push({ href: `/races/${senate.raceId}`, title: senate.title, sub: `${senate.people.length} candidates` });
-  if (senate && pair) {
-    candidates.push({
-      href: `/races/${senate.raceId}/compare?a=${pair[0].id}&b=${pair[1].id}`,
-      title: `Compare ${lastName(pair[0].name)} and ${lastName(pair[1].name)}`,
-      sub: "Side by side",
-    });
-  }
-  candidates.push(
-    { href: "/officeholders", title: "Officeholders", sub: "Who holds office now", rule: true },
-    { href: "/states", title: "Explore by state", sub: "All 50 states and D.C." },
-  );
-  const polls: NavItem[] = [
-    { href: "/polls", title: "Polls", sub: "No qualifying polls yet" },
-    { href: "/measures", title: "Ballot measures", sub: "Example layout" },
-  ];
-  return { candidates, polls };
-}
-
 export function SiteHeader() {
-  const { candidates, polls } = menus();
+  const state = stateConfig();
   return (
     <>
       <header className="hdr">
         <div className="wrap">
           <Brand />
-          <PrimaryNav candidates={candidates} polls={polls} />
+          <PrimaryNav />
           <div className="hdr-end">
+            <WhereToVote className="wtv hdr-wtv" />
             <SearchButton />
-            <AlertsButton />
-            <ThemeToggle />
+            <ThemeToggle className="thm only-d" />
             <MenuSheet>
               <nav className="sh-b mnav" aria-label="All sections">
-                <YoursLink className="top">Find my races</YoursLink>
-                <h3>Candidates</h3>
-                {candidates.map((item) => (
-                  <Link key={item.href} href={item.href}>
-                    {item.title}
-                  </Link>
-                ))}
-                <Link className="top" href="/news">
-                  News and Updates
+                <Link className="top" href={HOME_NAV.href}>
+                  <Icon name={HOME_NAV.icon} size="sm" />
+                  {HOME_NAV.label}
                 </Link>
-                <h3>Polls and Analysis</h3>
-                {polls.map((item) => (
-                  <Link key={item.href} href={item.href}>
-                    {item.title}
-                  </Link>
-                ))}
-                <Link className="top" href="/finance">
-                  Campaign Finance
-                </Link>
-                <h3>About the data</h3>
-                <Link href="/sources">Sources and methodology</Link>
-                <Link href="/sources#coverage">Coverage status</Link>
+                {NAV.map((item) =>
+                  item.href === "/ballot" ? (
+                    <YoursLink key={item.href} className="top">
+                      <Icon name={item.icon} size="sm" />
+                      {item.label}
+                    </YoursLink>
+                  ) : (
+                    <Link key={item.href} className="top" href={item.href}>
+                      <Icon name={item.icon} size="sm" />
+                      {item.label}
+                    </Link>
+                  ),
+                )}
+                <WhereToVote className="top wtv" />
+                <h3>More</h3>
+                <Link href={statePath(state)}>All {state.name} races</Link>
+                <Link href="/officeholders">Who holds office now</Link>
+                <Link href="/sources">Where our facts come from</Link>
+                <ThemeToggle className="thm mthm" />
               </nav>
             </MenuSheet>
           </div>
@@ -113,68 +86,33 @@ export function SiteFooter() {
         <div className="wrap">
           <div className="f-brand">
             <Brand />
-            <p>Your elections, all in one place. {state.name} is covered now. Every fact links to its source.</p>
+            <p>
+              {state.name}’s U.S. Senate and House races. Every fact links to its source.
+            </p>
           </div>
-          <div>
-            <h2>Explore</h2>
-            <ul>
-              <li>
-                <YoursLink>Find my races</YoursLink>
-              </li>
-              <li>
-                <Link href={`/states/${state.slug}`}>{state.name}</Link>
-              </li>
-              <li>
-                <Link href="/states">Explore by state</Link>
-              </li>
-              <li>
-                <Link href="/officeholders">Officeholders</Link>
-              </li>
-              <li>
-                <Link href="/news">News and Updates</Link>
-              </li>
-              <li>
-                <Link href="/finance">Campaign Finance</Link>
-              </li>
-              <li>
-                <Link href="/polls">Polls and Analysis</Link>
-              </li>
-            </ul>
-          </div>
-          <div>
-            <h2>Trust</h2>
-            <ul>
-              <li>
-                <Link href="/sources">Sources and methodology</Link>
-              </li>
-              <li>
-                <Link href="/sources#coverage">Coverage status</Link>
-              </li>
-              <li>
-                <ReportButton className="f-link">Feedback and corrections</ReportButton>
-              </li>
-              <li>
-                <Link href="/sources#independence">Independence and affiliations</Link>
-              </li>
-            </ul>
-          </div>
-          <div>
-            <h2>Site</h2>
-            <ul>
-              <li>
-                <Link href="/contact">Contact</Link>
-              </li>
-              <li>
-                <Link href="/accessibility">Accessibility</Link>
-              </li>
-              <li>
-                <Link href="/privacy">Privacy</Link>
-              </li>
-              <li>
-                <Link href="/terms">Terms</Link>
-              </li>
-            </ul>
-          </div>
+          <ul className="f-links">
+            <li>
+              <WhereToVote className="f-link" />
+            </li>
+            <li>
+              <Link href="/sources">Sources</Link>
+            </li>
+            <li>
+              <ReportButton className="f-link">Report an error</ReportButton>
+            </li>
+            <li>
+              <Link href="/accessibility">Accessibility</Link>
+            </li>
+            <li>
+              <Link href="/privacy">Privacy</Link>
+            </li>
+            <li>
+              <Link href="/terms">Terms</Link>
+            </li>
+            <li>
+              <Link href="/contact">Contact</Link>
+            </li>
+          </ul>
           <p className="f-base">
             THE VOTE, {state.cycle} elections. Data last checked {dayLabel(DATA_CHECKED)}.
           </p>

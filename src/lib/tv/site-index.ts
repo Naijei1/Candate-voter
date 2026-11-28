@@ -4,15 +4,12 @@ import { campaignCommittee, committeeTitle } from "./money";
 import { allRaces } from "./people";
 
 const PAGES: IndexEntry[] = [
-  { g: "Pages", t: "Find my races", s: "Pick your county", h: "/ballot", i: "ballot" },
-  { g: "Pages", t: "News and Updates", s: "Statements and reporting", h: "/news", i: "news" },
-  { g: "Pages", t: "Campaign Finance", s: "Raised, spent and cash on hand", h: "/finance", i: "money" },
+  { g: "Pages", t: "My races", s: "Pick your county", h: "/ballot", i: "ballot" },
+  { g: "Pages", t: "News", s: "What candidates said and news reports", h: "/news", i: "news" },
+  { g: "Pages", t: "Campaign money", s: "Who gives to each campaign", h: "/finance", i: "money" },
   { g: "Pages", t: "Ask", s: "Answers from our records", h: "/ask", i: "ask" },
-  { g: "Pages", t: "Officeholders", s: "Who holds office now", h: "/officeholders", i: "building" },
-  { g: "Pages", t: "Explore by state", s: "All 50 states and D.C.", h: "/states", i: "pin" },
-  { g: "Pages", t: "Polls", s: "No qualifying polls yet", h: "/polls", i: "info" },
-  { g: "Pages", t: "Ballot measures", s: "Example layout", h: "/measures", i: "info" },
-  { g: "Pages", t: "Sources and methodology", s: "How we check", h: "/sources", i: "info" },
+  { g: "Pages", t: "Who holds office now", s: "Kentucky members of Congress", h: "/officeholders", i: "building" },
+  { g: "Pages", t: "Where our facts come from", s: "Sources and how we check", h: "/sources", i: "info" },
   { g: "Pages", t: "Home", s: "THE VOTE", h: "/", i: "home" },
 ];
 

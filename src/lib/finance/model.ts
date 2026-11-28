@@ -64,11 +64,11 @@ export function formatMoney(value: number | null): string {
 
 const WHOLE_DOLLARS = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
 
-/** Short label for a bar, e.g. "$12.5M". The table shows the full amount. */
+/** Rounded amount in plain words, e.g. "$12.5 million" or "$304,000". No "M" or "K". */
 export function shortMoney(value: number): string {
   const abs = Math.abs(value);
-  if (abs >= 1_000_000) return `$${(value / 1_000_000).toFixed(abs >= 10_000_000 ? 1 : 2).replace(/\.?0+$/, "")}M`;
-  if (abs >= 1_000) return `$${Math.round(value / 1_000)}K`;
+  if (abs >= 999_500) return `$${(value / 1_000_000).toFixed(1).replace(/\.0$/, "")} million`;
+  if (abs >= 1_000) return WHOLE_DOLLARS.format(Math.round(value / 1_000) * 1_000);
   return WHOLE_DOLLARS.format(value);
 }
 

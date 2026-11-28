@@ -1,10 +1,9 @@
-import Link from "next/link";
 import { US_HERO } from "@/lib/geo/us-hero";
-import { enabledStates, statePath } from "@/lib/states";
+import { enabledStates } from "@/lib/states";
 import { HeroPause, HeroSavedLine } from "./client/HeroBits";
 import { YoursCta } from "./client/Yours";
 
-/** Home hero: the country drawn in thin lines with the covered state lit. CSS only; still when motion is reduced. */
+/** Home hero: the country drawn in thin lines with the available state lit. CSS only; still when motion is reduced. */
 export function Hero() {
   const covered = enabledStates();
   const first = covered[0];
@@ -24,26 +23,18 @@ export function Hero() {
           </svg>
           <span className="live">
             <i />
-            Covered: {covered.map((state) => state.name).join(", ")}
+            {covered.map((state) => state.name).join(" and ")} races available
           </span>
         </div>
       </div>
       <div className="wrap hero-g">
         <div className="hero-c">
           <h1 id="h-hero" className="t-display">
-            <span>Your elections.</span> <span>All in one place.</span>
+            <span>Your U.S. Senate</span> <span>and House races</span>
           </h1>
-          <p className="hero-s">Find your races. Compare candidates. See every source.</p>
-          <p className="hero-cov">
-            <b>{covered.map((state) => state.name).join(" and ")} is covered now.</b>
-          </p>
+          <p className="hero-s">{first ? `${first.name}, ${first.cycle}. ` : null}Pick your county to see who ran.</p>
           <div className="hero-act">
             <YoursCta className="btn hero-btn" />
-            {first ? (
-              <Link className="hero-ln" href={statePath(first)}>
-                Explore {first.name}
-              </Link>
-            ) : null}
           </div>
           <HeroSavedLine />
         </div>

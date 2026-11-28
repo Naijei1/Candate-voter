@@ -16,7 +16,8 @@ function apply(theme: "light" | "dark") {
   });
 }
 
-export function ThemeToggle() {
+/** Labeled switch for dark mode. The words say what it does; the icon is decoration. */
+export function ThemeToggle({ className = "thm" }: { className?: string }) {
   const [theme, setTheme] = useState<"light" | "dark">("light");
 
   useEffect(() => {
@@ -35,13 +36,9 @@ export function ThemeToggle() {
   };
 
   return (
-    <button className="icon-btn" type="button" onClick={flip} aria-label={theme === "dark" ? "Use light theme" : "Use dark theme"}>
-      <span className="t-l">
-        <Icon name="moon" />
-      </span>
-      <span className="t-d">
-        <Icon name="sun" />
-      </span>
+    <button className={className} type="button" role="switch" aria-checked={theme === "dark"} onClick={flip}>
+      <Icon name={theme === "dark" ? "sun" : "moon"} size="sm" />
+      Dark mode
     </button>
   );
 }

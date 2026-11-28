@@ -4,15 +4,14 @@ import { notFound } from "next/navigation";
 import { AskPanel } from "@/components/tv/Ask";
 import { FollowButton } from "@/components/tv/client/Follow";
 import { ReportButton } from "@/components/tv/client/Report";
-import { SheetButton } from "@/components/tv/client/Sheet";
 import { Tabs } from "@/components/tv/client/Tabs";
-import { YoursContext } from "@/components/tv/client/Yours";
 import { Crumbs, Empty, Face, PartyTag } from "@/components/tv/bits";
 import { ExtLink } from "@/components/tv/ExtLink";
 import { FinanceTable, FundingLegend } from "@/components/tv/FinanceTable";
 import { Icon } from "@/components/tv/Icon";
 import { NewsList } from "@/components/tv/NewsList";
 import { RaceCard } from "@/components/tv/RaceCard";
+import { ElectionStatus } from "@/components/tv/Status";
 import { VoteRecord } from "@/components/tv/Votes";
 import { formatMoney } from "@/lib/finance/model";
 import { dayLabel } from "@/lib/format";
@@ -21,11 +20,11 @@ import { profileFor } from "@/lib/site/profiles";
 import { stanceIssues } from "@/lib/site/stances";
 import { stateConfig, statePath } from "@/lib/states";
 import { raceQuestions } from "@/lib/tv/ask";
+import { MY_RACES_CRUMB } from "@/lib/tv/nav";
 import { newsForRace } from "@/lib/tv/news";
 import { lastName } from "@/lib/tv/party";
-import { allRaces, backgroundParts, defaultPair, isHouseVote, raceView, stanceFor, voteChoice, type PersonView, type RaceView } from "@/lib/tv/people";
+import { allRaces, defaultPair, isHouseVote, raceView, stanceFor, voteChoice, type PersonView, type RaceView } from "@/lib/tv/people";
 import { outsideSpending, raceTimeline, recordNote } from "@/lib/tv/race-extra";
-import { shortLine } from "@/lib/tv/short-line";
 
 export const revalidate = 3600;
 export const runtime = "nodejs";
@@ -56,97 +55,6 @@ function ColumnHead({ person }: { person: PersonView }) {
         </span>
       </Link>
     </div>
-  );
-}
-
-function Overview({ race }: { race: RaceView }) {
-  const rows = ["Party", "Filed to run", "Ballot", "Campaign website", "Background"];
-  return (
-    <>
-      <div
-        className="sbs"
-        style={
-          {
-            "--n": race.people.length,
-            "--k": rows.length + 1,
-          } as React.CSSProperties
-        }
-      >
-        <div className="sbs-lab" aria-hidden="true">
-          <div className="sbs-h" />
-          {rows.map((row) => (
-            <div className="sbs-c" key={row}>
-              {row}
-            </div>
-          ))}
-        </div>
-        {race.people.map((person) => {
-          const background = backgroundParts(person);
-          return (
-            <div className="sbs-col" role="group" aria-label={person.name} key={person.id}>
-              <ColumnHead person={person} />
-              <div className="sbs-c">
-                <span className="cl">Party</span>
-                <PartyTag party={person.party} size="sm" /> {person.role}
-              </div>
-              <div className="sbs-c">
-                <span className="cl">Filed to run</span>
-                {person.filing ? (
-                  <>
-                    {person.filing.label} ·{" "}
-                    <ExtLink className="xl" href={person.filing.url} icon label={`${stateConfig().filings.name} filing for ${person.name}`}>
-                      SOS
-                    </ExtLink>
-                  </>
-                ) : (
-                  <span className="none">Not in our records</span>
-                )}
-              </div>
-              <div className="sbs-c">
-                <span className="cl">Ballot</span>
-                {person.writeIn ? "Write-in (not printed)" : "Printed on the ballot"}
-              </div>
-              <div className="sbs-c">
-                <span className="cl">Campaign website</span>
-                {person.website ? (
-                  <ExtLink className="url" href={person.website.url} title={person.website.label}>
-                    {person.website.label}
-                  </ExtLink>
-                ) : (
-                  <span className="none">Not in our records</span>
-                )}
-              </div>
-              <div className="sbs-c">
-                <span className="cl">Background</span>
-                {background.length === 0 ? <span className="none">Not in our records</span> : null}
-                {background.map((part, index) => (
-                  <span key={index}>
-                    {index > 0 ? <br /> : null}
-                    {part.says ? <span className="cs-t">Campaign says:</span> : null} {part.text}
-                    {part.muted ? (
-                      <>
-                        {" "}
-                        <span className="muted">{part.muted}</span>
-                      </>
-                    ) : null}
-                  </span>
-                ))}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-      <p className="src">
-        Source:{" "}
-        <ExtLink className="xl" href={stateConfig().filings.href} icon>
-          {stateConfig().filings.name} filings
-        </ExtLink>
-        ;{" "}
-        <ExtLink className="xl" href={KY_BALLOT_SOURCES[1].url} icon>
-          Clerk of the House nominations
-        </ExtLink>
-      </p>
-    </>
   );
 }
 
@@ -183,7 +91,6 @@ function Issues({ race }: { race: RaceView }) {
                 </div>
               );
             }
-            const line = shortLine(stance.text);
             const vote = isHouseVote(stance) ? voteChoice(stance.text) : null;
             return (
               <div className="sbs-c" key={issue.id}>
@@ -194,8 +101,7 @@ function Issues({ race }: { race: RaceView }) {
                       <span className="vtag">House vote</span>{" "}
                     </>
                   ) : null}
-                  {line.short}
-                  {line.cut ? "…" : "."}
+                  {stance.text}
                 </p>
                 <p className="pm">
                   <time dateTime={stance.sourceDate}>{dayLabel(stance.sourceDate)}</time>{" "}
@@ -203,12 +109,6 @@ function Issues({ race }: { race: RaceView }) {
                     <span className="lb">{stance.sourceName.split(",")[0]}</span>
                   </ExtLink>
                 </p>
-                {line.cut ? (
-                  <details className="pmore">
-                    <summary aria-label={`More: ${lastName(person.name)}, ${issue.label.toLowerCase()}`}>More</summary>
-                    <p>{line.full}</p>
-                  </details>
-                ) : null}
                 {vote ? <span className="hint">Vote: {vote}</span> : null}
               </div>
             );
@@ -318,51 +218,21 @@ export default async function RacePage({ params }: PageProps) {
   const questions = raceQuestions(race);
 
   const tabs = [
-    {
-      id: "overview",
-      label: "Overview",
-      panel: (
-        <>
-          <Overview race={race} />
-          {compareHref ? (
-            <p className="tabfoot">
-              <Link className="btn outline" href={compareHref}>
-                <Icon name="swap" size="sm" />
-                Compare two candidates in detail
-              </Link>
-            </p>
-          ) : null}
-        </>
-      ),
-    },
     { id: "issues", label: "Issues", panel: <Issues race={race} /> },
-    {
-      id: "statements",
-      label: "Statements",
-      panel: statements.length > 0 ? <NewsList items={statements} /> : <Empty title="No candidate statements yet." />,
-    },
     { id: "record", label: "Voting record", panel: <Record race={race} /> },
+    { id: "money", label: "Campaign money", panel: <Finance race={race} /> },
     {
-      id: "polls",
-      label: "Polls",
-      panel: (
-        <Empty title="No qualifying polls.">
-          <p>
-            <Link href="/polls">How polls are listed</Link>
-          </p>
-        </Empty>
-      ),
-    },
-    {
-      id: "finance",
-      label: "Campaign finance",
-      panel: <Finance race={race} />,
-    },
-    {
-      id: "updates",
-      label: "Updates",
+      id: "news",
+      label: "News",
       panel: (
         <>
+          {statements.length > 0 ? (
+            <>
+              <h3 className="sub-h">What the candidates said</h3>
+              <NewsList items={statements} />
+            </>
+          ) : null}
+          <h3 className="sub-h">Timeline</h3>
           {timeline.length > 0 ? (
             <ol className="tl">
               {timeline.map((item, index) => (
@@ -391,8 +261,7 @@ export default async function RacePage({ params }: PageProps) {
 
   return (
     <div className="wrap">
-      <Crumbs items={[{ href: "/", label: "Home" }, { href: statePath(state), label: state.name }, { label: race.title }]} />
-      <YoursContext />
+      <Crumbs items={[{ href: "/", label: "Home" }, MY_RACES_CRUMB, { label: race.title }]} />
       <div className="rhead">
         <div>
           <h1 className="t-h1">
@@ -401,34 +270,30 @@ export default async function RacePage({ params }: PageProps) {
           </h1>
         </div>
         <div className="ract">
-          <SheetButton className="btn primary ask-inline" icon="ask" label="Ask about this race" title="Ask about this race">
-            <AskPanel id="askm" place={place} questions={questions} />
-          </SheetButton>
+          {pair && compareHref ? (
+            <Link className="btn primary" href={compareHref}>
+              Compare {lastName(pair[0].name)} and {lastName(pair[1].name)}
+              <Icon name="right" size="sm" />
+            </Link>
+          ) : null}
           <FollowButton id={race.raceId} name={race.title} label="Follow race" />
         </div>
       </div>
+      <ElectionStatus raceId={race.raceId} />
 
       <div className="cards">
         {race.people.map((person) => (
           <RaceCard key={person.id} person={person} race={race} />
         ))}
       </div>
-      {pair && compareHref ? (
-        <p className="cmpgo">
-          <Link className="btn primary" href={compareHref}>
-            <Icon name="swap" size="sm" />
-            Compare {lastName(pair[0].name)} and {lastName(pair[1].name)}
-          </Link>
-        </p>
-      ) : null}
 
       <div className="race-g">
         <div className="race-main">
-          <Tabs label="Compare the candidates" tabs={tabs} />
+          <Tabs label="About this race" tabs={tabs} />
           <p className="page-f">
             <ReportButton />
             <Link href="/sources">Sources</Link>
-            <ExtLink href={state.results.official.href}>See official results</ExtLink>
+            <Link href={statePath(state)}>All {state.name} races</Link>
           </p>
           <details className="how">
             <summary>Sources and method</summary>
@@ -439,9 +304,6 @@ export default async function RacePage({ params }: PageProps) {
           <AskPanel id="askp" place={place} questions={questions} />
         </aside>
       </div>
-      <SheetButton className="ask-fab btn primary" icon="ask" label="Ask about this race" title="Ask about this race">
-        <AskPanel id="askf" place={place} questions={questions} />
-      </SheetButton>
     </div>
   );
 }
