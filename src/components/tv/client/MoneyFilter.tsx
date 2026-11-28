@@ -38,9 +38,11 @@ export function MoneyFilter({ races, sets }: { races: MoneyRace[]; sets: Record<
           ))}
         </div>
       </div>
-      {races.filter((race) => shown.includes(race.key)).map((race) => (
-        <div key={race.key}>{sets[race.key]}</div>
-      ))}
+      {races
+        .filter((race) => shown.includes(race.key))
+        .map((race) => (
+          <div key={race.key}>{sets[race.key]}</div>
+        ))}
       {shown.length === 0 ? <p className="none">Pick a race above.</p> : null}
     </>
   );
