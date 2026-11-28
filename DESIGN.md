@@ -1,6 +1,6 @@
 # THE VOTE
 
-THE VOTE is a guide to Kentucky’s U.S. Senate and House races. The v12 design (approved mockups in the `r2/site` archive) is the visual and UX spec. Lead with the race, person, filing or source the reader came for. Say plainly when a record is missing.
+THE VOTE is a guide to Kentucky’s U.S. Senate and House races. The v12 design (approved mockups in the `r2/site` archive) is the visual spec; v13 simplified the flow after a UX audit. Lead with the race, person, filing or source the reader came for. Say plainly when a record is missing.
 
 ## Color
 
@@ -18,34 +18,34 @@ Word budget: about 50 words on a phone’s first screen and about 80 on desktop.
 
 ## Chrome
 
-The header holds THE VOTE wordmark with the red/white flag, the primary nav (Find my races, Candidates, News and Updates, Polls and Analysis, Campaign Finance), search (command palette), alerts and the theme toggle. Phones get a menu sheet and the five-tab bar: Home, My races, News Feed, Finances, Ask. The tab bar hides while the on-screen keyboard is open. The footer is the dark navy band with a white focus ring. An offline notice appears at the top of `main` when the connection drops.
+One list of section names (`src/lib/tv/nav.ts`) feeds the header, the phone menu and the tab bar: My races, News, Campaign money, Search. The header holds THE VOTE wordmark with the red/white flag, those sections, “Where to vote” (the state’s official lookup), a labeled Search button and a labeled “Dark mode” switch. Phones get a menu sheet (the same sections, Where to vote, then All Kentucky races, Who holds office now, Where our facts come from, Dark mode) and the five-tab bar: Home, My races, News, Campaign money, Search. Breadcrumbs run Home › My races › race › candidate or Compare; “My races” opens the saved county. The footer has seven links. The tab bar hides while the on-screen keyboard is open. The footer is the dark navy band with a white focus ring. An offline notice appears at the top of `main` when the connection drops.
 
 ## Home
 
-The hero is a CSS line drawing of the country with the covered state lit (`hero-b`). It pauses off screen and when the tab is hidden, and is still under reduced motion. There is no pause button and no ZIP field. Then: the Senate matchup with a Compare link, Featured stories, Explore by state (tile map and finder), and sources.
+The hero is a CSS line drawing of the country with the available state lit (`hero-b`), headed “Your U.S. Senate and House races”. It pauses off screen and when the tab is hidden, and is still under reduced motion. There is no pause button and no ZIP field. Then: the election status line (`ElectionStatus`: “Kentucky’s general election was Tuesday, November 3, 2026. It is over.”, See official results, Where to vote), one-tap county picks that open My races, and sources.
 
 ## Finding your races
 
-The flow is state map, then county. `/ballot` is a county combobox with quick picks and a county map. A county in more than one district asks which district is on the voter card, links the county clerk and offers “Show both”. The choice is saved on the device (`tv-place`) and drives “Your races” everywhere. No address or ZIP code is ever asked for.
+The flow is county, then My races. `/ballot` is a county combobox with quick picks and a county map. A county in more than one district asks which district is on the voter card, links the county clerk and offers “Show both”. The choice is saved on the device (`tv-place`) and drives “Your races” everywhere. No address or ZIP code is ever asked for.
 
 ## State pages
 
-`/states` lists every state; `/states/{st}` serves a covered state (Statewide, Congressional and County views, key dates with “See official results”) or an uncovered state (district outlines and “Awaiting verified filings”). The scope nav (National, States, Congress, Local) appears on these pages and on officeholders.
+`/states` lists every state; `/states/{st}` serves a covered state (Statewide, Congressional and County views, key dates with “See official results”) or an uncovered state (district outlines and “Awaiting verified filings”). Key dates are plain dates (“Tuesday, November 3, 2026”), never “Held” or “Next”. `/states` is not linked from navigation.
 
 ## Race, candidate and compare
 
-- Race pages lead with the November candidate cards (photo or initials, party tag, one line from records, Follow), then a Compare button and tabs: Issues, Statements, Voting record, Polls, Campaign finance, Updates. An Ask panel sits beside on desktop and in a sheet on phones.
-- Candidate pages: verified facts, positions, record, money summary, endorsements and news. Endorsements and News are hidden when there are none. Phone jump links use the section headings’ exact words.
-- Compare shows one line per point with “More”. Every cut ends at a complete clause (`src/lib/tv/short-line.ts`); the stored text is never rewritten.
+- Race pages: title, Compare and Follow at the top, the election status line with “Won”, the candidate cards, then tabs: Issues (first full sentence per candidate), Voting record, Campaign money, News. One Ask panel: beside the tabs on desktop, after them on phones.
+- Candidate pages: four key facts (party, running for, filed to run, one office or career fact), more facts under “More about”, sources under “Sources”, then their own words, money, and collapsed news, record, endorsements. Endorsements and News are hidden when there are none. Jump links use the section headings’ exact words.
+- Compare shows full sentences. On phones each point stacks one candidate over the other under a sticky header with both names. “Change <name>” buttons swap a candidate; there is no bare swap icon.
 - Each source line sits inside the box with the statements it covers.
 
 ## Money
 
-One stacked bar per candidate, split into Individuals, PACs and other committees, Self-funding, and “Other (transfers, loans, refunds)”. Segments are ink patterns (solid, hatch, dots, line) with a legend, so they work without colour; the legend stacks on phones. Outside spending reads “Outside groups for/against <name>”. Figures come from `data/ky-fec-breakdown.json`, refreshed from the FEC API by `npm run refresh:fec-breakdown`.
+Campaign money (`/finance`) shows the Senate race and the saved House districts; chips add other races. Each campaign lists the amount raised and its largest source in plain words, then “Who gives to <name>”. That page lists sources largest first (Individual people; Political action committees (PACs) and other groups; The candidate’s own money; Loans, transfers and refunds) with dollar amounts only, then groups that gave, then per-report detail collapsed. Bars use ink patterns so they work without colour, and carry no percentages. FEC filing numbers sit under “Sources”. Outside spending reads “For/Against <name>” under “Outside groups”. Figures come from `data/ky-fec-breakdown.json`, refreshed from the FEC API by `npm run refresh:fec-breakdown`.
 
 ## Results
 
-Winners and result-revealing headlines stay hidden behind one flag: `display` in `data/ky-2026-general-winners.json`. When it is on, pages show only a “Won” label, never numbers, percentages or margins.
+Winners and result-revealing headlines sit behind one flag: `display` in `data/ky-2026-general-winners.json`, on since Nov 28, 2026. Pages show only a “Won” label, never numbers, percentages or margins.
 
 ## Accessibility
 
