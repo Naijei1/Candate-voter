@@ -126,9 +126,6 @@ export default async function CandidatePage({ params }: PageProps) {
             {person.role}
             {won ? <WonTag /> : null}
           </p>
-          <p className="lede">
-            Running for <Link href={`/races/${race.raceId}`}>{race.runningFor}</Link>.
-          </p>
           <div className="pact">
             {rival ? (
               <Link className="btn primary" href={`/races/${race.raceId}/compare?a=${person.id}&b=${rival.id}`}>

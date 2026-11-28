@@ -34,7 +34,7 @@ export function MoneyList({ race, level = 3 }: { race: RaceView; level?: 3 | 4 }
               ) : (
                 <p className="none">No totals reported to the Federal Election Commission.</p>
               )}
-              {ok ? (
+              {ok && (row?.receipts ?? 0) > 0 ? (
                 <Link className="btn outline sm" href={`/finance/candidates/${person.id}`}>
                   Who gives to {lastName(person.name)}
                 </Link>

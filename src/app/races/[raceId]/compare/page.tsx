@@ -217,7 +217,7 @@ export default async function ComparePage({ params, searchParams }: PageProps) {
             )
           }
         />
-        <Row label="Background" pair={pair} cell={(person) => <Background person={person} />} />
+        <Row label="Experience" pair={pair} cell={(person) => <Background person={person} />} />
       </Block>
 
       {both.length + onlyA.length + onlyB.length > 0 ? (

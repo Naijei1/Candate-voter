@@ -22,6 +22,7 @@ import { raceQuestions } from "@/lib/tv/ask";
 import { MY_RACES_CRUMB } from "@/lib/tv/nav";
 import { newsForRace } from "@/lib/tv/news";
 import { lastName } from "@/lib/tv/party";
+import { splitSentence } from "@/lib/tv/short-line";
 import { allRaces, defaultPair, isHouseVote, raceView, stanceFor, voteChoice, type PersonView, type RaceView } from "@/lib/tv/people";
 import { raceTimeline, recordNote } from "@/lib/tv/race-extra";
 
@@ -57,64 +58,71 @@ function ColumnHead({ person }: { person: PersonView }) {
   );
 }
 
-function Issues({ race }: { race: RaceView }) {
+function Issues({ race, compareHref }: { race: RaceView; compareHref: string | null }) {
   const issues = stanceIssues();
   return (
-    <div
-      className="sbs wide"
-      style={
-        {
-          "--n": race.people.length,
-          "--k": issues.length + 1,
-        } as React.CSSProperties
-      }
-    >
-      <div className="sbs-lab" aria-hidden="true">
-        <div className="sbs-h" />
-        {issues.map((issue) => (
-          <div className="sbs-c" key={issue.id}>
-            {issue.label}
-          </div>
-        ))}
-      </div>
-      {race.people.map((person) => (
-        <div className="sbs-col" role="group" aria-label={person.name} key={person.id}>
-          <ColumnHead person={person} />
-          {issues.map((issue) => {
-            const stance = stanceFor(person.id, issue.id);
-            if (!stance) {
+    <>
+      <div
+        className="sbs wide"
+        style={
+          {
+            "--n": race.people.length,
+            "--k": issues.length + 1,
+          } as React.CSSProperties
+        }
+      >
+        <div className="sbs-lab" aria-hidden="true">
+          <div className="sbs-h" />
+          {issues.map((issue) => (
+            <div className="sbs-c" key={issue.id}>
+              {issue.label}
+            </div>
+          ))}
+        </div>
+        {race.people.map((person) => (
+          <div className="sbs-col" role="group" aria-label={person.name} key={person.id}>
+            <ColumnHead person={person} />
+            {issues.map((issue) => {
+              const stance = stanceFor(person.id, issue.id);
+              if (!stance) {
+                return (
+                  <div className="sbs-c" key={issue.id}>
+                    <span className="cl">{issue.label}</span>
+                    <span className="none">Not in our records</span>
+                  </div>
+                );
+              }
+              const vote = isHouseVote(stance) ? voteChoice(stance.text) : null;
               return (
                 <div className="sbs-c" key={issue.id}>
                   <span className="cl">{issue.label}</span>
-                  <span className="none">Not in our records</span>
+                  <p className="pt">
+                    {isHouseVote(stance) ? (
+                      <>
+                        <span className="vtag">House vote</span>{" "}
+                      </>
+                    ) : null}
+                    {splitSentence(stance.text)[0]}
+                  </p>
+                  <p className="pm">
+                    <time dateTime={stance.sourceDate}>{dayLabel(stance.sourceDate)}</time>{" "}
+                    <ExtLink className="schip" href={stance.sourceUrl} title={stance.sourceName}>
+                      <span className="lb">{stance.sourceName.split(",")[0]}</span>
+                    </ExtLink>
+                  </p>
+                  {vote ? <span className="hint">Vote: {vote}</span> : null}
                 </div>
               );
-            }
-            const vote = isHouseVote(stance) ? voteChoice(stance.text) : null;
-            return (
-              <div className="sbs-c" key={issue.id}>
-                <span className="cl">{issue.label}</span>
-                <p className="pt">
-                  {isHouseVote(stance) ? (
-                    <>
-                      <span className="vtag">House vote</span>{" "}
-                    </>
-                  ) : null}
-                  {stance.text}
-                </p>
-                <p className="pm">
-                  <time dateTime={stance.sourceDate}>{dayLabel(stance.sourceDate)}</time>{" "}
-                  <ExtLink className="schip" href={stance.sourceUrl} title={stance.sourceName}>
-                    <span className="lb">{stance.sourceName.split(",")[0]}</span>
-                  </ExtLink>
-                </p>
-                {vote ? <span className="hint">Vote: {vote}</span> : null}
-              </div>
-            );
-          })}
-        </div>
-      ))}
-    </div>
+            })}
+          </div>
+        ))}
+      </div>
+      {compareHref ? (
+        <p className="tabfoot">
+          <Link href={compareHref}>Read the full statements side by side</Link>
+        </p>
+      ) : null}
+    </>
   );
 }
 
@@ -183,7 +191,7 @@ export default async function RacePage({ params }: PageProps) {
   const questions = raceQuestions(race);
 
   const tabs = [
-    { id: "issues", label: "Issues", panel: <Issues race={race} /> },
+    { id: "issues", label: "Issues", panel: <Issues race={race} compareHref={compareHref} /> },
     { id: "record", label: "Voting record", panel: <Record race={race} /> },
     { id: "money", label: "Campaign money", panel: <Finance race={race} /> },
     {
