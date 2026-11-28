@@ -38,20 +38,23 @@ test("the site is named THE VOTE and no visitor-facing Candate name is left in s
 });
 
 test("nav says News Feed and Candidates' Political Finances, and /updates goes to /news", () => {
-  // v12 header uses the approved mockup labels; the phone tab bar keeps "News Feed" and "Finances".
-  const nav = readFileSync("src/components/tv/client/PrimaryNav.tsx", "utf8");
-  const order = ["Find my races", 'label="Candidates"', "News and Updates", 'label="Polls and Analysis"', "Campaign Finance"].map((text) => nav.indexOf(text));
+  // v13: header, phone menu and tab bar share one list of names in src/lib/tv/nav.ts.
+  const nav = readFileSync("src/lib/tv/nav.ts", "utf8");
+  const order = ['label: "My races"', 'label: "News"', 'label: "Campaign money"', 'label: "Search"'].map((text) => nav.indexOf(text));
   assert.ok(order.every((index) => index > 0), String(order));
   assert.deepEqual([...order].sort((x, y) => x - y), order);
-  assert.match(nav, /<Link href="\/news"/);
-  assert.match(nav, /<Link href="\/finance"/);
+  assert.match(nav, /href: "\/news"/);
+  assert.match(nav, /href: "\/finance"/);
+  for (const file of ["src/components/tv/client/PrimaryNav.tsx", "src/components/tv/Chrome.tsx", "src/components/site/MobileNavigation.tsx"]) {
+    assert.match(readFileSync(file, "utf8"), /from "@\/lib\/tv\/nav"/, file);
+  }
   assert.equal(NAV_LINKS[0].href, "/news");
   const updates = readFileSync("src/middleware.ts", "utf8");
   assert.match(updates, /\/updates/);
   assert.match(updates, /\/news/);
   assert.equal(existsSync("src/app/updates/page.tsx"), false);
   const news = readFileSync("src/app/news/page.tsx", "utf8");
-  assert.match(news, />News and Updates<\/h1>/);
+  assert.match(news, />News<\/h1>/);
   assert.equal(news.includes("redirect("), false);
 });
 
@@ -202,9 +205,10 @@ test("money charts use stored FEC totals and never draw a missing total as zero"
       assert.ok((race.people[i - 1]?.raised ?? 0) >= (race.people[i]?.raised ?? 0));
     }
   }
-  assert.equal(shortMoney(12_476_747.89), "$12.5M");
-  assert.equal(shortMoney(1_553_857.1), "$1.55M");
-  assert.equal(shortMoney(303_598.89), "$304K");
+  // v13: plain words, not "M" or "K".
+  assert.equal(shortMoney(12_476_747.89), "$12.5 million");
+  assert.equal(shortMoney(1_553_857.1), "$1.6 million");
+  assert.equal(shortMoney(303_598.89), "$304,000");
   assert.equal(shortMoney(0), "$0");
 });
 
@@ -380,9 +384,9 @@ test("the full Senate comparison allows enough output for cited differences and 
 });
 
 test("home order is film, map, compare, news feed, money; ZIP link stays and nothing has a pause button", () => {
-  // v12 home: hero, Senate matchup, Featured, state map, then sources. No ZIP entry (the flow is state map, then county).
+  // v13 home: hero, election status, county picks, then sources. No ZIP entry (the flow is county, then races).
   const page = readFileSync("src/app/page.tsx", "utf8");
-  const order = ["<Hero", "/compare?a=", 'title="Featured"', 'title="Explore by state"', "/sources"].map((tag) => page.indexOf(tag));
+  const order = ["<Hero", "<ElectionStatus", "/ballot?county=", "/sources"].map((tag) => page.indexOf(tag));
   assert.ok(order.every((index) => index > 0), String(order));
   assert.deepEqual([...order].sort((a, b) => a - b), order);
   assert.equal(/ZIP code|<input/.test(page), false);

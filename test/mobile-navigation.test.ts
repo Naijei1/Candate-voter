@@ -5,7 +5,8 @@ import test from "node:test";
 import { currentTab, keyboardOpen, MOBILE_TABS, raisesKeyboard } from "../src/components/site/MobileNavigation";
 
 test("phone navigation goes directly to the five existing Kentucky guide destinations", () => {
-  assert.deepEqual(MOBILE_TABS.map(({ href }) => href), ["/", "/ballot", "/news", "/finance", "/ask"]);
+  // v13: Search replaces Ask in the tab bar; Ask stays reachable from Search and race pages.
+  assert.deepEqual(MOBILE_TABS.map(({ href }) => href), ["/", "/ballot", "/news", "/finance", "/search"]);
   for (const { href, label } of MOBILE_TABS) {
     assert.ok(existsSync(join("src/app", href, "page.tsx")), href);
     assert.doesNotMatch(label, /about|national|states|congress|local|watchlist/i);
@@ -42,12 +43,12 @@ test("no ZIP entry anywhere and mockup election claims stay out of source", () =
 });
 
 test("tab names match the page titles they open", () => {
-  // v12 keeps the short tab labels from the approved mockup; the pages carry the mockup's longer titles.
-  assert.deepEqual(MOBILE_TABS.map(({ label }) => label), ["Home", "My races", "News Feed", "Finances", "Ask"]);
+  // v13: one set of names. Each tab label is the title of the page it opens.
+  assert.deepEqual(MOBILE_TABS.map(({ label }) => label), ["Home", "My races", "News", "Campaign money", "Search"]);
   assert.match(readFileSync("src/app/ballot/page.tsx", "utf8"), />My races<\/h1>/);
-  assert.match(readFileSync("src/app/news/page.tsx", "utf8"), />News and Updates<\/h1>/);
-  assert.match(readFileSync("src/app/finance/page.tsx", "utf8"), />Campaign Finance<\/h1>/);
-  assert.match(readFileSync("src/app/ask/page.tsx", "utf8"), />Ask<\/h1>/);
+  assert.match(readFileSync("src/app/news/page.tsx", "utf8"), />News<\/h1>/);
+  assert.match(readFileSync("src/app/finance/page.tsx", "utf8"), />Campaign money<\/h1>/);
+  assert.match(readFileSync("src/app/search/page.tsx", "utf8"), /: "Search"\}<\/h1>/);
 });
 
 test("the tab bar hides while the on-screen keyboard is open", () => {

@@ -7,7 +7,7 @@ import { Icon } from "@/components/tv/Icon";
 import { NEWS_TOPICS, newsFeed } from "@/lib/tv/news";
 import { allRaces } from "@/lib/tv/people";
 
-export const metadata: Metadata = { alternates: { canonical: "/news" }, title: "News and Updates" };
+export const metadata: Metadata = { alternates: { canonical: "/news" }, title: "News" };
 export const revalidate = 3600;
 
 export default async function NewsPage() {
@@ -16,8 +16,9 @@ export default async function NewsPage() {
   const sources = [...new Map(items.map((item) => [item.source, item])).values()];
   return (
     <div className="wrap">
-      <Crumbs items={[{ href: "/", label: "Home" }, { label: "News and Updates" }]} />
-      <h1 className="t-h1 pt">News and Updates</h1>
+      <Crumbs items={[{ href: "/", label: "Home" }, { label: "News" }]} />
+      <h1 className="t-h1 pt">News</h1>
+      <p className="lede">What the candidates said, and news reports about the races.</p>
       {items.length ? (
         <NewsFeed items={items} topics={NEWS_TOPICS} races={races} />
       ) : (
@@ -27,8 +28,8 @@ export default async function NewsPage() {
       )}
       <p className="page-f">
         <YoursLink className="btn primary">
-          <Icon name="pin" size="sm" />
-          Find my races
+          <Icon name="ballot" size="sm" />
+          My races
         </YoursLink>
       </p>
       {sources.length ? (

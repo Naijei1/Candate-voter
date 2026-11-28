@@ -36,7 +36,7 @@ export default async function SourcesPage() {
     ["Outside spending", "working", "FEC independent expenditures", "Each FEC filing deadline"],
     ["Issue positions", "working", "Candidate websites, questionnaires, official offices", `Last checked ${dayLabel(stanceData.checkedOn)}`],
     ["House voting records", "working", "House Clerk roll calls", `Last checked ${dayLabel(profileVoteSelection.checkedOn)}`],
-    ["News and Updates", "working", newsSources.map((item) => item.source).join("; ") || "No feeds", newsChecked ? `Snapshot, ${dayLabel(newsChecked)}` : "Not applicable"],
+    ["News", "working", newsSources.map((item) => item.source).join("; ") || "No feeds", newsChecked ? `Snapshot, ${dayLabel(newsChecked)}` : "Not applicable"],
     ["Ask", "demonstration", "Matches questions to this site’s records", "Same as the records"],
     ["Follow and alerts", "demonstration", "Saved on this device; nothing is sent", "Not applicable"],
     ["Report an error", "working", "Sent to THE VOTE’s corrections inbox", "Not applicable"],

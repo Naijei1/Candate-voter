@@ -7,7 +7,8 @@ test("race page puts the November candidates before primary tables", () => {
   // v12: the November cards lead the page, the tabbed comparison follows, and primary tables are gone.
   const race = readFileSync("src/app/races/[raceId]/page.tsx", "utf8");
   const candidates = race.indexOf("<RaceCard key={person.id}");
-  const tabs = race.indexOf('<Tabs label="Compare the candidates"');
+  // v13: the tab list is labeled "About this race".
+  const tabs = race.indexOf('<Tabs label="About this race"');
   assert.ok(candidates > -1 && tabs > candidates);
   assert.equal(race.includes('show="primary"'), false);
 });

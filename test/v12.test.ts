@@ -31,17 +31,21 @@ test("compare lines are cut at a complete clause and keep the full text", () => 
 });
 
 test("winners and result headlines stay hidden until the one flag is turned on", () => {
-  assert.equal(winners.display, false);
-  assert.equal(RESULTS_VISIBLE, false);
+  // v13: the owner approved showing winners, so the flag is on. Turning it off still hides everything.
+  assert.equal(winners.display, true);
+  assert.equal(RESULTS_VISIBLE, true);
   const first = winners.winners[0];
   assert.ok(first);
-  assert.equal(isWinner(first.raceId, first.name), false);
-  assert.equal(winnerName(first.raceId), null);
-  assert.equal(isWinner(first.raceId, first.name, { visible: true }), true);
-  assert.equal(winnerName(first.raceId, { visible: true }), first.name);
-  assert.equal(hidesHeadline("Barr wins Senate seat"), true);
-  assert.equal(hidesHeadline("Barr wins Senate seat", { visible: true }), false);
-  assert.deepEqual(visibleNews([{ title: "Candidates meet in Lexington forum" }, { title: "McGrath concedes" }]), [{ title: "Candidates meet in Lexington forum" }]);
+  assert.equal(isWinner(first.raceId, first.name), true);
+  assert.equal(winnerName(first.raceId), first.name);
+  assert.equal(isWinner(first.raceId, first.name, { visible: false }), false);
+  assert.equal(winnerName(first.raceId, { visible: false }), null);
+  assert.equal(hidesHeadline("Barr wins Senate seat"), false);
+  assert.equal(hidesHeadline("Barr wins Senate seat", { visible: false }), true);
+  const news = [{ title: "Candidates meet in Lexington forum" }, { title: "McGrath concedes" }];
+  assert.deepEqual(visibleNews(news), news);
+  assert.deepEqual(visibleNews(news, { visible: false }), [{ title: "Candidates meet in Lexington forum" }]);
+  assert.equal(winners.winners.every((row) => !("votes" in row) && !("margin" in row) && !("percent" in row)), true);
   const won = readFileSync("src/components/tv/bits.tsx", "utf8");
   assert.doesNotMatch(won.slice(won.indexOf("export function WonTag")), /votes|%|margin/i);
 });
@@ -83,9 +87,12 @@ test("money splits receipts into four labeled parts, in a fixed order, without c
   for (const snapshot of fundingRows()) assert.match(snapshot.sourceUrl, /^https:\/\/www\.fec\.gov\/data\/committee\/C\d+\//);
   const css = readFileSync("src/app/globals.css", "utf8");
   for (const part of FUNDING_PARTS) assert.match(css, new RegExp(`\\.${part.className} \\{ background:`));
-  const finance = readFileSync("src/app/finance/page.tsx", "utf8");
-  assert.match(finance, /Outside groups for \{row\.person\.name\}/);
-  assert.match(finance, /Outside groups against \{row\.person\.name\}/);
+  // v13: outside spending moved into the shared money list, under an "Outside groups" heading. No percentages.
+  const finance = readFileSync("src/components/tv/MoneyList.tsx", "utf8");
+  assert.match(finance, />Outside groups</);
+  assert.match(finance, /For \{row\.person\.name\}/);
+  assert.match(finance, /Against \{row\.person\.name\}/);
+  assert.doesNotMatch(readFileSync("src/components/tv/Funding.tsx", "utf8"), /percent|%\}/);
 });
 
 test("outside links open in a new tab with noopener and spoken new-tab text", () => {

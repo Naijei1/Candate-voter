@@ -32,13 +32,16 @@ test("posts on X stay hidden when the bearer token is unset", async () => {
 });
 
 test("the home page leads with the hero, the Kentucky map, and FEC activity", () => {
-  // v12: the hero is a CSS line drawing of the country with the covered state lit; the guide is county-first.
+  // v12: the hero is a CSS line drawing of the country with the available state lit; the guide is county-first.
+  // v13: below the hero, the election status line and one-tap county picks replace the matchup, Featured and state list.
   const page = readFileSync("src/app/page.tsx", "utf8");
   const hero = readFileSync("src/components/tv/Hero.tsx", "utf8");
   const css = readFileSync("src/app/globals.css", "utf8");
   assert.match(page, /<Hero \/>/);
-  assert.match(page, /<StateExplorer /);
-  assert.match(page, /featured\(/);
+  assert.match(page, /<ElectionStatus where \/>/);
+  assert.match(page, /state\.quickCounties\.map/);
+  assert.match(hero, /Your U\.S\. Senate<\/span> <span>and House races/);
+  assert.match(hero, /races available/);
   assert.equal(page.includes("Kentucky Lantern"), false);
   assert.equal(page.includes("<input"), false);
   assert.match(readFileSync("src/components/tv/client/Yours.tsx", "utf8"), /"Find my races"/);

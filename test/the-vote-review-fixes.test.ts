@@ -220,9 +220,9 @@ test("home page sends only race titles and ballot facts; candidate records load 
   const records = summary("records");
   assert.ok(records.evidence.length > 0);
   assert.equal(records.evidence.every((row) => row.personId), true);
-  // v12 home shows one Senate matchup and links to the compare page; no records are sent with it.
+  // v13 home has one job, picking a county; it sends no candidate records.
   const page = readFileSync("src/app/page.tsx", "utf8");
-  assert.match(page, /href=\{`\/races\/\$\{senate\.raceId\}\/compare\?a=\$\{pair\[0\]\.id\}&b=\$\{pair\[1\]\.id\}`\}/);
+  assert.match(page, /href=\{`\/ballot\?county=\$\{encodeURIComponent\(county\)\}`\}/);
   assert.equal(/evidence|compareBasis|"use client"/.test(page), false);
 });
 

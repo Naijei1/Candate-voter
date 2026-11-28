@@ -49,7 +49,7 @@ export default async function SearchPage({ searchParams }: PageProps) {
         <label className="sr" htmlFor="s-q">
           Search
         </label>
-        <input id="s-q" name="q" defaultValue={query} autoComplete="off" placeholder="A name, district or state…" maxLength={120} />
+        <input id="s-q" name="q" defaultValue={query} autoComplete="off" placeholder="A name or a district…" maxLength={120} />
         <button className="btn primary" type="submit">
           Search
         </button>
@@ -80,7 +80,7 @@ export default async function SearchPage({ searchParams }: PageProps) {
           ) : (
             <div className="empty">
               <p className="empty-t">No results for “{query}”.</p>
-              <p>THE VOTE covers U.S. Senate and House races. Try a name, “District 4” or a state.</p>
+              <p>THE VOTE has U.S. Senate and House races. Try a name or “District 4”.</p>
             </div>
           )}
           <p className="s-ask">
@@ -107,7 +107,11 @@ export default async function SearchPage({ searchParams }: PageProps) {
             </>
           ) : null}
         </>
-      ) : null}
+      ) : (
+        <p className="s-ask">
+          <Link href="/ask">Or ask a question</Link>
+        </p>
+      )}
     </div>
   );
 }
