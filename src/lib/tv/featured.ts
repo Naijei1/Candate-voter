@@ -55,7 +55,7 @@ export function featured(now = new Date()): Featured[] {
     items.push({
       label: "Recent filings",
       text: `${filing.person.name}, ${dayLabel(filing.report.receiptDate.slice(0, 10))}`,
-      href: `/races/${filing.raceId}?tab=finance`,
+      href: `/races/${filing.raceId}?tab=money`,
       source: { label: "New FEC report", url: filing.report.sourceUrl },
     });
   }

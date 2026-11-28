@@ -29,6 +29,8 @@ import { raceTimeline, recordNote } from "@/lib/tv/race-extra";
 export const revalidate = 3600;
 export const runtime = "nodejs";
 
+const OLD_TABS = { overview: "issues", finance: "money", statements: "news", polls: "issues" };
+
 type PageProps = { params: Promise<{ raceId: string }> };
 
 export function generateStaticParams() {
@@ -262,7 +264,7 @@ export default async function RacePage({ params }: PageProps) {
 
       <div className="race-g">
         <div className="race-main">
-          <Tabs label="About this race" tabs={tabs} />
+          <Tabs label="About this race" tabs={tabs} aliases={OLD_TABS} />
           <p className="page-f">
             <ReportButton />
             <Link href="/sources">Sources</Link>

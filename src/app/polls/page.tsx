@@ -27,7 +27,7 @@ export default function PollsPage() {
           </p>
           <div className="chips" role="group" aria-labelledby="eb-l">
             {races.map((race) => (
-              <Link key={race.raceId} className="chip" href={`/races/${race.raceId}?tab=polls`}>
+              <Link key={race.raceId} className="chip" href={`/races/${race.raceId}`}>
                 {race.title.replace(/^U\.S\. House/, "House")}
               </Link>
             ))}

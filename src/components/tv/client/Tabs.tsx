@@ -5,19 +5,33 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 export type TabPanel = { id: string; label: string; panel: ReactNode };
 
 /** ARIA tabs that keep the open tab in the URL (`?tab=` by default) so links and Back work. */
-export function Tabs({ label, tabs, param = "tab", listClass = "tabs" }: { label: string; tabs: TabPanel[]; param?: string; listClass?: string }) {
+export function Tabs({
+  label,
+  tabs,
+  param = "tab",
+  listClass = "tabs",
+  aliases,
+}: {
+  label: string;
+  tabs: TabPanel[];
+  param?: string;
+  listClass?: string;
+  /** Old tab ids that shared links may still carry, mapped to the tab that replaced them. */
+  aliases?: Record<string, string>;
+}) {
   const [active, setActive] = useState(tabs[0]?.id ?? "");
   const buttons = useRef<Array<HTMLButtonElement | null>>([]);
 
   useEffect(() => {
     const sync = () => {
-      const wanted = new URLSearchParams(location.search).get(param);
+      const raw = new URLSearchParams(location.search).get(param);
+      const wanted = raw && aliases?.[raw] ? aliases[raw] : raw;
       setActive(tabs.some((tab) => tab.id === wanted) ? (wanted as string) : (tabs[0]?.id ?? ""));
     };
     sync();
     window.addEventListener("popstate", sync);
     return () => window.removeEventListener("popstate", sync);
-  }, [tabs, param]);
+  }, [tabs, param, aliases]);
 
   const choose = (id: string, focus = false) => {
     setActive(id);

@@ -697,7 +697,7 @@ mark { background: color-mix(in srgb, #F0C674 45%, transparent); color: inherit;
 @media (max-width: 1180px) {
   .nav > a, .nav-b { padding: 0 8px; font-size: 15px; }
   .race-g { grid-template-columns: minmax(0, 1fr); }
-  .race-ask { display: none; }
+  .race-ask { position: static; margin-top: 32px; }
   .ask-inline { display: inline-flex; }
   .ask-fab { display: inline-flex; position: fixed; transition: opacity .2s; right: 20px; bottom: 24px; z-index: 30; box-shadow: var(--shadow-pop); }
 }
@@ -1682,7 +1682,6 @@ html[data-keyboard="open"] .tabbar { display: none; }
   .tabbar a { font-size: 13px; line-height: 1.15; text-align: center; padding: 4px 2px; }
   .ftr .wrap { grid-template-columns: minmax(0, 1fr); }
 }
-@media (max-width: 1000px) { .race-ask { display: block; position: static; margin-top: 32px; } }
 .ract { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 
 /* v13: compare, stacked on phones; full source chips */

@@ -29,7 +29,7 @@ export function MoneyList({ race, level = 3 }: { race: RaceView; level?: 3 | 4 }
               </p>
               {ok && row ? (
                 <p>
-                  Raised <b className="num">{shortMoney(row.receipts ?? 0)}</b>.{top ? ` Most came from ${lowerFirst(top.label)}.` : null}
+                  Raised <b className="num">{shortMoney(row.receipts ?? 0)}</b>.{top ? ` ${top.amount * 2 > (row.receipts ?? 0) ? "Most" : "The largest share"} came from ${lowerFirst(top.label)}.` : null}
                 </p>
               ) : (
                 <p className="none">No totals reported to the Federal Election Commission.</p>

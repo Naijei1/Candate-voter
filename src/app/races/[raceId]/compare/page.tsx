@@ -174,10 +174,10 @@ export default async function ComparePage({ params, searchParams }: PageProps) {
         Compare {lastName(a.name)} and {lastName(b.name)}
       </h1>
       {race.people.length > 2 ? (
-        <p className="cswap">
+        <div className="cswap">
           <Swap race={race} person={a} other={b} side="a" />
           <Swap race={race} person={b} other={a} side="b" />
-        </p>
+        </div>
       ) : null}
 
       <div className="chead">

@@ -127,7 +127,7 @@ export function answerQuestion(raw: string): AskAnswer {
       next: target
         ? [
             { label: "Their published positions", href: `${racePath(target)}?tab=issues` },
-            { label: "Statements on file", href: `${racePath(target)}?tab=statements` },
+            { label: "Statements on file", href: `${racePath(target)}?tab=news` },
           ]
         : [{ label: "Search", href: "/search" }],
     };
@@ -220,7 +220,7 @@ export function answerQuestion(raw: string): AskAnswer {
     if (named.length === 1 && !/each|all|every|who|most/.test(q)) {
       const { person, race: home } = named[0];
       const funding = person.funding;
-      const next = [{ label: `${home.title} campaign finance`, href: `${racePath(home)}?tab=finance` }];
+      const next = [{ label: `${home.title} campaign finance`, href: `${racePath(home)}?tab=money` }];
       if (!funding || funding.status !== "ok" || funding.receipts == null) {
         return { found: false, lead: [`${person.name} has no campaign report on file with the FEC.`], sources: [], next };
       }
@@ -244,7 +244,7 @@ export function answerQuestion(raw: string): AskAnswer {
       lead: [`${heading} by each ${target.title} campaign,`, `as reported to the FEC${end ? ` through ${dayLabel(end)}` : ""}.`],
       bars: target.people.map((person) => ({ person, value: person.funding?.status === "ok" ? (person.funding[key] ?? null) : null })).sort((a, b) => (b.value ?? -1) - (a.value ?? -1)),
       sources: reported.map(fecSource),
-      next: [{ label: `${target.title} campaign finance`, href: `${racePath(target)}?tab=finance` }],
+      next: [{ label: `${target.title} campaign finance`, href: `${racePath(target)}?tab=money` }],
     };
   }
 

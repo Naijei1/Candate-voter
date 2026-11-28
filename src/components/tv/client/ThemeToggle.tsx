@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { Icon } from "../Icon";
 import { DARK_BAR, LIGHT_BAR } from "../theme-script";
 
+const THEME_EVENT = "tv-theme";
+
 function current(): "light" | "dark" {
   return document.documentElement.dataset.theme === "dark" ? "dark" : "light";
 }
@@ -21,7 +23,10 @@ export function ThemeToggle({ className = "thm" }: { className?: string }) {
   const [theme, setTheme] = useState<"light" | "dark">("light");
 
   useEffect(() => {
-    setTheme(current());
+    const sync = () => setTheme(current());
+    sync();
+    window.addEventListener(THEME_EVENT, sync);
+    return () => window.removeEventListener(THEME_EVENT, sync);
   }, []);
 
   const flip = () => {
@@ -32,7 +37,7 @@ export function ThemeToggle({ className = "thm" }: { className?: string }) {
     } catch {
       // The choice still applies to this page.
     }
-    setTheme(next);
+    window.dispatchEvent(new Event(THEME_EVENT));
   };
 
   return (
