@@ -1730,3 +1730,4 @@ html[data-keyboard="open"] .tabbar { display: none; }
 .fin-r .sec-t a { color: inherit; }
 @media (min-width: 761px) { .hero { min-height: min(calc(100svh - var(--hh)), 620px); } }
 .cacts a { white-space: normal; text-align: center; min-width: 0; }
+.mnav a.top.wtv > .ic:first-child { margin-right: 4px; }
