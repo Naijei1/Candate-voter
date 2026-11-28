@@ -231,7 +231,7 @@ export function answerQuestion(raw: string): AskAnswer {
           `spent ${shortMoney(funding.disbursements ?? 0)} and had ${shortMoney(funding.cash ?? 0)} on hand${funding.coverageEnd ? ` through ${dayLabel(funding.coverageEnd)}` : ""}.`,
         ],
         sources: [fecSource(person)],
-        next: [{ label: `Where ${lastName(person.name)}’s money comes from`, href: `/finance/candidates/${person.id}` }, ...next],
+        next: [{ label: `Who gives to ${lastName(person.name)}`, href: `/finance/candidates/${person.id}` }, ...next],
       };
     }
     const target = race ?? named[0].race;

@@ -6,7 +6,6 @@ import type { PersonView } from "@/lib/tv/people";
 import { campaignCommittee, latestGifts, pacPath, periodLong, reportsFor, type GiftRow } from "@/lib/tv/money";
 import { outsideFor } from "@/lib/tv/race-extra";
 import { ReportButton } from "./client/Report";
-import { YoursContext } from "./client/Yours";
 import { Crumbs, SectionHead } from "./bits";
 import { ExtLink } from "./ExtLink";
 import { FundingBlock } from "./Funding";
@@ -21,7 +20,7 @@ function GiftName({ row }: { row: GiftRow }) {
   return path ? <Link href={path}>{text}</Link> : text;
 }
 
-/** Where one campaign's money came from: bar, totals, receipts per report, committee gifts, outside groups. */
+/** Who gives to one campaign: sources in plain words first, then groups that gave, then per-report detail. */
 export function MoneyView({ person }: { person: PersonView & { funding: FundingBreakdown } }) {
   const funding = person.funding;
   const committee = campaignCommittee(person);
@@ -34,133 +33,109 @@ export function MoneyView({ person }: { person: PersonView & { funding: FundingB
 
   return (
     <div className="wrap">
-      <Crumbs items={[{ href: "/", label: "Home" }, { href: "/finance", label: "Campaign Finance" }, { label: committee?.name ?? person.name }]} />
-      <YoursContext />
-      <h1 className="t-h1 pt">Where {person.name}’s money comes from</h1>
+      <Crumbs items={[{ href: "/", label: "Home" }, { href: "/finance", label: "Campaign money" }, { label: person.name }]} />
+      <h1 className="t-h1 pt">Who gives to {person.name}</h1>
 
-      <section className="sec" aria-label="Where it came from">
+      <section className="sec" aria-label="Where the money came from">
         <FundingBlock name={person.name} row={funding} />
+        {ok ? (
+          <p className="mspent">
+            Spent <b className="num">{shortMoney(funding.disbursements ?? 0)}</b>. Cash left <b className="num">{shortMoney(funding.cash ?? 0)}</b>.
+          </p>
+        ) : null}
       </section>
 
-      {ok ? (
-        <section className="sec" aria-label="Totals">
-          <dl className="stats">
-            <div>
-              <dt>Raised</dt>
-              <dd className="num">{shortMoney(funding.receipts ?? 0)}</dd>
-            </div>
-            <div>
-              <dt>Spent</dt>
-              <dd className="num">{shortMoney(funding.disbursements ?? 0)}</dd>
-            </div>
-            <div>
-              <dt>Cash</dt>
-              <dd className="num">{shortMoney(funding.cash ?? 0)}</dd>
-            </div>
-          </dl>
+      {gifts ? (
+        <section className="sec" aria-labelledby="h-pac">
+          <SectionHead id="h-pac" title="Groups that gave" />
+          <p className="sec-sub">From the report for {periodLong(gifts.start, gifts.end)}.</p>
+          <ul className="glist">
+            {gifts.rows.map((row) => (
+              <li key={`${row.committeeId}-${row.name}`}>
+                <span className="gn">
+                  <GiftName row={row} />
+                  {row.short === row.name ? null : (
+                    <details className="fullnm">
+                      <summary>
+                        Full name<span className="sr"> of {row.short}</span>
+                      </summary>
+                      {row.name}
+                    </details>
+                  )}
+                </span>
+                <b className="num">{dollars(row.total)}</b>
+              </li>
+            ))}
+          </ul>
+          <details className="srcd">
+            <summary>Sources</summary>
+            <p className="fnote">
+              <ExtLink className="xl" href={gifts.sourceUrl} icon>
+                {gifts.fileNumber ? `FEC filing ${gifts.fileNumber}` : "FEC filing"}
+              </ExtLink>
+            </p>
+          </details>
         </section>
       ) : null}
 
-      {reports.length > 0 || gifts ? (
-        <div className="mgrid">
-          {reports.length > 0 ? (
-            <section className="sec" aria-labelledby="h-per">
-              <SectionHead id="h-per" title="Raised per report" />
-              <div className="bars fbars" role="group" aria-label="Raised per report">
-                {reports.map((report) => {
-                  const label = periodLong(report.start, report.end);
-                  return (
-                    <div className="brow" key={`${report.start}-${report.end}`}>
-                      <div className="who">
-                        <span>{label}</span>
-                      </div>
-                      <div className="track" role="img" aria-label={`Raised ${dollars(report.receipts)} in the report for ${label}`}>
-                        <span className="fill" style={{ width: `${((report.receipts / top) * 100).toFixed(1)}%` }} />
-                      </div>
-                      <span className="val" title={dollars(report.receipts)}>
-                        {shortMoney(report.receipts)}
-                      </span>
+      {reports.length > 0 ? (
+        <details className="disc" id="reports">
+          <summary>
+            <span className="sec-t sm">Raised in each report</span>
+          </summary>
+          <div className="disc-b">
+            <div className="bars fbars" role="group" aria-label="Raised in each report">
+              {reports.map((report) => {
+                const label = periodLong(report.start, report.end);
+                return (
+                  <div className="brow" key={`${report.start}-${report.end}`}>
+                    <div className="who">
+                      <span>{label}</span>
                     </div>
-                  );
-                })}
-              </div>
-              <p className="src">
-                Source:{" "}
-                {[...reports].reverse().map((report, index) => (
-                  <span key={report.fileNumber}>
-                    {index > 0 ? "; " : null}
+                    <div className="track" role="img" aria-label={`Raised ${dollars(report.receipts)} in the report for ${label}`}>
+                      <span className="fill" style={{ width: `${((report.receipts / top) * 100).toFixed(1)}%` }} />
+                    </div>
+                    <span className="val" title={dollars(report.receipts)}>
+                      {shortMoney(report.receipts)}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+            <details className="srcd">
+              <summary>Sources</summary>
+              <ul className="srcl-list">
+                {[...reports].reverse().map((report) => (
+                  <li key={report.fileNumber}>
                     <ExtLink className="xl" href={report.sourceUrl} icon>
-                      {index === 0 ? `FEC filing ${report.fileNumber}` : report.fileNumber}
+                      FEC filing {report.fileNumber}
                     </ExtLink>
-                  </span>
+                  </li>
                 ))}
-              </p>
-            </section>
-          ) : null}
-          {gifts ? (
-            <section className="sec" aria-labelledby="h-pac">
-              <SectionHead id="h-pac" title={`Committee gifts, ${periodLong(gifts.start, gifts.end)} report`} />
-              <div className="tscroll" role="region" aria-labelledby="h-pac" tabIndex={0}>
-                <table className="tbl">
-                  <caption className="sr">Committee gifts</caption>
-                  <thead>
-                    <tr>
-                      <th scope="col">Committee</th>
-                      <th scope="col" className="r">
-                        Amount
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {gifts.rows.map((row) => (
-                      <tr key={`${row.committeeId}-${row.name}`}>
-                        <td>
-                          {row.short === row.name ? (
-                            <GiftName row={row} />
-                          ) : (
-                            <>
-                              <GiftName row={row} />
-                              <details className="fullnm">
-                                <summary>
-                                  Full name<span className="sr"> of {row.short}</span>
-                                </summary>
-                                {row.name}
-                              </details>
-                            </>
-                          )}
-                        </td>
-                        <td className="r num">{dollars(row.total)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <p className="src">
-                Source:{" "}
-                <ExtLink className="xl" href={gifts.sourceUrl} icon>
-                  {gifts.fileNumber ? `FEC filing ${gifts.fileNumber}` : "FEC filing"}
-                </ExtLink>
-              </p>
-            </section>
-          ) : null}
-        </div>
+              </ul>
+            </details>
+          </div>
+        </details>
       ) : null}
 
       {outside ? (
         <section className="sec" aria-labelledby="h-o">
-          <SectionHead id="h-o" title="Outside spending" />
+          <SectionHead id="h-o" title="Outside groups" />
+          <p className="sec-sub">Groups that spent on their own, not money the campaign received.</p>
           <p className="outl">
-            Outside groups for {person.name}: <b className="num">{dollars(outside.support)}</b>
+            For {person.name}: <b className="num">{dollars(outside.support)}</b>
           </p>
           <p className="outl">
-            Outside groups against {person.name}: <b className="num">{dollars(outside.oppose)}</b>
+            Against {person.name}: <b className="num">{dollars(outside.oppose)}</b>
           </p>
-          <p className="src">
-            Source:{" "}
-            <ExtLink className="xl" href={outside.sourceUrl} icon>
-              FEC independent expenditures
-            </ExtLink>
-          </p>
+          <details className="srcd">
+            <summary>Sources</summary>
+            <p className="fnote">
+              <ExtLink className="xl" href={outside.sourceUrl} icon>
+                FEC outside spending
+              </ExtLink>
+            </p>
+          </details>
         </section>
       ) : null}
 
@@ -170,19 +145,11 @@ export function MoneyView({ person }: { person: PersonView & { funding: FundingB
         </Link>
         {committee ? (
           <ExtLink className="xl" href={`https://www.fec.gov/data/receipts/?committee_id=${committee.committeeId}`} icon>
-            Individual donors: FEC
+            People who gave over $200, on the FEC website
           </ExtLink>
         ) : null}
         <ReportButton candidateId={person.id} />
       </p>
-      <details className="how">
-        <summary>Sources and method</summary>
-        <div className="how-b">
-          {reports.length > 0 ? `Raised per report: each bar is one FEC reporting period (${reports.length} in our records). ` : null}
-          {gifts ? "Committee gifts cover one report only. " : null}
-          Individual donors over $200 are listed by the FEC, not here. Outside groups spend on their own; that is not campaign money.
-        </div>
-      </details>
     </div>
   );
 }

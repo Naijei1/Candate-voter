@@ -5,15 +5,14 @@ import { AskPanel } from "@/components/tv/Ask";
 import { FollowButton } from "@/components/tv/client/Follow";
 import { ReportButton } from "@/components/tv/client/Report";
 import { Tabs } from "@/components/tv/client/Tabs";
-import { Crumbs, Empty, Face, PartyTag } from "@/components/tv/bits";
+import { Crumbs, Empty, Face } from "@/components/tv/bits";
 import { ExtLink } from "@/components/tv/ExtLink";
-import { FinanceTable, FundingLegend } from "@/components/tv/FinanceTable";
 import { Icon } from "@/components/tv/Icon";
 import { NewsList } from "@/components/tv/NewsList";
+import { MoneyList } from "@/components/tv/MoneyList";
 import { RaceCard } from "@/components/tv/RaceCard";
 import { ElectionStatus } from "@/components/tv/Status";
 import { VoteRecord } from "@/components/tv/Votes";
-import { formatMoney } from "@/lib/finance/model";
 import { dayLabel } from "@/lib/format";
 import { KY_BALLOT_SOURCES } from "@/lib/site/ky-ballot";
 import { profileFor } from "@/lib/site/profiles";
@@ -24,7 +23,7 @@ import { MY_RACES_CRUMB } from "@/lib/tv/nav";
 import { newsForRace } from "@/lib/tv/news";
 import { lastName } from "@/lib/tv/party";
 import { allRaces, defaultPair, isHouseVote, raceView, stanceFor, voteChoice, type PersonView, type RaceView } from "@/lib/tv/people";
-import { outsideSpending, raceTimeline, recordNote } from "@/lib/tv/race-extra";
+import { raceTimeline, recordNote } from "@/lib/tv/race-extra";
 
 export const revalidate = 3600;
 export const runtime = "nodejs";
@@ -152,51 +151,17 @@ function Record({ race }: { race: RaceView }) {
 }
 
 function Finance({ race }: { race: RaceView }) {
-  const outside = outsideSpending(race);
   return (
     <>
-      <h3 className="sub-h">Money reported</h3>
-      <FundingLegend />
-      <FinanceTable people={race.people} />
-      <p className="src">
-        Source:{" "}
-        <ExtLink className="xl" href={KY_BALLOT_SOURCES[2].url} icon>
-          FEC candidate totals
-        </ExtLink>
-      </p>
-      {outside.length > 0 ? (
-        <>
-          <h3 className="sub-h">Outside spending</h3>
-          <ul className="outlist">
-            {outside.map((row) => (
-              <li key={row.person.id}>
-                <PartyTag party={row.person.party} size="sm" /> <Link href={`/candidates/${row.person.id}`}>{row.person.name}</Link>
-                <p className="outl">
-                  Outside groups for {row.person.name}: <b className="num">{formatMoney(Math.round(row.support)).replace(/\.00$/, "")}</b>
-                </p>
-                <p className="outl">
-                  Outside groups against {row.person.name}: <b className="num">{formatMoney(Math.round(row.oppose)).replace(/\.00$/, "")}</b>
-                </p>
-              </li>
-            ))}
-          </ul>
-          <p className="src">
-            Source:{" "}
-            {outside.map((row, index) => (
-              <span key={row.person.id}>
-                {index > 0 ? "; " : null}
-                <ExtLink className="xl" href={row.sourceUrl} icon>
-                  {outside.length > 1 ? `FEC independent expenditures, ${lastName(row.person.name)}` : "FEC independent expenditures"}
-                </ExtLink>
-              </span>
-            ))}
-          </p>
-          <details className="how">
-            <summary>Sources and method</summary>
-            <div className="how-b">Outside groups spend on their own. This is not money the campaigns received.</div>
-          </details>
-        </>
-      ) : null}
+      <MoneyList race={race} />
+      <details className="srcd">
+        <summary>Sources</summary>
+        <p className="fnote">
+          <ExtLink className="xl" href={KY_BALLOT_SOURCES[2].url} icon>
+            FEC candidate totals
+          </ExtLink>
+        </p>
+      </details>
     </>
   );
 }

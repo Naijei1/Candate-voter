@@ -19,8 +19,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!person?.funding) return { title: "Campaign money" };
   return {
     alternates: { canonical: `/finance/candidates/${person.id}` },
-    title: `Where ${person.name}’s money comes from`,
-    description: `FEC totals for ${person.name}: individuals, PACs and other committees, self-funding and other receipts.`,
+    title: `Who gives to ${person.name}`,
+    description: `Who gives to ${person.name}’s campaign, from Federal Election Commission reports.`,
   };
 }
 
