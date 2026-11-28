@@ -86,9 +86,7 @@ export function SiteFooter() {
         <div className="wrap">
           <div className="f-brand">
             <Brand />
-            <p>
-              {state.name}’s U.S. Senate and House races. Every fact links to its source.
-            </p>
+            <p>{state.name}’s U.S. Senate and House races. Every fact links to its source.</p>
           </div>
           <ul className="f-links">
             <li>

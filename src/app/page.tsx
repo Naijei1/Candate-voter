@@ -6,13 +6,7 @@ import { stateConfig, statePath } from "@/lib/states";
 
 export const revalidate = 3600;
 
-const SOURCES = [
-  "Kentucky State Board of Elections",
-  "Kentucky Secretary of State",
-  "Federal Election Commission",
-  "Clerk of the U.S. House",
-  "U.S. Census Bureau",
-];
+const SOURCES = ["Kentucky State Board of Elections", "Kentucky Secretary of State", "Federal Election Commission", "Clerk of the U.S. House", "U.S. Census Bureau"];
 
 export default function HomePage() {
   const state = stateConfig();
