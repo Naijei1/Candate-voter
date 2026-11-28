@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import { normalizeBasePath } from "./src/lib/base-path";
+import { cityPageviewEndpoint } from "./src/lib/goatcounter";
 
 /**
  * Optional path prefix for a future CloudFront mount at /voter.
@@ -36,7 +37,7 @@ const nextConfig: NextConfig = {
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https:",
       "media-src 'self'",
-      `connect-src 'self' https://*.goatcounter.com${uploadOrigin}`,
+      `connect-src 'self' https://*.goatcounter.com ${cityPageviewEndpoint}${uploadOrigin}`,
       "font-src 'self' data:",
       "frame-ancestors 'none'",
       "object-src 'none'",

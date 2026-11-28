@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import Script from "next/script";
 import { useEffect, useRef, useState } from "react";
 import { normalizeBasePath } from "@/lib/base-path";
-import { isGoatCounterHostname, normalizeGoatCounterPath } from "@/lib/goatcounter";
+import { isGoatCounterHostname, normalizeGoatCounterPath, sendCityPageview } from "@/lib/goatcounter";
 
 type Pageview = { path: string; title: string; event: false; referrer: string };
 
@@ -36,14 +36,11 @@ export function GoatCounter() {
 
   useEffect(() => {
     if (!enabled || pathname == null) return;
-    const browserPath = window.location.pathname;
-    const appPath = basePath && (browserPath === basePath || browserPath.startsWith(`${basePath}/`))
-      ? browserPath.slice(basePath.length)
-      : browserPath;
-    const path = normalizeGoatCounterPath(appPath);
+    const path = normalizeGoatCounterPath(window.location.pathname, basePath);
     if (lastPath.current !== path) {
       lastPath.current = path;
       pending.current.push(path);
+      sendCityPageview(path, window);
     }
 
     const counter = window.goatcounter;
