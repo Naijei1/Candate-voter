@@ -3,7 +3,7 @@ import headlines from "../../../data/ky-result-headlines.json";
 
 /**
  * The one switch for election outcomes. `display` in
- * data/ky-2026-general-winners.json stays false until Kentucky certifies.
+ * data/ky-2026-general-winners.json turns winners on or off.
  * When true, pages show a "Won" label and result headlines. Never numbers.
  */
 export const RESULTS_VISIBLE: boolean = winners.display === true;

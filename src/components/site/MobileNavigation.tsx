@@ -5,18 +5,15 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Icon, type IconName } from "@/components/tv/Icon";
 import { PLACE_EVENT, placeHref, readPlace } from "@/components/tv/client/device";
+import { HOME_NAV, NAV } from "@/lib/tv/nav";
 
-export const MOBILE_TABS = [
-  { href: "/", label: "Home", icon: "home" },
-  { href: "/ballot", label: "My races", icon: "ballot" },
-  { href: "/news", label: "News Feed", icon: "news" },
-  { href: "/finance", label: "Finances", icon: "money" },
-  { href: "/ask", label: "Ask", icon: "ask" },
-] as const satisfies ReadonlyArray<{ href: string; label: string; icon: IconName }>;
+/** Home plus the shared section list, in the same words as the header and menu. */
+export const MOBILE_TABS = [HOME_NAV, ...NAV] as const satisfies ReadonlyArray<{ href: string; label: string; icon: IconName }>;
 
 export function currentTab(path: string | null, href: string) {
   if (path === href) return "page";
-  if (href === "/ballot" && /^\/(races|candidates)(\/|$)/.test(path ?? "")) return "location";
+  if (href === "/ballot" && /^\/(races|candidates|states)(\/|$)/.test(path ?? "")) return "location";
+  if (href === "/search" && /^\/ask(\/|$)/.test(path ?? "")) return "location";
   if (href !== "/" && path?.startsWith(`${href}/`)) return "location";
   return undefined;
 }

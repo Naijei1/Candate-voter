@@ -49,7 +49,9 @@ test("the November seed covers every federal race and does not add primary loser
   // v12: race pages read the ballot through raceView and link the certified results page in the footer.
   assert.match(page, /raceView\(/);
   assert.match(page, /race\.people\.map/);
-  assert.match(page, /See official results/);
+  // v13: the official results link sits in the election status line that race pages render.
+  assert.match(page, /<ElectionStatus raceId=\{race\.raceId\} \/>/);
+  assert.match(readFileSync("src/components/tv/Status.tsx", "utf8"), /See official results/);
   assert.match(readFileSync("src/app/states/[state]/page.tsx", "utf8"), /See official results/);
   const script = readFileSync("scripts/seed-ky-ballot.ts", "utf8");
   assert.match(script, /AWS_REGION=us-east-1 CANDATE_TABLE_NAME=candate-voter npm run seed:ky/);

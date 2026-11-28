@@ -98,6 +98,15 @@ export function answerQuestion(raw: string): AskAnswer {
   const county = [...counties].sort((a, b) => b.name.length - a.name.length).find((row) => new RegExp(`\\b${escapeRegExp(row.name.toLowerCase())}\\s+county\\b`).test(q));
   const issueId = ISSUE_WORDS.find(([, words]) => words.test(q))?.[0];
 
+  if (/where (do|can|should|will) i vote|where to vote|polling (place|location)|precinct|voting location|register to vote|am i registered/.test(q)) {
+    return {
+      found: false,
+      lead: [`Look up where you vote on the ${state.voterInfo.label}.`, `The state of ${state.name} runs it.`],
+      sources: [{ label: state.voterInfo.label, url: state.voterInfo.href }],
+      next: [{ label: "My races", href: "/ballot" }],
+    };
+  }
+
   if (shared.length > 0) {
     const surname = lastName(shared[0].person.name);
     return {
@@ -118,7 +127,7 @@ export function answerQuestion(raw: string): AskAnswer {
       next: target
         ? [
             { label: "Their published positions", href: `${racePath(target)}?tab=issues` },
-            { label: "Statements on file", href: `${racePath(target)}?tab=statements` },
+            { label: "Statements on file", href: `${racePath(target)}?tab=news` },
           ]
         : [{ label: "Search", href: "/search" }],
     };
@@ -167,7 +176,7 @@ export function answerQuestion(raw: string): AskAnswer {
       found: false,
       lead: ["No qualifying polls are available", `for ${state.name}’s ${state.cycle} federal races, so we can’t say who is ahead.`],
       sources: [],
-      next: [{ label: "How polls are listed", href: "/polls" }],
+      next: [{ label: "My races", href: "/ballot" }],
     };
   }
 
@@ -211,7 +220,7 @@ export function answerQuestion(raw: string): AskAnswer {
     if (named.length === 1 && !/each|all|every|who|most/.test(q)) {
       const { person, race: home } = named[0];
       const funding = person.funding;
-      const next = [{ label: `${home.title} campaign finance`, href: `${racePath(home)}?tab=finance` }];
+      const next = [{ label: `${home.title} campaign finance`, href: `${racePath(home)}?tab=money` }];
       if (!funding || funding.status !== "ok" || funding.receipts == null) {
         return { found: false, lead: [`${person.name} has no campaign report on file with the FEC.`], sources: [], next };
       }
@@ -222,7 +231,7 @@ export function answerQuestion(raw: string): AskAnswer {
           `spent ${shortMoney(funding.disbursements ?? 0)} and had ${shortMoney(funding.cash ?? 0)} on hand${funding.coverageEnd ? ` through ${dayLabel(funding.coverageEnd)}` : ""}.`,
         ],
         sources: [fecSource(person)],
-        next: [{ label: `Where ${lastName(person.name)}’s money comes from`, href: `/finance/candidates/${person.id}` }, ...next],
+        next: [{ label: `Who gives to ${lastName(person.name)}`, href: `/finance/candidates/${person.id}` }, ...next],
       };
     }
     const target = race ?? named[0].race;
@@ -235,7 +244,7 @@ export function answerQuestion(raw: string): AskAnswer {
       lead: [`${heading} by each ${target.title} campaign,`, `as reported to the FEC${end ? ` through ${dayLabel(end)}` : ""}.`],
       bars: target.people.map((person) => ({ person, value: person.funding?.status === "ok" ? (person.funding[key] ?? null) : null })).sort((a, b) => (b.value ?? -1) - (a.value ?? -1)),
       sources: reported.map(fecSource),
-      next: [{ label: `${target.title} campaign finance`, href: `${racePath(target)}?tab=finance` }],
+      next: [{ label: `${target.title} campaign finance`, href: `${racePath(target)}?tab=money` }],
     };
   }
 

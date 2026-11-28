@@ -9,7 +9,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const { races, candidates } = kyBallotSeed();
   const paths = [
     "/", "/accessibility", "/ask", "/ballot", "/candidates", "/contact", "/search",
-    "/finance", "/measures", "/news", "/officeholders", "/polls", "/privacy", "/sources", "/states", ...enabledStates().map(statePath), "/terms",
+    "/finance", "/news", "/officeholders", "/privacy", "/sources", "/states", ...enabledStates().map(statePath), "/terms",
     ...races.flatMap(({ raceId }) => [`/races/${raceId}`, `/races/${raceId}/compare`]),
     ...candidates.map(({ candidateId }) => `/candidates/${candidateId}`),
   ];

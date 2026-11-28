@@ -26,8 +26,10 @@ test("race and candidate pages return to the state journey", () => {
     new URL("../src/app/races/[raceId]/compare/page.tsx", import.meta.url),
     "utf8",
   );
-  // v12: crumbs lead back to the state page; compare and follow controls are the shared tv components.
-  assert.match(race, /href: statePath\(state\), label: state\.name/);
+  // v13: crumbs lead back to My races at the saved county; compare and follow controls are the shared tv components.
+  assert.match(race, /MY_RACES_CRUMB/);
+  assert.match(candidate, /MY_RACES_CRUMB/);
+  assert.match(compare, /MY_RACES_CRUMB/);
   assert.match(race, /Compare \{lastName\(pair\[0\]\.name\)\} and \{lastName\(pair\[1\]\.name\)\}/);
   assert.match(race, /AskPanel/);
   assert.match(race, /<FollowButton /);

@@ -2,64 +2,35 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Fragment } from "react";
-import { Icon } from "../Icon";
-import { PopMenu } from "./PopMenu";
+import { NAV } from "@/lib/tv/nav";
 import { YoursLink } from "./Yours";
 
-export type NavItem = { href: string; title: string; sub: string; rule?: boolean };
-
-function inSection(pathname: string, prefixes: readonly string[]): boolean {
-  return prefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
+/** Which section a path belongs to. Race and candidate pages sit under My races. */
+export function sectionOf(pathname: string): string | null {
+  if (/^\/(ballot|races|candidates|states)(\/|$)/.test(pathname)) return "/ballot";
+  if (/^\/(finance)(\/|$)/.test(pathname)) return "/finance";
+  if (/^\/news(\/|$)/.test(pathname)) return "/news";
+  if (/^\/(search|ask)(\/|$)/.test(pathname)) return "/search";
+  return null;
 }
 
-export function PrimaryNav({ candidates, polls }: { candidates: NavItem[]; polls: NavItem[] }) {
+/** Desktop section links. Search is the header button next to them. */
+export function PrimaryNav() {
   const pathname = usePathname() ?? "/";
-  const current = (href: string) => (pathname === href ? "page" : undefined);
-  const menu = (items: NavItem[]) =>
-    items.map((item) => (
-      <Fragment key={item.href}>
-        {item.rule ? <hr /> : null}
-        <Link href={item.href} role="menuitem" aria-current={current(item.href)}>
-          <b>{item.title}</b>
-          <span>{item.sub}</span>
-        </Link>
-      </Fragment>
-    ));
-
+  const section = sectionOf(pathname);
   return (
     <nav className="nav" aria-label="Primary">
-      <YoursLink aria-current={inSection(pathname, ["/ballot"]) ? "page" : undefined}>Find my races</YoursLink>
-      <PopMenu
-        label="Candidates"
-        buttonClass={inSection(pathname, ["/races", "/candidates", "/states", "/officeholders"]) ? "nav-b cur" : "nav-b"}
-        button={
-          <>
-            Candidates
-            <Icon name="down" size="xs" />
-          </>
-        }
-      >
-        {menu(candidates)}
-      </PopMenu>
-      <Link href="/news" aria-current={inSection(pathname, ["/news"]) ? "page" : undefined}>
-        News and Updates
-      </Link>
-      <PopMenu
-        label="Polls and Analysis"
-        buttonClass={inSection(pathname, ["/polls", "/measures"]) ? "nav-b cur" : "nav-b"}
-        button={
-          <>
-            Polls and Analysis
-            <Icon name="down" size="xs" />
-          </>
-        }
-      >
-        {menu(polls)}
-      </PopMenu>
-      <Link href="/finance" aria-current={inSection(pathname, ["/finance"]) ? "page" : undefined}>
-        Campaign Finance
-      </Link>
+      {NAV.filter((item) => item.href !== "/search").map((item) =>
+        item.href === "/ballot" ? (
+          <YoursLink key={item.href} aria-current={section === item.href ? "page" : undefined}>
+            {item.label}
+          </YoursLink>
+        ) : (
+          <Link key={item.href} href={item.href} aria-current={section === item.href ? "page" : undefined}>
+            {item.label}
+          </Link>
+        ),
+      )}
     </nav>
   );
 }

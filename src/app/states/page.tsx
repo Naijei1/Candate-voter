@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Crumbs, ScopeNav } from "@/components/tv/bits";
+import { Crumbs } from "@/components/tv/bits";
 import { ExtLink } from "@/components/tv/ExtLink";
 import { StateExplorer } from "@/components/tv/StateExplorer";
 import { enabledStates } from "@/lib/states";
@@ -10,11 +10,10 @@ export default function StatesPage() {
   const covered = enabledStates().map((state) => state.name);
   return (
     <>
-      <ScopeNav current="states" />
       <div className="wrap">
         <Crumbs items={[{ href: "/", label: "Home" }, { label: "Explore by state" }]} />
         <h1 className="t-h1 pt">Explore by state</h1>
-        <p className="lede">{covered.join(" and ")} is covered now. Other states are coming later and show no candidate data yet.</p>
+        <p className="lede">{covered.join(" and ")} races are available. Other states have no candidate data yet.</p>
         <StateExplorer
           id="statelist"
           big

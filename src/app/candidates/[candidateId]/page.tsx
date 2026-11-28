@@ -4,7 +4,6 @@ import { notFound } from "next/navigation";
 import { FollowButton } from "@/components/tv/client/Follow";
 import { More } from "@/components/tv/client/More";
 import { ReportButton } from "@/components/tv/client/Report";
-import { YoursContext } from "@/components/tv/client/Yours";
 import { Crumbs, Face, PartyTag } from "@/components/tv/bits";
 import { ExtLink } from "@/components/tv/ExtLink";
 import { FundingBlock } from "@/components/tv/Funding";
@@ -13,7 +12,8 @@ import { VoteRecord } from "@/components/tv/Votes";
 import { WonTag } from "@/components/tv/Won";
 import { dayLabel } from "@/lib/format";
 import { KY_BALLOT_SOURCES } from "@/lib/site/ky-ballot";
-import { stateConfig, statePath } from "@/lib/states";
+import { stateConfig } from "@/lib/states";
+import { MY_RACES_CRUMB } from "@/lib/tv/nav";
 import { newsForPerson } from "@/lib/tv/news";
 import { initials, lastName } from "@/lib/tv/party";
 import { allPeople, mainRival, personRecord, personView } from "@/lib/tv/people";
@@ -40,6 +40,26 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
+type Fact = ReturnType<typeof personRecord>["facts"][number];
+
+function FactRow({ fact }: { fact: Fact }) {
+  return (
+    <div>
+      <dt>{fact.term}</dt>
+      <dd>
+        {fact.text}
+        {fact.muted ? (
+          <>
+            {" "}
+            <span className="muted">{fact.muted}</span>
+          </>
+        ) : null}
+        {fact.hint ? <span className="hint">{fact.hint}</span> : null}
+      </dd>
+    </div>
+  );
+}
+
 export default async function CandidatePage({ params }: PageProps) {
   const id = (await params).candidateId;
   const person = personView(id);
@@ -57,18 +77,24 @@ export default async function CandidatePage({ params }: PageProps) {
   const hasLinks = Boolean(website) || social.length > 0;
   const won = isWinner(race.raceId, person.name);
   const surname = lastName(person.name);
+  const facts = record.facts.filter((fact) => !/^House vote/.test(fact.term));
+  const keyFact = facts.find((fact) => fact.term === "Public service") ?? facts.find((fact) => fact.term === "Career") ?? facts[0] ?? null;
+  const moreFacts = facts.filter((fact) => fact !== keyFact);
+  const factSources = [
+    ...new Map(
+      [
+        person.filing ? { label: `${state.filings.name} filing`, url: person.filing.url } : null,
+        person.writeIn ? { label: state.filings.name, url: state.filings.href } : { label: "Clerk of the U.S. House, nominations", url: KY_BALLOT_SOURCES[1].url },
+        ...facts.flatMap((fact) => fact.sources),
+      ]
+        .filter((source): source is { label: string; url: string } => Boolean(source))
+        .map((source) => [source.url, source]),
+    ).values(),
+  ];
 
   return (
     <div className="wrap">
-      <Crumbs
-        items={[
-          { href: "/", label: "Home" },
-          { href: statePath(state), label: state.name },
-          { href: `/races/${race.raceId}`, label: race.title },
-          { label: person.name },
-        ]}
-      />
-      <YoursContext />
+      <Crumbs items={[{ href: "/", label: "Home" }, MY_RACES_CRUMB, { href: `/races/${race.raceId}`, label: race.title }, { label: person.name }]} />
 
       <div className="phead">
         <div className="pcol">
@@ -100,14 +126,11 @@ export default async function CandidatePage({ params }: PageProps) {
             {person.role}
             {won ? <WonTag /> : null}
           </p>
-          <p className="lede">
-            Running for <Link href={`/races/${race.raceId}`}>{race.runningFor}</Link>.
-          </p>
           <div className="pact">
             {rival ? (
               <Link className="btn primary" href={`/races/${race.raceId}/compare?a=${person.id}&b=${rival.id}`}>
-                <Icon name="swap" size="sm" />
                 Compare with {lastName(rival.name)}
+                <Icon name="right" size="sm" />
               </Link>
             ) : null}
             <FollowButton id={person.id} name={person.name} />
@@ -122,7 +145,7 @@ export default async function CandidatePage({ params }: PageProps) {
         <span className="jump-l" id="jump-l">
           On this page
         </span>
-        <a href="#facts">Verified facts</a>
+        <a href="#facts">Key facts</a>
         <a href="#own">In their own words</a>
         <a href="#money">Campaign money</a>
         {news.length > 0 ? <a href="#updates">News ({news.length})</a> : null}
@@ -131,62 +154,55 @@ export default async function CandidatePage({ params }: PageProps) {
       <div className="two">
         <section id="facts" className="sec" aria-labelledby="h-vf">
           <h2 id="h-vf" className="sec-t">
-            Verified facts
+            Key facts
           </h2>
           <dl className="facts">
             <div>
-              <dt>Party on the ballot</dt>
+              <dt>Party</dt>
+              <dd>{person.party.name}</dd>
+            </div>
+            <div>
+              <dt>Running for</dt>
               <dd>
-                <PartyTag party={person.party} size="sm" /> {person.party.name}
-                {person.writeIn ? (
-                  <ExtLink className="srcl" href={state.filings.href}>
-                    {state.filings.name}
-                  </ExtLink>
-                ) : (
-                  <ExtLink className="srcl" href={KY_BALLOT_SOURCES[1].url}>
-                    Clerk of the House nominations
-                  </ExtLink>
-                )}
+                <Link href={`/races/${race.raceId}`}>{race.runningFor}</Link>
+                {won ? <WonTag /> : null}
               </dd>
             </div>
             <div>
               <dt>Filed to run</dt>
-              <dd>
-                {person.filing ? (
-                  <>
-                    {person.filing.label}
-                    <ExtLink className="srcl" href={person.filing.url}>
-                      {state.filings.name}
-                    </ExtLink>
-                  </>
-                ) : (
-                  <span className="none">Not in our records</span>
-                )}
-              </dd>
+              <dd>{person.filing ? person.filing.label : <span className="none">Not in our records</span>}</dd>
             </div>
-            {record.facts.map((fact, index) => (
-              <div key={`${fact.term}-${index}`}>
-                <dt>{fact.term}</dt>
-                <dd>
-                  {fact.text}
-                  {fact.muted ? <> <span className="muted">{fact.muted}</span></> : null}
-                  {fact.hint ? <span className="hint">{fact.hint}</span> : null}
-                  {fact.sources.map((source) => (
-                    <ExtLink key={source.url} className="srcl" href={source.url}>
-                      {source.label}
-                    </ExtLink>
-                  ))}
-                </dd>
-              </div>
-            ))}
+            {keyFact ? <FactRow fact={keyFact} /> : null}
           </dl>
+          {moreFacts.length > 0 ? (
+            <details className="srcd more-f">
+              <summary>More about {surname}</summary>
+              <dl className="facts">
+                {moreFacts.map((fact, index) => (
+                  <FactRow key={`${fact.term}-${index}`} fact={fact} />
+                ))}
+              </dl>
+            </details>
+          ) : null}
+          <details className="srcd">
+            <summary>Sources</summary>
+            <ul className="srcl-list">
+              {factSources.map((source) => (
+                <li key={source.url}>
+                  <ExtLink className="xl" href={source.url} icon>
+                    {source.label}
+                  </ExtLink>
+                </li>
+              ))}
+            </ul>
+          </details>
         </section>
 
         <section id="own" className="sec claims" aria-labelledby="h-own">
           <h2 id="h-own" className="sec-t">
             In their own words
           </h2>
-          <p className="sec-sub">Not checked by THE VOTE.</p>
+          <p className="sec-sub">What {surname} or the campaign has said.</p>
           {record.claims.length === 0 ? <p className="none">No sourced statements in our records.</p> : null}
           {record.claims.map((group, index) => (
             <div className="own" key={`${group.source.url}-${index}`}>
@@ -218,13 +234,15 @@ export default async function CandidatePage({ params }: PageProps) {
                   </div>
                 );
               })}
-              <p className="srcl2 bot">
-                {group.items.length > 1 ? `Source for these ${group.items.length} statements: ` : "Source: "}
-                <ExtLink className="xl srcl" href={group.source.url} icon>
-                  {group.source.label}
-                </ExtLink>
-                {group.source.date ? `, ${dayLabel(group.source.date)}` : null}
-              </p>
+              <details className="srcd">
+                <summary>Sources</summary>
+                <p className="srcl2">
+                  <ExtLink className="xl srcl" href={group.source.url} icon>
+                    {group.source.label}
+                  </ExtLink>
+                  {group.source.date ? `, ${dayLabel(group.source.date)}` : null}
+                </p>
+              </details>
             </div>
           ))}
           {record.missingIssues.length > 0 ? <p className="none">No sourced statement: {record.missingIssues.join(", ")}.</p> : null}

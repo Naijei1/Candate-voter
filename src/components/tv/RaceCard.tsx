@@ -30,13 +30,13 @@ export function RaceCard({ person, race, level = 3 }: { person: PersonView; race
           {isWinner(race.raceId, person.name) ? <WonTag /> : null}
         </p>
         {person.oneLine ? <p className="one">{person.oneLine}</p> : <p className="one none">No background in our records.</p>}
-        <Link className={`btn vp ${person.party.key}`} href={`/candidates/${person.id}`} aria-label={`View profile: ${person.name}`}>
-          View Profile
+        <Link className={`btn vp ${person.party.key}`} href={`/candidates/${person.id}`} aria-label={`Profile: ${person.name}`}>
+          Profile
         </Link>
         <p className="cacts">
-          <Link href={`/candidates/${person.id}#money`} aria-label={`Money: ${person.name}`}>
+          <Link href={`/candidates/${person.id}#money`} aria-label={`Campaign money: ${person.name}`}>
             <Icon name="money" size="sm" />
-            Money
+            Campaign money
           </Link>
         </p>
       </div>
@@ -77,7 +77,7 @@ export function RaceRow({ race, yours }: { race: RaceView; yours?: boolean }) {
           </span>
         ))}
       </span>
-      {yours ? <span className="yours-tag">Your district</span> : <span />}
+      {yours ? <span className="yours-tag">Your district</span> : <span className="rr-gap" />}
       <Icon name="right" size="sm" />
     </Link>
   );

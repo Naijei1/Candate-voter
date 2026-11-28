@@ -42,6 +42,10 @@ export type StateConfig = {
   };
   /** Secretary of State candidate filing list. */
   readonly filings: { readonly name: string; readonly href: string };
+  /** Largest counties, offered as one-tap picks on Home and My races. */
+  readonly quickCounties: readonly string[];
+  /** Official page where voters look up where to vote. Linked only; the site keeps no polling data. */
+  readonly voterInfo: OfficialLink;
   readonly map: {
     /** Congressional districts, 120th Congress lines. */
     readonly districts: string;
@@ -96,6 +100,8 @@ export const STATES = {
       name: "Kentucky Secretary of State",
       href: "https://web.sos.ky.gov/candidatefilings/Default.aspx?id=3",
     },
+    quickCounties: ["Jefferson", "Fayette", "Kenton", "Boone", "Warren", "Hardin"],
+    voterInfo: { href: "https://vrsws.sos.ky.gov/VIC/Default.aspx", label: "Kentucky Voter Information Center" },
     map: {
       districts: "/geo/cd120/KY.json",
       counties: "/geo/counties/KY.json",

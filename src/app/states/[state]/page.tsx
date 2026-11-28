@@ -5,21 +5,20 @@ import calendar from "../../../../data/ky-election-calendar.json";
 import { FollowButton } from "@/components/tv/client/Follow";
 import { CountyPicker, DistrictPicker, ZoomBox } from "@/components/tv/client/Maps";
 import { ReportButton } from "@/components/tv/client/Report";
-import { SheetButton } from "@/components/tv/client/Sheet";
-import { StateFinder } from "@/components/tv/client/StateFinder";
 import { Tabs } from "@/components/tv/client/Tabs";
-import { Crumbs, ScopeNav } from "@/components/tv/bits";
+import { Crumbs } from "@/components/tv/bits";
 import { ExtLink } from "@/components/tv/ExtLink";
 import { Icon } from "@/components/tv/Icon";
 import { RaceCards, RaceRow, candidateCount } from "@/components/tv/RaceCard";
-import { stateRows } from "@/components/tv/StateExplorer";
+import { ElectionStatus } from "@/components/tv/Status";
 import { stateName } from "@/lib/data/states";
 import { KY_BALLOT_SOURCES } from "@/lib/site/ky-ballot";
-import { dayLabel } from "@/lib/format";
+import { dayLabel, longDayLabel } from "@/lib/format";
 import { STATE_TILES } from "@/lib/geo/state-tiles";
 import { stateMap } from "@/lib/geo/state-maps";
 import { outlineMap } from "@/lib/geo/uncovered";
 import { enabledStates, isStateCode, stateConfig, type StateConfig } from "@/lib/states";
+import { MY_RACES_CRUMB } from "@/lib/tv/nav";
 import { allRaces, type RaceView } from "@/lib/tv/people";
 
 export const revalidate = 3600;
@@ -59,23 +58,16 @@ function Silhouette({ viewBox, paths }: { viewBox: string; paths: string[] }) {
   );
 }
 
-function StateTitle({ code, name, silhouette }: { code: string; name: string; silhouette: React.ReactNode }) {
+function StateTitle({ code, name, title = name, silhouette }: { code: string; name: string; title?: string; silhouette: React.ReactNode }) {
   return (
     <div className="stitle">
       <div className="sname">
         {silhouette}
-        <h1 className="t-h1">{name}</h1>
-        <SheetButton label="Switch state" icon="down" iconOnly className="sw-btn" title="Choose a state">
-          <StateFinder id="sheetlist" rows={stateRows()} />
-        </SheetButton>
+        <h1 className="t-h1">{title}</h1>
       </div>
       <FollowButton id={`state-${code}`} name={name} />
     </div>
   );
-}
-
-function stageWord(date: string, today: string): string {
-  return date < today ? "held" : date === today ? "today" : "next";
 }
 
 function Stats({ items }: { items: Array<[string, string | number]> }) {
@@ -101,7 +93,7 @@ function SetHead({ id, race }: { id: string; race: RaceView }) {
         {race.subtitle ? <p className="sec-sub">{race.subtitle}</p> : null}
       </div>
       <Link className="viewall" href={`/races/${race.raceId}`}>
-        View All
+        Race page
         <Icon name="right" size="sm" />
       </Link>
     </div>
@@ -115,13 +107,9 @@ function CoveredState({ state }: { state: StateConfig }) {
   const house = races.filter((race) => race.office === "house");
   const houseCount = house.reduce((sum, race) => sum + race.people.length, 0);
   const rows = calendar as CalendarRow[];
-  const today = new Date().toISOString().slice(0, 10);
   const general = state.generalElection;
   const generalShort = dayLabel(general).replace(/, \d{4}$/, "");
-  const primary = rows.find((row) => row.label === "Primary");
-  const calendarSource = rows.find((row) => row.label === "General election") ?? rows[0];
   const split = map.counties.filter((county) => county.districts.length > 1).length;
-  const nextIndex = rows.findIndex((row) => row.date >= today);
   const compact = new Set<string>(state.mapHints.compactLabelDistricts);
   const filingSource = (
     <ExtLink className="xl" href={state.filings.href} icon>
@@ -271,30 +259,10 @@ function CoveredState({ state }: { state: StateConfig }) {
 
   return (
     <>
-      <ScopeNav current="states" />
       <div className="wrap">
-        <Crumbs items={[{ href: "/", label: "Home" }, { href: "/states", label: "States" }, { label: state.name }]} />
-        <StateTitle code={state.code} name={state.name} silhouette={<Silhouette viewBox={map.districtViewBox} paths={map.districts.map((district) => district.d)} />} />
-        <details className="how">
-          <summary>General election, {generalShort} · Federal races</summary>
-          <div className="how-b">
-            <div className="stages" aria-label={`Elections in ${state.cycle}`}>
-              {primary ? (
-                <span className="stage">
-                  <b>Primary</b> {dayLabel(primary.date).replace(/, \d{4}$/, "")}, {stageWord(primary.date, today)}
-                </span>
-              ) : null}
-              <span className="stage cur">
-                <b>General</b> {generalShort}, {stageWord(general, today)}
-              </span>
-              {calendarSource ? (
-                <ExtLink className="srcl" href={calendarSource.sourceUrl} icon>
-                  State election calendar
-                </ExtLink>
-              ) : null}
-            </div>
-          </div>
-        </details>
+        <Crumbs items={[{ href: "/", label: "Home" }, MY_RACES_CRUMB, { label: `All ${state.name} races` }]} />
+        <StateTitle code={state.code} name={state.name} title={`All ${state.name} races`} silhouette={<Silhouette viewBox={map.districtViewBox} paths={map.districts.map((district) => district.d)} />} />
+        <ElectionStatus />
         <Tabs
           label="Map level"
           param="view"
@@ -317,11 +285,10 @@ function CoveredState({ state }: { state: StateConfig }) {
             </ExtLink>
           </div>
           <ol className="dates">
-            {rows.map((row, index) => (
+            {rows.map((row) => (
               <li key={row.label}>
-                <time dateTime={row.date}>{dayLabel(row.date)}</time>
+                <time dateTime={row.date}>{longDayLabel(row.date)}</time>
                 <span>{row.label}</span>
-                <span className="muted">{row.date < today ? "Held" : index === nextIndex ? "Next" : ""}</span>
               </li>
             ))}
           </ol>
@@ -356,7 +323,6 @@ function UncoveredState({ code }: { code: string }) {
   const slots = outline.count === 1 ? ["At large"] : Array.from({ length: outline.count }, (_, index) => `District ${index + 1}`);
   return (
     <>
-      <ScopeNav current="states" />
       <div className="wrap">
         <Crumbs items={[{ href: "/", label: "Home" }, { href: "/states", label: "States" }, { label: name }]} />
         <StateTitle code={code} name={name} silhouette={outline.districts.length ? <Silhouette viewBox={outline.viewBox} paths={outline.districts.map((district) => district.d)} /> : null} />

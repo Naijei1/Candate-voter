@@ -9,8 +9,9 @@ type Row = IndexEntry | { g: "Ask"; t: string; s: string; h: string; i: "ask" };
 
 export function SearchButton() {
   return (
-    <button className="icon-btn" type="button" aria-label="Search" onClick={() => window.dispatchEvent(new Event("tv:search"))}>
+    <button className="srch-b" type="button" onClick={() => window.dispatchEvent(new Event("tv:search"))}>
       <Icon name="search" />
+      <span>Search</span>
     </button>
   );
 }
